@@ -19,6 +19,10 @@ import {
 } from "./seismicFigureAnnotations";
 
 type SeismicLodTierName = "coarse" | "standard" | "source";
+type SeismicVerticalDatumMode = NonNullable<EditableStyle["seismicVerticalDatumMode"]>;
+type SeismicPathPoint = [number, number, number];
+
+const SEISMIC_REFERENCE_DATUM_M = 1800;
 
 type SeismicBrowserRuntimeIndex = {
   root: THREE.Object3D;
@@ -42,7 +46,131 @@ type SeismicBrowserStyleHost = {
   setProductOpacityBaseForMaterial(material: THREE.Material, opacity: number): void;
   updateSeismicVolumeCutIsoOverlays(style: EditableStyle): void;
   updateSeismicResistivityIsoOverlays(style: EditableStyle): void;
+  renderedTopoSurfaceZ?: (x: number, y: number) => number | null;
 };
+
+function seismicVerticalDatumModeFromStyle(
+  style: EditableStyle,
+): SeismicVerticalDatumMode {
+  return style.seismicVerticalDatumMode === "reference-1800m" ||
+    style.seismicVerticalDatumMode === "terrain-top-preview"
+    ? style.seismicVerticalDatumMode
+    : "source";
+}
+
+function isFinitePathPoint(value: unknown): value is SeismicPathPoint {
+  return (
+    Array.isArray(value) &&
+    value.length >= 3 &&
+    typeof value[0] === "number" &&
+    Number.isFinite(value[0]) &&
+    typeof value[1] === "number" &&
+    Number.isFinite(value[1]) &&
+    typeof value[2] === "number" &&
+    Number.isFinite(value[2])
+  );
+}
+
+function seismicSectionPathPoints(obj: THREE.Object3D): SeismicPathPoint[] {
+  const rawPath = obj.userData?.seismicSectionPath;
+  if (Array.isArray(rawPath)) {
+    return rawPath.filter(isFinitePathPoint);
+  }
+  const surfaceGrid = obj.userData?.seismicSectionSurfaceGrid as
+    | {
+        points?: unknown;
+        corners?: unknown;
+      }
+    | undefined;
+  if (Array.isArray(surfaceGrid?.points)) {
+    return surfaceGrid.points.filter(isFinitePathPoint);
+  }
+  if (Array.isArray(surfaceGrid?.corners)) {
+    return surfaceGrid.corners.filter(isFinitePathPoint);
+  }
+  if (surfaceGrid?.corners && typeof surfaceGrid.corners === "object") {
+    return Object.values(surfaceGrid.corners).filter(isFinitePathPoint);
+  }
+  return [];
+}
+
+function seismicMeanTerrainZ(
+  host: SeismicBrowserStyleHost,
+  points: SeismicPathPoint[],
+): number | null {
+  if (typeof host.renderedTopoSurfaceZ !== "function" || points.length === 0) {
+    return null;
+  }
+  const stride = Math.max(1, Math.floor(points.length / 64));
+  let sum = 0;
+  let count = 0;
+  for (let index = 0; index < points.length; index += stride) {
+    const point = points[index];
+    const topoZ = host.renderedTopoSurfaceZ(point[0], point[1]);
+    if (typeof topoZ === "number" && Number.isFinite(topoZ)) {
+      sum += topoZ;
+      count += 1;
+    }
+  }
+  return count > 0 ? sum / count : null;
+}
+
+function seismicMeshLocalTopZ(mesh: THREE.Mesh): number | null {
+  const geometry = mesh.geometry;
+  if (!geometry.boundingBox) geometry.computeBoundingBox();
+  const topZ = geometry.boundingBox?.max.z;
+  return typeof topZ === "number" && Number.isFinite(topZ) ? topZ : null;
+}
+
+function seismicSectionVerticalDatumOffsetM(
+  host: SeismicBrowserStyleHost,
+  mesh: THREE.Mesh,
+  mode: SeismicVerticalDatumMode,
+  basePosition: [number, number, number],
+): number {
+  if (mode === "source") return 0;
+  const localTopZ = seismicMeshLocalTopZ(mesh);
+  if (localTopZ === null) return 0;
+  const sourceTopZ = basePosition[2] + localTopZ;
+  const targetTopZ =
+    mode === "reference-1800m"
+      ? SEISMIC_REFERENCE_DATUM_M
+      : seismicMeanTerrainZ(host, seismicSectionPathPoints(mesh));
+  return typeof targetTopZ === "number" && Number.isFinite(targetTopZ)
+    ? targetTopZ - sourceTopZ
+    : 0;
+}
+
+function seismicBoundsFootprintPoints(
+  boundsMin: [number, number, number],
+  boundsMax: [number, number, number],
+): SeismicPathPoint[] {
+  const z = boundsMax[2];
+  return [
+    [boundsMin[0], boundsMin[1], z],
+    [boundsMin[0], boundsMax[1], z],
+    [boundsMax[0], boundsMin[1], z],
+    [boundsMax[0], boundsMax[1], z],
+    [(boundsMin[0] + boundsMax[0]) / 2, (boundsMin[1] + boundsMax[1]) / 2, z],
+  ];
+}
+
+function seismicBoundsVerticalDatumOffsetM(
+  host: SeismicBrowserStyleHost,
+  boundsMin: [number, number, number],
+  boundsMax: [number, number, number],
+  mode: SeismicVerticalDatumMode,
+): number {
+  if (mode === "source") return 0;
+  const sourceTopZ = boundsMax[2];
+  const targetTopZ =
+    mode === "reference-1800m"
+      ? SEISMIC_REFERENCE_DATUM_M
+      : seismicMeanTerrainZ(host, seismicBoundsFootprintPoints(boundsMin, boundsMax));
+  return typeof targetTopZ === "number" && Number.isFinite(targetTopZ)
+    ? targetTopZ - sourceTopZ
+    : 0;
+}
 
 function seismicTextureAmplitudeValues(
   mesh: THREE.Mesh,
@@ -370,6 +498,7 @@ export function applySeismicBrowserStyle(this: unknown, id: string, style: Edita
     3000,
   );
   const timeScale = styleNumber(effectiveStyle, "seismicTimeScale", 2, 0.25, 8);
+  const verticalDatumMode = seismicVerticalDatumModeFromStyle(effectiveStyle);
   const navigationVisible = effectiveStyle.seismicNavigationVisible !== false;
   const navigationRoleVisibility =
     typeof effectiveStyle.seismicNavigationRoleVisibility === "object" &&
@@ -495,6 +624,7 @@ export function applySeismicBrowserStyle(this: unknown, id: string, style: Edita
   group.userData.seismicAmplitudeGamma = amplitudeGamma;
   group.userData.seismicBackgroundCutoff = backgroundCutoff;
   group.userData.seismicVolumeSampleSteps = volumeSampleSteps;
+  group.userData.seismicVerticalDatumMode = verticalDatumMode;
   group.userData.seismicNavigationRoleVisibility = {
     sources: navigationRoleVisible("sources"),
     receivers: navigationRoleVisible("receivers"),
@@ -517,6 +647,7 @@ export function applySeismicBrowserStyle(this: unknown, id: string, style: Edita
   index.root.userData.seismicAmplitudeGamma = amplitudeGamma;
   index.root.userData.seismicBackgroundCutoff = backgroundCutoff;
   index.root.userData.seismicVolumeSampleSteps = volumeSampleSteps;
+  index.root.userData.seismicVerticalDatumMode = verticalDatumMode;
   index.root.userData.seismicNavigationRoleVisibility =
     group.userData.seismicNavigationRoleVisibility;
 
@@ -592,6 +723,33 @@ export function applySeismicBrowserStyle(this: unknown, id: string, style: Edita
       } else if (baseSize && baseBounds?.min && baseBounds.max) {
         obj.scale.z = 1;
         obj.position.z = (baseBounds.min[2] + baseBounds.max[2]) / 2;
+        obj.updateMatrixWorld();
+      }
+      const verticalDatumOffsetM =
+        boundsMin && boundsMax
+          ? seismicBoundsVerticalDatumOffsetM(
+              host,
+              boundsMin,
+              boundsMax,
+              verticalDatumMode,
+            )
+          : 0;
+      if (verticalDatumOffsetM !== 0 && boundsMin && boundsMax) {
+        boundsMin = [
+          boundsMin[0],
+          boundsMin[1],
+          boundsMin[2] + verticalDatumOffsetM,
+        ];
+        boundsMax = [
+          boundsMax[0],
+          boundsMax[1],
+          boundsMax[2] + verticalDatumOffsetM,
+        ];
+      }
+      if (boundsMin && boundsMax) {
+        obj.position.z = (boundsMin[2] + boundsMax[2]) / 2;
+        obj.userData.seismicVerticalDatumMode = verticalDatumMode;
+        obj.userData.seismicVerticalDatumOffsetM = verticalDatumOffsetM;
         obj.updateMatrixWorld();
       }
       const uniforms = obj.material.uniforms;
@@ -702,6 +860,20 @@ export function applySeismicBrowserStyle(this: unknown, id: string, style: Edita
         geometry.computeBoundingBox();
         geometry.computeBoundingSphere();
       }
+      const verticalDatumOffsetM = seismicSectionVerticalDatumOffsetM(
+        host,
+        obj,
+        verticalDatumMode,
+        basePosition,
+      );
+      obj.position.set(
+        basePosition[0] + productOffset,
+        basePosition[1],
+        basePosition[2] + verticalDatumOffsetM,
+      );
+      obj.userData.seismicVerticalDatumMode = verticalDatumMode;
+      obj.userData.seismicVerticalDatumOffsetM = verticalDatumOffsetM;
+      obj.updateMatrixWorld();
 
       const materials = Array.isArray(obj.material)
         ? obj.material

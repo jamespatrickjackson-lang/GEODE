@@ -16,6 +16,7 @@ from typing import Any
 
 import numpy as np
 import segyio
+from pyproj import Transformer
 
 from geosee_registration import (
     UTAH_FORGE_PROJECT_FRAME,
@@ -50,6 +51,20 @@ UNSORTED_ROOT = CLIENT_ROOT / "Unsorted data"
 DERIVED_DATE = os.environ.get("GEOSEE_DERIVED_DATE", "2026-05-13")
 UTAH_FORGE_HORIZONTAL_CRS = UTAH_FORGE_PROJECT_FRAME.horizontal_crs
 SEISMIC_REFERENCE_DATUM_M = 1800.0
+FT_TO_M = 0.3048
+UTAH_FORGE_EXPECTED_UTM_CENTER = (334000.0, 4262500.0)
+LEGACY_STATE_PLANE_CRS_CANDIDATES = (
+    {
+        "epsg": 32043,
+        "name": "NAD27 / Utah Central (ftUS)",
+        "reason": "legacy header declares US State Plane NAD27; zone text is inconsistent across delivered lines",
+    },
+    {
+        "epsg": 32044,
+        "name": "NAD27 / Utah South (ftUS)",
+        "reason": "legacy header declares US State Plane NAD27; zone text is inconsistent across delivered lines",
+    },
+)
 TIME_SCALE_M_PER_MS = 2.0
 SOURCE_FIDELITY_SECTION_MAX_PIXELS = int(
     os.environ.get("GEOSEE_SEISMIC_SECTION_MAX_PIXELS", "4194304")
@@ -129,6 +144,7 @@ class Product:
     sample_max: float
     sample_interval: float
     sample_spacing: float
+    sample_axis_metadata: dict[str, Any]
     source_geometry: dict[str, Any]
     source_unit_status: str
     stats: dict[str, Any]
@@ -717,6 +733,141 @@ def domain_kind(path: Path, kind: str) -> tuple[str, str]:
     return "time", "ms"
 
 
+HEADER_MEASURE_PATTERN = r"([0-9]+(?:\.[0-9]+)?)\s*(milliseconds?|ms|meters?|metres?|feet|foot|ft|m)\b"
+
+
+def normalized_header_unit(unit: str) -> str:
+    normalized = unit.strip().lower()
+    if normalized in {"meter", "meters", "metre", "metres", "m"}:
+        return "m"
+    if normalized in {"feet", "foot", "ft"}:
+        return "ft"
+    if normalized in {"millisecond", "milliseconds", "ms"}:
+        return "ms"
+    return normalized
+
+
+def header_measure(text_header: str, label: str) -> tuple[float, str] | None:
+    pattern = rf"\b{re.escape(label)}\s*:\s*{HEADER_MEASURE_PATTERN}"
+    match = re.search(pattern, text_header, re.IGNORECASE)
+    if not match:
+        return None
+    return float(match.group(1)), normalized_header_unit(match.group(2))
+
+
+def header_shift_up_m(text_header: str) -> float:
+    match = re.search(rf"\bshifted\s+up\s+{HEADER_MEASURE_PATTERN}", text_header, re.IGNORECASE)
+    if not match:
+        return 0.0
+    value = float(match.group(1))
+    unit = normalized_header_unit(match.group(2))
+    if unit == "ft":
+        return value * FT_TO_M
+    if unit == "m":
+        return value
+    return 0.0
+
+
+def header_value_to_m(value: float, unit: str) -> float | None:
+    if unit == "ft":
+        return value * FT_TO_M
+    if unit == "m":
+        return value
+    return None
+
+
+def measures_close(actual: float, expected: float, relative_tolerance: float = 0.05) -> bool:
+    tolerance = max(0.01, abs(expected) * relative_tolerance)
+    return abs(actual - expected) <= tolerance
+
+
+def sample_axis_from_header(
+    text_header: str,
+    raw_samples: np.ndarray,
+    domain: tuple[str, str],
+) -> tuple[np.ndarray, tuple[str, str], str | None, dict[str, Any]]:
+    raw_spacing = float(abs(float(raw_samples[1]) - float(raw_samples[0]))) if len(raw_samples) > 1 else 0.0
+    raw_min = float(raw_samples[0]) if len(raw_samples) else 0.0
+    raw_max = float(raw_samples[-1]) if len(raw_samples) else 0.0
+    metadata: dict[str, Any] = {
+        "source": "segy-sample-labels",
+        "rawSampleRange": [round(raw_min, 6), round(raw_max, 6)],
+        "rawSampleSpacing": round(raw_spacing, 6),
+        "warnings": [],
+    }
+    if domain[0] != "depth":
+        return raw_samples, domain, None, metadata
+
+    sample_measure = header_measure(text_header, "SAMPLE INT")
+    if not sample_measure:
+        metadata["warnings"].append("SEG-Y textual header has no SAMPLE INT entry for depth axis.")
+        return raw_samples, domain, None, metadata
+
+    spacing_value, spacing_unit = sample_measure
+    spacing_m = header_value_to_m(spacing_value, spacing_unit)
+    if spacing_m is None:
+        metadata["warnings"].append(f"Unsupported depth SAMPLE INT unit: {spacing_unit}.")
+        return raw_samples, domain, None, metadata
+
+    trace_length_measure = header_measure(text_header, "TRACE LENGTH")
+    trace_length_m = (
+        header_value_to_m(trace_length_measure[0], trace_length_measure[1])
+        if trace_length_measure
+        else None
+    )
+    raw_samples_m = raw_samples.astype(np.float32) * np.float32(FT_TO_M if spacing_unit == "ft" else 1.0)
+    interval_samples_m = np.arange(len(raw_samples), dtype=np.float32) * np.float32(spacing_m)
+    interval_max = float(interval_samples_m[-1]) if len(interval_samples_m) else 0.0
+    raw_max_m = float(raw_samples_m[-1]) if len(raw_samples_m) else 0.0
+    source_unit_status = (
+        "header-indicated-depth-ft-converted-to-m"
+        if spacing_unit == "ft"
+        else "header-indicated-depth-m"
+    )
+    metadata.update(
+        {
+            "source": "header-sample-interval",
+            "headerSampleInterval": {"value": spacing_value, "unit": spacing_unit},
+            "headerTraceLength": (
+                {"value": trace_length_measure[0], "unit": trace_length_measure[1]}
+                if trace_length_measure
+                else None
+            ),
+            "unitConversion": (
+                "source depth feet converted to scene metres"
+                if spacing_unit == "ft"
+                else "source depth metres preserved"
+            ),
+        }
+    )
+
+    if trace_length_m and interval_max > trace_length_m * 1.05:
+        metadata["warnings"].append(
+            "Header SAMPLE INT over-runs TRACE LENGTH for the SEG-Y sample count; "
+            "using TRACE LENGTH to keep the section in the declared depth range."
+        )
+        if raw_max_m and measures_close(raw_max_m, trace_length_m):
+            metadata["source"] = "segy-sample-labels-validated-by-header-trace-length"
+            return raw_samples_m, ("depth", "m"), source_unit_status, metadata
+        metadata["source"] = "header-trace-length-derived"
+        samples_m = np.linspace(0.0, trace_length_m, len(raw_samples), dtype=np.float32)
+        return samples_m, ("depth", "m"), source_unit_status, metadata
+
+    if trace_length_m and interval_max < trace_length_m * 0.5 and raw_max_m and measures_close(raw_max_m, trace_length_m):
+        metadata["warnings"].append(
+            "Header SAMPLE INT under-runs TRACE LENGTH while SEG-Y sample labels match TRACE LENGTH; "
+            "using sample labels converted to scene metres."
+        )
+        metadata["source"] = "segy-sample-labels-validated-by-header-trace-length"
+        return raw_samples_m, ("depth", "m"), source_unit_status, metadata
+
+    if raw_max_m and measures_close(raw_max_m, interval_max):
+        metadata["source"] = "segy-sample-labels-validated-by-header-sample-interval"
+        return raw_samples_m, ("depth", "m"), source_unit_status, metadata
+
+    return interval_samples_m, ("depth", "m"), source_unit_status, metadata
+
+
 def survey_kind(path: Path) -> str:
     parts = [p.lower() for p in path.parts]
     name = path.name.lower()
@@ -728,10 +879,15 @@ def survey_kind(path: Path) -> str:
 
 
 def parsed_datum_m(text_header: str) -> float | None:
-    match = re.search(r"\bDATUM\s*:\s*([0-9]+(?:\.[0-9]+)?)\s*m\b", text_header, re.IGNORECASE)
-    if not match:
+    datum_measure = header_measure(text_header, "DATUM")
+    if not datum_measure:
         return None
-    return float(match.group(1))
+    value, unit = datum_measure
+    if unit == "ft":
+        return value * FT_TO_M - header_shift_up_m(text_header)
+    if unit == "m":
+        return value
+    return None
 
 
 def datum_for(text_header: str) -> float:
@@ -942,7 +1098,7 @@ def read_text_header(f: segyio.SegyFile) -> str:
     for encoding in ("ascii", "cp500", "latin-1"):
         text = raw.decode(encoding, errors="replace")
         if "CLIENT" in text or encoding == "latin-1":
-            return " ".join(text.split())[:900]
+            return " ".join(text.split())[:3200]
     return ""
 
 
@@ -996,6 +1152,130 @@ def round_scene_point(point: list[float] | tuple[float, ...]) -> list[float]:
 
 def scene_from_utm(easting: float, northing: float, elevation: float = 0.0) -> list[float]:
     return round_scene_point(source_to_scene(easting, northing, elevation, UTAH_FORGE_HORIZONTAL_CRS))
+
+
+def legacy_state_plane_header(text_header: str) -> bool:
+    text = text_header.lower()
+    return "state plane" in text and ("nad 27" in text or "nad27" in text)
+
+
+def custom_trace_coordinate_fields() -> dict[str, Any]:
+    return {
+        "cmpX": {"byte": 189, "format": "ibm-real-4"},
+        "cmpY": {"byte": 193, "format": "ibm-real-4"},
+        "inline": {"bytes": [9, 10], "format": "int16"},
+        "crossline": {"bytes": [13, 14], "format": "int16"},
+    }
+
+
+def custom_trace_geometry(
+    *,
+    trace_count: int,
+    rows: list[dict[str, Any]],
+    geometry_source: str,
+    coordinate_fields: dict[str, Any] | None = None,
+    source_coordinate_system: dict[str, Any] | None = None,
+    coordinate_transform: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    geometry: dict[str, Any] = {
+        "status": "trace-header-derived",
+        "geometrySource": geometry_source,
+        "traceCount": trace_count,
+        "rows": rows,
+        "coordinateFields": coordinate_fields or custom_trace_coordinate_fields(),
+    }
+    if source_coordinate_system:
+        geometry["sourceCoordinateSystem"] = source_coordinate_system
+    if coordinate_transform:
+        geometry["coordinateTransform"] = coordinate_transform
+    grid = trace_geometry_grid(rows)
+    if grid:
+        geometry["grid"] = grid
+    return geometry
+
+
+def state_plane_candidate_transform(
+    raw_rows: list[dict[str, Any]],
+    trace_count: int,
+    text_header: str,
+) -> dict[str, Any] | None:
+    if not legacy_state_plane_header(text_header) or not raw_rows:
+        return None
+
+    best_candidate: tuple[int, float, dict[str, Any], list[dict[str, Any]]] | None = None
+    for candidate in LEGACY_STATE_PLANE_CRS_CANDIDATES:
+        transformer = Transformer.from_crs(f"EPSG:{candidate['epsg']}", UTAH_FORGE_HORIZONTAL_CRS, always_xy=True)
+        transformed_rows: list[dict[str, Any]] = []
+        eastings: list[float] = []
+        northings: list[float] = []
+        for row in raw_rows:
+            source_x, source_y = row["sourceCmp"]
+            try:
+                easting, northing = transformer.transform(float(source_x), float(source_y))
+            except Exception:
+                continue
+            if not plausible_utm(easting, northing):
+                continue
+            eastings.append(float(easting))
+            northings.append(float(northing))
+            transformed_rows.append(
+                {
+                    "traceIndex": row["traceIndex"],
+                    "inline": row["inline"],
+                    "crossline": row["crossline"],
+                    "sourceCmp": row["sourceCmp"],
+                    "cmpUtm": [float(easting), float(northing)],
+                    "scene": scene_from_utm(float(easting), float(northing), 0.0),
+                }
+            )
+        if len(transformed_rows) < max(4, int(trace_count * 0.8)):
+            continue
+        centroid_distance = math.hypot(
+            (sum(eastings) / len(eastings)) - UTAH_FORGE_EXPECTED_UTM_CENTER[0],
+            (sum(northings) / len(northings)) - UTAH_FORGE_EXPECTED_UTM_CENTER[1],
+        )
+        if best_candidate is None or len(transformed_rows) > best_candidate[0] or (
+            len(transformed_rows) == best_candidate[0] and centroid_distance < best_candidate[1]
+        ):
+            best_candidate = (len(transformed_rows), centroid_distance, candidate, transformed_rows)
+
+    if best_candidate is None:
+        return None
+
+    _, centroid_distance, candidate, rows = best_candidate
+    return custom_trace_geometry(
+        trace_count=trace_count,
+        rows=rows,
+        geometry_source="trace-header-cmp-ibm-real-state-plane-nad27-ftus-to-utm",
+        coordinate_fields={
+            **custom_trace_coordinate_fields(),
+            "sourceCoordinateSystem": {
+                "epsg": candidate["epsg"],
+                "name": candidate["name"],
+                "unit": "US survey foot",
+            },
+            "targetCoordinateSystem": {
+                "epsg": 26912,
+                "name": "NAD83 / UTM Zone 12N",
+                "unit": "metre",
+            },
+        },
+        source_coordinate_system={
+            "epsg": candidate["epsg"],
+            "name": candidate["name"],
+            "unit": "US survey foot",
+            "headerEvidence": "US STATE PLANE NAD 27",
+            "selectionReason": candidate["reason"],
+        },
+        coordinate_transform={
+            "method": "pyproj.Transformer.from_crs(..., EPSG:26912, always_xy=True)",
+            "targetEpsg": 26912,
+            "candidateEpsg": candidate["epsg"],
+            "acceptedTraceCount": len(rows),
+            "centroidDistanceToForgeM": round(centroid_distance, 3),
+            "selectionRule": "choose transformed candidate with plausible UTM coordinates nearest expected FORGE survey center",
+        },
+    )
 
 
 def scaled_header_coordinate(value: float, scalar: int) -> float:
@@ -1125,6 +1405,10 @@ def trace_geometry_manifest_summary(
             "registration claims remain review-gated until control-point validation."
         ),
     }
+    if geometry.get("sourceCoordinateSystem"):
+        summary["sourceCoordinateSystem"] = geometry["sourceCoordinateSystem"]
+    if geometry.get("coordinateTransform"):
+        summary["coordinateTransform"] = geometry["coordinateTransform"]
     grid = geometry.get("grid")
     if grid:
         corner_rows = grid_corner_rows(grid)
@@ -1153,10 +1437,12 @@ def read_custom_trace_header_geometry(
     sample_count: int,
     sample_format: int,
     ext_headers: int,
+    text_header: str,
 ) -> dict[str, Any] | None:
     trace_stride = 240 + sample_count * sample_byte_size(sample_format)
     data_start = 3600 + ext_headers * 3200
     rows: list[dict[str, Any]] = []
+    raw_rows: list[dict[str, Any]] = []
     with path.open("rb") as source:
         for trace_index in range(trace_count):
             source.seek(data_start + trace_index * trace_stride)
@@ -1167,35 +1453,34 @@ def read_custom_trace_header_geometry(
             crossline = int16_be(header[segy_header_offset(13) : segy_header_offset(13) + 2])
             cmp_x = ibm_float32(header[segy_header_offset(189) : segy_header_offset(189) + 4])
             cmp_y = ibm_float32(header[segy_header_offset(193) : segy_header_offset(193) + 4])
+            if cmp_x is None or cmp_y is None or not math.isfinite(cmp_x) or not math.isfinite(cmp_y):
+                continue
+            base_row = {
+                "traceIndex": trace_index,
+                "inline": inline if inline and inline > 0 else None,
+                "crossline": crossline if crossline and crossline > 0 else None,
+                "sourceCmp": [float(cmp_x), float(cmp_y)],
+            }
+            raw_rows.append(base_row)
             if not plausible_utm(cmp_x, cmp_y):
                 continue
             rows.append(
                 {
                     "traceIndex": trace_index,
-                    "inline": inline if inline and inline > 0 else None,
-                    "crossline": crossline if crossline and crossline > 0 else None,
+                    "inline": base_row["inline"],
+                    "crossline": base_row["crossline"],
+                    "sourceCmp": base_row["sourceCmp"],
                     "cmpUtm": [float(cmp_x), float(cmp_y)],
                     "scene": scene_from_utm(float(cmp_x), float(cmp_y), 0.0),
                 }
             )
-    if len(rows) < max(4, int(trace_count * 0.8)):
-        return None
-    geometry: dict[str, Any] = {
-        "status": "trace-header-derived",
-        "geometrySource": "trace-header-cmp-ibm-real",
-        "traceCount": trace_count,
-        "rows": rows,
-        "coordinateFields": {
-            "cmpX": {"byte": 189, "format": "ibm-real-4"},
-            "cmpY": {"byte": 193, "format": "ibm-real-4"},
-            "inline": {"bytes": [9, 10], "format": "int16"},
-            "crossline": {"bytes": [13, 14], "format": "int16"},
-        },
-    }
-    grid = trace_geometry_grid(rows)
-    if grid:
-        geometry["grid"] = grid
-    return geometry
+    if len(rows) >= max(4, int(trace_count * 0.8)):
+        return custom_trace_geometry(
+            trace_count=trace_count,
+            rows=rows,
+            geometry_source="trace-header-cmp-ibm-real",
+        )
+    return state_plane_candidate_transform(raw_rows, trace_count, text_header)
 
 
 def read_standard_trace_header_geometry(path: Path, trace_count: int) -> dict[str, Any] | None:
@@ -1241,6 +1526,7 @@ def read_trace_header_geometry(
     sample_count: int,
     sample_format: int,
     ext_headers: int,
+    text_header: str,
 ) -> dict[str, Any]:
     custom = read_custom_trace_header_geometry(
         path,
@@ -1248,6 +1534,7 @@ def read_trace_header_geometry(
         sample_count,
         sample_format,
         ext_headers,
+        text_header,
     )
     if custom:
         return custom
@@ -1267,14 +1554,22 @@ def source_unit_status_for(
     path: Path,
     text_header: str,
     domain: tuple[str, str],
+    header_status: str | None = None,
 ) -> str:
     if domain[1] != "m":
         return "not-depth-m-domain"
+    if header_status:
+        return header_status
+    sample_measure = header_measure(text_header, "SAMPLE INT")
+    if sample_measure and sample_measure[1] == "ft":
+        return "header-indicated-depth-ft-converted-to-m"
+    if sample_measure and sample_measure[1] == "m":
+        return "header-indicated-depth-m"
     text = text_header.lower()
     if re.search(r"\b(meters?|metres?)\b", text) or re.search(r"\b[0-9]+(?:\.[0-9]+)?\s*m\b", text):
         return "header-indicated-depth-m"
     if re.search(r"\b(feet|foot|ft)\b", text):
-        return "header-indicated-nonmetric-depth-review-required"
+        return "header-indicated-depth-ft-converted-to-m"
     if "migr-depth" in path.name.lower() or "migrated" in text and "depth" in text:
         return "header-unresolved-filename-inferred-depth-m"
     return "header-unresolved-filename-inferred-depth-m"
@@ -2001,25 +2296,28 @@ def build_product(
 
     with segyio.open(str(path), "r", strict=False, ignore_geometry=True) as f:
         trace_count = f.tracecount
-        samples = np.asarray(f.samples[:], dtype=np.float32)
-        sample_count = len(samples)
+        raw_samples = np.asarray(f.samples[:], dtype=np.float32)
+        sample_count = len(raw_samples)
         sample_interval = float(segyio.tools.dt(f) or 0)
         sample_format = int(f.bin[segyio.BinField.Format])
         ext_headers = int(getattr(f, "ext_headers", 0) or 0)
         text_header = read_text_header(f)
         datum = datum_for(text_header)
+    samples, domain, header_unit_status, sample_axis_metadata = sample_axis_from_header(text_header, raw_samples, domain)
+    sample_count = len(samples)
     sample_spacing = (
         float(abs(float(samples[1]) - float(samples[0])))
         if sample_count > 1
         else 0.0
     )
-    source_unit_status = source_unit_status_for(path, text_header, domain)
+    source_unit_status = source_unit_status_for(path, text_header, domain, header_unit_status)
     trace_geometry = read_trace_header_geometry(
         path,
         trace_count,
         sample_count,
         sample_format,
         ext_headers,
+        text_header,
     )
     source_geometry = trace_geometry_manifest_summary(trace_geometry, samples, domain, datum)
     product_bounds = source_geometry.get("sceneBounds") or nav_bounds
@@ -2233,6 +2531,7 @@ def build_product(
         sample_max=float(samples[-1]) if len(samples) else 0,
         sample_interval=sample_interval,
         sample_spacing=sample_spacing,
+        sample_axis_metadata=sample_axis_metadata,
         source_geometry=source_geometry,
         source_unit_status=source_unit_status,
         stats=stats,
@@ -2289,6 +2588,7 @@ def product_to_manifest(product: Product) -> dict[str, Any]:
             },
             "segySampleIntervalRaw": product.sample_interval,
             "sourceUnitStatus": product.source_unit_status,
+            "axisSource": product.sample_axis_metadata,
         },
         "amplitudeStats": {k: round(v, 6) for k, v in product.stats.items()},
         "sections": product.sections,
@@ -2376,6 +2676,125 @@ def required_line_source_gates(products: list[Product]) -> list[dict[str, Any]]:
     return gates
 
 
+def project_seismic_product_metadata(products: list[Product]) -> list[dict[str, Any]]:
+    return [
+        {
+            "id": p.id,
+            "label": p.label,
+            "lineId": p.line_id,
+            "lineLabel": p.line_label,
+            "processingStage": p.processing_stage,
+            "canonicalLabel": p.canonical_label,
+            "nameEvidence": p.name_evidence,
+            "sourceSubmission": p.source_submission,
+            "sourceFile": rel(p.normalized_source_file),
+            "surveyKind": p.survey_kind,
+            "productKind": p.product_kind,
+            "domainKind": p.domain_kind,
+            "domainUnit": p.domain_unit,
+            "datumM": p.datum_m,
+            "sourceUnitStatus": p.source_unit_status,
+            "sourceGeometry": p.source_geometry,
+            "traceCount": p.trace_count,
+            "sampleCount": p.sample_count,
+            "raymarchCapable": p.raymarch_volume is not None,
+        }
+        for p in products
+    ]
+
+
+def seismic_product_catalog_capability_presets(products: list[Product]) -> list[dict[str, Any]]:
+    line_order = {"301": 0, "302": 1, "L11": 2, "L5": 3}
+    catalog_products = sorted(
+        [product for product in products if product.line_id in line_order],
+        key=lambda product: (line_order[product.line_id], product.processing_stage, product.label),
+    )
+    presets: list[dict[str, Any]] = []
+    for index, product in enumerate(catalog_products):
+        presets.append(
+            {
+                "id": f"seismic-product-{product.id}",
+                "label": product.label,
+                "rank": 100 + index,
+                "summary": f"{product.line_label} {product.processing_stage} source product.",
+                "displayRecipeId": "2d-line-theatre",
+                "productId": product.id,
+                "visibleProductIds": [product.id],
+                "renderMode": "slice",
+                "sliceAxis": "line",
+                "sliceFraction": 0.5,
+                "opacity": 0.74,
+                "amplitudeMin": 0.08,
+                "amplitudeMax": 0.92,
+                "amplitudeGamma": 1.0,
+                "colormap": "blue-white-red",
+                "backgroundCutoff": 0.16,
+                "volumeSampleSteps": 96,
+                "timeScale": TIME_SCALE_M_PER_MS,
+                "navigationVisible": True,
+                "sliceThroughVolume": False,
+                "comparisonMode": "overlay",
+                "mtCoRender": "seismic",
+                "navigationRoleVisibility": {
+                    "sources": True,
+                    "receivers": True,
+                    "lines": True,
+                },
+                "removeBackground": False,
+                "capabilityGroup": "seismic-product-catalog",
+                "mtStylePatch": {
+                    "opacity": 0.05,
+                    "scalarLegendVisible": False,
+                },
+                "cameraShot": f"line-{product.line_id.lower()}-product-catalog",
+                "badges": [
+                    "public geothermal demo data",
+                    "processed seismic product",
+                    "not a mineral resource estimate",
+                ],
+                "caveats": [
+                    "public geothermal demo data",
+                    "processed seismic product",
+                    "not a mineral resource estimate",
+                ],
+            }
+        )
+    return presets
+
+
+def sync_project_seismic_layer(
+    products: list[Product],
+    manifest: dict[str, Any],
+    source_gates: list[dict[str, Any]],
+    required_product_source_gates: list[dict[str, Any]],
+) -> None:
+    project_path = PROJECT_ROOT / "project.json"
+    if not project_path.exists():
+        return
+    project = json.loads(project_path.read_text(encoding="utf-8"))
+    layers = project.get("layers")
+    if not isinstance(layers, list):
+        return
+    seismic_layer = next(
+        (layer for layer in layers if layer.get("id") == "utah-forge-phase3-seismic-browser"),
+        None,
+    )
+    if not seismic_layer:
+        return
+    metadata = seismic_layer.setdefault("metadata", {})
+    metadata["derivedArtifactDate"] = DERIVED_DATE
+    metadata["defaultSeismicProductId"] = manifest["defaultProductId"]
+    metadata["seismicProducts"] = project_seismic_product_metadata(products)
+    metadata["seismicVerticalReference"] = manifest["verticalReference"]
+    metadata["seismicValueEncoding"] = manifest["valueEncoding"]
+    metadata["seismicRequiredLineSourceGates"] = source_gates
+    metadata["seismicRequiredProductSourceGates"] = required_product_source_gates
+    existing_presets = metadata.get("seismicCapabilityPresets")
+    if not isinstance(existing_presets, list):
+        metadata["seismicCapabilityPresets"] = manifest["capabilityPresets"]
+    project_path.write_text(json.dumps(project, indent=2), encoding="utf-8")
+
+
 def main() -> None:
     ensure_dir(PHASE3_SOURCE_ROOT)
     ensure_dir(PHASE3_PROCESSED_ROOT)
@@ -2390,6 +2809,7 @@ def main() -> None:
     products.sort(key=lambda p: (p.survey_kind != "3d", p.product_kind, p.label))
     source_gates = required_line_source_gates(products)
     required_product_source_gates = normalization.get("requiredProductSourceGates", [])
+    capability_presets = seismic_product_catalog_capability_presets(products)
 
     inventory = {
         "schema": "geosee.seismic-source-inventory.v1",
@@ -2451,7 +2871,7 @@ def main() -> None:
         "crs": {
             "rendered": "scene-local meters",
             "primarySourceCrs": "EPSG:26912 NAD83 / UTM Zone 12N",
-            "legacySourceCrs": "EPSG:32043 NAD27 / Utah Central, US survey foot",
+            "legacySourceCrs": "EPSG:32043/EPSG:32044 NAD27 Utah State Plane, US survey foot",
             "axisConvention": "X east, Y north, Z up",
             "sceneOriginUtm": project_origin_payload(),
             "registrationStatus": "unverified",
@@ -2470,6 +2890,7 @@ def main() -> None:
                 "All seismic render coordinates use absolute elevation metres in the same scene Z frame as terrain and wells.",
                 "Time-domain products use a display scale in meters per millisecond below their parsed source datum.",
                 "Depth-domain products use depth below their parsed seismic datum where the source product is depth migrated.",
+                "Depth sample axes are resolved from the textual SEG-Y header; inconsistent SAMPLE INT and TRACE LENGTH combinations are recorded in product sampleDomain.axisSource.",
             ],
         },
         "requiredLineSourceGates": source_gates,
@@ -2477,7 +2898,7 @@ def main() -> None:
             "coordinateSystem": "scene-local meters, X east, Y north, Z up",
             "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
             "referenceDatumM": SEISMIC_REFERENCE_DATUM_M,
-            "sourceDatumStrategy": "parse SEG-Y text header DATUM field; fall back to 1800 m when absent",
+            "sourceDatumStrategy": "parse SEG-Y text header DATUM field; convert feet to metres; apply documented datum shifts when present; fall back to 1800 m when absent",
             "transform": "sceneZ_m = datumM - sample * verticalScaleMPerUnit",
             "calibration": TOP_OF_GRANITE_CALIBRATION,
             "notes": [
@@ -2493,6 +2914,7 @@ def main() -> None:
                 "displayRangeMPerS": VELOCITY_DISPLAY_RANGE_M_PER_S,
             },
         },
+        "capabilityPresets": capability_presets,
         "products": [product_to_manifest(product) for product in products],
         "sourceFiles": [entry["normalizedPath"] for entry in normalization["normalizedFiles"]],
         "requiredProductSourceGates": required_product_source_gates,
@@ -2503,12 +2925,19 @@ def main() -> None:
             "notes": [
                 "Browser artifacts are source-derived visual representations generated from SEG-Y trace and sample grids.",
                 "Raymarch volumes are browser-ready source-fidelity amplitude textures for visual communication; they are not certified for engineering design or interpretation decisions.",
-                "Legacy L5/L11 sections are approximate reference curtains when no delivered navigation line exists; fallback endpoints are not ground truth and cannot support precise registration claims.",
+                "Legacy L5/L11 sections use trace-header CMP coordinates transformed from declared NAD27 State Plane feet when those coordinates resolve to plausible EPSG:26912 UTM placement.",
+                "Fallback endpoints remain available only for products with no delivered trace or navigation geometry and cannot support precise registration claims.",
             ],
         },
     }
     manifest_path = PHASE3_PROCESSED_ROOT / "browser" / "seismic_manifest.json"
     write_json(manifest_path, manifest)
+    sync_project_seismic_layer(
+        products,
+        manifest,
+        source_gates,
+        required_product_source_gates,
+    )
 
     provenance = {
         "schema": "geosee.provenance.v1",

@@ -530,7 +530,7 @@
         "sourceStem": "Forge3d_Poststack_Time_Migration_FXYDecon_Stack",
         "sourceSubmission": "GDR 1141",
         "sourceFile": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/3D Survey/Forge3d_Poststack_Time_Migration_FXYDecon_Stack.segy",
-        "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE Forge3d POSTSTACK Migration AREA Utah C 3 YEAR ACQUIRED: 2017 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 2ms TRACE LENGTH: 4000 ms C 5 C 6 COORD SYSTEM:METRIC GEODETIC DATUM:NAD83 UTM 12 N C 7 PROJECTION:MOLODENSKY/TM C 8 C 9 DATE:3/28/2019 C10 DATUM: 1800 m REPLACEMENT VELOCITY: 2500 m/s C12 CMP Bin : 25m x 25m C13 PRODUCT: POSTMigration Stack C14 IL 1, XL 1, (332800.5, 4260778.0 ) C15 IL 170, XL 1, (322874.25, 4265002.25) C16 IL 170, XL 213,(338173.44, 4264910.0 ) C17 C18 C19 C20 C21 PROCESSING FLOW: C22 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C23 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C24 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C25 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C26 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C27 POST DECON NOISE ATTENUAT"
+        "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE Forge3d POSTSTACK Migration AREA Utah C 3 YEAR ACQUIRED: 2017 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 2ms TRACE LENGTH: 4000 ms C 5 C 6 COORD SYSTEM:METRIC GEODETIC DATUM:NAD83 UTM 12 N C 7 PROJECTION:MOLODENSKY/TM C 8 C 9 DATE:3/28/2019 C10 DATUM: 1800 m REPLACEMENT VELOCITY: 2500 m/s C12 CMP Bin : 25m x 25m C13 PRODUCT: POSTMigration Stack C14 IL 1, XL 1, (332800.5, 4260778.0 ) C15 IL 170, XL 1, (322874.25, 4265002.25) C16 IL 170, XL 213,(338173.44, 4264910.0 ) C17 C18 C19 C20 C21 PROCESSING FLOW: C22 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C23 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C24 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C25 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C26 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C27 POST DECON NOISE ATTENUATION - SPECTRAL EDIT and DESPIKE C28 RESIDUAL STATICS, AGC, PSTM, Interpolation in OFFBIN, STACK C29 Poststack migration, Bandpass 6-65/-20DB C30 C31 C32 CMP_X: byte 189 4 byte ibm real C33 CMP_X: byte 193 4 byte ibm real C34 BIN_ELEV byte 53 4 byte C35 HEADER FOR FINAL DATUM CMP_STAT: byte 201 4 byte ibm real C36 C37 C38 C39 SEG Y REV1 C40 END EBCDIC"
       },
       "sourceSubmission": "GDR 1141",
       "sourceFile": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/3D Survey/Forge3d_Poststack_Time_Migration_FXYDecon_Stack.segy",
@@ -617,7 +617,7 @@
         "sourceStem": "Forge3d_ANI_PSDM_Stack_UnEnh",
         "sourceSubmission": "GDR 1141",
         "sourceFile": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/3D Survey/Forge3d_ANI_PSDM_Stack_UnEnh.segy",
-        "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE Forge3d AniPSDM Stack UnEnhanced AREA Utah C 3 YEAR ACQUIRED: 2017 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 5m TRACE LENGTH: 5000 m C 5 C 6 COORD SYSTEM:METRIC GEODETIC DATUM:NAD83 UTM 12 N C 7 PROJECTION:MOLODENSKY/TM C 8 C 9 DATE:4/12/2019 C10 DATUM: 1800 m REPLACEMENT VELOCITY: 2500 m/s C12 CMP Bin : 25m x 25m C13 PRODUCT: Aniso PSDM UnEnhanced Stack C14 IL 1, XL 1, (332800.5, 4260778.0 ) C15 IL 170, XL 1, (322874.25, 4265002.25) C16 IL 170, XL 213,(338173.44, 4264910.0 ) C17 C18 C19 C20 C21 PROCESSING FLOW: C22 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C23 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C24 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C25 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C26 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C27 POST DECON NOI"
+        "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE Forge3d AniPSDM Stack UnEnhanced AREA Utah C 3 YEAR ACQUIRED: 2017 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 5m TRACE LENGTH: 5000 m C 5 C 6 COORD SYSTEM:METRIC GEODETIC DATUM:NAD83 UTM 12 N C 7 PROJECTION:MOLODENSKY/TM C 8 C 9 DATE:4/12/2019 C10 DATUM: 1800 m REPLACEMENT VELOCITY: 2500 m/s C12 CMP Bin : 25m x 25m C13 PRODUCT: Aniso PSDM UnEnhanced Stack C14 IL 1, XL 1, (332800.5, 4260778.0 ) C15 IL 170, XL 1, (322874.25, 4265002.25) C16 IL 170, XL 213,(338173.44, 4264910.0 ) C17 C18 C19 C20 C21 PROCESSING FLOW: C22 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C23 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C24 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C25 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C26 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C27 POST DECON NOISE ATTENUATION - SPECTRAL EDIT and DESPIKE C28 RESIDUAL STATICS, AGC, Interpolation on OFFBIN, Anisotropic PSDM C29 Bandpass 4-8-80-120, STACK C30 C31 C32 CMP_X: byte 189 4 byte ibm real C33 CMP_X: byte 193 4 byte ibm real C34 BIN_ELEV byte 53 4 byte C35 HEADER FOR FINAL DATUM CMP_STAT: byte 201 4 byte ibm real C36 C37 C38 C39 SEG Y REV1 C40 END EBCDIC"
       },
       "sourceSubmission": "GDR 1141",
       "sourceFile": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/3D Survey/Forge3d_ANI_PSDM_Stack_UnEnh.segy",
@@ -757,7 +757,7 @@
         "sourceStem": "Forge3d_PSTM_Stack_Enh",
         "sourceSubmission": "GDR 1141",
         "sourceFile": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/3D Survey/Forge3d_PSTM_Stack_Enh.segy",
-        "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE Forge3d PSTM Stack Enhanced AREA Utah C 3 YEAR ACQUIRED: 2017 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 4ms TRACE LENGTH: 4000 ms C 5 C 6 COORD SYSTEM:METRIC GEODETIC DATUM:NAD83 UTM 12 N C 7 PROJECTION:MOLODENSKY/TM C 8 C 9 DATE:3/28/2019 C10 DATUM: 1800 m REPLACEMENT VELOCITY: 2500 m/s C12 CMP Bin : 25m x 25m C13 PRODUCT: PSTM Stack in time C14 IL 1, XL 1, (332800.5, 4260778.0 ) C15 IL 170, XL 1, (322874.25, 4265002.25) C16 IL 170, XL 213,(338173.44, 4264910.0 ) C17 C18 C19 C20 C21 PROCESSING FLOW: C22 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C23 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C24 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C25 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C26 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C27 POST DECON NOISE ATTENUATI"
+        "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE Forge3d PSTM Stack Enhanced AREA Utah C 3 YEAR ACQUIRED: 2017 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 4ms TRACE LENGTH: 4000 ms C 5 C 6 COORD SYSTEM:METRIC GEODETIC DATUM:NAD83 UTM 12 N C 7 PROJECTION:MOLODENSKY/TM C 8 C 9 DATE:3/28/2019 C10 DATUM: 1800 m REPLACEMENT VELOCITY: 2500 m/s C12 CMP Bin : 25m x 25m C13 PRODUCT: PSTM Stack in time C14 IL 1, XL 1, (332800.5, 4260778.0 ) C15 IL 170, XL 1, (322874.25, 4265002.25) C16 IL 170, XL 213,(338173.44, 4264910.0 ) C17 C18 C19 C20 C21 PROCESSING FLOW: C22 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C23 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C24 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C25 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C26 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C27 POST DECON NOISE ATTENUATION - SPECTRAL EDIT and DESPIKE C28 RESIDUAL STATICS, AGC, PSTM, BILATERAL FILTER, STACK C29 FXY DECON, FKXKY FILTER C30 C31 C32 CMP_X: byte 189 4 byte ibm real C33 CMP_Y: byte 193 4 byte ibm real C34 BIN_ELEV byte 53 4 byte C35 HEADER FOR FINAL DATUM CMP_STAT: byte 201 4 byte ibm real C36 C37 C38 C39 SEG Y REV1 C40 END EBCDIC"
       },
       "sourceSubmission": "GDR 1141",
       "sourceFile": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/3D Survey/Forge3d_PSTM_Stack_Enh.segy",
@@ -844,7 +844,7 @@
         "sourceStem": "Forge3D_velo5D_float_01312018",
         "sourceSubmission": "GDR 1015",
         "sourceFile": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1015/Velocity/Velocity/Forge3D_velo5D_float_01312018.sgy",
-        "textHeaderExcerpt": "C01 Client: University of Utah Dataset: Forge3D_velo5D_float_01312018.sgy C02 Project: Forge 3D velocity volume at floating datum C03 Area: Beaver Co., UT C04 Date of file: January 31, 2018 C05 Media ID: 01312018-4 Media Format: SEG-Y, IBM 32-bit float, 4sec, 1ms C06 Recorded By: Paragon Geophysical (2017) C07 Source Type: Vib, 4 swps, Linear sweep 4-84hz, 12s sweep C08 C09 Source Interval: 50 meters Source Line Interval: 375.55 m C10 Receiver Interval: 50 meters Receiver Line Interval: 200 m C11 Sample Interval: 1ms Record Length: 4s Data Samples/Trace: 4000 C12 Datum: 1800 m ASL Replacement Vel: 2500 m/s C13 C14 Key Header Word Byte Locations: C15 Description Byte Loc. Format C16 Inline 9-12 4i C17 Xline 13-16 4i C18 CDP-X 81-84 4i C19 CDP-Y 85-89 4i C20 CDP_elev 41-44 4i C21 FNL_stat 103-106 4i C22 C23 Processing: geometry extract, gain recovery, trace C24 equalization, min phase filt"
+        "textHeaderExcerpt": "C01 Client: University of Utah Dataset: Forge3D_velo5D_float_01312018.sgy C02 Project: Forge 3D velocity volume at floating datum C03 Area: Beaver Co., UT C04 Date of file: January 31, 2018 C05 Media ID: 01312018-4 Media Format: SEG-Y, IBM 32-bit float, 4sec, 1ms C06 Recorded By: Paragon Geophysical (2017) C07 Source Type: Vib, 4 swps, Linear sweep 4-84hz, 12s sweep C08 C09 Source Interval: 50 meters Source Line Interval: 375.55 m C10 Receiver Interval: 50 meters Receiver Line Interval: 200 m C11 Sample Interval: 1ms Record Length: 4s Data Samples/Trace: 4000 C12 Datum: 1800 m ASL Replacement Vel: 2500 m/s C13 C14 Key Header Word Byte Locations: C15 Description Byte Loc. Format C16 Inline 9-12 4i C17 Xline 13-16 4i C18 CDP-X 81-84 4i C19 CDP-Y 85-89 4i C20 CDP_elev 41-44 4i C21 FNL_stat 103-106 4i C22 C23 Processing: geometry extract, gain recovery, trace C24 equalization, min phase filter, surface consistent spiking C25 deconvolution, refraction statics, velocity analysis, C26 residual statics, external model trim statics, top mute, C27 5D Interpolation, velocity analysis, grid 10 x 10 x 20, C28 output to SEG-Y (4sec, 20ms). C29 C30 C31 Bin Definition: NAD 83, UTM 12N (meters) C32 Coord: C33 Inline Xline CDP X-Coord Y-Coord C34 1 1 (SW) 1 332800.50 4260778.00 C35 1 213 (SE) 213 338099.69 4360685.50 C36 170 1 (NW) 35998 332874.25 4265002.50 C37 170 213 (NE) 36210 338173.44 4264910.00 C38 C39 Bin Azimuth: 1 degrees Bin Definition: 25 m by 25 m C40 Processed by STAR Geophysics, INC. Oklahoma City, OK USA Jan 2018"
       },
       "sourceSubmission": "GDR 1015",
       "sourceFile": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1015/Velocity/Velocity/Forge3D_velo5D_float_01312018.sgy",
@@ -911,7 +911,7 @@
         "sourceStem": "Line_301_PDM_Enh",
         "sourceSubmission": "GDR 1141",
         "sourceFile": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Line 301/Line_301_PDM_Enh.segy",
-        "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE 2D -301 Enhanced PSDM AREA Utah C 3 YEAR ACQUIRED: 2017 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 1m TRACE LENGTH: 6000 m C 5 CMP RANGE: 1002-1322 CMP_FOLD: 83 C 6 COORD SYSTEM:METRIC GEODETIC DATUM:NAD83 UTM 12 N C 7 PROJECTION:MOLODENSKY/TM C 8 C 9 DATE:3/28/2019 C10 DATUM: 1800 m REPLACEMENT VELOCITY: 2500 m/s C12 CMP Bin : 12.5 m C13 PRODUCT: PSDM Stack in depth C14 PROCESSING FLOW: C15 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C16 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C17 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C18 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C19 POST DECON NOISE ATTENUATION - SPECTRAL EDIT and DESPIKE C20 RESIDUAL STATICS C21 PSDM tomographic VELOCITY ANALYSIS C22 KIRCHHOFF PSDM C23 BPF, 500 FT MEDIAN SCALING C24 DATA AT FINLA DATUM C25 FXDecon C"
+        "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE 2D -301 Enhanced PSDM AREA Utah C 3 YEAR ACQUIRED: 2017 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 1m TRACE LENGTH: 6000 m C 5 CMP RANGE: 1002-1322 CMP_FOLD: 83 C 6 COORD SYSTEM:METRIC GEODETIC DATUM:NAD83 UTM 12 N C 7 PROJECTION:MOLODENSKY/TM C 8 C 9 DATE:3/28/2019 C10 DATUM: 1800 m REPLACEMENT VELOCITY: 2500 m/s C12 CMP Bin : 12.5 m C13 PRODUCT: PSDM Stack in depth C14 PROCESSING FLOW: C15 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C16 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C17 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C18 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C19 POST DECON NOISE ATTENUATION - SPECTRAL EDIT and DESPIKE C20 RESIDUAL STATICS C21 PSDM tomographic VELOCITY ANALYSIS C22 KIRCHHOFF PSDM C23 BPF, 500 FT MEDIAN SCALING C24 DATA AT FINLA DATUM C25 FXDecon C26 C27 C28 C29 C30 C31 C32 CMP_X: byte 189 4 byte ibm real C33 CMP_X: byte 193 4 byte ibm real C34 BIN_ELEV byte 53 4 byte C35 HEADER FOR FINAL DATUM CMP_STAT: byte 201 4 byte ibm real C36 C37 C38 C39 SEG Y REV1 C40 END EBCDIC"
       },
       "sourceSubmission": "GDR 1141",
       "sourceFile": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Line 301/Line_301_PDM_Enh.segy",
@@ -998,7 +998,7 @@
         "sourceStem": "Line-301_PSDM_UNEnh",
         "sourceSubmission": "GDR 1141",
         "sourceFile": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Line 301/Line-301_PSDM_UNEnh.segy",
-        "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE 2D -301 PSDM UnEnhanced AREA Utah C 3 YEAR ACQUIRED: 2017 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 1m TRACE LENGTH: 6000 m C 5 CMP RANGE: 1002-1322 CMP_FOLD: 83 C 6 COORD SYSTEM:METRIC GEODETIC DATUM:NAD83 UTM 12 N C 7 PROJECTION:MOLODENSKY/TM C 8 C 9 DATE:3/28/2019 C10 DATUM: 1800 m REPLACEMENT VELOCITY: 2500 m/s C12 CMP Bin : 12.5 m C13 PRODUCT: PSDM Stack in depth C14 PROCESSING FLOW: C15 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C16 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C17 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C18 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C19 POST DECON NOISE ATTENUATION - SPECTRAL EDIT and DESPIKE C20 RESIDUAL STATICS C21 PSDM tomographic VELOCITY ANALYSIS C22 KIRCHHOFF PSDM C23 BPF, 500 FT MEDIAN SCALING C24 DATA AT FINLA DATUM C25 C26 C27"
+        "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE 2D -301 PSDM UnEnhanced AREA Utah C 3 YEAR ACQUIRED: 2017 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 1m TRACE LENGTH: 6000 m C 5 CMP RANGE: 1002-1322 CMP_FOLD: 83 C 6 COORD SYSTEM:METRIC GEODETIC DATUM:NAD83 UTM 12 N C 7 PROJECTION:MOLODENSKY/TM C 8 C 9 DATE:3/28/2019 C10 DATUM: 1800 m REPLACEMENT VELOCITY: 2500 m/s C12 CMP Bin : 12.5 m C13 PRODUCT: PSDM Stack in depth C14 PROCESSING FLOW: C15 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C16 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C17 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C18 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C19 POST DECON NOISE ATTENUATION - SPECTRAL EDIT and DESPIKE C20 RESIDUAL STATICS C21 PSDM tomographic VELOCITY ANALYSIS C22 KIRCHHOFF PSDM C23 BPF, 500 FT MEDIAN SCALING C24 DATA AT FINLA DATUM C25 C26 C27 C28 C29 C30 C31 C32 CMP_X: byte 189 4 byte ibm real C33 CMP_X: byte 193 4 byte ibm real C34 BIN_ELEV byte 53 4 byte C35 HEADER FOR FINAL DATUM CMP_STAT: byte 201 4 byte ibm real C36 C37 C38 C39 SEG Y REV1 C40 END EBCDIC"
       },
       "sourceSubmission": "GDR 1141",
       "sourceFile": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Line 301/Line-301_PSDM_UNEnh.segy",
@@ -1152,7 +1152,7 @@
         "sourceStem": "Line_302_PSDM_Enh",
         "sourceSubmission": "GDR 1141",
         "sourceFile": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Line 302/Line_302_PSDM_Enh.segy",
-        "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE 2D -302 Enhanced PSDM AREA Utah C 3 YEAR ACQUIRED: 2017 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 1m TRACE LENGTH: 6000 m C 5 CMP RANGE: 1-307 CMP_FOLD: 90 C 6 COORD SYSTEM:METRIC GEODETIC DATUM:NAD83 UTM 12 N C 7 PROJECTION:MOLODENSKY/TM C 8 C 9 DATE:3/28/2019 C10 DATUM: 1800 m REPLACEMENT VELOCITY: 2500 m/s C12 CMP Bin : 12.5 m C13 PRODUCT: PSDM Stack in depth C14 PROCESSING FLOW: C15 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C16 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C17 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C18 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C19 POST DECON NOISE ATTENUATION - SPECTRAL EDIT and DESPIKE C20 RESIDUAL STATICS C21 PSDM tomographic VELOCITY ANALYSIS C22 KIRCHHOFF PSDM C23 BPF, 500 FT MEDIAN SCALING C24 DATA AT FINLA DATUM C25 FXDecon C26 C"
+        "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE 2D -302 Enhanced PSDM AREA Utah C 3 YEAR ACQUIRED: 2017 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 1m TRACE LENGTH: 6000 m C 5 CMP RANGE: 1-307 CMP_FOLD: 90 C 6 COORD SYSTEM:METRIC GEODETIC DATUM:NAD83 UTM 12 N C 7 PROJECTION:MOLODENSKY/TM C 8 C 9 DATE:3/28/2019 C10 DATUM: 1800 m REPLACEMENT VELOCITY: 2500 m/s C12 CMP Bin : 12.5 m C13 PRODUCT: PSDM Stack in depth C14 PROCESSING FLOW: C15 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C16 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C17 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C18 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C19 POST DECON NOISE ATTENUATION - SPECTRAL EDIT and DESPIKE C20 RESIDUAL STATICS C21 PSDM tomographic VELOCITY ANALYSIS C22 KIRCHHOFF PSDM C23 BPF, 500 FT MEDIAN SCALING C24 DATA AT FINLA DATUM C25 FXDecon C26 C27 C28 C29 C30 C31 C32 CMP_X: byte 189 4 byte ibm real C33 CMP_X: byte 193 4 byte ibm real C34 BIN_ELEV byte 53 4 byte C35 HEADER FOR FINAL DATUM CMP_STAT: byte 201 4 byte ibm real C36 C37 C38 C39 SEG Y REV1 C40 END EBCDIC"
       },
       "sourceSubmission": "GDR 1141",
       "sourceFile": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Line 302/Line_302_PSDM_Enh.segy",
@@ -1196,7 +1196,7 @@
         "sourceStem": "Line_302_PSDM_UNEnh",
         "sourceSubmission": "GDR 1141",
         "sourceFile": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Line 302/Line_302_PSDM_UNEnh.segy",
-        "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE 2D -302 PSDM UnEnhanced AREA Utah C 3 YEAR ACQUIRED: 2017 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 1m TRACE LENGTH: 6000 m C 5 CMP RANGE: 1-307 CMP_FOLD:90 C 6 COORD SYSTEM:METRIC GEODETIC DATUM:NAD83 UTM 12 N C 7 PROJECTION:MOLODENSKY/TM C 8 C 9 DATE:3/28/2019 C10 DATUM: 1800 m REPLACEMENT VELOCITY: 2500 m/s C12 CMP Bin : 12.5 m C13 PRODUCT: PSDM Stack in depth C14 PROCESSING FLOW: C15 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C16 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C17 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C18 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C19 POST DECON NOISE ATTENUATION - SPECTRAL EDIT and DESPIKE C20 RESIDUAL STATICS C21 PSDM tomographic VELOCITY ANALYSIS C22 KIRCHHOFF PSDM C23 BPF, 500 FT MEDIAN SCALING C24 DATA AT FINLA DATUM C25 C26 C27 C28 "
+        "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE 2D -302 PSDM UnEnhanced AREA Utah C 3 YEAR ACQUIRED: 2017 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 1m TRACE LENGTH: 6000 m C 5 CMP RANGE: 1-307 CMP_FOLD:90 C 6 COORD SYSTEM:METRIC GEODETIC DATUM:NAD83 UTM 12 N C 7 PROJECTION:MOLODENSKY/TM C 8 C 9 DATE:3/28/2019 C10 DATUM: 1800 m REPLACEMENT VELOCITY: 2500 m/s C12 CMP Bin : 12.5 m C13 PRODUCT: PSDM Stack in depth C14 PROCESSING FLOW: C15 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C16 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C17 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C18 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C19 POST DECON NOISE ATTENUATION - SPECTRAL EDIT and DESPIKE C20 RESIDUAL STATICS C21 PSDM tomographic VELOCITY ANALYSIS C22 KIRCHHOFF PSDM C23 BPF, 500 FT MEDIAN SCALING C24 DATA AT FINLA DATUM C25 C26 C27 C28 C29 C30 C31 C32 CMP_X: byte 189 4 byte ibm real C33 CMP_X: byte 193 4 byte ibm real C34 BIN_ELEV byte 53 4 byte C35 HEADER FOR FINAL DATUM CMP_STAT: byte 201 4 byte ibm real C36 C37 C38 C39 SEG Y REV1 C40 END EBCDIC"
       },
       "sourceSubmission": "GDR 1141",
       "sourceFile": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Line 302/Line_302_PSDM_UNEnh.segy",
@@ -1283,7 +1283,7 @@
         "sourceStem": "Line_L11_PSDM_Enh",
         "sourceSubmission": "GDR 1141",
         "sourceFile": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Legacy Line 11/Line_L11_PSDM_Enh.segy",
-        "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE 2D -B11 PSDM Enhanced Stack SEGY AREA Utah C 3 YEAR ACQUIRED: 1979 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 2ft TRACE LENGTH: 20000 ft C 5 CMP RANGE: 1-681 CMP_FOLD: 45 C 6 COORD SYSTEM: US STATE PLANE 4302 NAD 27 C 7 C 8 C 9 DATE:3/28/2019 C10 DATUM: 7000 ft REPLACEMENT VELOCITY: 10000 ft/s C12 CMP Bin : 75 ft C13 PRODUCT: PSDM Stack in depth C14 PROCESSING FLOW: C15 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C16 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C17 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C18 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C19 POST DECON NOISE ATTENUATION - SPECTRAL EDIT and DESPIKE C20 RESIDUAL STATICS C21 PSDM tomographic VELOCITY ANALYSIS C22 KIRCHHOFF PSDM C23 BPF, 3000 FT AGC SCALING C24 DATA AT FINAL DATUM C25 FXDECON, TV BANDPASS C26 C27 C28 "
+        "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE 2D -B11 PSDM Enhanced Stack SEGY AREA Utah C 3 YEAR ACQUIRED: 1979 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 2ft TRACE LENGTH: 20000 ft C 5 CMP RANGE: 1-681 CMP_FOLD: 45 C 6 COORD SYSTEM: US STATE PLANE 4302 NAD 27 C 7 C 8 C 9 DATE:3/28/2019 C10 DATUM: 7000 ft REPLACEMENT VELOCITY: 10000 ft/s C12 CMP Bin : 75 ft C13 PRODUCT: PSDM Stack in depth C14 PROCESSING FLOW: C15 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C16 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C17 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C18 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C19 POST DECON NOISE ATTENUATION - SPECTRAL EDIT and DESPIKE C20 RESIDUAL STATICS C21 PSDM tomographic VELOCITY ANALYSIS C22 KIRCHHOFF PSDM C23 BPF, 3000 FT AGC SCALING C24 DATA AT FINAL DATUM C25 FXDECON, TV BANDPASS C26 C27 C28 C29 C30 C31 C32 CMP_X: byte 189 4 byte ibm real C33 CMP_X: byte 193 4 byte ibm real C34 BIN_ELEV byte 53 4 byte C35 HEADER FOR FINAL DATUM CMP_STAT: byte 201 4 byte ibm real C36 C37 C38 C39 SEG Y REV1 C40 END EBCDIC"
       },
       "sourceSubmission": "GDR 1141",
       "sourceFile": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Legacy Line 11/Line_L11_PSDM_Enh.segy",
@@ -1291,25 +1291,93 @@
       "productKind": "psdm",
       "domainKind": "depth",
       "domainUnit": "m",
-      "datumM": 1800.0,
+      "datumM": 2133.6,
       "sourceGeometry": {
-        "status": "unresolved",
-        "geometrySource": "navigation-or-envelope-fallback",
+        "status": "trace-header-derived",
+        "geometrySource": "trace-header-cmp-ibm-real-state-plane-nad27-ftus-to-utm",
         "horizontalCrs": {
           "epsg": 26912,
           "name": "NAD83 / UTM Zone 12N"
         },
         "coordinateBasis": "utm-trace-header-cmp",
         "traceCount": 681,
-        "validTraceCount": 0,
-        "coordinateFields": {},
-        "cmpBoundsUtm": null,
-        "sceneBounds": null,
+        "validTraceCount": 681,
+        "coordinateFields": {
+          "cmpX": {
+            "byte": 189,
+            "format": "ibm-real-4"
+          },
+          "cmpY": {
+            "byte": 193,
+            "format": "ibm-real-4"
+          },
+          "inline": {
+            "bytes": [
+              9,
+              10
+            ],
+            "format": "int16"
+          },
+          "crossline": {
+            "bytes": [
+              13,
+              14
+            ],
+            "format": "int16"
+          },
+          "sourceCoordinateSystem": {
+            "epsg": 32043,
+            "name": "NAD27 / Utah Central (ftUS)",
+            "unit": "US survey foot"
+          },
+          "targetCoordinateSystem": {
+            "epsg": 26912,
+            "name": "NAD83 / UTM Zone 12N",
+            "unit": "metre"
+          }
+        },
+        "cmpBoundsUtm": {
+          "min": [
+            329216.197,
+            4258908.5283
+          ],
+          "max": [
+            334696.9341,
+            4273101.6208
+          ]
+        },
+        "sceneBounds": {
+          "min": [
+            -12251.153,
+            -14465.9717,
+            -3962.4
+          ],
+          "max": [
+            -6770.4159,
+            -272.8792,
+            2133.6
+          ]
+        },
         "registrationStatus": "unverified",
         "canClaimPreciseRegistration": false,
-        "reason": "Trace-header coordinates are used for placement; survey-grade registration claims remain review-gated until control-point validation."
+        "reason": "Trace-header coordinates are used for placement; survey-grade registration claims remain review-gated until control-point validation.",
+        "sourceCoordinateSystem": {
+          "epsg": 32043,
+          "name": "NAD27 / Utah Central (ftUS)",
+          "unit": "US survey foot",
+          "headerEvidence": "US STATE PLANE NAD 27",
+          "selectionReason": "legacy header declares US State Plane NAD27; zone text is inconsistent across delivered lines"
+        },
+        "coordinateTransform": {
+          "method": "pyproj.Transformer.from_crs(..., EPSG:26912, always_xy=True)",
+          "targetEpsg": 26912,
+          "candidateEpsg": 32043,
+          "acceptedTraceCount": 681,
+          "centroidDistanceToForgeM": 3621.498,
+          "selectionRule": "choose transformed candidate with plausible UTM coordinates nearest expected FORGE survey center"
+        }
       },
-      "sourceUnitStatus": "header-indicated-nonmetric-depth-review-required",
+      "sourceUnitStatus": "header-indicated-depth-ft-converted-to-m",
       "traceCount": 681,
       "sampleCount": 10001,
       "raymarchCapable": false
@@ -1327,7 +1395,7 @@
         "sourceStem": "Line_L11_PSDM_Enh_Meters",
         "sourceSubmission": "GDR 1141",
         "sourceFile": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Legacy Line 11/Line_L11_PSDM_Enh_Meters.segy",
-        "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE 2D -B11 PSDM Enhanced Stack SEGY CONVERT TO METERS AREA Utah C 3 YEAR ACQUIRED: 1979 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 5m TRACE LENGTH: 6000 m C 5 CMP RANGE: 1-681 CMP_FOLD: 45 C 6 COORD SYSTEM: US STATE PLANE 4302 NAD 27 C 7 C 8 C 9 DATE:3/28/2019 C10 DATUM: 7000 ft REPLACEMENT VELOCITY: 10000 ft/s C12 CMP Bin : 75 ft C13 PRODUCT: PSDM Stack in depth C14 PROCESSING FLOW: C15 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C16 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C17 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C18 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C19 POST DECON NOISE ATTENUATION - SPECTRAL EDIT and DESPIKE C20 RESIDUAL STATICS C21 PSDM tomographic VELOCITY ANALYSIS C22 KIRCHHOFF PSDM C23 BPF, 3000 FT AGC SCALING C24 DATA AT FINAL DATUM C25 FXDECON, TV BANDPA"
+        "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE 2D -B11 PSDM Enhanced Stack SEGY CONVERT TO METERS AREA Utah C 3 YEAR ACQUIRED: 1979 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 5m TRACE LENGTH: 6000 m C 5 CMP RANGE: 1-681 CMP_FOLD: 45 C 6 COORD SYSTEM: US STATE PLANE 4302 NAD 27 C 7 C 8 C 9 DATE:3/28/2019 C10 DATUM: 7000 ft REPLACEMENT VELOCITY: 10000 ft/s C12 CMP Bin : 75 ft C13 PRODUCT: PSDM Stack in depth C14 PROCESSING FLOW: C15 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C16 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C17 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C18 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C19 POST DECON NOISE ATTENUATION - SPECTRAL EDIT and DESPIKE C20 RESIDUAL STATICS C21 PSDM tomographic VELOCITY ANALYSIS C22 KIRCHHOFF PSDM C23 BPF, 3000 FT AGC SCALING C24 DATA AT FINAL DATUM C25 FXDECON, TV BANDPASS C26 CONVERT TO METERS and adjusted by -333.6 to account for datum difference C27 C28 C29 C30 C31 C32 CMP_X: byte 189 4 byte ibm real C33 CMP_X: byte 193 4 byte ibm real C34 BIN_ELEV byte 53 4 byte C35 HEADER FOR FINAL DATUM CMP_STAT: byte 201 4 byte ibm real C36 C37 C38 C39 SEG Y REV1 C40 END EBCDIC"
       },
       "sourceSubmission": "GDR 1141",
       "sourceFile": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Legacy Line 11/Line_L11_PSDM_Enh_Meters.segy",
@@ -1335,23 +1403,91 @@
       "productKind": "psdm",
       "domainKind": "depth",
       "domainUnit": "m",
-      "datumM": 1800.0,
+      "datumM": 2133.6,
       "sourceGeometry": {
-        "status": "unresolved",
-        "geometrySource": "navigation-or-envelope-fallback",
+        "status": "trace-header-derived",
+        "geometrySource": "trace-header-cmp-ibm-real-state-plane-nad27-ftus-to-utm",
         "horizontalCrs": {
           "epsg": 26912,
           "name": "NAD83 / UTM Zone 12N"
         },
         "coordinateBasis": "utm-trace-header-cmp",
         "traceCount": 681,
-        "validTraceCount": 0,
-        "coordinateFields": {},
-        "cmpBoundsUtm": null,
-        "sceneBounds": null,
+        "validTraceCount": 681,
+        "coordinateFields": {
+          "cmpX": {
+            "byte": 189,
+            "format": "ibm-real-4"
+          },
+          "cmpY": {
+            "byte": 193,
+            "format": "ibm-real-4"
+          },
+          "inline": {
+            "bytes": [
+              9,
+              10
+            ],
+            "format": "int16"
+          },
+          "crossline": {
+            "bytes": [
+              13,
+              14
+            ],
+            "format": "int16"
+          },
+          "sourceCoordinateSystem": {
+            "epsg": 32043,
+            "name": "NAD27 / Utah Central (ftUS)",
+            "unit": "US survey foot"
+          },
+          "targetCoordinateSystem": {
+            "epsg": 26912,
+            "name": "NAD83 / UTM Zone 12N",
+            "unit": "metre"
+          }
+        },
+        "cmpBoundsUtm": {
+          "min": [
+            329216.197,
+            4258908.5283
+          ],
+          "max": [
+            334696.9341,
+            4273101.6208
+          ]
+        },
+        "sceneBounds": {
+          "min": [
+            -12251.153,
+            -14465.9717,
+            -3866.4
+          ],
+          "max": [
+            -6770.4159,
+            -272.8792,
+            2133.6
+          ]
+        },
         "registrationStatus": "unverified",
         "canClaimPreciseRegistration": false,
-        "reason": "Trace-header coordinates are used for placement; survey-grade registration claims remain review-gated until control-point validation."
+        "reason": "Trace-header coordinates are used for placement; survey-grade registration claims remain review-gated until control-point validation.",
+        "sourceCoordinateSystem": {
+          "epsg": 32043,
+          "name": "NAD27 / Utah Central (ftUS)",
+          "unit": "US survey foot",
+          "headerEvidence": "US STATE PLANE NAD 27",
+          "selectionReason": "legacy header declares US State Plane NAD27; zone text is inconsistent across delivered lines"
+        },
+        "coordinateTransform": {
+          "method": "pyproj.Transformer.from_crs(..., EPSG:26912, always_xy=True)",
+          "targetEpsg": 26912,
+          "candidateEpsg": 32043,
+          "acceptedTraceCount": 681,
+          "centroidDistanceToForgeM": 3621.498,
+          "selectionRule": "choose transformed candidate with plausible UTM coordinates nearest expected FORGE survey center"
+        }
       },
       "sourceUnitStatus": "header-indicated-depth-m",
       "traceCount": 681,
@@ -1371,7 +1507,7 @@
         "sourceStem": "Line_L11_PSDM_UnEnh",
         "sourceSubmission": "GDR 1141",
         "sourceFile": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Legacy Line 11/Line_L11_PSDM_UnEnh.segy",
-        "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE 2D -B11 PSDM Unenhanced SEGY AREA Utah C 3 YEAR ACQUIRED: 1979 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 2ft TRACE LENGTH: 20000 ft C 5 CMP RANGE: 1-681 CMP_FOLD: 45 C 6 COORD SYSTEM: US STATE PLANE 4302 NAD 27 C 7 C 8 C 9 DATE:3/28/2019 C10 DATUM: 7000 ft REPLACEMENT VELOCITY: 10000 ft/s C12 CMP Bin : 75 ft C13 PRODUCT: PSDM Stack in depth C14 PROCESSING FLOW: C15 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C16 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C17 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C18 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C19 POST DECON NOISE ATTENUATION - SPECTRAL EDIT and DESPIKE C20 RESIDUAL STATICS C21 PSDM tomographic VELOCITY ANALYSIS C22 KIRCHHOFF PSDM C23 BPF, 3000 FT AGC SCALING C24 DATA AT FINAL DATUM C25 C26 C27 C28 C29 C30 C31 C32 CMP_X: by"
+        "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE 2D -B11 PSDM Unenhanced SEGY AREA Utah C 3 YEAR ACQUIRED: 1979 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 2ft TRACE LENGTH: 20000 ft C 5 CMP RANGE: 1-681 CMP_FOLD: 45 C 6 COORD SYSTEM: US STATE PLANE 4302 NAD 27 C 7 C 8 C 9 DATE:3/28/2019 C10 DATUM: 7000 ft REPLACEMENT VELOCITY: 10000 ft/s C12 CMP Bin : 75 ft C13 PRODUCT: PSDM Stack in depth C14 PROCESSING FLOW: C15 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C16 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C17 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C18 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C19 POST DECON NOISE ATTENUATION - SPECTRAL EDIT and DESPIKE C20 RESIDUAL STATICS C21 PSDM tomographic VELOCITY ANALYSIS C22 KIRCHHOFF PSDM C23 BPF, 3000 FT AGC SCALING C24 DATA AT FINAL DATUM C25 C26 C27 C28 C29 C30 C31 C32 CMP_X: byte 189 4 byte ibm real C33 CMP_X: byte 193 4 byte ibm real C34 BIN_ELEV byte 53 4 byte C35 HEADER FOR FINAL DATUM CMP_STAT: byte 201 4 byte ibm real C36 C37 C38 C39 SEG Y REV1 C40 END EBCDIC"
       },
       "sourceSubmission": "GDR 1141",
       "sourceFile": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Legacy Line 11/Line_L11_PSDM_UnEnh.segy",
@@ -1379,25 +1515,93 @@
       "productKind": "psdm",
       "domainKind": "depth",
       "domainUnit": "m",
-      "datumM": 1800.0,
+      "datumM": 2133.6,
       "sourceGeometry": {
-        "status": "unresolved",
-        "geometrySource": "navigation-or-envelope-fallback",
+        "status": "trace-header-derived",
+        "geometrySource": "trace-header-cmp-ibm-real-state-plane-nad27-ftus-to-utm",
         "horizontalCrs": {
           "epsg": 26912,
           "name": "NAD83 / UTM Zone 12N"
         },
         "coordinateBasis": "utm-trace-header-cmp",
         "traceCount": 681,
-        "validTraceCount": 0,
-        "coordinateFields": {},
-        "cmpBoundsUtm": null,
-        "sceneBounds": null,
+        "validTraceCount": 681,
+        "coordinateFields": {
+          "cmpX": {
+            "byte": 189,
+            "format": "ibm-real-4"
+          },
+          "cmpY": {
+            "byte": 193,
+            "format": "ibm-real-4"
+          },
+          "inline": {
+            "bytes": [
+              9,
+              10
+            ],
+            "format": "int16"
+          },
+          "crossline": {
+            "bytes": [
+              13,
+              14
+            ],
+            "format": "int16"
+          },
+          "sourceCoordinateSystem": {
+            "epsg": 32043,
+            "name": "NAD27 / Utah Central (ftUS)",
+            "unit": "US survey foot"
+          },
+          "targetCoordinateSystem": {
+            "epsg": 26912,
+            "name": "NAD83 / UTM Zone 12N",
+            "unit": "metre"
+          }
+        },
+        "cmpBoundsUtm": {
+          "min": [
+            329216.197,
+            4258908.5283
+          ],
+          "max": [
+            334696.9341,
+            4273101.6208
+          ]
+        },
+        "sceneBounds": {
+          "min": [
+            -12251.153,
+            -14465.9717,
+            -3962.4
+          ],
+          "max": [
+            -6770.4159,
+            -272.8792,
+            2133.6
+          ]
+        },
         "registrationStatus": "unverified",
         "canClaimPreciseRegistration": false,
-        "reason": "Trace-header coordinates are used for placement; survey-grade registration claims remain review-gated until control-point validation."
+        "reason": "Trace-header coordinates are used for placement; survey-grade registration claims remain review-gated until control-point validation.",
+        "sourceCoordinateSystem": {
+          "epsg": 32043,
+          "name": "NAD27 / Utah Central (ftUS)",
+          "unit": "US survey foot",
+          "headerEvidence": "US STATE PLANE NAD 27",
+          "selectionReason": "legacy header declares US State Plane NAD27; zone text is inconsistent across delivered lines"
+        },
+        "coordinateTransform": {
+          "method": "pyproj.Transformer.from_crs(..., EPSG:26912, always_xy=True)",
+          "targetEpsg": 26912,
+          "candidateEpsg": 32043,
+          "acceptedTraceCount": 681,
+          "centroidDistanceToForgeM": 3621.498,
+          "selectionRule": "choose transformed candidate with plausible UTM coordinates nearest expected FORGE survey center"
+        }
       },
-      "sourceUnitStatus": "header-indicated-nonmetric-depth-review-required",
+      "sourceUnitStatus": "header-indicated-depth-ft-converted-to-m",
       "traceCount": 681,
       "sampleCount": 10001,
       "raymarchCapable": false
@@ -1415,7 +1619,7 @@
         "sourceStem": "Line_L5_PSDM_Enh",
         "sourceSubmission": "GDR 1141",
         "sourceFile": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Legacy Line 5/Line_L5_PSDM_Enh.segy",
-        "textHeaderExcerpt": "C 1 CLIENC 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic NoiseC 2 LINE 2D -A5 PSDM Enhanced SEGY AREA Utah C 3 YEAR ACQUIRED: 1979 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 4ft TRACE LENGTH: 20000 ft C 5 CMP RANGE: 1-439 CMP_FOLD: 30 C 6 COORD SYSTEM: US STATE PLANE 4302 NAD 27 C 7 C 8 C 9 DATE:3/28/2019 C10 DATUM: 7000 ft REPLACEMENT VELOCITY: 10000 ft/s C12 CMP Bin : 100 ft C13 PRODUCT: PSDM Stack in depth C14 PROCESSING FLOW: C15 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C16 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C17 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C18 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C19 POST DECON NOISE ATTENUATION - SPECTRAL EDIT and DESPIKE C20 RESIDUAL STATICS C21 PSDM tomographic VELOCITY ANALYSIS C22 KIRCHHOFF PSDM C23 BPF, 3000 FT AGC SCALING C24 DATA AT FINAL DATUM C25 FXDECON, TV BANDPASS C26 C27 C28 C29 C3"
+        "textHeaderExcerpt": "C 1 CLIENC 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic NoiseC 2 LINE 2D -A5 PSDM Enhanced SEGY AREA Utah C 3 YEAR ACQUIRED: 1979 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 4ft TRACE LENGTH: 20000 ft C 5 CMP RANGE: 1-439 CMP_FOLD: 30 C 6 COORD SYSTEM: US STATE PLANE 4302 NAD 27 C 7 C 8 C 9 DATE:3/28/2019 C10 DATUM: 7000 ft REPLACEMENT VELOCITY: 10000 ft/s C12 CMP Bin : 100 ft C13 PRODUCT: PSDM Stack in depth C14 PROCESSING FLOW: C15 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C16 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C17 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C18 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C19 POST DECON NOISE ATTENUATION - SPECTRAL EDIT and DESPIKE C20 RESIDUAL STATICS C21 PSDM tomographic VELOCITY ANALYSIS C22 KIRCHHOFF PSDM C23 BPF, 3000 FT AGC SCALING C24 DATA AT FINAL DATUM C25 FXDECON, TV BANDPASS C26 C27 C28 C29 C30 C31 C32 CMP_X: byte 189 4 byte ibm real C33 CMP_X: byte 193 4 byte ibm real C34 BIN_ELEV byte 53 4 byte C35 HEADER FOR FINAL DATUM CMP_STAT: byte 201 4 byte ibm real C36 C37 C38 C39 SEG Y REV1 C40 END EBCDIC"
       },
       "sourceSubmission": "GDR 1141",
       "sourceFile": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Legacy Line 5/Line_L5_PSDM_Enh.segy",
@@ -1423,25 +1627,93 @@
       "productKind": "psdm",
       "domainKind": "depth",
       "domainUnit": "m",
-      "datumM": 1800.0,
+      "datumM": 2133.6,
       "sourceGeometry": {
-        "status": "unresolved",
-        "geometrySource": "navigation-or-envelope-fallback",
+        "status": "trace-header-derived",
+        "geometrySource": "trace-header-cmp-ibm-real-state-plane-nad27-ftus-to-utm",
         "horizontalCrs": {
           "epsg": 26912,
           "name": "NAD83 / UTM Zone 12N"
         },
         "coordinateBasis": "utm-trace-header-cmp",
         "traceCount": 439,
-        "validTraceCount": 0,
-        "coordinateFields": {},
-        "cmpBoundsUtm": null,
-        "sceneBounds": null,
+        "validTraceCount": 439,
+        "coordinateFields": {
+          "cmpX": {
+            "byte": 189,
+            "format": "ibm-real-4"
+          },
+          "cmpY": {
+            "byte": 193,
+            "format": "ibm-real-4"
+          },
+          "inline": {
+            "bytes": [
+              9,
+              10
+            ],
+            "format": "int16"
+          },
+          "crossline": {
+            "bytes": [
+              13,
+              14
+            ],
+            "format": "int16"
+          },
+          "sourceCoordinateSystem": {
+            "epsg": 32044,
+            "name": "NAD27 / Utah South (ftUS)",
+            "unit": "US survey foot"
+          },
+          "targetCoordinateSystem": {
+            "epsg": 26912,
+            "name": "NAD83 / UTM Zone 12N",
+            "unit": "metre"
+          }
+        },
+        "cmpBoundsUtm": {
+          "min": [
+            328589.0448,
+            4259669.198
+          ],
+          "max": [
+            341446.7483,
+            4262139.1055
+          ]
+        },
+        "sceneBounds": {
+          "min": [
+            -12878.3052,
+            -13705.302,
+            -3962.4
+          ],
+          "max": [
+            -20.6017,
+            -11235.3945,
+            2133.6
+          ]
+        },
         "registrationStatus": "unverified",
         "canClaimPreciseRegistration": false,
-        "reason": "Trace-header coordinates are used for placement; survey-grade registration claims remain review-gated until control-point validation."
+        "reason": "Trace-header coordinates are used for placement; survey-grade registration claims remain review-gated until control-point validation.",
+        "sourceCoordinateSystem": {
+          "epsg": 32044,
+          "name": "NAD27 / Utah South (ftUS)",
+          "unit": "US survey foot",
+          "headerEvidence": "US STATE PLANE NAD 27",
+          "selectionReason": "legacy header declares US State Plane NAD27; zone text is inconsistent across delivered lines"
+        },
+        "coordinateTransform": {
+          "method": "pyproj.Transformer.from_crs(..., EPSG:26912, always_xy=True)",
+          "targetEpsg": 26912,
+          "candidateEpsg": 32044,
+          "acceptedTraceCount": 439,
+          "centroidDistanceToForgeM": 2086.023,
+          "selectionRule": "choose transformed candidate with plausible UTM coordinates nearest expected FORGE survey center"
+        }
       },
-      "sourceUnitStatus": "header-indicated-nonmetric-depth-review-required",
+      "sourceUnitStatus": "header-indicated-depth-ft-converted-to-m",
       "traceCount": 439,
       "sampleCount": 2001,
       "raymarchCapable": false
@@ -1459,7 +1731,7 @@
         "sourceStem": "Line_L5_PSDM_Enh_Meters",
         "sourceSubmission": "GDR 1141",
         "sourceFile": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Legacy Line 5/Line_L5_PSDM_Enh_Meters.segy",
-        "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah ROCESSOR: Land Seismic Noise Specialists C 2 LINE 2D -A5 PSDM Enhanced SEGY CONVERTED TO METERES AREA Utah C 3 YEAR ACQUIRED: 1979 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 5m TRACE LENGTH: 10000 m C 5 CMP RANGE: 1-439 CMP_FOLD: 30 C 6 COORD SYSTEM: US STATE PLANE 4302 NAD 27 C 7 C 8 C 9 DATE:3/28/2019 C10 DATUM: 7000 ft REPLACEMENT VELOCITY: 10000 ft/s C12 CMP Bin : 100 ft C13 PRODUCT: PSDM Stack in depth CONVERTED TO METERS C14 PROCESSING FLOW: C15 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C16 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C17 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C18 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C19 POST DECON NOISE ATTENUATION - SPECTRAL EDIT and DESPIKE C20 RESIDUAL STATICS C21 PSDM VELOCITY MODEL BUILDING (tomography tested) C22 KIRCHHOFF PSDM C23 BPF, 3000 FT AGC SCALING, FX Decon C"
+        "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah ROCESSOR: Land Seismic Noise Specialists C 2 LINE 2D -A5 PSDM Enhanced SEGY CONVERTED TO METERES AREA Utah C 3 YEAR ACQUIRED: 1979 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 5m TRACE LENGTH: 10000 m C 5 CMP RANGE: 1-439 CMP_FOLD: 30 C 6 COORD SYSTEM: US STATE PLANE 4302 NAD 27 C 7 C 8 C 9 DATE:3/28/2019 C10 DATUM: 7000 ft REPLACEMENT VELOCITY: 10000 ft/s C12 CMP Bin : 100 ft C13 PRODUCT: PSDM Stack in depth CONVERTED TO METERS C14 PROCESSING FLOW: C15 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C16 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C17 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C18 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C19 POST DECON NOISE ATTENUATION - SPECTRAL EDIT and DESPIKE C20 RESIDUAL STATICS C21 PSDM VELOCITY MODEL BUILDING (tomography tested) C22 KIRCHHOFF PSDM C23 BPF, 3000 FT AGC SCALING, FX Decon C24 DATA AT FINAL DATUM C25 CONVERED TO METERS , shifted up 333.6 meters C26 to account for datum difference C27 C28 C29 C30 C31 C32 CMP_X: byte 189 4 byte ibm real C33 CMP_X: byte 193 4 byte ibm real C34 BIN_ELEV byte 53 4 byte C35 HEADER FOR FINAL DATUM CMP_STAT: byte 201 4 byte ibm real C36 C37 C38 C39 SEG Y REV1 C40 END EBCDIC"
       },
       "sourceSubmission": "GDR 1141",
       "sourceFile": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Legacy Line 5/Line_L5_PSDM_Enh_Meters.segy",
@@ -1469,21 +1741,89 @@
       "domainUnit": "m",
       "datumM": 1800.0,
       "sourceGeometry": {
-        "status": "unresolved",
-        "geometrySource": "navigation-or-envelope-fallback",
+        "status": "trace-header-derived",
+        "geometrySource": "trace-header-cmp-ibm-real-state-plane-nad27-ftus-to-utm",
         "horizontalCrs": {
           "epsg": 26912,
           "name": "NAD83 / UTM Zone 12N"
         },
         "coordinateBasis": "utm-trace-header-cmp",
         "traceCount": 439,
-        "validTraceCount": 0,
-        "coordinateFields": {},
-        "cmpBoundsUtm": null,
-        "sceneBounds": null,
+        "validTraceCount": 439,
+        "coordinateFields": {
+          "cmpX": {
+            "byte": 189,
+            "format": "ibm-real-4"
+          },
+          "cmpY": {
+            "byte": 193,
+            "format": "ibm-real-4"
+          },
+          "inline": {
+            "bytes": [
+              9,
+              10
+            ],
+            "format": "int16"
+          },
+          "crossline": {
+            "bytes": [
+              13,
+              14
+            ],
+            "format": "int16"
+          },
+          "sourceCoordinateSystem": {
+            "epsg": 32044,
+            "name": "NAD27 / Utah South (ftUS)",
+            "unit": "US survey foot"
+          },
+          "targetCoordinateSystem": {
+            "epsg": 26912,
+            "name": "NAD83 / UTM Zone 12N",
+            "unit": "metre"
+          }
+        },
+        "cmpBoundsUtm": {
+          "min": [
+            328589.0448,
+            4259669.198
+          ],
+          "max": [
+            341446.7483,
+            4262139.1055
+          ]
+        },
+        "sceneBounds": {
+          "min": [
+            -12878.3052,
+            -13705.302,
+            -4000.0
+          ],
+          "max": [
+            -20.6017,
+            -11235.3945,
+            1800.0
+          ]
+        },
         "registrationStatus": "unverified",
         "canClaimPreciseRegistration": false,
-        "reason": "Trace-header coordinates are used for placement; survey-grade registration claims remain review-gated until control-point validation."
+        "reason": "Trace-header coordinates are used for placement; survey-grade registration claims remain review-gated until control-point validation.",
+        "sourceCoordinateSystem": {
+          "epsg": 32044,
+          "name": "NAD27 / Utah South (ftUS)",
+          "unit": "US survey foot",
+          "headerEvidence": "US STATE PLANE NAD 27",
+          "selectionReason": "legacy header declares US State Plane NAD27; zone text is inconsistent across delivered lines"
+        },
+        "coordinateTransform": {
+          "method": "pyproj.Transformer.from_crs(..., EPSG:26912, always_xy=True)",
+          "targetEpsg": 26912,
+          "candidateEpsg": 32044,
+          "acceptedTraceCount": 439,
+          "centroidDistanceToForgeM": 2086.023,
+          "selectionRule": "choose transformed candidate with plausible UTM coordinates nearest expected FORGE survey center"
+        }
       },
       "sourceUnitStatus": "header-indicated-depth-m",
       "traceCount": 439,
@@ -1503,7 +1843,7 @@
         "sourceStem": "Line_L5_PSDM_UnEnh",
         "sourceSubmission": "GDR 1141",
         "sourceFile": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Legacy Line 5/Line_L5_PSDM_UnEnh.segy",
-        "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE 2D -A5 PSDM Unenhanced SEGY AREA Utah C 3 YEAR ACQUIRED: 1979 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 4ft TRACE LENGTH: 20000 ft C 5 CMP RANGE: 1-439 CMP_FOLD: 30 C 6 COORD SYSTEM: US STATE PLANE 4302 NAD 27 C 7 C 8 C 9 DATE:3/28/2019 C10 DATUM: 7000 ft REPLACEMENT VELOCITY: 10000 ft/s C12 CMP Bin : 100 ft C13 PRODUCT: PSDM Stack in depth C14 PROCESSING FLOW: C15 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C16 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C17 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C18 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C19 POST DECON NOISE ATTENUATION - SPECTRAL EDIT and DESPIKE C20 RESIDUAL STATICS C21 PSDM VELOCITY MODEL BUILDING (tomography tested) C22 KIRCHHOFF PSDM C23 BPF, 3000 FT AGC SCALING C24 DATA AT FINAL DATUM C25 C26 C27 C28 C29 C30 C31"
+        "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE 2D -A5 PSDM Unenhanced SEGY AREA Utah C 3 YEAR ACQUIRED: 1979 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 4ft TRACE LENGTH: 20000 ft C 5 CMP RANGE: 1-439 CMP_FOLD: 30 C 6 COORD SYSTEM: US STATE PLANE 4302 NAD 27 C 7 C 8 C 9 DATE:3/28/2019 C10 DATUM: 7000 ft REPLACEMENT VELOCITY: 10000 ft/s C12 CMP Bin : 100 ft C13 PRODUCT: PSDM Stack in depth C14 PROCESSING FLOW: C15 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C16 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C17 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C18 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C19 POST DECON NOISE ATTENUATION - SPECTRAL EDIT and DESPIKE C20 RESIDUAL STATICS C21 PSDM VELOCITY MODEL BUILDING (tomography tested) C22 KIRCHHOFF PSDM C23 BPF, 3000 FT AGC SCALING C24 DATA AT FINAL DATUM C25 C26 C27 C28 C29 C30 C31 C32 CMP_X: byte 189 4 byte ibm real C33 CMP_X: byte 193 4 byte ibm real C34 BIN_ELEV byte 53 4 byte C35 HEADER FOR FINAL DATUM CMP_STAT: byte 201 4 byte ibm real C36 C37 C38 C39 SEG Y REV1 C40 END EBCDIC"
       },
       "sourceSubmission": "GDR 1141",
       "sourceFile": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Legacy Line 5/Line_L5_PSDM_UnEnh.segy",
@@ -1511,25 +1851,93 @@
       "productKind": "psdm",
       "domainKind": "depth",
       "domainUnit": "m",
-      "datumM": 1800.0,
+      "datumM": 2133.6,
       "sourceGeometry": {
-        "status": "unresolved",
-        "geometrySource": "navigation-or-envelope-fallback",
+        "status": "trace-header-derived",
+        "geometrySource": "trace-header-cmp-ibm-real-state-plane-nad27-ftus-to-utm",
         "horizontalCrs": {
           "epsg": 26912,
           "name": "NAD83 / UTM Zone 12N"
         },
         "coordinateBasis": "utm-trace-header-cmp",
         "traceCount": 439,
-        "validTraceCount": 0,
-        "coordinateFields": {},
-        "cmpBoundsUtm": null,
-        "sceneBounds": null,
+        "validTraceCount": 439,
+        "coordinateFields": {
+          "cmpX": {
+            "byte": 189,
+            "format": "ibm-real-4"
+          },
+          "cmpY": {
+            "byte": 193,
+            "format": "ibm-real-4"
+          },
+          "inline": {
+            "bytes": [
+              9,
+              10
+            ],
+            "format": "int16"
+          },
+          "crossline": {
+            "bytes": [
+              13,
+              14
+            ],
+            "format": "int16"
+          },
+          "sourceCoordinateSystem": {
+            "epsg": 32044,
+            "name": "NAD27 / Utah South (ftUS)",
+            "unit": "US survey foot"
+          },
+          "targetCoordinateSystem": {
+            "epsg": 26912,
+            "name": "NAD83 / UTM Zone 12N",
+            "unit": "metre"
+          }
+        },
+        "cmpBoundsUtm": {
+          "min": [
+            328589.0448,
+            4259669.198
+          ],
+          "max": [
+            341446.7483,
+            4262139.1055
+          ]
+        },
+        "sceneBounds": {
+          "min": [
+            -12878.3052,
+            -13705.302,
+            -3962.4
+          ],
+          "max": [
+            -20.6017,
+            -11235.3945,
+            2133.6
+          ]
+        },
         "registrationStatus": "unverified",
         "canClaimPreciseRegistration": false,
-        "reason": "Trace-header coordinates are used for placement; survey-grade registration claims remain review-gated until control-point validation."
+        "reason": "Trace-header coordinates are used for placement; survey-grade registration claims remain review-gated until control-point validation.",
+        "sourceCoordinateSystem": {
+          "epsg": 32044,
+          "name": "NAD27 / Utah South (ftUS)",
+          "unit": "US survey foot",
+          "headerEvidence": "US STATE PLANE NAD 27",
+          "selectionReason": "legacy header declares US State Plane NAD27; zone text is inconsistent across delivered lines"
+        },
+        "coordinateTransform": {
+          "method": "pyproj.Transformer.from_crs(..., EPSG:26912, always_xy=True)",
+          "targetEpsg": 26912,
+          "candidateEpsg": 32044,
+          "acceptedTraceCount": 439,
+          "centroidDistanceToForgeM": 2086.023,
+          "selectionRule": "choose transformed candidate with plausible UTM coordinates nearest expected FORGE survey center"
+        }
       },
-      "sourceUnitStatus": "header-indicated-nonmetric-depth-review-required",
+      "sourceUnitStatus": "header-indicated-depth-ft-converted-to-m",
       "traceCount": 439,
       "sampleCount": 2001,
       "raymarchCapable": false
@@ -1547,7 +1955,7 @@
         "sourceStem": "Line_L5_PSDM_UnEnh_Meters",
         "sourceSubmission": "GDR 1141",
         "sourceFile": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Legacy Line 5/Line_L5_PSDM_UnEnh_Meters.segy",
-        "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah ROCESSOR: Land Seismic Noise Specialists C 2 LINE 2D -A5 PSDM Unenhanced SEGY CONVERTED TO METERES AREA Utah C 3 YEAR ACQUIRED: 1979 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 5m TRACE LENGTH: 10000 m C 5 CMP RANGE: 1-439 CMP_FOLD: 30 C 6 COORD SYSTEM: US STATE PLANE 4302 NAD 27 C 7 C 8 C 9 DATE:3/28/2019 C10 DATUM: 7000 ft REPLACEMENT VELOCITY: 10000 ft/s C12 CMP Bin : 100 ft C13 PRODUCT: PSDM Stack in depth CONVERTED TO METERS C14 PROCESSING FLOW: C15 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C16 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C17 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C18 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C19 POST DECON NOISE ATTENUATION - SPECTRAL EDIT and DESPIKE C20 RESIDUAL STATICS C21 PSDM VELOCITY MODEL BUILDING (tomography tested) C22 KIRCHHOFF PSDM C23 BPF, 3000 FT AGC SCALING C24 DATA "
+        "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah ROCESSOR: Land Seismic Noise Specialists C 2 LINE 2D -A5 PSDM Unenhanced SEGY CONVERTED TO METERES AREA Utah C 3 YEAR ACQUIRED: 1979 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 5m TRACE LENGTH: 10000 m C 5 CMP RANGE: 1-439 CMP_FOLD: 30 C 6 COORD SYSTEM: US STATE PLANE 4302 NAD 27 C 7 C 8 C 9 DATE:3/28/2019 C10 DATUM: 7000 ft REPLACEMENT VELOCITY: 10000 ft/s C12 CMP Bin : 100 ft C13 PRODUCT: PSDM Stack in depth CONVERTED TO METERS C14 PROCESSING FLOW: C15 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C16 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C17 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C18 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C19 POST DECON NOISE ATTENUATION - SPECTRAL EDIT and DESPIKE C20 RESIDUAL STATICS C21 PSDM VELOCITY MODEL BUILDING (tomography tested) C22 KIRCHHOFF PSDM C23 BPF, 3000 FT AGC SCALING C24 DATA AT FINAL DATUM C25 CONVERED TO METERS , shifted up 333.6 meters C26 to account for datum difference C27 C28 C29 C30 C31 C32 CMP_X: byte 189 4 byte ibm real C33 CMP_X: byte 193 4 byte ibm real C34 BIN_ELEV byte 53 4 byte C35 HEADER FOR FINAL DATUM CMP_STAT: byte 201 4 byte ibm real C36 C37 C38 C39 SEG Y REV1 C40 END EBCDIC"
       },
       "sourceSubmission": "GDR 1141",
       "sourceFile": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Legacy Line 5/Line_L5_PSDM_UnEnh_Meters.segy",
@@ -1557,21 +1965,89 @@
       "domainUnit": "m",
       "datumM": 1800.0,
       "sourceGeometry": {
-        "status": "unresolved",
-        "geometrySource": "navigation-or-envelope-fallback",
+        "status": "trace-header-derived",
+        "geometrySource": "trace-header-cmp-ibm-real-state-plane-nad27-ftus-to-utm",
         "horizontalCrs": {
           "epsg": 26912,
           "name": "NAD83 / UTM Zone 12N"
         },
         "coordinateBasis": "utm-trace-header-cmp",
         "traceCount": 439,
-        "validTraceCount": 0,
-        "coordinateFields": {},
-        "cmpBoundsUtm": null,
-        "sceneBounds": null,
+        "validTraceCount": 439,
+        "coordinateFields": {
+          "cmpX": {
+            "byte": 189,
+            "format": "ibm-real-4"
+          },
+          "cmpY": {
+            "byte": 193,
+            "format": "ibm-real-4"
+          },
+          "inline": {
+            "bytes": [
+              9,
+              10
+            ],
+            "format": "int16"
+          },
+          "crossline": {
+            "bytes": [
+              13,
+              14
+            ],
+            "format": "int16"
+          },
+          "sourceCoordinateSystem": {
+            "epsg": 32044,
+            "name": "NAD27 / Utah South (ftUS)",
+            "unit": "US survey foot"
+          },
+          "targetCoordinateSystem": {
+            "epsg": 26912,
+            "name": "NAD83 / UTM Zone 12N",
+            "unit": "metre"
+          }
+        },
+        "cmpBoundsUtm": {
+          "min": [
+            328589.0448,
+            4259669.198
+          ],
+          "max": [
+            341446.7483,
+            4262139.1055
+          ]
+        },
+        "sceneBounds": {
+          "min": [
+            -12878.3052,
+            -13705.302,
+            -4000.0
+          ],
+          "max": [
+            -20.6017,
+            -11235.3945,
+            1800.0
+          ]
+        },
         "registrationStatus": "unverified",
         "canClaimPreciseRegistration": false,
-        "reason": "Trace-header coordinates are used for placement; survey-grade registration claims remain review-gated until control-point validation."
+        "reason": "Trace-header coordinates are used for placement; survey-grade registration claims remain review-gated until control-point validation.",
+        "sourceCoordinateSystem": {
+          "epsg": 32044,
+          "name": "NAD27 / Utah South (ftUS)",
+          "unit": "US survey foot",
+          "headerEvidence": "US STATE PLANE NAD 27",
+          "selectionReason": "legacy header declares US State Plane NAD27; zone text is inconsistent across delivered lines"
+        },
+        "coordinateTransform": {
+          "method": "pyproj.Transformer.from_crs(..., EPSG:26912, always_xy=True)",
+          "targetEpsg": 26912,
+          "candidateEpsg": 32044,
+          "acceptedTraceCount": 439,
+          "centroidDistanceToForgeM": 2086.023,
+          "selectionRule": "choose transformed candidate with plausible UTM coordinates nearest expected FORGE survey center"
+        }
       },
       "sourceUnitStatus": "header-indicated-depth-m",
       "traceCount": 439,
@@ -1591,7 +2067,7 @@
         "sourceStem": "Line_301_PSTM_Stack_Enh",
         "sourceSubmission": "GDR 1141",
         "sourceFile": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Line 301/Line_301_PSTM_Stack_Enh.segy",
-        "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE 2D -301 PSTM Stack Enhanced AREA Utah C 3 YEAR ACQUIRED: 2017 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 1ms TRACE LENGTH: 4000ms C 5 CMP RANGE: 1002-1322 CMP_FOLD: 83 C 6 COORD SYSTEM:METRIC GEODETIC DATUM:NAD83 UTM 12 N C 7 PROJECTION:MOLODENSKY/TM C 8 C 9 DATE:3/28/2019 C10 DATUM: 1800 m REPLACEMENT VELOCITY: 2500 m/s C12 CMP Bin : 12.5 m C13 PRODUCT: PSTM Stack in time C14 PROCESSING FLOW: C15 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C16 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C17 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C18 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C19 POST DECON NOISE ATTENUATION - SPECTRAL EDIT and DESPIKE C20 RESIDUAL STATICS C21 AGC C22 PSTM C23 BILATERAL FILTER C24 STACK C25 FXY DECON C26 FK FILTER C27 C28 C29 C30 C31 C32 CMP_X: byte 189 4 by"
+        "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE 2D -301 PSTM Stack Enhanced AREA Utah C 3 YEAR ACQUIRED: 2017 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 1ms TRACE LENGTH: 4000ms C 5 CMP RANGE: 1002-1322 CMP_FOLD: 83 C 6 COORD SYSTEM:METRIC GEODETIC DATUM:NAD83 UTM 12 N C 7 PROJECTION:MOLODENSKY/TM C 8 C 9 DATE:3/28/2019 C10 DATUM: 1800 m REPLACEMENT VELOCITY: 2500 m/s C12 CMP Bin : 12.5 m C13 PRODUCT: PSTM Stack in time C14 PROCESSING FLOW: C15 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C16 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C17 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C18 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C19 POST DECON NOISE ATTENUATION - SPECTRAL EDIT and DESPIKE C20 RESIDUAL STATICS C21 AGC C22 PSTM C23 BILATERAL FILTER C24 STACK C25 FXY DECON C26 FK FILTER C27 C28 C29 C30 C31 C32 CMP_X: byte 189 4 byte ibm real C33 CMP_Y: byte 193 4 byte ibm real C34 BIN_ELEV byte 53 4 byte C35 HEADER FOR FINAL DATUM CMP_STAT: byte 201 4 byte ibm real C36 C37 C38 C39 SEG Y REV1 C40 END EBCDIC"
       },
       "sourceSubmission": "GDR 1141",
       "sourceFile": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Line 301/Line_301_PSTM_Stack_Enh.segy",
@@ -1635,7 +2111,7 @@
         "sourceStem": "Line_301_PSTM_Stack_UnEnh",
         "sourceSubmission": "GDR 1141",
         "sourceFile": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Line 301/Line_301_PSTM_Stack_UnEnh.segy",
-        "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE 2D -301 PSTM Stack UnEnhanced AREA Utah C 3 YEAR ACQUIRED: 2017 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 1ms TRACE LENGTH: 4000 ms C 5 CMP RANGE: 1002-1322 CMP_FOLD: 83 C 6 COORD SYSTEM:METRIC GEODETIC DATUM:NAD83 UTM 12 N C 7 PROJECTION:MOLODENSKY/TM C 8 C 9 DATE:3/28/2019 C10 DATUM: 1800 m REPLACEMENT VELOCITY: 2500 m/s C12 CMP Bin : 12.5 m C13 PRODUCT: PSTM Stack in time C14 PROCESSING FLOW: C15 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C16 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C17 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C18 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C19 POST DECON NOISE ATTENUATION - SPECTRAL EDIT and DESPIKE C20 RESIDUAL STATICS C21 AGC C22 PSTM C23 STACK C24 C25 C26 C27 C28 C29 C30 C31 C32 CMP_X: byte 189 4 byte ibm real C33 CMP_Y: byte 193 4 "
+        "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE 2D -301 PSTM Stack UnEnhanced AREA Utah C 3 YEAR ACQUIRED: 2017 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 1ms TRACE LENGTH: 4000 ms C 5 CMP RANGE: 1002-1322 CMP_FOLD: 83 C 6 COORD SYSTEM:METRIC GEODETIC DATUM:NAD83 UTM 12 N C 7 PROJECTION:MOLODENSKY/TM C 8 C 9 DATE:3/28/2019 C10 DATUM: 1800 m REPLACEMENT VELOCITY: 2500 m/s C12 CMP Bin : 12.5 m C13 PRODUCT: PSTM Stack in time C14 PROCESSING FLOW: C15 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C16 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C17 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C18 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C19 POST DECON NOISE ATTENUATION - SPECTRAL EDIT and DESPIKE C20 RESIDUAL STATICS C21 AGC C22 PSTM C23 STACK C24 C25 C26 C27 C28 C29 C30 C31 C32 CMP_X: byte 189 4 byte ibm real C33 CMP_Y: byte 193 4 byte ibm real C34 BIN_ELEV byte 53 4 byte C35 HEADER FOR FINAL DATUM CMP_STAT: byte 201 4 byte ibm real C36 C37 C38 C39 SEG Y REV1 C40 END EBCDIC"
       },
       "sourceSubmission": "GDR 1141",
       "sourceFile": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Line 301/Line_301_PSTM_Stack_UnEnh.segy",
@@ -1679,7 +2155,7 @@
         "sourceStem": "Line_301_Unmigrated_Stack",
         "sourceSubmission": "GDR 1141",
         "sourceFile": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Line 301/Line_301_Unmigrated_Stack.segy",
-        "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE 2D -301 Unmigrated Time stack AREA Utah C 3 YEAR ACQUIRED: 2017 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 1m TRACE LENGTH: 6000 m C 5 CMP RANGE: 1002-1322 CMP_FOLD: 83 C 6 COORD SYSTEM:METRIC GEODETIC DATUM:NAD83 UTM 12 N C 7 PROJECTION:MOLODENSKY/TM C 8 C 9 DATE:3/28/2019 C10 DATUM: 1800 m REPLACEMENT VELOCITY: 2500 m/s C12 CMP Bin : 12.5 m C13 PRODUCT: Unmigrated Time Stack C14 PROCESSING FLOW: C15 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C16 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C17 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C18 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C19 POST DECON NOISE ATTENUATION - SPECTRAL EDIT and DESPIKE C20 RESIDUAL STATICS C21 BPF, 500 FT MEDIAN SCALING C22 DATA AT FINLA DATUM C23 C24 C25 C26 C27 C28 C29 C30 C31 C32 CMP_X: byte 189 4 byt"
+        "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE 2D -301 Unmigrated Time stack AREA Utah C 3 YEAR ACQUIRED: 2017 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 1m TRACE LENGTH: 6000 m C 5 CMP RANGE: 1002-1322 CMP_FOLD: 83 C 6 COORD SYSTEM:METRIC GEODETIC DATUM:NAD83 UTM 12 N C 7 PROJECTION:MOLODENSKY/TM C 8 C 9 DATE:3/28/2019 C10 DATUM: 1800 m REPLACEMENT VELOCITY: 2500 m/s C12 CMP Bin : 12.5 m C13 PRODUCT: Unmigrated Time Stack C14 PROCESSING FLOW: C15 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C16 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C17 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C18 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C19 POST DECON NOISE ATTENUATION - SPECTRAL EDIT and DESPIKE C20 RESIDUAL STATICS C21 BPF, 500 FT MEDIAN SCALING C22 DATA AT FINLA DATUM C23 C24 C25 C26 C27 C28 C29 C30 C31 C32 CMP_X: byte 189 4 byte ibm real C33 CMP_X: byte 193 4 byte ibm real C34 BIN_ELEV byte 53 4 byte C35 HEADER FOR FINAL DATUM CMP_STAT: byte 201 4 byte ibm real C36 C37 C38 C39 SEG Y REV1 C40 END EBCDIC"
       },
       "sourceSubmission": "GDR 1141",
       "sourceFile": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Line 301/Line_301_Unmigrated_Stack.segy",
@@ -1766,7 +2242,7 @@
         "sourceStem": "Line_302_PSTM_Stack_Enh",
         "sourceSubmission": "GDR 1141",
         "sourceFile": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Line 302/Line_302_PSTM_Stack_Enh.segy",
-        "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE 2D -302 PSTM Stack Enhanced AREA Utah C 3 YEAR ACQUIRED: 2017 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 1ms TRACE LENGTH: 4000 ms C 5 CMP RANGE: 1-307 CMP_FOLD:90 C 6 COORD SYSTEM:METRIC GEODETIC DATUM:NAD83 UTM 12 N C 7 PROJECTION:MOLODENSKY/TM C 8 C 9 DATE:3/28/2019 C10 DATUM: 2100 m REPLACEMENT VELOCITY: 2500 m/s C12 CMP Bin : 12.5 m C13 PRODUCT: PSTM Stack in time C14 PROCESSING FLOW: C15 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C16 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C17 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C18 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C19 POST DECON NOISE ATTENUATION - SPECTRAL EDIT and DESPIKE C20 BPF, 500 FT MEDIAN SCALING C21 AGC C22 PSTM C23 BILATERAL FILTER C24 STACK C25 FX-DECON C26 C27 DATA AT FINAL DATUM C28 C29 C30 C31 C32 CMP_X"
+        "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE 2D -302 PSTM Stack Enhanced AREA Utah C 3 YEAR ACQUIRED: 2017 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 1ms TRACE LENGTH: 4000 ms C 5 CMP RANGE: 1-307 CMP_FOLD:90 C 6 COORD SYSTEM:METRIC GEODETIC DATUM:NAD83 UTM 12 N C 7 PROJECTION:MOLODENSKY/TM C 8 C 9 DATE:3/28/2019 C10 DATUM: 2100 m REPLACEMENT VELOCITY: 2500 m/s C12 CMP Bin : 12.5 m C13 PRODUCT: PSTM Stack in time C14 PROCESSING FLOW: C15 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C16 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C17 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C18 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C19 POST DECON NOISE ATTENUATION - SPECTRAL EDIT and DESPIKE C20 BPF, 500 FT MEDIAN SCALING C21 AGC C22 PSTM C23 BILATERAL FILTER C24 STACK C25 FX-DECON C26 C27 DATA AT FINAL DATUM C28 C29 C30 C31 C32 CMP_X: byte 189 4 byte ibm real C33 CMP_Y: byte 193 4 byte ibm real C34 BIN_ELEV byte 53 4 byte C35 HEADER FOR FINAL DATUM CMP_STAT: byte 201 4 byte ibm real C36 C37 C38 C39 SEG Y REV1 C40 END EBCDIC"
       },
       "sourceSubmission": "GDR 1141",
       "sourceFile": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Line 302/Line_302_PSTM_Stack_Enh.segy",
@@ -1810,7 +2286,7 @@
         "sourceStem": "Line_302_PSTM_Stack_UnEnh",
         "sourceSubmission": "GDR 1141",
         "sourceFile": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Line 302/Line_302_PSTM_Stack_UnEnh.segy",
-        "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE 2D -302 PSTM Stack Unenhanced AREA Utah C 3 YEAR ACQUIRED: 2017 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 1ms TRACE LENGTH: 4000 ms C 5 CMP RANGE: 1-307 CMP_FOLD:90 C 6 COORD SYSTEM:METRIC GEODETIC DATUM:NAD83 UTM 12 N C 7 PROJECTION:MOLODENSKY/TM C 8 C 9 DATE:3/28/2019 C10 DATUM: 2100 m REPLACEMENT VELOCITY: 2500 m/s C12 CMP Bin : 12.5 m C13 PRODUCT: PSTM Stack in time C14 PROCESSING FLOW: C15 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C16 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C17 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C18 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C19 POST DECON NOISE ATTENUATION - SPECTRAL EDIT and DESPIKE C20 BPF, 500 FT MEDIAN SCALING C21 AGC C22 PSTM C23 STACK C24 C25 C26 C27 DATA AT FINAL DATUM C28 C29 C30 C31 C32 CMP_X: byte 189 4 byte ibm re"
+        "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE 2D -302 PSTM Stack Unenhanced AREA Utah C 3 YEAR ACQUIRED: 2017 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 1ms TRACE LENGTH: 4000 ms C 5 CMP RANGE: 1-307 CMP_FOLD:90 C 6 COORD SYSTEM:METRIC GEODETIC DATUM:NAD83 UTM 12 N C 7 PROJECTION:MOLODENSKY/TM C 8 C 9 DATE:3/28/2019 C10 DATUM: 2100 m REPLACEMENT VELOCITY: 2500 m/s C12 CMP Bin : 12.5 m C13 PRODUCT: PSTM Stack in time C14 PROCESSING FLOW: C15 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C16 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C17 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C18 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C19 POST DECON NOISE ATTENUATION - SPECTRAL EDIT and DESPIKE C20 BPF, 500 FT MEDIAN SCALING C21 AGC C22 PSTM C23 STACK C24 C25 C26 C27 DATA AT FINAL DATUM C28 C29 C30 C31 C32 CMP_X: byte 189 4 byte ibm real C33 CMP_Y: byte 193 4 byte ibm real C34 BIN_ELEV byte 53 4 byte C35 HEADER FOR FINAL DATUM CMP_STAT: byte 201 4 byte ibm real C36 C37 C38 C39 SEG Y REV1 C40 END EBCDIC"
       },
       "sourceSubmission": "GDR 1141",
       "sourceFile": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Line 302/Line_302_PSTM_Stack_UnEnh.segy",
@@ -1854,7 +2330,7 @@
         "sourceStem": "Line_302_Unmigrated_Stack",
         "sourceSubmission": "GDR 1141",
         "sourceFile": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Line 302/Line_302_Unmigrated_Stack.segy",
-        "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE 2D -302 UnMigrated Time Stack AREA Utah C 3 YEAR ACQUIRED: 2017 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 1m TRACE LENGTH: 6000 m C 5 CMP RANGE: 1-307 CMP_FOLD:90 C 6 COORD SYSTEM:METRIC GEODETIC DATUM:NAD83 UTM 12 N C 7 PROJECTION:MOLODENSKY/TM C 8 C 9 DATE:3/28/2019 C10 DATUM: 1800 m REPLACEMENT VELOCITY: 2500 m/s C12 CMP Bin : 12.5 m C13 PRODUCT: Time Stack input to Depth migration C14 PROCESSING FLOW: C15 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C16 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C17 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C18 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C19 POST DECON NOISE ATTENUATION - SPECTRAL EDIT and DESPIKE C20 BPF, 500 FT MEDIAN SCALING C21 C22 C23 C24 DATA AT FINLA DATUM C25 C26 C27 C28 C29 C30 C31 C32 CMP_X: byte 189 4 byte ibm re"
+        "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE 2D -302 UnMigrated Time Stack AREA Utah C 3 YEAR ACQUIRED: 2017 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 1m TRACE LENGTH: 6000 m C 5 CMP RANGE: 1-307 CMP_FOLD:90 C 6 COORD SYSTEM:METRIC GEODETIC DATUM:NAD83 UTM 12 N C 7 PROJECTION:MOLODENSKY/TM C 8 C 9 DATE:3/28/2019 C10 DATUM: 1800 m REPLACEMENT VELOCITY: 2500 m/s C12 CMP Bin : 12.5 m C13 PRODUCT: Time Stack input to Depth migration C14 PROCESSING FLOW: C15 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C16 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C17 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C18 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C19 POST DECON NOISE ATTENUATION - SPECTRAL EDIT and DESPIKE C20 BPF, 500 FT MEDIAN SCALING C21 C22 C23 C24 DATA AT FINLA DATUM C25 C26 C27 C28 C29 C30 C31 C32 CMP_X: byte 189 4 byte ibm real C33 CMP_X: byte 193 4 byte ibm real C34 BIN_ELEV byte 53 4 byte C35 HEADER FOR FINAL DATUM CMP_STAT: byte 201 4 byte ibm real C36 C37 C38 C39 SEG Y REV1 C40 END EBCDIC"
       },
       "sourceSubmission": "GDR 1141",
       "sourceFile": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Line 302/Line_302_Unmigrated_Stack.segy",
@@ -1941,7 +2417,7 @@
         "sourceStem": "Line_L11_ PSTM_Enh",
         "sourceSubmission": "GDR 1141",
         "sourceFile": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Legacy Line 11/Line_L11_ PSTM_Enh.segy",
-        "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE 2D -B11 Enhanced PSTM Stack SEGY AREA Utah C 3 YEAR ACQUIRED: 1979 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 2ft TRACE LENGTH: 4384 ms C 5 CMP RANGE: 1-681 CMP_FOLD: 45 C 6 COORD SYSTEM: US STATE PLANE 4302 NAD 27 C 7 C 8 C 9 DATE:3/28/2019 C10 DATUM: 7000 ft REPLACEMENT VELOCITY: 10000 ft/s C12 CMP Bin : 75 ft C13 PRODUCT: PSTM Stack in time C14 PROCESSING FLOW: C15 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C16 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C17 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C18 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C19 POST DECON NOISE ATTENUATION - SPECTRAL EDIT and DESPIKE C20 RESIDUAL STATICS C21 AGC C22 PSTM C23 BILATERAL FILTER C24 STACK C25 FX-DECON C26 C27 C28 C29 C30 C31 C32 CMP_X: byte 189 4 byte ibm real C33 CMP_Y: byte 193 4 byte ib"
+        "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE 2D -B11 Enhanced PSTM Stack SEGY AREA Utah C 3 YEAR ACQUIRED: 1979 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 2ft TRACE LENGTH: 4384 ms C 5 CMP RANGE: 1-681 CMP_FOLD: 45 C 6 COORD SYSTEM: US STATE PLANE 4302 NAD 27 C 7 C 8 C 9 DATE:3/28/2019 C10 DATUM: 7000 ft REPLACEMENT VELOCITY: 10000 ft/s C12 CMP Bin : 75 ft C13 PRODUCT: PSTM Stack in time C14 PROCESSING FLOW: C15 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C16 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C17 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C18 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C19 POST DECON NOISE ATTENUATION - SPECTRAL EDIT and DESPIKE C20 RESIDUAL STATICS C21 AGC C22 PSTM C23 BILATERAL FILTER C24 STACK C25 FX-DECON C26 C27 C28 C29 C30 C31 C32 CMP_X: byte 189 4 byte ibm real C33 CMP_Y: byte 193 4 byte ibm real C34 BIN_ELEV byte 53 4 byte C35 HEADER FOR FINAL DATUM CMP_STAT: byte 201 4 byte ibm real C36 C37 C38 C39 SEG Y REV1 C40 END EBCDIC"
       },
       "sourceSubmission": "GDR 1141",
       "sourceFile": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Legacy Line 11/Line_L11_ PSTM_Enh.segy",
@@ -1949,23 +2425,91 @@
       "productKind": "pstm",
       "domainKind": "time",
       "domainUnit": "ms",
-      "datumM": 1800.0,
+      "datumM": 2133.6,
       "sourceGeometry": {
-        "status": "unresolved",
-        "geometrySource": "navigation-or-envelope-fallback",
+        "status": "trace-header-derived",
+        "geometrySource": "trace-header-cmp-ibm-real-state-plane-nad27-ftus-to-utm",
         "horizontalCrs": {
           "epsg": 26912,
           "name": "NAD83 / UTM Zone 12N"
         },
         "coordinateBasis": "utm-trace-header-cmp",
         "traceCount": 681,
-        "validTraceCount": 0,
-        "coordinateFields": {},
-        "cmpBoundsUtm": null,
-        "sceneBounds": null,
+        "validTraceCount": 681,
+        "coordinateFields": {
+          "cmpX": {
+            "byte": 189,
+            "format": "ibm-real-4"
+          },
+          "cmpY": {
+            "byte": 193,
+            "format": "ibm-real-4"
+          },
+          "inline": {
+            "bytes": [
+              9,
+              10
+            ],
+            "format": "int16"
+          },
+          "crossline": {
+            "bytes": [
+              13,
+              14
+            ],
+            "format": "int16"
+          },
+          "sourceCoordinateSystem": {
+            "epsg": 32043,
+            "name": "NAD27 / Utah Central (ftUS)",
+            "unit": "US survey foot"
+          },
+          "targetCoordinateSystem": {
+            "epsg": 26912,
+            "name": "NAD83 / UTM Zone 12N",
+            "unit": "metre"
+          }
+        },
+        "cmpBoundsUtm": {
+          "min": [
+            329216.197,
+            4258908.5283
+          ],
+          "max": [
+            334696.9341,
+            4273101.6208
+          ]
+        },
+        "sceneBounds": {
+          "min": [
+            -12251.153,
+            -14465.9717,
+            -6630.4
+          ],
+          "max": [
+            -6770.4159,
+            -272.8792,
+            2133.6
+          ]
+        },
         "registrationStatus": "unverified",
         "canClaimPreciseRegistration": false,
-        "reason": "Trace-header coordinates are used for placement; survey-grade registration claims remain review-gated until control-point validation."
+        "reason": "Trace-header coordinates are used for placement; survey-grade registration claims remain review-gated until control-point validation.",
+        "sourceCoordinateSystem": {
+          "epsg": 32043,
+          "name": "NAD27 / Utah Central (ftUS)",
+          "unit": "US survey foot",
+          "headerEvidence": "US STATE PLANE NAD 27",
+          "selectionReason": "legacy header declares US State Plane NAD27; zone text is inconsistent across delivered lines"
+        },
+        "coordinateTransform": {
+          "method": "pyproj.Transformer.from_crs(..., EPSG:26912, always_xy=True)",
+          "targetEpsg": 26912,
+          "candidateEpsg": 32043,
+          "acceptedTraceCount": 681,
+          "centroidDistanceToForgeM": 3621.498,
+          "selectionRule": "choose transformed candidate with plausible UTM coordinates nearest expected FORGE survey center"
+        }
       },
       "sourceUnitStatus": "not-depth-m-domain",
       "traceCount": 681,
@@ -1985,7 +2529,7 @@
         "sourceStem": "Line_L11 _PSTM_UnEnh",
         "sourceSubmission": "GDR 1141",
         "sourceFile": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Legacy Line 11/Line_L11 _PSTM_UnEnh.segy",
-        "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE 2D -B11 PSTM Stack SEGY AREA Utah C 3 YEAR ACQUIRED: 1979 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 2ft TRACE LENGTH: 4384 ms C 5 CMP RANGE: 1-681 CMP_FOLD: 45 C 6 COORD SYSTEM: US STATE PLANE 4302 NAD 27 C 7 C 8 C 9 DATE:3/28/2019 C10 DATUM: 7000 ft REPLACEMENT VELOCITY: 10000 ft/s C12 CMP Bin : 75 ft C13 PRODUCT: PSDM Stack in depth C14 PROCESSING FLOW: C15 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C16 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C17 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C18 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C19 POST DECON NOISE ATTENUATION - SPECTRAL EDIT and DESPIKE C20 RESIDUAL STATICS C21 AGC C22 PSTM C23 STACK C24 C25 C26 C27 C28 C29 C30 C31 C32 CMP_X: byte 189 4 byte ibm real C33 CMP_Y: byte 193 4 byte ibm real C34 BIN_ELEV byte 53 4 byte"
+        "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE 2D -B11 PSTM Stack SEGY AREA Utah C 3 YEAR ACQUIRED: 1979 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 2ft TRACE LENGTH: 4384 ms C 5 CMP RANGE: 1-681 CMP_FOLD: 45 C 6 COORD SYSTEM: US STATE PLANE 4302 NAD 27 C 7 C 8 C 9 DATE:3/28/2019 C10 DATUM: 7000 ft REPLACEMENT VELOCITY: 10000 ft/s C12 CMP Bin : 75 ft C13 PRODUCT: PSDM Stack in depth C14 PROCESSING FLOW: C15 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C16 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C17 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C18 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C19 POST DECON NOISE ATTENUATION - SPECTRAL EDIT and DESPIKE C20 RESIDUAL STATICS C21 AGC C22 PSTM C23 STACK C24 C25 C26 C27 C28 C29 C30 C31 C32 CMP_X: byte 189 4 byte ibm real C33 CMP_Y: byte 193 4 byte ibm real C34 BIN_ELEV byte 53 4 byte C35 HEADER FOR FINAL DATUM CMP_STAT: byte 201 4 byte ibm real C36 C37 C38 C39 SEG Y REV1 C40 END EBCDIC"
       },
       "sourceSubmission": "GDR 1141",
       "sourceFile": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Legacy Line 11/Line_L11 _PSTM_UnEnh.segy",
@@ -1993,23 +2537,91 @@
       "productKind": "pstm",
       "domainKind": "time",
       "domainUnit": "ms",
-      "datumM": 1800.0,
+      "datumM": 2133.6,
       "sourceGeometry": {
-        "status": "unresolved",
-        "geometrySource": "navigation-or-envelope-fallback",
+        "status": "trace-header-derived",
+        "geometrySource": "trace-header-cmp-ibm-real-state-plane-nad27-ftus-to-utm",
         "horizontalCrs": {
           "epsg": 26912,
           "name": "NAD83 / UTM Zone 12N"
         },
         "coordinateBasis": "utm-trace-header-cmp",
         "traceCount": 681,
-        "validTraceCount": 0,
-        "coordinateFields": {},
-        "cmpBoundsUtm": null,
-        "sceneBounds": null,
+        "validTraceCount": 681,
+        "coordinateFields": {
+          "cmpX": {
+            "byte": 189,
+            "format": "ibm-real-4"
+          },
+          "cmpY": {
+            "byte": 193,
+            "format": "ibm-real-4"
+          },
+          "inline": {
+            "bytes": [
+              9,
+              10
+            ],
+            "format": "int16"
+          },
+          "crossline": {
+            "bytes": [
+              13,
+              14
+            ],
+            "format": "int16"
+          },
+          "sourceCoordinateSystem": {
+            "epsg": 32043,
+            "name": "NAD27 / Utah Central (ftUS)",
+            "unit": "US survey foot"
+          },
+          "targetCoordinateSystem": {
+            "epsg": 26912,
+            "name": "NAD83 / UTM Zone 12N",
+            "unit": "metre"
+          }
+        },
+        "cmpBoundsUtm": {
+          "min": [
+            329216.197,
+            4258908.5283
+          ],
+          "max": [
+            334696.9341,
+            4273101.6208
+          ]
+        },
+        "sceneBounds": {
+          "min": [
+            -12251.153,
+            -14465.9717,
+            -6630.4
+          ],
+          "max": [
+            -6770.4159,
+            -272.8792,
+            2133.6
+          ]
+        },
         "registrationStatus": "unverified",
         "canClaimPreciseRegistration": false,
-        "reason": "Trace-header coordinates are used for placement; survey-grade registration claims remain review-gated until control-point validation."
+        "reason": "Trace-header coordinates are used for placement; survey-grade registration claims remain review-gated until control-point validation.",
+        "sourceCoordinateSystem": {
+          "epsg": 32043,
+          "name": "NAD27 / Utah Central (ftUS)",
+          "unit": "US survey foot",
+          "headerEvidence": "US STATE PLANE NAD 27",
+          "selectionReason": "legacy header declares US State Plane NAD27; zone text is inconsistent across delivered lines"
+        },
+        "coordinateTransform": {
+          "method": "pyproj.Transformer.from_crs(..., EPSG:26912, always_xy=True)",
+          "targetEpsg": 26912,
+          "candidateEpsg": 32043,
+          "acceptedTraceCount": 681,
+          "centroidDistanceToForgeM": 3621.498,
+          "selectionRule": "choose transformed candidate with plausible UTM coordinates nearest expected FORGE survey center"
+        }
       },
       "sourceUnitStatus": "not-depth-m-domain",
       "traceCount": 681,
@@ -2029,7 +2641,7 @@
         "sourceStem": "Line_L11_Unmigrated_Time_Stack",
         "sourceSubmission": "GDR 1141",
         "sourceFile": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Legacy Line 11/Line_L11_Unmigrated_Time_Stack.segy",
-        "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE 2D -B11 Unmigrated Time Stack SEGY AREA Utah C 3 YEAR ACQUIRED: 1979 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 2ft TRACE LENGTH: 20000 ft C 5 CMP RANGE: 1-681 CMP_FOLD: 45 C 6 COORD SYSTEM: US STATE PLANE 4302 NAD 27 C 7 C 8 C 9 DATE:3/28/2019 C10 DATUM: 7000 ft REPLACEMENT VELOCITY: 10000 ft/s C12 CMP Bin : 75 ft C13 PRODUCT: PSDM Stack in depth C14 PROCESSING FLOW: C15 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C16 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C17 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C18 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C19 POST DECON NOISE ATTENUATION - SPECTRAL EDIT and DESPIKE C20 RESIDUAL STATICS C21 PSDM tomographic VELOCITY ANALYSIS C22 Stack C23 BPF, 1000 ms AGC SCALING C24 DATA AT FINAL DATUM C25 C26 C27 C28 C29 C30 C31 C32 CMP_X: byte "
+        "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE 2D -B11 Unmigrated Time Stack SEGY AREA Utah C 3 YEAR ACQUIRED: 1979 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 2ft TRACE LENGTH: 20000 ft C 5 CMP RANGE: 1-681 CMP_FOLD: 45 C 6 COORD SYSTEM: US STATE PLANE 4302 NAD 27 C 7 C 8 C 9 DATE:3/28/2019 C10 DATUM: 7000 ft REPLACEMENT VELOCITY: 10000 ft/s C12 CMP Bin : 75 ft C13 PRODUCT: PSDM Stack in depth C14 PROCESSING FLOW: C15 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C16 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C17 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C18 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C19 POST DECON NOISE ATTENUATION - SPECTRAL EDIT and DESPIKE C20 RESIDUAL STATICS C21 PSDM tomographic VELOCITY ANALYSIS C22 Stack C23 BPF, 1000 ms AGC SCALING C24 DATA AT FINAL DATUM C25 C26 C27 C28 C29 C30 C31 C32 CMP_X: byte 189 4 byte ibm real C33 CMP_X: byte 193 4 byte ibm real C34 BIN_ELEV byte 53 4 byte C35 HEADER FOR FINAL DATUM CMP_STAT: byte 201 4 byte ibm real C36 C37 C38 C39 SEG Y REV1 C40 END EBCDIC"
       },
       "sourceSubmission": "GDR 1141",
       "sourceFile": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Legacy Line 11/Line_L11_Unmigrated_Time_Stack.segy",
@@ -2037,23 +2649,91 @@
       "productKind": "pstm",
       "domainKind": "time",
       "domainUnit": "ms",
-      "datumM": 1800.0,
+      "datumM": 2133.6,
       "sourceGeometry": {
-        "status": "unresolved",
-        "geometrySource": "navigation-or-envelope-fallback",
+        "status": "trace-header-derived",
+        "geometrySource": "trace-header-cmp-ibm-real-state-plane-nad27-ftus-to-utm",
         "horizontalCrs": {
           "epsg": 26912,
           "name": "NAD83 / UTM Zone 12N"
         },
         "coordinateBasis": "utm-trace-header-cmp",
         "traceCount": 681,
-        "validTraceCount": 0,
-        "coordinateFields": {},
-        "cmpBoundsUtm": null,
-        "sceneBounds": null,
+        "validTraceCount": 681,
+        "coordinateFields": {
+          "cmpX": {
+            "byte": 189,
+            "format": "ibm-real-4"
+          },
+          "cmpY": {
+            "byte": 193,
+            "format": "ibm-real-4"
+          },
+          "inline": {
+            "bytes": [
+              9,
+              10
+            ],
+            "format": "int16"
+          },
+          "crossline": {
+            "bytes": [
+              13,
+              14
+            ],
+            "format": "int16"
+          },
+          "sourceCoordinateSystem": {
+            "epsg": 32043,
+            "name": "NAD27 / Utah Central (ftUS)",
+            "unit": "US survey foot"
+          },
+          "targetCoordinateSystem": {
+            "epsg": 26912,
+            "name": "NAD83 / UTM Zone 12N",
+            "unit": "metre"
+          }
+        },
+        "cmpBoundsUtm": {
+          "min": [
+            329216.197,
+            4258908.5283
+          ],
+          "max": [
+            334696.9341,
+            4273101.6208
+          ]
+        },
+        "sceneBounds": {
+          "min": [
+            -12251.153,
+            -14465.9717,
+            -6630.4
+          ],
+          "max": [
+            -6770.4159,
+            -272.8792,
+            2133.6
+          ]
+        },
         "registrationStatus": "unverified",
         "canClaimPreciseRegistration": false,
-        "reason": "Trace-header coordinates are used for placement; survey-grade registration claims remain review-gated until control-point validation."
+        "reason": "Trace-header coordinates are used for placement; survey-grade registration claims remain review-gated until control-point validation.",
+        "sourceCoordinateSystem": {
+          "epsg": 32043,
+          "name": "NAD27 / Utah Central (ftUS)",
+          "unit": "US survey foot",
+          "headerEvidence": "US STATE PLANE NAD 27",
+          "selectionReason": "legacy header declares US State Plane NAD27; zone text is inconsistent across delivered lines"
+        },
+        "coordinateTransform": {
+          "method": "pyproj.Transformer.from_crs(..., EPSG:26912, always_xy=True)",
+          "targetEpsg": 26912,
+          "candidateEpsg": 32043,
+          "acceptedTraceCount": 681,
+          "centroidDistanceToForgeM": 3621.498,
+          "selectionRule": "choose transformed candidate with plausible UTM coordinates nearest expected FORGE survey center"
+        }
       },
       "sourceUnitStatus": "not-depth-m-domain",
       "traceCount": 681,
@@ -2073,7 +2753,7 @@
         "sourceStem": "Line_L5_PSTM_Enh",
         "sourceSubmission": "GDR 1141",
         "sourceFile": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Legacy Line 5/Line_L5_PSTM_Enh.segy",
-        "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE 2D -A5 PSTM Stack Enhanced SEGY AREA Utah C 3 YEAR ACQUIRED: 1979 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 2ms TRACE LENGTH: 4384 ms C 5 CMP RANGE: 1-439 CMP_FOLD: 30 C 6 COORD SYSTEM: US STATE PLANE 4302 NAD 27 C 7 C 8 C 9 DATE:3/28/2019 C10 DATUM: 7000 ft REPLACEMENT VELOCITY: 10000 ft/s C12 CMP Bin : 100 ft C13 PRODUCT: PSTM Stack in time C14 PROCESSING FLOW: C15 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C16 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C17 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C18 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C19 POST DECON NOISE ATTENUATION - SPECTRAL EDIT and DESPIKE C20 RESIDUAL STATICS C21 AGC C22 PSTM C23 STACK C24 C25 C26 C27 C28 C29 C30 C31 C32 CMP_X: byte 189 4 byte ibm real C33 CMP_Y: byte 193 4 byte ibm real C34 BIN_ELEV byte 5"
+        "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE 2D -A5 PSTM Stack Enhanced SEGY AREA Utah C 3 YEAR ACQUIRED: 1979 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 2ms TRACE LENGTH: 4384 ms C 5 CMP RANGE: 1-439 CMP_FOLD: 30 C 6 COORD SYSTEM: US STATE PLANE 4302 NAD 27 C 7 C 8 C 9 DATE:3/28/2019 C10 DATUM: 7000 ft REPLACEMENT VELOCITY: 10000 ft/s C12 CMP Bin : 100 ft C13 PRODUCT: PSTM Stack in time C14 PROCESSING FLOW: C15 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C16 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C17 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C18 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C19 POST DECON NOISE ATTENUATION - SPECTRAL EDIT and DESPIKE C20 RESIDUAL STATICS C21 AGC C22 PSTM C23 STACK C24 C25 C26 C27 C28 C29 C30 C31 C32 CMP_X: byte 189 4 byte ibm real C33 CMP_Y: byte 193 4 byte ibm real C34 BIN_ELEV byte 53 4 byte C35 HEADER FOR FINAL DATUM CMP_STAT: byte 201 4 byte ibm real C36 C37 C38 C39 SEG Y REV1 C40 END EBCDIC"
       },
       "sourceSubmission": "GDR 1141",
       "sourceFile": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Legacy Line 5/Line_L5_PSTM_Enh.segy",
@@ -2081,23 +2761,91 @@
       "productKind": "pstm",
       "domainKind": "time",
       "domainUnit": "ms",
-      "datumM": 1800.0,
+      "datumM": 2133.6,
       "sourceGeometry": {
-        "status": "unresolved",
-        "geometrySource": "navigation-or-envelope-fallback",
+        "status": "trace-header-derived",
+        "geometrySource": "trace-header-cmp-ibm-real-state-plane-nad27-ftus-to-utm",
         "horizontalCrs": {
           "epsg": 26912,
           "name": "NAD83 / UTM Zone 12N"
         },
         "coordinateBasis": "utm-trace-header-cmp",
         "traceCount": 439,
-        "validTraceCount": 0,
-        "coordinateFields": {},
-        "cmpBoundsUtm": null,
-        "sceneBounds": null,
+        "validTraceCount": 439,
+        "coordinateFields": {
+          "cmpX": {
+            "byte": 189,
+            "format": "ibm-real-4"
+          },
+          "cmpY": {
+            "byte": 193,
+            "format": "ibm-real-4"
+          },
+          "inline": {
+            "bytes": [
+              9,
+              10
+            ],
+            "format": "int16"
+          },
+          "crossline": {
+            "bytes": [
+              13,
+              14
+            ],
+            "format": "int16"
+          },
+          "sourceCoordinateSystem": {
+            "epsg": 32044,
+            "name": "NAD27 / Utah South (ftUS)",
+            "unit": "US survey foot"
+          },
+          "targetCoordinateSystem": {
+            "epsg": 26912,
+            "name": "NAD83 / UTM Zone 12N",
+            "unit": "metre"
+          }
+        },
+        "cmpBoundsUtm": {
+          "min": [
+            328589.0448,
+            4259669.198
+          ],
+          "max": [
+            341446.7483,
+            4262139.1055
+          ]
+        },
+        "sceneBounds": {
+          "min": [
+            -12878.3052,
+            -13705.302,
+            -6630.4
+          ],
+          "max": [
+            -20.6017,
+            -11235.3945,
+            2133.6
+          ]
+        },
         "registrationStatus": "unverified",
         "canClaimPreciseRegistration": false,
-        "reason": "Trace-header coordinates are used for placement; survey-grade registration claims remain review-gated until control-point validation."
+        "reason": "Trace-header coordinates are used for placement; survey-grade registration claims remain review-gated until control-point validation.",
+        "sourceCoordinateSystem": {
+          "epsg": 32044,
+          "name": "NAD27 / Utah South (ftUS)",
+          "unit": "US survey foot",
+          "headerEvidence": "US STATE PLANE NAD 27",
+          "selectionReason": "legacy header declares US State Plane NAD27; zone text is inconsistent across delivered lines"
+        },
+        "coordinateTransform": {
+          "method": "pyproj.Transformer.from_crs(..., EPSG:26912, always_xy=True)",
+          "targetEpsg": 26912,
+          "candidateEpsg": 32044,
+          "acceptedTraceCount": 439,
+          "centroidDistanceToForgeM": 2086.023,
+          "selectionRule": "choose transformed candidate with plausible UTM coordinates nearest expected FORGE survey center"
+        }
       },
       "sourceUnitStatus": "not-depth-m-domain",
       "traceCount": 439,
@@ -2117,7 +2865,7 @@
         "sourceStem": "Line_L5_PSTM_UnEnh",
         "sourceSubmission": "GDR 1141",
         "sourceFile": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Legacy Line 5/Line_L5_PSTM_UnEnh.segy",
-        "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE 2D -A5 PSTM Stack Unenhanced SEGY AREA Utah C 3 YEAR ACQUIRED: 1979 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 2ms TRACE LENGTH: 4384 ms C 5 CMP RANGE: 1-439 CMP_FOLD: 30 C 6 COORD SYSTEM: US STATE PLANE 4302 NAD 27 C 7 C 8 C 9 DATE:3/28/2019 C10 DATUM: 7000 ft REPLACEMENT VELOCITY: 10000 ft/s C12 CMP Bin : 100 ft C13 PRODUCT: PSTM Stack in time C14 PROCESSING FLOW: C15 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C16 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C17 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C18 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C19 POST DECON NOISE ATTENUATION - SPECTRAL EDIT and DESPIKE C20 RESIDUAL STATICS C21 AGC C22 PSTM C23 STACK C24 C25 C26 C27 C28 C29 C30 C31 C32 CMP_X: byte 189 4 byte ibm real C33 CMP_Y: byte 193 4 byte ibm real C34 BIN_ELEV byte"
+        "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE 2D -A5 PSTM Stack Unenhanced SEGY AREA Utah C 3 YEAR ACQUIRED: 1979 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 2ms TRACE LENGTH: 4384 ms C 5 CMP RANGE: 1-439 CMP_FOLD: 30 C 6 COORD SYSTEM: US STATE PLANE 4302 NAD 27 C 7 C 8 C 9 DATE:3/28/2019 C10 DATUM: 7000 ft REPLACEMENT VELOCITY: 10000 ft/s C12 CMP Bin : 100 ft C13 PRODUCT: PSTM Stack in time C14 PROCESSING FLOW: C15 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C16 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C17 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C18 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C19 POST DECON NOISE ATTENUATION - SPECTRAL EDIT and DESPIKE C20 RESIDUAL STATICS C21 AGC C22 PSTM C23 STACK C24 C25 C26 C27 C28 C29 C30 C31 C32 CMP_X: byte 189 4 byte ibm real C33 CMP_Y: byte 193 4 byte ibm real C34 BIN_ELEV byte 53 4 byte C35 HEADER FOR FINAL DATUM CMP_STAT: byte 201 4 byte ibm real C36 C37 C38 C39 SEG Y REV1 C40 END EBCDIC"
       },
       "sourceSubmission": "GDR 1141",
       "sourceFile": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Legacy Line 5/Line_L5_PSTM_UnEnh.segy",
@@ -2125,23 +2873,91 @@
       "productKind": "pstm",
       "domainKind": "time",
       "domainUnit": "ms",
-      "datumM": 1800.0,
+      "datumM": 2133.6,
       "sourceGeometry": {
-        "status": "unresolved",
-        "geometrySource": "navigation-or-envelope-fallback",
+        "status": "trace-header-derived",
+        "geometrySource": "trace-header-cmp-ibm-real-state-plane-nad27-ftus-to-utm",
         "horizontalCrs": {
           "epsg": 26912,
           "name": "NAD83 / UTM Zone 12N"
         },
         "coordinateBasis": "utm-trace-header-cmp",
         "traceCount": 439,
-        "validTraceCount": 0,
-        "coordinateFields": {},
-        "cmpBoundsUtm": null,
-        "sceneBounds": null,
+        "validTraceCount": 439,
+        "coordinateFields": {
+          "cmpX": {
+            "byte": 189,
+            "format": "ibm-real-4"
+          },
+          "cmpY": {
+            "byte": 193,
+            "format": "ibm-real-4"
+          },
+          "inline": {
+            "bytes": [
+              9,
+              10
+            ],
+            "format": "int16"
+          },
+          "crossline": {
+            "bytes": [
+              13,
+              14
+            ],
+            "format": "int16"
+          },
+          "sourceCoordinateSystem": {
+            "epsg": 32044,
+            "name": "NAD27 / Utah South (ftUS)",
+            "unit": "US survey foot"
+          },
+          "targetCoordinateSystem": {
+            "epsg": 26912,
+            "name": "NAD83 / UTM Zone 12N",
+            "unit": "metre"
+          }
+        },
+        "cmpBoundsUtm": {
+          "min": [
+            328589.0448,
+            4259669.198
+          ],
+          "max": [
+            341446.7483,
+            4262139.1055
+          ]
+        },
+        "sceneBounds": {
+          "min": [
+            -12878.3052,
+            -13705.302,
+            -6630.4
+          ],
+          "max": [
+            -20.6017,
+            -11235.3945,
+            2133.6
+          ]
+        },
         "registrationStatus": "unverified",
         "canClaimPreciseRegistration": false,
-        "reason": "Trace-header coordinates are used for placement; survey-grade registration claims remain review-gated until control-point validation."
+        "reason": "Trace-header coordinates are used for placement; survey-grade registration claims remain review-gated until control-point validation.",
+        "sourceCoordinateSystem": {
+          "epsg": 32044,
+          "name": "NAD27 / Utah South (ftUS)",
+          "unit": "US survey foot",
+          "headerEvidence": "US STATE PLANE NAD 27",
+          "selectionReason": "legacy header declares US State Plane NAD27; zone text is inconsistent across delivered lines"
+        },
+        "coordinateTransform": {
+          "method": "pyproj.Transformer.from_crs(..., EPSG:26912, always_xy=True)",
+          "targetEpsg": 26912,
+          "candidateEpsg": 32044,
+          "acceptedTraceCount": 439,
+          "centroidDistanceToForgeM": 2086.023,
+          "selectionRule": "choose transformed candidate with plausible UTM coordinates nearest expected FORGE survey center"
+        }
       },
       "sourceUnitStatus": "not-depth-m-domain",
       "traceCount": 439,
@@ -2161,7 +2977,7 @@
         "sourceStem": "Line_L5_Unmigrated_Time_Stack",
         "sourceSubmission": "GDR 1141",
         "sourceFile": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Legacy Line 5/Line_L5_Unmigrated_Time_Stack.segy",
-        "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE 2D -A5 Unmigrated Stack SEGY AREA Utah C 3 YEAR ACQUIRED: 1979 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 4ft TRACE LENGTH: 20000 ft C 5 CMP RANGE: 1-439 CMP_FOLD: 30 C 6 COORD SYSTEM: US STATE PLANE 4302 NAD 27 C 7 C 8 C 9 DATE:3/28/2019 C10 DATUM: 7000 ft REPLACEMENT VELOCITY: 10000 ft/s C12 CMP Bin : 100 ft C13 PRODUCT: Time Stack C14 PROCESSING FLOW: C15 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C16 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C17 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C18 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C19 POST DECON NOISE ATTENUATION - SPECTRAL EDIT and DESPIKE C20 RESIDUAL STATICS C21 C22 Stack C23 BPF, 1000 ms AGC SCALING C24 DATA AT FINAL DATUM C25 C26 C27 C28 C29 C30 C31 C32 CMP_X: byte 189 4 byte ibm real C33 CMP_X: byte 193 4 byte ib"
+        "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE 2D -A5 Unmigrated Stack SEGY AREA Utah C 3 YEAR ACQUIRED: 1979 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 4ft TRACE LENGTH: 20000 ft C 5 CMP RANGE: 1-439 CMP_FOLD: 30 C 6 COORD SYSTEM: US STATE PLANE 4302 NAD 27 C 7 C 8 C 9 DATE:3/28/2019 C10 DATUM: 7000 ft REPLACEMENT VELOCITY: 10000 ft/s C12 CMP Bin : 100 ft C13 PRODUCT: Time Stack C14 PROCESSING FLOW: C15 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C16 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C17 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C18 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C19 POST DECON NOISE ATTENUATION - SPECTRAL EDIT and DESPIKE C20 RESIDUAL STATICS C21 C22 Stack C23 BPF, 1000 ms AGC SCALING C24 DATA AT FINAL DATUM C25 C26 C27 C28 C29 C30 C31 C32 CMP_X: byte 189 4 byte ibm real C33 CMP_X: byte 193 4 byte ibm real C34 BIN_ELEV byte 53 4 byte C35 HEADER FOR FINAL DATUM CMP_STAT: byte 201 4 byte ibm real C36 C37 C38 C39 SEG Y REV1 C40 END EBCDIC"
       },
       "sourceSubmission": "GDR 1141",
       "sourceFile": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing/Legacy Line 5/Line_L5_Unmigrated_Time_Stack.segy",
@@ -2169,23 +2985,91 @@
       "productKind": "pstm",
       "domainKind": "time",
       "domainUnit": "ms",
-      "datumM": 1800.0,
+      "datumM": 2133.6,
       "sourceGeometry": {
-        "status": "unresolved",
-        "geometrySource": "navigation-or-envelope-fallback",
+        "status": "trace-header-derived",
+        "geometrySource": "trace-header-cmp-ibm-real-state-plane-nad27-ftus-to-utm",
         "horizontalCrs": {
           "epsg": 26912,
           "name": "NAD83 / UTM Zone 12N"
         },
         "coordinateBasis": "utm-trace-header-cmp",
         "traceCount": 439,
-        "validTraceCount": 0,
-        "coordinateFields": {},
-        "cmpBoundsUtm": null,
-        "sceneBounds": null,
+        "validTraceCount": 439,
+        "coordinateFields": {
+          "cmpX": {
+            "byte": 189,
+            "format": "ibm-real-4"
+          },
+          "cmpY": {
+            "byte": 193,
+            "format": "ibm-real-4"
+          },
+          "inline": {
+            "bytes": [
+              9,
+              10
+            ],
+            "format": "int16"
+          },
+          "crossline": {
+            "bytes": [
+              13,
+              14
+            ],
+            "format": "int16"
+          },
+          "sourceCoordinateSystem": {
+            "epsg": 32044,
+            "name": "NAD27 / Utah South (ftUS)",
+            "unit": "US survey foot"
+          },
+          "targetCoordinateSystem": {
+            "epsg": 26912,
+            "name": "NAD83 / UTM Zone 12N",
+            "unit": "metre"
+          }
+        },
+        "cmpBoundsUtm": {
+          "min": [
+            328589.0448,
+            4259669.198
+          ],
+          "max": [
+            341446.7483,
+            4262139.1055
+          ]
+        },
+        "sceneBounds": {
+          "min": [
+            -12878.3052,
+            -13705.302,
+            -6466.4
+          ],
+          "max": [
+            -20.6017,
+            -11235.3945,
+            2133.6
+          ]
+        },
         "registrationStatus": "unverified",
         "canClaimPreciseRegistration": false,
-        "reason": "Trace-header coordinates are used for placement; survey-grade registration claims remain review-gated until control-point validation."
+        "reason": "Trace-header coordinates are used for placement; survey-grade registration claims remain review-gated until control-point validation.",
+        "sourceCoordinateSystem": {
+          "epsg": 32044,
+          "name": "NAD27 / Utah South (ftUS)",
+          "unit": "US survey foot",
+          "headerEvidence": "US STATE PLANE NAD 27",
+          "selectionReason": "legacy header declares US State Plane NAD27; zone text is inconsistent across delivered lines"
+        },
+        "coordinateTransform": {
+          "method": "pyproj.Transformer.from_crs(..., EPSG:26912, always_xy=True)",
+          "targetEpsg": 26912,
+          "candidateEpsg": 32044,
+          "acceptedTraceCount": 439,
+          "centroidDistanceToForgeM": 2086.023,
+          "selectionRule": "choose transformed candidate with plausible UTM coordinates nearest expected FORGE survey center"
+        }
       },
       "sourceUnitStatus": "not-depth-m-domain",
       "traceCount": 439,
@@ -2205,7 +3089,7 @@
         "sourceStem": "Forge2D-301_Stack_01312018",
         "sourceSubmission": "GDR 1015",
         "sourceFile": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1015/2D/Processed_Data/Forge2D-301_Stack_01312018.sgy",
-        "textHeaderExcerpt": "C 1 Client: University of Utah Dataset: Forge2D-301_Stack_01312018.sgy C 2 Project: Forge 2D - 301 Stack at final datum C 3 Area: Beaver Co., UT Processing Flow Dataset: stk-elev-v3-m2-grrm C 4 Date of File: January 31, 2018 C 5 Media ID: 01312018-1 Media Format: SEG-Y,IBM 32-bit float,4sec,1ms C 6 Recorded: Paragon Geophysical (2017) C 7 Source Type: Vib, 4 swps, Linear Sweep 4-84 Hz, 12s sweep C 8 C 9 C10 Max offset: C11 Source Interval: 50m Receiver Interval: 50m C12 C13 Sample Interval: 1 ms Record Length: 4 sec Data Samples/Trace: 4000 C14 Datum: 1800 m ASL Replacement Vel: 2500 m/s C15 C16 Key Header Word Byte Locations: C17 Description Byte Loc. Format C18 Shotpoint 17-20 4i C19 CDP 21-24 4i C20 CDP-X 81-84 4i C21 CDP-Y 85-89 4i C22 C23 Processing: segy in, typed geometry from observer notes, gain recovery, C24 trace equalization, surface consistent spiking deconvolution, elevatio"
+        "textHeaderExcerpt": "C 1 Client: University of Utah Dataset: Forge2D-301_Stack_01312018.sgy C 2 Project: Forge 2D - 301 Stack at final datum C 3 Area: Beaver Co., UT Processing Flow Dataset: stk-elev-v3-m2-grrm C 4 Date of File: January 31, 2018 C 5 Media ID: 01312018-1 Media Format: SEG-Y,IBM 32-bit float,4sec,1ms C 6 Recorded: Paragon Geophysical (2017) C 7 Source Type: Vib, 4 swps, Linear Sweep 4-84 Hz, 12s sweep C 8 C 9 C10 Max offset: C11 Source Interval: 50m Receiver Interval: 50m C12 C13 Sample Interval: 1 ms Record Length: 4 sec Data Samples/Trace: 4000 C14 Datum: 1800 m ASL Replacement Vel: 2500 m/s C15 C16 Key Header Word Byte Locations: C17 Description Byte Loc. Format C18 Shotpoint 17-20 4i C19 CDP 21-24 4i C20 CDP-X 81-84 4i C21 CDP-Y 85-89 4i C22 C23 Processing: segy in, typed geometry from observer notes, gain recovery, C24 trace equalization, surface consistent spiking deconvolution, elevation C25 statics, iterative velocity analysis, iterative passes of surface C26 consistent residual statics, topmute, CDP-stack, bandpass filter C27 8-10-60-72, time variant scaling, f-x decon, o/p to segy (4sec, 1ms). C28 C29 C30 C31 Bin Definition: C32 Survey: NAD83, UTM 12N (meters) C33 CDP X-Coord Y-Coord C34 1002 (SE) 333124.31 4264388.00 C35 1322 (NW) 329279.91 4265315.00 C36 C37 C38 Straight Line Geometry Bin definition: 25 m C39 C40 Processed by STAR Geophysics, Inc. Oklahoma City, OK USA January 2018"
       },
       "sourceSubmission": "GDR 1015",
       "sourceFile": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1015/2D/Processed_Data/Forge2D-301_Stack_01312018.sgy",
@@ -2521,23 +3405,91 @@
       "productKind": "velocity",
       "domainKind": "velocity-time",
       "domainUnit": "ms",
-      "datumM": 1800.0,
+      "datumM": 2133.6,
       "sourceGeometry": {
-        "status": "unresolved",
-        "geometrySource": "navigation-or-envelope-fallback",
+        "status": "trace-header-derived",
+        "geometrySource": "trace-header-cmp-ibm-real-state-plane-nad27-ftus-to-utm",
         "horizontalCrs": {
           "epsg": 26912,
           "name": "NAD83 / UTM Zone 12N"
         },
         "coordinateBasis": "utm-trace-header-cmp",
         "traceCount": 137,
-        "validTraceCount": 0,
-        "coordinateFields": {},
-        "cmpBoundsUtm": null,
-        "sceneBounds": null,
+        "validTraceCount": 137,
+        "coordinateFields": {
+          "cmpX": {
+            "byte": 189,
+            "format": "ibm-real-4"
+          },
+          "cmpY": {
+            "byte": 193,
+            "format": "ibm-real-4"
+          },
+          "inline": {
+            "bytes": [
+              9,
+              10
+            ],
+            "format": "int16"
+          },
+          "crossline": {
+            "bytes": [
+              13,
+              14
+            ],
+            "format": "int16"
+          },
+          "sourceCoordinateSystem": {
+            "epsg": 32043,
+            "name": "NAD27 / Utah Central (ftUS)",
+            "unit": "US survey foot"
+          },
+          "targetCoordinateSystem": {
+            "epsg": 26912,
+            "name": "NAD83 / UTM Zone 12N",
+            "unit": "metre"
+          }
+        },
+        "cmpBoundsUtm": {
+          "min": [
+            329216.197,
+            4258908.5283
+          ],
+          "max": [
+            334696.9341,
+            4273101.6208
+          ]
+        },
+        "sceneBounds": {
+          "min": [
+            -12251.153,
+            -14465.9717,
+            -37866.4
+          ],
+          "max": [
+            -6770.4159,
+            -272.8792,
+            2133.6
+          ]
+        },
         "registrationStatus": "unverified",
         "canClaimPreciseRegistration": false,
-        "reason": "Trace-header coordinates are used for placement; survey-grade registration claims remain review-gated until control-point validation."
+        "reason": "Trace-header coordinates are used for placement; survey-grade registration claims remain review-gated until control-point validation.",
+        "sourceCoordinateSystem": {
+          "epsg": 32043,
+          "name": "NAD27 / Utah Central (ftUS)",
+          "unit": "US survey foot",
+          "headerEvidence": "US STATE PLANE NAD 27",
+          "selectionReason": "legacy header declares US State Plane NAD27; zone text is inconsistent across delivered lines"
+        },
+        "coordinateTransform": {
+          "method": "pyproj.Transformer.from_crs(..., EPSG:26912, always_xy=True)",
+          "targetEpsg": 26912,
+          "candidateEpsg": 32043,
+          "acceptedTraceCount": 137,
+          "centroidDistanceToForgeM": 3623.863,
+          "selectionRule": "choose transformed candidate with plausible UTM coordinates nearest expected FORGE survey center"
+        }
       },
       "sourceUnitStatus": "not-depth-m-domain",
       "traceCount": 137,
@@ -2565,23 +3517,91 @@
       "productKind": "velocity",
       "domainKind": "velocity-time",
       "domainUnit": "ms",
-      "datumM": 1800.0,
+      "datumM": 2133.6,
       "sourceGeometry": {
-        "status": "unresolved",
-        "geometrySource": "navigation-or-envelope-fallback",
+        "status": "trace-header-derived",
+        "geometrySource": "trace-header-cmp-ibm-real-state-plane-nad27-ftus-to-utm",
         "horizontalCrs": {
           "epsg": 26912,
           "name": "NAD83 / UTM Zone 12N"
         },
         "coordinateBasis": "utm-trace-header-cmp",
         "traceCount": 89,
-        "validTraceCount": 0,
-        "coordinateFields": {},
-        "cmpBoundsUtm": null,
-        "sceneBounds": null,
+        "validTraceCount": 89,
+        "coordinateFields": {
+          "cmpX": {
+            "byte": 189,
+            "format": "ibm-real-4"
+          },
+          "cmpY": {
+            "byte": 193,
+            "format": "ibm-real-4"
+          },
+          "inline": {
+            "bytes": [
+              9,
+              10
+            ],
+            "format": "int16"
+          },
+          "crossline": {
+            "bytes": [
+              13,
+              14
+            ],
+            "format": "int16"
+          },
+          "sourceCoordinateSystem": {
+            "epsg": 32044,
+            "name": "NAD27 / Utah South (ftUS)",
+            "unit": "US survey foot"
+          },
+          "targetCoordinateSystem": {
+            "epsg": 26912,
+            "name": "NAD83 / UTM Zone 12N",
+            "unit": "metre"
+          }
+        },
+        "cmpBoundsUtm": {
+          "min": [
+            328589.0448,
+            4259669.198
+          ],
+          "max": [
+            341446.7483,
+            4262139.1055
+          ]
+        },
+        "sceneBounds": {
+          "min": [
+            -12878.3052,
+            -13705.302,
+            -37866.4
+          ],
+          "max": [
+            -20.6017,
+            -11235.3945,
+            2133.6
+          ]
+        },
         "registrationStatus": "unverified",
         "canClaimPreciseRegistration": false,
-        "reason": "Trace-header coordinates are used for placement; survey-grade registration claims remain review-gated until control-point validation."
+        "reason": "Trace-header coordinates are used for placement; survey-grade registration claims remain review-gated until control-point validation.",
+        "sourceCoordinateSystem": {
+          "epsg": 32044,
+          "name": "NAD27 / Utah South (ftUS)",
+          "unit": "US survey foot",
+          "headerEvidence": "US STATE PLANE NAD 27",
+          "selectionReason": "legacy header declares US State Plane NAD27; zone text is inconsistent across delivered lines"
+        },
+        "coordinateTransform": {
+          "method": "pyproj.Transformer.from_crs(..., EPSG:26912, always_xy=True)",
+          "targetEpsg": 26912,
+          "candidateEpsg": 32044,
+          "acceptedTraceCount": 89,
+          "centroidDistanceToForgeM": 2093.058,
+          "selectionRule": "choose transformed candidate with plausible UTM coordinates nearest expected FORGE survey center"
+        }
       },
       "sourceUnitStatus": "not-depth-m-domain",
       "traceCount": 89,

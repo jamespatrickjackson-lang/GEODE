@@ -828,8 +828,10 @@ async function buildSectionMesh(
     seismicSectionGeometryKind: geometry.userData.seismicSectionGeometryKind,
     seismicSectionVertexCount:
       geometry.getAttribute("position")?.count ?? 0,
+    seismicSectionPath: section.path,
     seismicSectionPathPointCount:
       geometry.userData.seismicSectionPathPointCount,
+    seismicSectionSurfaceGrid: section.surfaceGrid,
     seismicSectionSurfaceGridPointCount:
       geometry.userData.seismicSectionSurfaceGridPointCount,
     seismicLodTier: tier,

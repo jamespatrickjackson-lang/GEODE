@@ -346,6 +346,109 @@ test("seismic editor exposes first-class all-2D section controls", () => {
   );
 });
 
+test("seismic editor container uses logical source and display groups without audience framing", () => {
+  const capabilitySource = readText(
+    "src",
+    "editor",
+    "layerControls",
+    "seismic",
+    "SeismicCapabilityLayerContainers.tsx",
+  );
+  const browserSource = readText(
+    "src",
+    "editor",
+    "layerControls",
+    "seismic",
+    "SeismicBrowserControls.tsx",
+  );
+  const visibilitySource = readText(
+    "src",
+    "editor",
+    "layerControls",
+    "seismic",
+    "SeismicProductVisibilityControls.tsx",
+  );
+  const sourceRegistrationSource = readText(
+    "src",
+    "editor",
+    "layerControls",
+    "seismic",
+    "SeismicSourceAndRegistrationControls.tsx",
+  );
+  const seismicModelSource = readText(
+    "src",
+    "editor",
+    "layerControls",
+    "seismic",
+    "seismicModel.ts",
+  );
+
+  for (const source of [capabilitySource, browserSource]) {
+    assert.doesNotMatch(source, /SEISMIC_AUDIENCE_MODE_OPTIONS/);
+    assert.doesNotMatch(source, /seismic-audience-mode-select/);
+    assert.doesNotMatch(source, /seismic-audience-preset-select/);
+    assert.doesNotMatch(source, /seismic-export-summary/);
+  }
+  assert.doesNotMatch(sourceRegistrationSource, /Audience/);
+  assert.match(sourceRegistrationSource, /Source and registration/);
+  assert.match(sourceRegistrationSource, /visibleProductCount/);
+  assert.match(sourceRegistrationSource, /placementLabel/);
+  assert.match(sourceRegistrationSource, /seismicVerticalDatumMode/);
+  assert.match(seismicModelSource, /Source datum/);
+  assert.match(seismicModelSource, /1800 m/);
+  assert.match(seismicModelSource, /Terrain top/);
+  assert.match(capabilitySource, /seismicVerticalDatumMode/);
+  assert.match(browserSource, /seismicVerticalDatumMode/);
+
+  assert.match(visibilitySource, /Product visibility/);
+
+  for (const label of [
+    "Source-gated products",
+    "SeismicSourceAndRegistrationControls",
+    "2D sections",
+    "3D products",
+    "2D product details",
+    "Processing comparison",
+    "Display",
+    "Survey geometry",
+    "Figure annotations",
+    "Integrated geophysics",
+  ]) {
+    assert.match(capabilitySource, new RegExp(label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+  }
+
+  assert.doesNotMatch(capabilitySource, /title="Display cleanup"/);
+  assert.doesNotMatch(capabilitySource, /2D \/ legacy section theatre/);
+  assert.doesNotMatch(capabilitySource, /3D \/ raymarch products/);
+  assert.doesNotMatch(capabilitySource, /Section-only products/);
+  assert.doesNotMatch(browserSource, /Technical controls/);
+  assert.doesNotMatch(browserSource, /Seismic product controls/);
+  assert.match(browserSource, /Source and registration/);
+  assert.match(browserSource, /Integrated geophysics/);
+});
+
+test("all-2D review page uses shared 1800m datum display mode", () => {
+  const page = readJson(
+    "projects",
+    "utah-forge",
+    "pages",
+    "60_all_2d_seismic_sections_review.json",
+  );
+  const seismicOverride =
+    page.layerOverrides?.["utah-forge-phase3-seismic-browser"];
+
+  assert.equal(
+    seismicOverride?.visible,
+    true,
+    "all-2D review page should force the seismic layer visible so products load",
+  );
+  assert.equal(
+    seismicOverride?.seismicVerticalDatumMode,
+    "reference-1800m",
+    "all-2D review page should align section tops to the shared FORGE reference datum",
+  );
+});
+
 test("seismic show actions restore real layer visibility before product loading", () => {
   const layerPanelSource = readText("src", "editor", "LayerPanel.tsx");
   const layerPanelGroupsSource = readText(
@@ -472,5 +575,174 @@ test("authored seismic catalog pages cover only source-backed required lines", (
     project.pageOrder.some((pageId) => /line[_-]?95|95[_-]?seismic/i.test(pageId)),
     false,
     "Line 95 page must not be authored without source data",
+  );
+});
+
+test("2D seismic survey-lines review page inherits page 5 view and shows representative line curtains", () => {
+  const manifest = readJson(...seismicManifestPath);
+  const project = readJson("projects", "utah-forge", "project.json");
+  const page5 = readJson(
+    "projects",
+    "utah-forge",
+    "pages",
+    "05_mt_threshold_focus.json",
+  );
+  const page = readJson(
+    "projects",
+    "utah-forge",
+    "pages",
+    "59_all_seismic_sections_review.json",
+  );
+
+  assert.ok(
+    project.pageOrder.includes("59_all_seismic_sections_review"),
+    "all seismic sections review page should be in project order",
+  );
+  assert.equal(
+    project.pageOrder.indexOf("59_all_seismic_sections_review"),
+    project.pageOrder.indexOf("58_legacy_line_l5_seismic_products") + 1,
+    "all seismic sections review page should sit after the seismic catalog block",
+  );
+  assert.deepEqual(page.camera, page5.camera, "page should inherit page 5 camera");
+  assert.deepEqual(
+    page.dynamicCamera,
+    page5.dynamicCamera,
+    "page should inherit page 5 dynamic camera",
+  );
+
+  const visibility = page.layerOverrides?.["utah-forge-phase3-seismic-browser"]
+    ?.seismicProductVisibility;
+  assert.equal(page.visibilityOverrides?.["utah-forge-phase3-seismic-browser"], true);
+  assert.equal(page.visibilityOverrides?.terrain, true);
+  assert.equal(page.visibilityOverrides?.["utah-forge-phase3-demo-boreholes"], true);
+  assert.equal(
+    page.layerOverrides?.["utah-forge-phase3-seismic-browser"]?.seismicRenderMode,
+    "slice",
+  );
+  assert.equal(
+    page.layerOverrides?.["utah-forge-phase3-seismic-browser"]?.seismicSliceAxis,
+    "line",
+  );
+  assert.equal(
+    page.layerOverrides?.["utah-forge-phase3-seismic-browser"]?.seismicNavigationVisible,
+    true,
+  );
+  assert.equal(
+    page.layerOverrides?.["utah-forge-phase3-seismic-browser"]
+      ?.seismicNavigationRoleVisibility?.lines,
+    true,
+  );
+
+  const expectedVisibleProducts = new Set([
+    "gdr-1141-line-301-pdm-enh",
+    "gdr-1141-line-302-psdm-enh",
+    "gdr-1141-line-l11-psdm-enh-meters",
+    "gdr-1141-line-l5-psdm-enh-meters",
+  ]);
+  for (const product of manifest.products) {
+    assert.equal(
+      visibility?.[product.id],
+      expectedVisibleProducts.has(product.id),
+      `${product.id} representative 2D review visibility`,
+    );
+  }
+  assert.equal(
+    Object.keys(visibility ?? {}).length,
+    manifest.products.length,
+    "review page visibility should explicitly cover each source-backed manifest product",
+  );
+  assert.equal(
+    manifest.products
+      .filter((product) => visibility?.[product.id] === true)
+      .every((product) => product.surveyKind !== "3d"),
+    true,
+    "review page must not show 3D center slices over the 2D survey-line curtains",
+  );
+  for (const product of manifest.products.filter(
+    (candidate) => visibility?.[candidate.id] === true,
+  )) {
+    assert.equal(product.sections?.[0]?.axis, "line", `${product.id} uses line-axis section geometry`);
+    assert.ok(
+      (product.sections?.[0]?.path?.length ?? 0) >= 2,
+      `${product.id} has a survey path for its section curtain`,
+    );
+  }
+  assert.equal(
+    visibility?.["gdr-1141-forge3d-ani-psdm-stack-enh"],
+    undefined,
+    "source-gated enhanced ANI PSDM should remain non-renderable",
+  );
+});
+
+test("all 2D seismic sections review page enables every non-3D source-backed section", () => {
+  const manifest = readJson(...seismicManifestPath);
+  const project = readJson("projects", "utah-forge", "project.json");
+  const page5 = readJson(
+    "projects",
+    "utah-forge",
+    "pages",
+    "05_mt_threshold_focus.json",
+  );
+  const page = readJson(
+    "projects",
+    "utah-forge",
+    "pages",
+    "60_all_2d_seismic_sections_review.json",
+  );
+  const seismicOverrides = page.layerOverrides?.["utah-forge-phase3-seismic-browser"];
+  const visibility = seismicOverrides?.seismicProductVisibility;
+
+  assert.ok(
+    project.pageOrder.includes("60_all_2d_seismic_sections_review"),
+    "all 2D seismic sections review page should be in project order",
+  );
+  assert.equal(
+    project.pageOrder.indexOf("60_all_2d_seismic_sections_review"),
+    project.pageOrder.indexOf("59_all_seismic_sections_review") + 1,
+    "all 2D seismic sections review page should sit directly after the representative review page",
+  );
+  assert.deepEqual(page.camera, page5.camera, "page should inherit page 5 camera");
+  assert.deepEqual(
+    page.dynamicCamera,
+    page5.dynamicCamera,
+    "page should inherit page 5 dynamic camera",
+  );
+  assert.equal(page.visibilityOverrides?.["utah-forge-phase3-seismic-browser"], true);
+  assert.equal(page.visibilityOverrides?.terrain, true);
+  assert.equal(page.visibilityOverrides?.["utah-forge-phase3-demo-boreholes"], true);
+  assert.equal(seismicOverrides?.seismicRenderMode, "slice");
+  assert.equal(seismicOverrides?.seismicSliceAxis, "line");
+  assert.equal(seismicOverrides?.seismicNavigationVisible, true);
+  assert.deepEqual(seismicOverrides?.seismicNavigationRoleVisibility, {
+    sources: true,
+    receivers: true,
+    lines: true,
+  });
+  assert.equal(
+    Object.keys(visibility ?? {}).length,
+    manifest.products.length,
+    "all 2D page visibility should explicitly cover each source-backed manifest product",
+  );
+
+  const visibleProducts = manifest.products.filter((product) => visibility?.[product.id] === true);
+  assert.equal(visibleProducts.length, 30, "all 2D page should enable all 30 section products");
+  for (const product of manifest.products) {
+    assert.equal(
+      visibility?.[product.id],
+      product.surveyKind !== "3d",
+      `${product.id} all 2D review visibility`,
+    );
+  }
+  for (const product of visibleProducts) {
+    assert.equal(product.sections?.[0]?.axis, "line", `${product.id} uses line-axis section geometry`);
+    assert.ok(
+      (product.sections?.[0]?.path?.length ?? 0) >= 2,
+      `${product.id} has a survey path for its section curtain`,
+    );
+  }
+  assert.equal(
+    visibility?.["gdr-1141-forge3d-ani-psdm-stack-enh"],
+    undefined,
+    "source-gated enhanced ANI PSDM should remain non-renderable",
   );
 });

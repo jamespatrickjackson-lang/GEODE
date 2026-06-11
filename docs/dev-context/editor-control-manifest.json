@@ -1228,6 +1228,114 @@
       "backedBy": "ProjectLayerSpec.metadata.seismicRequiredProductSourceGates",
       "setterRoute": "read-only source gate with optional GDR landing-page action",
       "status": "active"
+    },
+    {
+      "id": "seismic.source-registration",
+      "label": "Source and registration",
+      "kind": "group",
+      "parentId": "section.forge-data",
+      "sourceFile": "src/editor/layerControls/seismic/SeismicSourceAndRegistrationControls.tsx",
+      "sourceAnchor": "testId=\"seismic-source-registration\"",
+      "scope": "seismic layers",
+      "backedBy": "ProjectLayerSpec.metadata.seismicProducts, ProjectLayerSpec.metadata.seismicRequiredProductSourceGates",
+      "setterRoute": "read-only source and registration summary",
+      "status": "active"
+    },
+    {
+      "id": "seismic.registration.vertical-datum",
+      "label": "Vertical datum",
+      "kind": "control",
+      "parentId": "seismic.source-registration",
+      "sourceFile": "src/editor/layerControls/seismic/SeismicSourceAndRegistrationControls.tsx",
+      "sourceAnchor": "testId=\"seismic-vertical-datum-mode-select\"",
+      "scope": "seismic layers",
+      "backedBy": "EditableStyle.seismicVerticalDatumMode",
+      "setterRoute": "SeismicSourceAndRegistrationControls onSetVerticalDatumMode / SeismicBrowserControls commit",
+      "status": "active"
+    },
+    {
+      "id": "seismic.browser.source-registration",
+      "label": "Source and registration",
+      "kind": "group",
+      "parentId": "section.forge-data",
+      "sourceFile": "src/editor/layerControls/seismic/SeismicBrowserControls.tsx",
+      "sourceAnchor": "<summary style={panelStyles.summary}>Source and registration</summary>",
+      "scope": "seismic layers",
+      "backedBy": "ProjectLayerSpec.metadata.seismicProducts, ProjectLayerSpec.metadata.crsRegistration",
+      "setterRoute": "read-only source and registration summary",
+      "status": "active"
+    },
+    {
+      "id": "seismic.browser.integrated-geophysics",
+      "label": "Integrated geophysics",
+      "kind": "group",
+      "parentId": "section.forge-data",
+      "sourceFile": "src/editor/layerControls/seismic/SeismicBrowserControls.tsx",
+      "sourceAnchor": "testId=\"seismic-mt-co-render-select\"",
+      "scope": "seismic layers",
+      "backedBy": "EditableStyle.seismicMtCoRender",
+      "setterRoute": "SeismicBrowserControls setMtCoRender",
+      "status": "active"
+    },
+    {
+      "id": "seismic.products.visibility",
+      "label": "Product visibility",
+      "kind": "control-family",
+      "parentId": "section.forge-data",
+      "sourceFile": "src/editor/layerControls/seismic/SeismicProductVisibilityControls.tsx",
+      "sourceAnchor": "Product visibility ({visibleProductCount}/{products.length})",
+      "scope": "seismic layers",
+      "backedBy": "EditableStyle.seismicProductVisibility, EditableStyle.seismicProductId",
+      "setterRoute": "SeismicProductVisibilityControls commit",
+      "status": "active"
+    },
+    {
+      "id": "seismic.products.render-mode",
+      "label": "Product render mode",
+      "kind": "control-family",
+      "parentId": "section.forge-data",
+      "sourceFile": "src/editor/layerControls/seismic/SeismicCapabilityLayerContainers.tsx",
+      "sourceAnchor": "seismic-capability-render-${product.id}",
+      "scope": "seismic products",
+      "backedBy": "EditableStyle.seismicRenderMode, EditableStyle.seismicSliceThroughVolume",
+      "setterRoute": "SeismicCapabilityLayerContainers commitProductState",
+      "status": "active"
+    },
+    {
+      "id": "seismic.display.global",
+      "label": "Display",
+      "kind": "group",
+      "parentId": "section.forge-data",
+      "sourceFile": "src/editor/layerControls/seismic/SeismicCapabilityLayerContainers.tsx",
+      "sourceAnchor": "testId=\"seismic-capability-display-cleanup\"",
+      "scope": "seismic layers",
+      "backedBy": "EditableStyle opacity/seismicColormap/seismicAmplitudeGamma/seismicRemoveBackground/seismicBackgroundCutoff/seismicVolumeSampleSteps",
+      "setterRoute": "SeismicCapabilityLayerContainers commit",
+      "status": "active"
+    },
+    {
+      "id": "seismic.navigation.roles",
+      "label": "Survey geometry roles",
+      "kind": "control-family",
+      "parentId": "section.forge-data",
+      "sourceFile": "src/editor/layerControls/seismic/SeismicCapabilityLayerContainers.tsx",
+      "sourceAnchor": "seismic-navigation-role-${item.role}",
+      "scope": "seismic layers",
+      "backedBy": "EditableStyle.seismicNavigationVisible, EditableStyle.seismicNavigationRoleVisibility",
+      "setterRoute": "SeismicCapabilityLayerContainers setNavigationRoleVisible",
+      "status": "active"
+    },
+    {
+      "id": "seismic.figure.annotations",
+      "label": "Figure annotations",
+      "kind": "control-family",
+      "parentId": "section.forge-data",
+      "sourceFile": "src/editor/layerControls/seismic/SeismicCapabilityLayerContainers.tsx",
+      "sourceAnchor": "data-testid=\"seismic-figure-annotations-visible\"",
+      "scope": "seismic layers",
+      "backedBy": "EditableStyle seismicFigure* fields",
+      "setterRoute": "SeismicCapabilityLayerContainers commit",
+      "status": "active"
     }
   ]
 }

@@ -112,6 +112,15 @@ export const SEISMIC_DEMO_DISCLOSURE_LABELS = [
   "not a mineral resource estimate",
 ];
 
+export const SEISMIC_VERTICAL_DATUM_MODE_OPTIONS = [
+  { value: "source", label: "Source datum" },
+  { value: "reference-1800m", label: "1800 m" },
+  { value: "terrain-top-preview", label: "Terrain top" },
+] as const satisfies readonly {
+  value: NonNullable<EditableStyle["seismicVerticalDatumMode"]>;
+  label: string;
+}[];
+
 export function seismicIndustryLabel(label: string): string {
   return label
     .replace(/\bUtah\s+FORGE\b/gi, "")
@@ -131,6 +140,15 @@ export function seismicColormapFromValue(
   return value === "grayscale" || value === "velocity"
     ? value
     : "blue-white-red";
+}
+
+export function seismicVerticalDatumModeFromStyle(
+  style: EditableStyle,
+): NonNullable<EditableStyle["seismicVerticalDatumMode"]> {
+  return style.seismicVerticalDatumMode === "reference-1800m" ||
+    style.seismicVerticalDatumMode === "terrain-top-preview"
+    ? style.seismicVerticalDatumMode
+    : "source";
 }
 
 export function isVelocityProduct(product: SeismicProductOption | undefined): boolean {
@@ -769,6 +787,7 @@ export function seismicBrowserPatchFromStyle(
       96,
     ),
     seismicTimeScale: styleNumber(style, "seismicTimeScale", 2),
+    seismicVerticalDatumMode: seismicVerticalDatumModeFromStyle(style),
     seismicNavigationVisible: styleBoolean(
       style,
       "seismicNavigationVisible",

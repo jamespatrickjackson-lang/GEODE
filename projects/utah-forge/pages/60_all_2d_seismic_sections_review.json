@@ -1,0 +1,156 @@
+{
+  "id": "60_all_2d_seismic_sections_review",
+  "title": "All 2D Seismic Sections Review",
+  "camera": {
+    "position": [
+      7748.442847693308,
+      -80291.83550412979,
+      28013.273246632307
+    ],
+    "target": [
+      -2988,
+      -9116,
+      -19127
+    ],
+    "up": [
+      0,
+      0,
+      1
+    ],
+    "fov": 52
+  },
+  "transition": {
+    "duration": 4000,
+    "easing": "easeInOutCubic"
+  },
+  "holdDuration": 4000,
+  "layerOverrides": {
+    "terrain": {
+      "opacity": 0.38
+    },
+    "utah-forge-phase3-seismic-browser": {
+      "visible": true,
+      "opacity": 0.52,
+      "seismicProductId": "gdr-1141-line-301-pdm-enh",
+      "seismicCapabilityPresetId": "all-2d-sections-review",
+      "seismicVerticalDatumMode": "reference-1800m",
+      "seismicProductVisibility": {
+        "gdr-1141-forge3d-poststack-time-migration-fxydecon-stack": false,
+        "gdr-1141-forge3d-ani-psdm-stack-unenh": false,
+        "gdr-1141-forge3d-pstm-stack-enh": false,
+        "gdr-1015-forge3d-velo5d-float-01312018": false,
+        "gdr-1141-line-301-pdm-enh": true,
+        "gdr-1141-line-301-psdm-unenh": true,
+        "gdr-1015-forge2d-301-migr-depth": true,
+        "gdr-1141-line-302-psdm-enh": true,
+        "gdr-1141-line-302-psdm-unenh": true,
+        "gdr-1141-line-l11-psdm-enh": true,
+        "gdr-1141-line-l11-psdm-enh-meters": true,
+        "gdr-1141-line-l11-psdm-unenh": true,
+        "gdr-1141-line-l5-psdm-enh": true,
+        "gdr-1141-line-l5-psdm-enh-meters": true,
+        "gdr-1141-line-l5-psdm-unenh": true,
+        "gdr-1141-line-l5-psdm-unenh-meters": true,
+        "gdr-1141-line-301-pstm-stack-enh": true,
+        "gdr-1141-line-301-pstm-stack-unenh": true,
+        "gdr-1141-line-301-unmigrated-stack": true,
+        "gdr-1141-line-302-pstm-stack-enh": true,
+        "gdr-1141-line-302-pstm-stack-unenh": true,
+        "gdr-1141-line-302-unmigrated-stack": true,
+        "gdr-1141-line-l11-pstm-enh": true,
+        "gdr-1141-line-l11-pstm-unenh": true,
+        "gdr-1141-line-l11-unmigrated-time-stack": true,
+        "gdr-1141-line-l5-pstm-enh": true,
+        "gdr-1141-line-l5-pstm-unenh": true,
+        "gdr-1141-line-l5-unmigrated-time-stack": true,
+        "gdr-1015-forge2d-301-stack-01312018": true,
+        "gdr-1015-forge2d-302-stack": true,
+        "gdr-1141-line-301-psdm-interval-velocity": true,
+        "gdr-1141-line-302-psdm-interval-velocity": true,
+        "gdr-1141-line-l11-psdm-interval-velocity": true,
+        "gdr-1141-line-l5-psdm-interval-velocity": true
+      },
+      "seismicRenderMode": "slice",
+      "seismicSliceAxis": "line",
+      "seismicSliceFraction": 0.5,
+      "seismicAmplitudeMin": 0.08,
+      "seismicAmplitudeMax": 0.92,
+      "seismicAmplitudeGamma": 1,
+      "seismicColormap": "grayscale",
+      "seismicTimeScale": 1,
+      "seismicNavigationVisible": true,
+      "seismicNavigationRoleVisibility": {
+        "sources": true,
+        "receivers": true,
+        "lines": true
+      },
+      "seismicRemoveBackground": true,
+      "seismicBackgroundCutoff": 0.16,
+      "seismicSliceThroughVolume": false,
+      "seismicComparisonMode": "overlay",
+      "seismicMtCoRender": "seismic",
+      "sectionIsoEnabled": false,
+      "seismicLegendVisible": true,
+      "seismicFigureAnnotationsVisible": false
+    },
+    "utah-forge-phase3-demo-boreholes": {
+      "opacity": 0.9,
+      "showLabels": true
+    },
+    "utah-forge-mt-resistivity-full-density": {
+      "scalarLegendVisible": false,
+      "opacity": 0.05
+    },
+    "utah-forge-mt-resistivity-volume": {
+      "scalarLegendVisible": false
+    },
+    "utah-forge-mt-resistivity-slices": {
+      "scalarLegendVisible": false
+    }
+  },
+  "accentColor": "#75c7ff",
+  "dynamicCamera": {
+    "enabled": true,
+    "mode": "orbit",
+    "orbitEnabled": true,
+    "poi": [
+      -2988,
+      -9116,
+      -19127
+    ],
+    "orbitSpeedDegPerSec": 5,
+    "orbitRadius": 47950,
+    "orbitHeight": 30972,
+    "orbitDirection": -1,
+    "zoomFov": 52,
+    "zoomEnabled": false,
+    "zoomDeltaFov": 0,
+    "zoomStartMs": 0,
+    "zoomEndMs": 2500,
+    "zoomCurve": "smooth",
+    "easeInMs": 1600,
+    "transitionLeadMs": 1600,
+    "transitionExitMs": 900,
+    "transitionBlendCurve": "smooth",
+    "pathAwareBlend": true
+  },
+  "visibilityOverrides": {
+    "utah-forge-mt-resistivity-full-density": false,
+    "utah-forge-phase3-seismic-browser": true,
+    "terrain": true,
+    "utah-forge-phase3-working-area": true,
+    "utah-forge-phase3-demo-boreholes": true,
+    "utah-forge-mt-resistivity-threshold-surfaces": false,
+    "utah-forge-mt-resistivity-volume": false,
+    "utah-forge-mt-resistivity-slices": false,
+    "utah-forge-mt-top-surface": false,
+    "utah-forge-site-boundary": false,
+    "transport-roads": false,
+    "hydrography-streams": false,
+    "hydrography-lakes": false,
+    "utah-forge-mt-stations": false,
+    "utah-forge-mt-resistivity-preview": false,
+    "utah-forge-mt-top-contact-surface": false
+  },
+  "subtitle": "Page 5 view with every source-backed 2D seismic section product visible and all 3D products hidden"
+}

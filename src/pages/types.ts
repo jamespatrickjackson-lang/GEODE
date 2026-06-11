@@ -461,6 +461,7 @@ export interface EditableStyle {
   seismicBackgroundCutoff?: number;
   seismicVolumeSampleSteps?: number;
   seismicTimeScale?: number;
+  seismicVerticalDatumMode?: "source" | "reference-1800m" | "terrain-top-preview";
   seismicNavigationVisible?: boolean;
   seismicAudienceMode?: "investor" | "technical" | "data-room" | "export";
   seismicAudiencePresetId?: string;

@@ -18,10 +18,10 @@ import type { EditableStyle, PresentationPage, ProjectLayerSpec } from "../../..
 import type { SceneHandle } from "../../../scene";
 import { useEditor } from "../../EditorContext";
 import { UTAH_FORGE_MT_RESISTIVITY_FULL_DENSITY_LAYER_ID } from "../../../projectModules/utahForge/layerIds";
-import { SeismicAudienceAndDataConfidenceControls } from "./SeismicAudienceAndDataConfidenceControls";
 import { SeismicCapabilityLayerItem } from "./SeismicCapabilityLayerItem";
 import { SeismicProductDisplayVariables } from "./SeismicProductDisplayVariables";
 import { SeismicProductVisibilityControls } from "./SeismicProductVisibilityControls";
+import { SeismicSourceAndRegistrationControls } from "./SeismicSourceAndRegistrationControls";
 import {
   isVelocityProduct,
   seismicColormapFromValue,
@@ -32,6 +32,7 @@ import {
   seismicProductOptions,
   seismicRequiredProductSourceGates,
   seismicProductVisibilityFromStyle,
+  seismicVerticalDatumModeFromStyle,
   type SeismicProductOption,
   type SeismicRequiredProductSourceGate,
 } from "./seismicModel";
@@ -203,6 +204,7 @@ export function SeismicCapabilityLayerContainers({
     "seismicNavigationVisible",
     true,
   );
+  const verticalDatumMode = seismicVerticalDatumModeFromStyle(style);
   const navigationRoleVisibility =
     typeof style.seismicNavigationRoleVisibility === "object" &&
     style.seismicNavigationRoleVisibility !== null
@@ -502,6 +504,7 @@ export function SeismicCapabilityLayerContainers({
       seismicRenderMode: "slice",
       seismicSliceAxis: "line",
       seismicSliceThroughVolume: false,
+      seismicVerticalDatumMode: "reference-1800m",
       seismicComparisonProductId: undefined,
       seismicComparisonMode: "overlay",
       seismicNavigationVisible: withSurveyGeometry ? true : navigationVisible,
@@ -604,7 +607,7 @@ export function SeismicCapabilityLayerContainers({
               <summary style={panelStyles.summary}>Render</summary>
               <div style={detailsContentStyle}>
                 <EditorCompactSegmentedRow
-                  label="RenderMode"
+                  label="Render mode"
                   value={product.raymarchCapable ? capabilityMode : "slice"}
                   testId={`seismic-capability-render-${product.id}`}
                   disabled={disabled}
@@ -776,24 +779,6 @@ export function SeismicCapabilityLayerContainers({
 
   return (
     <>
-      <SeismicProductVisibilityControls
-        products={products}
-        productVisibility={productVisibility}
-        productId={productId}
-        disabled={disabled}
-        controlOpacity={controlOpacity}
-        commit={commit}
-      />
-
-      {raymarchProducts.length > 0 ? (
-        <details style={nestedDetailsStyle} open>
-          <summary style={panelStyles.summary}>3D / raymarch products</summary>
-          <div style={detailsContentStyle}>
-            {raymarchProducts.map(renderProductCapabilityItem)}
-          </div>
-        </details>
-      ) : null}
-
       {sourceGatedProducts.length > 0 ? (
         <details style={nestedDetailsStyle} open>
           <summary style={panelStyles.summary}>Source-gated products</summary>
@@ -803,18 +788,36 @@ export function SeismicCapabilityLayerContainers({
         </details>
       ) : null}
 
-      {sectionOnlyProducts.length > 0 ? (
-        <details style={nestedDetailsStyle} open>
-          <summary style={panelStyles.summary}>Section-only products</summary>
-          <div style={detailsContentStyle}>
-            {sectionOnlyProducts.map(renderProductCapabilityItem)}
-          </div>
-        </details>
-      ) : null}
+      <SeismicSourceAndRegistrationControls
+        products={products}
+        selectedProduct={selectedProduct}
+        visibleProductCount={products.filter(
+          (product) => productVisibility[product.id] === true,
+        ).length}
+        raymarchProductCount={raymarchProducts.length}
+        sourceGatedProducts={sourceGatedProducts}
+        currentCapabilityPresetId={currentCapabilityPresetId}
+        renderMode={renderMode}
+        verticalDatumMode={verticalDatumMode}
+        onSetVerticalDatumMode={(value) =>
+          commit({ seismicVerticalDatumMode: value })
+        }
+        disabled={disabled}
+        controlOpacity={controlOpacity}
+      />
+
+      <SeismicProductVisibilityControls
+        products={products}
+        productVisibility={productVisibility}
+        productId={productId}
+        disabled={disabled}
+        controlOpacity={controlOpacity}
+        commit={commit}
+      />
 
       <SeismicCapabilityLayerItem
         testId="seismic-capability-line-theatre"
-        title="2D / legacy section theatre"
+        title="2D sections"
         type="section"
       >
         <div style={nestedControlRowStyle}>
@@ -906,6 +909,24 @@ export function SeismicCapabilityLayerContainers({
         </div>
       </SeismicCapabilityLayerItem>
 
+      {raymarchProducts.length > 0 ? (
+        <details style={nestedDetailsStyle} open>
+          <summary style={panelStyles.summary}>3D products</summary>
+          <div style={detailsContentStyle}>
+            {raymarchProducts.map(renderProductCapabilityItem)}
+          </div>
+        </details>
+      ) : null}
+
+      {sectionOnlyProducts.length > 0 ? (
+        <details style={nestedDetailsStyle} open>
+          <summary style={panelStyles.summary}>2D product details</summary>
+          <div style={detailsContentStyle}>
+            {sectionOnlyProducts.map(renderProductCapabilityItem)}
+          </div>
+        </details>
+      ) : null}
+
       <SeismicCapabilityLayerItem
         testId="seismic-capability-processing-comparison"
         title="Processing comparison"
@@ -996,7 +1017,7 @@ export function SeismicCapabilityLayerContainers({
 
       <SeismicCapabilityLayerItem
         testId="seismic-capability-display-cleanup"
-        title="Display cleanup"
+        title="Display"
         type="display"
       >
         <div style={nestedControlRowStyle}>
@@ -1127,6 +1148,80 @@ export function SeismicCapabilityLayerContainers({
             }
           />
         </div>
+      </SeismicCapabilityLayerItem>
+
+      <SeismicCapabilityLayerItem
+        testId="seismic-capability-survey-geometry"
+        title="Survey geometry"
+        type="navigation"
+      >
+        <label style={{ ...nestedControlRowStyle, cursor: "pointer" }}>
+          <span style={nestedFieldLabelStyle}>Navigation</span>
+          <input
+            data-testid="seismic-navigation-visible-capability"
+            type="checkbox"
+            checked={navigationVisible}
+            disabled={disabled}
+            onChange={(e) =>
+              commit({ seismicNavigationVisible: e.target.checked })
+            }
+            style={{ opacity: controlOpacity }}
+          />
+          <span style={{ flex: 1 }} />
+        </label>
+        <div style={{ ...nestedControlRowStyle, gap: 6, flexWrap: "wrap" }}>
+          <label style={nestedFieldLabelStyle}>Preset</label>
+          <button
+            type="button"
+            data-testid="seismic-capability-survey-geometry-preset"
+            disabled={disabled}
+            onClick={() => applyCapabilityPreset("survey-geometry")}
+            style={{
+              ...panelStyles.iconButton,
+              width: "auto",
+              padding: "3px 7px",
+              fontSize: 10,
+              opacity: controlOpacity,
+            }}
+          >
+            Show survey
+          </button>
+        </div>
+        {[
+          {
+            role: "sources" as const,
+            label: "Sources",
+            checked: navigationSourcesVisible,
+          },
+          {
+            role: "receivers" as const,
+            label: "Receivers",
+            checked: navigationReceiversVisible,
+          },
+          {
+            role: "lines" as const,
+            label: "Lines",
+            checked: navigationLinesVisible,
+          },
+        ].map((item) => (
+          <label
+            key={item.role}
+            style={{ ...nestedControlRowStyle, cursor: "pointer" }}
+          >
+            <span style={nestedFieldLabelStyle}>{item.label}</span>
+            <input
+              data-testid={`seismic-navigation-role-${item.role}`}
+              type="checkbox"
+              checked={item.checked}
+              disabled={disabled}
+              onChange={(e) =>
+                setNavigationRoleVisible(item.role, e.target.checked)
+              }
+              style={{ opacity: controlOpacity }}
+            />
+            <span style={{ flex: 1 }} />
+          </label>
+        ))}
       </SeismicCapabilityLayerItem>
 
       <SeismicCapabilityLayerItem
@@ -1412,80 +1507,6 @@ export function SeismicCapabilityLayerContainers({
       </SeismicCapabilityLayerItem>
 
       <SeismicCapabilityLayerItem
-        testId="seismic-capability-survey-geometry"
-        title="Survey geometry"
-        type="navigation"
-      >
-        <label style={{ ...nestedControlRowStyle, cursor: "pointer" }}>
-          <span style={nestedFieldLabelStyle}>Navigation</span>
-          <input
-            data-testid="seismic-navigation-visible-capability"
-            type="checkbox"
-            checked={navigationVisible}
-            disabled={disabled}
-            onChange={(e) =>
-              commit({ seismicNavigationVisible: e.target.checked })
-            }
-            style={{ opacity: controlOpacity }}
-          />
-          <span style={{ flex: 1 }} />
-        </label>
-        <div style={{ ...nestedControlRowStyle, gap: 6, flexWrap: "wrap" }}>
-          <label style={nestedFieldLabelStyle}>Preset</label>
-          <button
-            type="button"
-            data-testid="seismic-capability-survey-geometry-preset"
-            disabled={disabled}
-            onClick={() => applyCapabilityPreset("survey-geometry")}
-            style={{
-              ...panelStyles.iconButton,
-              width: "auto",
-              padding: "3px 7px",
-              fontSize: 10,
-              opacity: controlOpacity,
-            }}
-          >
-            Show survey
-          </button>
-        </div>
-        {[
-          {
-            role: "sources" as const,
-            label: "Sources",
-            checked: navigationSourcesVisible,
-          },
-          {
-            role: "receivers" as const,
-            label: "Receivers",
-            checked: navigationReceiversVisible,
-          },
-          {
-            role: "lines" as const,
-            label: "Lines",
-            checked: navigationLinesVisible,
-          },
-        ].map((item) => (
-          <label
-            key={item.role}
-            style={{ ...nestedControlRowStyle, cursor: "pointer" }}
-          >
-            <span style={nestedFieldLabelStyle}>{item.label}</span>
-            <input
-              data-testid={`seismic-navigation-role-${item.role}`}
-              type="checkbox"
-              checked={item.checked}
-              disabled={disabled}
-              onChange={(e) =>
-                setNavigationRoleVisible(item.role, e.target.checked)
-              }
-              style={{ opacity: controlOpacity }}
-            />
-            <span style={{ flex: 1 }} />
-          </label>
-        ))}
-      </SeismicCapabilityLayerItem>
-
-      <SeismicCapabilityLayerItem
         testId="seismic-capability-integrated-geophysics"
         title="Integrated geophysics"
         type="preset"
@@ -1528,21 +1549,6 @@ export function SeismicCapabilityLayerContainers({
         />
       </SeismicCapabilityLayerItem>
 
-      <SeismicAudienceAndDataConfidenceControls
-        layer={layer}
-        style={style}
-        products={products}
-        productId={productId}
-        selectedProduct={selectedProduct}
-        raymarchProductCount={raymarchProducts.length}
-        renderMode={renderMode}
-        amplitudeMin={amplitudeMin}
-        currentCapabilityPresetId={currentCapabilityPresetId}
-        disabled={disabled}
-        controlOpacity={controlOpacity}
-        commit={commit}
-        commitLayerStyle={commitLayerStyle}
-      />
     </>
   );
 }

@@ -1,5 +1,5 @@
 import type React from "react";
-import { panelStyles, vibrancySecondaryLabel, vibrancyTertiaryLabel } from "../../styles";
+import { panelStyles, vibrancyTertiaryLabel } from "../../styles";
 import {
   EditorCompactSegmentedRow,
   detailsContentStyle,
@@ -21,18 +21,14 @@ import { SeismicDisplayTuningControls } from "./SeismicDisplayTuningControls";
 import { SeismicProductVisibilityControls } from "./SeismicProductVisibilityControls";
 import {
   isVelocityProduct,
-  seismicAudienceModeFromStyle,
-  seismicAudiencePresets,
   seismicColormapFromValue,
   seismicDefaultProductId,
-  seismicExportLayouts,
   seismicProcessingStageLabel,
   seismicProductGroups,
-  seismicPresetPatch,
   seismicProductOptions,
   seismicProductVisibilityFromStyle,
-  SEISMIC_AUDIENCE_MODE_OPTIONS,
-  SEISMIC_DEMO_DISCLOSURE_LABELS,
+  seismicVerticalDatumModeFromStyle,
+  SEISMIC_VERTICAL_DATUM_MODE_OPTIONS,
 } from "./seismicModel";
 export function SeismicBrowserControls({
   layer,
@@ -65,8 +61,6 @@ export function SeismicBrowserControls({
 }) {
   const products = seismicProductOptions(layer);
   const productGroups = seismicProductGroups(products);
-  const presets = seismicAudiencePresets(layer);
-  const exportLayouts = seismicExportLayouts(layer);
   const defaultProductId = seismicDefaultProductId(layer);
   const rawProductId = styleString(style, "seismicProductId", defaultProductId);
   const productId = products.some((product) => product.id === rawProductId)
@@ -81,11 +75,6 @@ export function SeismicBrowserControls({
   const visibleProductCount = products.filter(
     (product) => productVisibility[product.id] === true,
   ).length;
-  const audienceMode = seismicAudienceModeFromStyle(style);
-  const selectedPreset =
-    presets.find((preset) => preset.id === style.seismicAudiencePresetId) ??
-    presets.find((preset) => preset.audienceMode === audienceMode) ??
-    presets[0];
   const requestedRenderMode =
     style.seismicRenderMode === "raymarch" ? "raymarch" : "slice";
   const renderMode =
@@ -141,33 +130,20 @@ export function SeismicBrowserControls({
     false,
   );
   const legendVisible = styleBoolean(style, "seismicLegendVisible", true);
+  const verticalDatumMode = seismicVerticalDatumModeFromStyle(style);
   const sliceThroughVolume =
     selectedProduct?.raymarchCapable === true &&
     styleBoolean(style, "seismicSliceThroughVolume", false);
   const selectedProductVisible = productVisibility[productId] === true;
   const controlOpacity = disabled ? 0.4 : 1;
-  const exportLayoutId =
-    typeof style.seismicExportLayoutId === "string"
-      ? style.seismicExportLayoutId
-      : selectedPreset?.exportLayoutId;
-  const selectedExportLayout = exportLayouts.find(
-    (layout) => layout.id === exportLayoutId,
-  );
-  const disclosureLabels =
-    selectedPreset?.badges && selectedPreset.badges.length > 0
-      ? selectedPreset.badges
-      : SEISMIC_DEMO_DISCLOSURE_LABELS;
   const mtCoRender =
     style.seismicMtCoRender === "mt" || style.seismicMtCoRender === "integrated"
       ? style.seismicMtCoRender
-      : selectedPreset?.mtCoRender === "mt" ||
-          selectedPreset?.mtCoRender === "integrated"
-        ? selectedPreset.mtCoRender
-        : "seismic";
+      : "seismic";
   const comparisonProductId =
     typeof style.seismicComparisonProductId === "string"
       ? style.seismicComparisonProductId
-      : selectedPreset?.comparisonProductId;
+      : undefined;
   const comparisonMode =
     style.seismicComparisonMode === "side-by-side" ? "side-by-side" : "overlay";
 
@@ -211,29 +187,6 @@ export function SeismicBrowserControls({
     commit(seismicPatch);
     commitLayerStyle(UTAH_FORGE_MT_RESISTIVITY_FULL_DENSITY_LAYER_ID, mtPatch);
   };
-  const applyPreset = (presetId: string) => {
-    const preset = presets.find((candidate) => candidate.id === presetId);
-    if (!preset) return;
-    commit({ visible: true, ...seismicPresetPatch(preset, products, productId) });
-    if (preset.mtStylePatch) {
-      commitLayerStyle(
-        UTAH_FORGE_MT_RESISTIVITY_FULL_DENSITY_LAYER_ID,
-        preset.mtStylePatch,
-      );
-    }
-  };
-  const applyAudienceMode = (
-    value: NonNullable<EditableStyle["seismicAudienceMode"]>,
-  ) => {
-    const preset = presets.find(
-      (candidate) => candidate.audienceMode === value,
-    );
-    if (preset) {
-      applyPreset(preset.id);
-      return;
-    }
-    commit({ seismicAudienceMode: value });
-  };
   const selectProduct = (id: string) => {
     const product = products.find((candidate) => candidate.id === id);
     if (!product) return;
@@ -274,22 +227,6 @@ export function SeismicBrowserControls({
       seismicRenderMode: "slice",
     });
   };
-  const productKindCounts = products.reduce<Record<string, number>>(
-    (counts, product) => {
-      const key = product.productKind ?? "unknown";
-      counts[key] = (counts[key] ?? 0) + 1;
-      return counts;
-    },
-    {},
-  );
-  const surveyCounts = products.reduce<Record<string, number>>(
-    (counts, product) => {
-      const key = product.surveyKind ?? "unknown";
-      counts[key] = (counts[key] ?? 0) + 1;
-      return counts;
-    },
-    {},
-  );
   const layerMetadata = layer.metadata as Record<string, unknown> | undefined;
   const crsRegistration =
     layerMetadata?.crsRegistration &&
@@ -317,68 +254,8 @@ export function SeismicBrowserControls({
   return (
     <>
       <details style={nestedDetailsStyle}>
-        <summary style={panelStyles.summary}>Seismic browser</summary>
+        <summary style={panelStyles.summary}>Source and registration</summary>
         <div style={detailsContentStyle}>
-          {presets.length > 0 ? (
-            <>
-              <EditorCompactSegmentedRow
-                label="Audience"
-                value={audienceMode}
-                testId="seismic-audience-mode-select"
-                disabled={disabled}
-                controlOpacity={controlOpacity}
-                ariaLabel="Seismic audience mode"
-                options={SEISMIC_AUDIENCE_MODE_OPTIONS}
-                onChange={applyAudienceMode}
-              />
-              <div style={nestedControlRowStyle}>
-                <label style={nestedFieldLabelStyle}>Preset</label>
-                <select
-                  data-testid="seismic-audience-preset-select"
-                  value={selectedPreset?.id ?? ""}
-                  disabled={disabled}
-                  onChange={(e) => applyPreset(e.target.value)}
-                  style={{ ...editorDarkSelectStyle, opacity: controlOpacity }}
-                >
-                  {presets.map((preset) => (
-                    <option key={preset.id} value={preset.id}>
-                      {preset.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div
-                data-testid="seismic-preset-summary"
-                style={{
-                  margin: "4px 0 8px 0",
-                  padding: "2px 0 4px 0",
-                  color: vibrancyTertiaryLabel,
-                  fontSize: 11,
-                  lineHeight: 1.35,
-                  opacity: controlOpacity,
-                }}
-              >
-                <div style={{ color: vibrancySecondaryLabel, fontWeight: 750 }}>
-                  {selectedPreset?.summary ?? "Curated seismic demo view"}
-                </div>
-                <div style={{ marginTop: 4 }}>
-                  {disclosureLabels.join(" / ")}
-                </div>
-                {selectedPreset?.cameraShot ? (
-                  <div style={{ marginTop: 4 }}>
-                    Camera shot: {selectedPreset.cameraShot}
-                  </div>
-                ) : null}
-                {selectedPreset?.caveats &&
-                selectedPreset.caveats.length > 0 ? (
-                  <div style={{ marginTop: 4 }}>
-                    {selectedPreset.caveats.slice(0, 2).join(" / ")}
-                  </div>
-                ) : null}
-              </div>
-            </>
-          ) : null}
-
           <div style={nestedControlRowStyle}>
             <label style={nestedFieldLabelStyle}>Controls</label>
             {!isEnv ? (
@@ -408,19 +285,33 @@ export function SeismicBrowserControls({
             ) : null}
           </div>
 
-          <EditorCompactSegmentedRow
-            label="MT view"
-            value={mtCoRender}
-            testId="seismic-mt-co-render-select"
-            disabled={disabled}
-            controlOpacity={controlOpacity}
-            options={[
-              { value: "seismic", label: "Seismic" },
-              { value: "mt", label: "MT" },
-              { value: "integrated", label: "Integrated" },
-            ]}
-            onChange={setMtCoRender}
-          />
+          <div style={nestedControlRowStyle}>
+            <label style={nestedFieldLabelStyle}>Products</label>
+            <span
+              style={{
+                flex: 1,
+                color: vibrancyTertiaryLabel,
+                fontSize: 11,
+                opacity: controlOpacity,
+              }}
+            >
+              {visibleProductCount}/{products.length} visible
+            </span>
+          </div>
+
+          <div style={nestedControlRowStyle}>
+            <label style={nestedFieldLabelStyle}>Source</label>
+            <span
+              style={{
+                flex: 1,
+                color: vibrancyTertiaryLabel,
+                fontSize: 11,
+                opacity: controlOpacity,
+              }}
+            >
+              {selectedProduct?.sourceSubmission ?? "source record unavailable"}
+            </span>
+          </div>
 
           <div
             data-testid="seismic-crs-registration-status"
@@ -446,101 +337,24 @@ export function SeismicBrowserControls({
               {placementStatus}
             </div>
           ) : null}
-
-          {audienceMode === "data-room" ? (
-            <div
-              data-testid="seismic-data-room-summary"
-              style={{
-                margin: "4px 0 8px 0",
-                padding: "2px 0 4px 0",
-                color: vibrancyTertiaryLabel,
-                fontSize: 11,
-                lineHeight: 1.35,
-                opacity: controlOpacity,
-              }}
-            >
-              <div>Products: {products.length}</div>
-              <div>
-                Survey:{" "}
-                {Object.entries(surveyCounts)
-                  .map(([key, count]) => `${key} ${count}`)
-                  .join(" / ")}
-              </div>
-              <div>
-                Type:{" "}
-                {Object.entries(productKindCounts)
-                  .map(([key, count]) => `${key} ${count}`)
-                  .join(" / ")}
-              </div>
-              <div>
-                Selected: {selectedProduct?.sourceSubmission ?? "source"} /{" "}
-                {selectedProduct?.productKind ?? "processed"} /{" "}
-                {selectedProduct?.domainUnit ?? "domain"}
-              </div>
-              <div>
-                Confidence: measured navigation / processed seismic product
-              </div>
-            </div>
-          ) : null}
-
-          {audienceMode === "export" ? (
-            <div
-              data-testid="seismic-export-summary"
-              style={{
-                margin: "4px 0 8px 0",
-                padding: "2px 0 4px 0",
-                color: vibrancyTertiaryLabel,
-                fontSize: 11,
-                lineHeight: 1.35,
-                opacity: controlOpacity,
-              }}
-            >
-              <div style={nestedControlRowStyle}>
-                <label style={nestedFieldLabelStyle}>Layout</label>
-                <select
-                  data-testid="seismic-export-layout-select"
-                  value={exportLayoutId ?? ""}
-                  disabled={disabled || exportLayouts.length === 0}
-                  onChange={(e) =>
-                    commit({ seismicExportLayoutId: e.target.value })
-                  }
-                  style={{ ...editorDarkSelectStyle, opacity: controlOpacity }}
-                >
-                  {exportLayouts.map((layout) => (
-                    <option key={layout.id} value={layout.id}>
-                      {layout.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                {selectedExportLayout?.output ?? "PDF-ready report visual"}
-              </div>
-              <div>
-                {(
-                  selectedExportLayout?.includes ?? [
-                    "legend",
-                    "scale",
-                    "CRS",
-                    "source",
-                  ]
-                ).join(" / ")}
-              </div>
-              <div>
-                {selectedExportLayout?.caveat ??
-                  "Report-supporting visual, not a compliance certification."}
-              </div>
-            </div>
-          ) : null}
+          <EditorCompactSegmentedRow
+            label="Vertical datum"
+            value={verticalDatumMode}
+            testId="seismic-browser-vertical-datum-mode-select"
+            disabled={disabled}
+            controlOpacity={controlOpacity}
+            options={SEISMIC_VERTICAL_DATUM_MODE_OPTIONS}
+            onChange={(value) => commit({ seismicVerticalDatumMode: value })}
+          />
         </div>
       </details>
 
 
       <details
-        data-testid="seismic-technical-controls"
+        data-testid="seismic-product-display-controls"
         style={nestedDetailsStyle}
       >
-        <summary style={panelStyles.summary}>Technical controls</summary>
+        <summary style={panelStyles.summary}>Product and display</summary>
         <div style={detailsContentStyle}>
           <SeismicProductVisibilityControls
             products={products}
@@ -603,7 +417,7 @@ export function SeismicBrowserControls({
           </div>
 
           <EditorCompactSegmentedRow
-            label="RenderMode"
+            label="Render mode"
             value={renderMode}
             testId="seismic-render-mode-select"
             disabled={disabled || !selectedProduct?.raymarchCapable}
@@ -723,6 +537,25 @@ export function SeismicBrowserControls({
             commit={commit}
             setEnvLayerStyle={setEnvLayerStyle}
             setPageLayerOverride={setPageLayerOverride}
+          />
+        </div>
+      </details>
+
+      <details style={nestedDetailsStyle}>
+        <summary style={panelStyles.summary}>Integrated geophysics</summary>
+        <div style={detailsContentStyle}>
+          <EditorCompactSegmentedRow
+            label="MT view"
+            value={mtCoRender}
+            testId="seismic-mt-co-render-select"
+            disabled={disabled}
+            controlOpacity={controlOpacity}
+            options={[
+              { value: "seismic", label: "Seismic" },
+              { value: "mt", label: "MT" },
+              { value: "integrated", label: "Integrated" },
+            ]}
+            onChange={setMtCoRender}
           />
         </div>
       </details>

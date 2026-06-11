@@ -106,7 +106,7 @@ test("seismic prep script parses vertical datum from source headers", () => {
   const source = readText("prep", "build_utah_forge_seismic_browser.py");
 
   assert.match(source, /parsed_datum_m/);
-  assert.match(source, /DATUM\\s\*:/);
+  assert.match(source, /header_measure\(text_header,\s*"DATUM"\)/);
   assert.doesNotMatch(
     source,
     /if\s+"302"\s+in\s+name:\s*\n\s*return\s+2100\.0/,
@@ -121,7 +121,7 @@ test("seismic navigation import uses declared CRS transform before scene-origin 
 
   assert.match(source, /parse_sp1\(path:\s*Path,\s*source_crs:\s*str\)/);
   assert.match(source, /source_to_scene\(easting,\s*northing,\s*elevation,\s*source_crs\)/);
-  assert.doesNotMatch(source, /from pyproj import Transformer/);
+  assert.match(source, /Transformer\.from_crs\(f"EPSG:\{candidate\['epsg'\]\}"/);
   assert.doesNotMatch(source, /easting\s*-\s*SCENE_ORIGIN_E/);
   assert.doesNotMatch(source, /northing\s*-\s*SCENE_ORIGIN_N/);
   assert.match(registrationHelper, /Transformer\.from_crs/);
@@ -129,7 +129,7 @@ test("seismic navigation import uses declared CRS transform before scene-origin 
   assert.match(registrationHelper, /project_easting_m - frame\.origin_easting_m/);
 });
 
-test("legacy seismic fallback lines cannot claim precise registration", () => {
+test("legacy seismic trace-header lines cannot claim precise registration", () => {
   const source = readText("prep", "build_utah_forge_seismic_browser.py");
   const demoRecipeSource = readText("prep", "build_utah_forge_seismic_demo_recipes.mjs");
   const manifest = readJson(
@@ -146,7 +146,7 @@ test("legacy seismic fallback lines cannot claim precise registration", () => {
   assert.match(source, /navigationSource/);
   assert.match(source, /placementAccuracy/);
   assert.match(source, /canClaimPreciseRegistration/);
-  assert.match(source, /Approximate legacy line placement/);
+  assert.match(source, /precise registration not validated/);
   assert.match(demoRecipeSource, /approximate reference section curtains/);
   assert.doesNotMatch(demoRecipeSource, /Legacy lines L5 and L11 as georeferenced/);
 
@@ -157,18 +157,20 @@ test("legacy seismic fallback lines cannot claim precise registration", () => {
   );
   assert.ok(legacyProducts.length > 0, "legacy L5/L11 products should exist");
   for (const product of legacyProducts) {
-    assert.equal(product.navigationPlacement?.navigationSource, "fallback", product.id);
-    assert.equal(product.navigationPlacement?.placementAccuracy, "approximate", product.id);
+    assert.equal(product.sourceGeometry?.status, "trace-header-derived", product.id);
+    assert.equal(product.navigationPlacement?.navigationSource, "delivered", product.id);
+    assert.notEqual(product.navigationPlacement?.placementAccuracy, "validated", product.id);
     assert.equal(product.navigationPlacement?.canClaimPreciseRegistration, false, product.id);
-    assert.match(product.navigationPlacement?.statusLabel ?? "", /Approximate legacy line placement/);
-    assert.ok(
-      Array.isArray(product.navigationPlacement?.validationPath) &&
-        product.navigationPlacement.validationPath.length > 0,
-      `${product.id} validation path`,
-    );
+    assert.match(product.navigationPlacement?.statusLabel ?? "", /precise registration requires validation/i);
     for (const section of product.sections ?? []) {
-      assert.equal(section.navigationPlacement?.navigationSource, "fallback", `${product.id}/${section.id}`);
+      assert.equal(section.navigationPlacement?.navigationSource, "delivered", `${product.id}/${section.id}`);
+      assert.notEqual(
+        section.navigationPlacement?.placementAccuracy,
+        "validated",
+        `${product.id}/${section.id}`,
+      );
       assert.equal(section.navigationPlacement?.canClaimPreciseRegistration, false, `${product.id}/${section.id}`);
+      assert.match(section.geometrySource ?? "", /trace-header/);
     }
   }
 
@@ -482,7 +484,8 @@ test("seismic manifest records datum-aligned vertical metadata", () => {
   );
   assert.ok(depthProducts.length > 0, "depth-domain seismic products should exist");
   for (const product of depthProducts) {
-    assert.equal(product.datumM, 1800, `${product.id} depth datum`);
+    assert.equal(typeof product.datumM, "number", `${product.id} depth datum`);
+    assert.ok(Number.isFinite(product.datumM), `${product.id} finite depth datum`);
     assert.equal(product.verticalReference?.sourceDatumM, product.datumM);
     for (const section of product.sections ?? []) {
       assert.equal(section.datumM, product.datumM, `${product.id}/${section.id} datum`);

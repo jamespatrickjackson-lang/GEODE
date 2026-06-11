@@ -125,22 +125,16 @@ test("Utah FORGE seismic manifest and capability containers render", async ({
   const capture = captureSeismicSignals(page);
   await openSeismicWorkbench(page, capture);
 
-  await expect(page.locator("body")).toContainText("Seismic browser");
+  await expect(page.locator("body")).toContainText("Source and registration");
   await expect(page.locator("body")).toContainText("Seismic analysis");
   await expect(page.locator("body")).toContainText("Product");
-  await expect(page.locator("body")).toContainText("RenderMode");
+  await expect(page.locator("body")).toContainText("Product and display");
+  await expect(page.locator("body")).toContainText("Render mode");
   await expect(page.locator("body")).toContainText(/(Amp|Vel) min/);
   await expect(page.locator("body")).toContainText("Gain curve");
   await expect(page.locator("body")).toContainText("Zero mute");
   await expect(page.locator("body")).toContainText("Ray steps");
   await expect(page.locator("body")).toContainText("Navigation");
-  await expect(page.locator("body")).toContainText("Audience");
-  await expect(page.locator("body")).toContainText(
-    "public geothermal demo data",
-  );
-  await expect(page.locator("body")).toContainText(
-    "not a mineral resource estimate",
-  );
   await expect(page.locator("body")).toContainText(
     "3D anisotropic PSDM depth stack (unenhanced)",
   );
@@ -153,10 +147,9 @@ test("Utah FORGE seismic manifest and capability containers render", async ({
   await expect(page.locator("body")).toContainText(
     "3D velocity model (time domain)",
   );
-  await expect(page.locator("body")).toContainText(
-    "2D / legacy section theatre",
-  );
+  await expect(page.locator("body")).toContainText("2D sections");
   await expect(page.locator("body")).toContainText("Source-gated products");
+  await expect(page.locator("body")).toContainText("Source and registration");
   await expect(page.locator("body")).toContainText(
     "3D anisotropic PSDM depth stack (enhanced)",
   );
@@ -164,20 +157,11 @@ test("Utah FORGE seismic manifest and capability containers render", async ({
     "Forge3d_ANI_PSDM_Stack_Enh.segy",
   );
   await expect(page.locator("body")).toContainText("Processing comparison");
-  await expect(page.locator("body")).toContainText("Display cleanup");
+  await expect(page.locator("body")).toContainText("Display");
   await expect(page.locator("body")).toContainText("Survey geometry");
   await expect(page.locator("body")).toContainText("Integrated geophysics");
-  await expect(page.locator("body")).toContainText("Data confidence");
   await expect(page.locator("body")).toContainText("Scene section planes");
   await expect(page.getByTestId("scene-section-enabled")).toBeVisible();
-  await expect(page.getByTestId("seismic-audience-mode-select")).toBeVisible();
-  await expect(page.getByTestId("seismic-audience-mode-select")).toHaveAttribute(
-    "role",
-    "group",
-  );
-  await expect(
-    page.getByTestId("seismic-audience-preset-select"),
-  ).toBeVisible();
   await expect(
     page.getByTestId("seismic-capability-all-2d-sections"),
   ).toBeVisible();
@@ -685,16 +669,17 @@ test("Utah FORGE seismic display cleanup and scene sections update runtime state
   expect(capture.consoleErrors).toEqual([]);
 });
 
-test("Utah FORGE seismic audience presets and capability workflows update state", async ({
+test("Utah FORGE seismic product controls and capability workflows update state", async ({
   page,
 }) => {
   const capture = captureSeismicSignals(page);
   await openSeismicWorkbench(page, capture);
   await openAllDetails(page);
 
+  await revealSeismicCapabilityProduct(page, FIRST_RAYMARCH_PRODUCT_ID);
   await page
-    .getByTestId("seismic-audience-preset-select")
-    .selectOption("investor-overview-volume");
+    .getByTestId(`seismic-capability-sync-${FIRST_RAYMARCH_PRODUCT_ID}`)
+    .click();
   await expect
     .poll(() => seismicSceneState(page))
     .toMatchObject({
@@ -704,49 +689,24 @@ test("Utah FORGE seismic audience presets and capability workflows update state"
       visibleSections: 1,
       visibleVolumes: 1,
       visibleVolumeProductIds: [FIRST_RAYMARCH_PRODUCT_ID],
+      capabilityPresetId: `${FIRST_RAYMARCH_PRODUCT_ID}-raymarch-sync`,
       sliceThroughVolume: true,
     });
-  await expect
-    .poll(async () => (await seismicSceneState(page)).mtFullDensityOpacity)
-    .toBeCloseTo(0.34, 2);
 
-  await page
-    .getByTestId("seismic-audience-preset-select")
-    .selectOption("line-theatre-301");
-  await expect(
-    page.getByTestId("seismic-audience-mode-select-technical"),
-  ).toHaveAttribute("aria-pressed", "true");
+  await page.getByTestId("seismic-capability-line-301-theatre").click();
   await expect
     .poll(() => seismicSceneState(page))
     .toMatchObject({
       selectedProductId: "gdr-1141-line-301-pdm-enh",
       appliedRenderMode: "slice",
-      visibleSections: 2,
+      visibleSections: 1,
       visibleVolumes: 0,
       visibleProductIds: [
         "gdr-1141-line-301-pdm-enh",
-        "gdr-1141-line-301-psdm-unenh",
       ],
       visibleSectionAxes: ["line"],
+      capabilityPresetId: "line-301-theatre",
     });
-
-  await page
-    .getByTestId("seismic-audience-mode-select-data-room")
-    .click();
-  await expect(
-    page.getByTestId("seismic-capability-data-confidence"),
-  ).toContainText("Products: 34 processed GUI products");
-  await expect(
-    page.getByTestId("seismic-capability-data-confidence"),
-  ).toContainText("Audience: data-room");
-
-  await page.getByTestId("seismic-audience-mode-select-export").click();
-  await expect(
-    page.getByTestId("seismic-audience-mode-select-export"),
-  ).toHaveAttribute("aria-pressed", "true");
-  await expect(
-    page.getByTestId("seismic-capability-data-confidence"),
-  ).toContainText("Audience: export");
 
   await openAllDetails(page);
   await revealSeismicCapabilityProduct(page, FIRST_RAYMARCH_PRODUCT_ID);
