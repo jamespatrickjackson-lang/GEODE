@@ -79,6 +79,25 @@ function isTopoEnvironmentCloudLayer(layer: ProjectLayerSpec): boolean {
   );
 }
 
+function defaultUnverifiedUtm12Registration() {
+  return {
+    horizontalCrs: "EPSG:26912",
+    verticalDatum: "scene-local atmosphere volume bounds in metres above project scene datum",
+    units: "m",
+    coordinateBasis: "utm",
+    origin: {
+      easting_m: 341467.35,
+      northing_m: 4273374.5,
+      elevation_m: 0,
+    },
+    rotationDeg: 0,
+    registrationStatus: "unverified",
+    accuracyClaimStatus: "CRS/datum review required",
+    notes:
+      "Local atmosphere visual volume inherits the project UTM scene frame for authoring only; exact weather or plume CRS is not claimed.",
+  };
+}
+
 export function LayerPanelGroups({
   section,
   renderLayer,
@@ -192,6 +211,7 @@ export function LayerPanelGroups({
       files: {},
       metadata: {
         classification: "environmental",
+        crsRegistration: defaultUnverifiedUtm12Registration(),
         geoSeeTool: {
           id: "topo-map",
           role: "environment-clouds",
@@ -444,6 +464,19 @@ export function LayerPanelGroups({
               ? effectiveStyle(currentPageEnvironment, currentPage, seismicLayer.id)
               : (currentPageEnvironment.layerStyles[seismicLayer.id] ?? {})
           : {};
+        const seismicLayerVisible = seismicLayer
+          ? effectiveVisibleLayerIds.has(seismicLayer.id)
+          : false;
+        const ensureSeismicLayerVisible = () => {
+          if (!seismicLayer || seismicLayerVisible) return;
+          if (isEnv) {
+            toggleEnvDefaultVisible(seismicLayer.id);
+            return;
+          }
+          if (!currentPage) return;
+          if (pageStyleControlsDisabled) return;
+          setPageVisibilityOverride(currentPage.id, seismicLayer.id, true);
+        };
         const seismicCapabilityDisabled = pageStyleControlsDisabled;
         const groupOpenSignal = activeLayerOpenSignal(
           layers.map((layer) => layer.id),
@@ -744,6 +777,7 @@ export function LayerPanelGroups({
                 isEnv={isEnv}
                 currentPage={currentPage}
                 layerId={seismicLayer.id}
+                ensureLayerVisible={ensureSeismicLayerVisible}
                 setEnvLayerStyle={setEnvLayerStyle}
                 setPageLayerOverride={setPageLayerOverride}
                 sceneHandle={sceneHandle}

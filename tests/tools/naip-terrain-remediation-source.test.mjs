@@ -178,6 +178,16 @@ test("NAIP generator supports a regional COG source and validates CRS plus bound
   );
   assert.match(
     source,
+    /def ensure_naip_diagnostic_crs_registration\(/,
+    "NAIP diagnostic regeneration should preserve or create CRS registration metadata.",
+  );
+  assert.match(
+    source,
+    /metadata\["crsRegistration"\]\s*=/,
+    "NAIP diagnostic metadata refresh should write CRS registration when it is missing.",
+  );
+  assert.match(
+    source,
     /update_project_naip_metadata_refs\(SOURCE_CATALOG,\s*bounds\)/,
     "Main should refresh project NAIP bounds before cache references are updated.",
   );

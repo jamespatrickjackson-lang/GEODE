@@ -2182,3 +2182,67 @@ reviewed and approved with QA/RA and the relevant signed-off authority. Until
 that approval exists, tool and demo development remain on stale local datasets.
 Controlled handoff must carry explicit risks and client-side technical
 acceptance by the head of engineering or equivalent authority.
+
+## DEC-142 - Source-gated seismic products stay visible but non-rendered
+
+This decision governs required seismic products named by public source records
+when the deliverable cannot be validated into renderable browser artifacts.
+
+**Considered:** silently omit the product, fabricate it from a neighboring
+unenhanced product, partially recover corrupt bytes, or surface it as a
+source-gated product in the editor.
+
+**Chose:** source-named seismic products that are missing, corrupt, or
+unextractable stay out of the renderable seismic product manifest until a
+complete SEG-Y member can be extracted and CRC-validated. The editor may still
+show a source-gated heading with the source filename, expected size, source
+citation, GDR landing page, zip member, and status. The source gate is carried
+through the seismic manifest, inventory, recipes, and project layer metadata.
+
+**Why:** a named public seismic deliverable is important project context, but a
+partial or substituted seismic volume would look authoritative while violating
+source fidelity. Keeping the product visible as a gate preserves auditability
+without creating false render evidence.
+
+**Guard:** do not generate amplitude sections, raymarch volumes, project
+products, pages, or comparison presets from partial, corrupt, or neighboring
+SEG-Y products. For `Forge3d_ANI_PSDM_Stack_Enh.segy`, use the GDR 1141 landing
+page as the external source reference and do not construct or persist direct
+download URLs. If a valid source copy is later supplied, rerun the seismic
+browser builder so the gate can transition to a source-backed renderable
+product through the normal manifest path.
+
+## DEC-143 - Seismic sections use trace-header geometry before envelopes
+
+This decision supersedes any seismic browser behavior that placed 2D or 3D
+sections from file-order indexes, square trace-count grids, endpoint-only line
+segments, or the broad navigation envelope when trace coordinates are present.
+
+**Considered:** keep using existing section rectangles and page styles, repair
+only the visible editor toggles, approximate 3D sections from navigation
+bounds, or rebuild section geometry from SEG-Y trace headers.
+
+**Chose:** renderable seismic products must derive horizontal section placement
+from source SEG-Y trace coordinates before any navigation or envelope fallback.
+For Miller/GDR 1141 custom headers, CMP_X byte 189 and CMP_Y byte 193 are
+decoded as 4-byte IBM real values, with inline bytes 9-10 and crossline bytes
+13-14 decoded as 2-byte integers. Standard SEG-Y coordinate fields are fallback
+only when the custom fields are invalid. 3D inline/crossline sections store
+trace-derived paths, sample planes store trace-derived surface-grid geometry,
+and 2D sections store full per-trace CMP paths where available. SEG-P1 paths
+are fallback; endpoint-only paths are last-resort fallback.
+
+**Why:** seismic sections are vertical cuts through a trace grid, not images
+that can be stretched onto arbitrary rectangles. Trace-header UTM coordinates,
+the 1800 m datum, and real sample spacing are required for co-registration with
+wells, terrain, and other depth-domain overlays. Index-based placement can
+create sheared panels, wrong depth scale, and false alignment.
+
+**Guard:** generated manifests must record product `sourceGeometry`, section
+`geometrySource`, `sourceAxis`, `path`, or `surfaceGrid` metadata, plus any
+source-unit caveats. Runtime section meshes must tessellate trace paths instead
+of collapsing them to first/last endpoints. Raymarch volumes may remain
+axis-aligned browser envelopes only when explicitly labeled as envelopes; do
+not claim validated exact volume orientation from those AABB meshes. Source
+gates such as `Forge3d_ANI_PSDM_Stack_Enh.segy` remain non-renderable until a
+complete CRC-valid source is available.

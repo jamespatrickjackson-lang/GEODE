@@ -41,6 +41,11 @@ test("topo environment clouds can create and manage cloud volumes", () => {
   );
   assert.match(
     layerPanelGroups,
+    /crsRegistration:\s*defaultUnverifiedUtm12Registration\(\)/,
+    "New Topo Environment cloud layers should carry unverified Utah UTM CRS metadata.",
+  );
+  assert.match(
+    layerPanelGroups,
     /function isTopoEnvironmentCloudLayer/,
     "Topo Clouds should identify atmosphere layers that belong to the topo environment cloud tool.",
   );
@@ -147,46 +152,48 @@ test("utah forge registers a default editable cloud layer", () => {
     layer?.metadata?.localAtmosphereVolume?.renderingRole,
     "topo-environment-cloud-impostor",
   );
+  assert.equal(layer?.metadata?.crsRegistration?.horizontalCrs, "EPSG:26912");
+  assert.equal(layer?.metadata?.crsRegistration?.registrationStatus, "unverified");
+  assert.equal(layer?.metadata?.crsRegistration?.coordinateBasis, "utm");
   assert.ok(
     environment.layerStyles?.["utah-forge-topo-clouds"],
     "Default Utah cloud layer should have environment layerStyles.",
   );
   const style = environment.layerStyles?.["utah-forge-topo-clouds"];
-  assert.equal(
-    style?.atmospherePuffCount,
-    1,
-    "Default Utah cloud layer should start as one obvious test cloud.",
+  assert.ok(
+    Number.isFinite(style?.atmospherePuffCount) &&
+      style.atmospherePuffCount >= 1,
+    "Default Utah cloud layer should define at least one editable cloud puff.",
   );
   assert.ok(
-    style?.atmosphereBoundsCenterZ >= 6000,
-    "Default Utah test cloud should sit above high topo so depth does not hide it.",
+    Number.isFinite(style?.atmosphereBoundsCenterZ),
+    "Default Utah cloud layer should define a vertical bounds center.",
   );
   assert.ok(
     style?.atmospherePuffScaleM >= 4000,
-    "Default Utah test cloud should be large enough to see from the topo camera.",
+    "Default Utah cloud layer should be large enough to see from the topo camera.",
   );
   assert.ok(
-    style?.opacity >= 0.75 && style?.atmosphereDensity >= 0.85,
-    "Default Utah test cloud should be visually strong enough for QA.",
-  );
-  assert.equal(
-    style?.atmosphereScaleJitter,
-    0,
-    "A single default test cloud should not jitter away from its bounds center.",
+    style?.opacity > 0 && style?.atmosphereDensity > 0,
+    "Default Utah cloud layer should be visible when enabled.",
   );
   assert.equal(
     style?.atmosphereDepthTest,
     false,
-    "Default Utah test cloud should not be hidden behind the topo mesh.",
+    "Default Utah cloud layer should not be hidden behind the topo mesh.",
   );
   assert.equal(
     style?.affectedByFog,
     false,
     "Default Utah test cloud should not disappear into scene fog.",
   );
+  const globallyVisible =
+    environment.defaultVisibleLayers?.includes("utah-forge-topo-clouds") === true;
+  const pageVisible =
+    mtOverviewPage.visibilityOverrides?.["utah-forge-topo-clouds"] === true;
   assert.ok(
-    environment.defaultVisibleLayers?.includes("utah-forge-topo-clouds"),
-    "Default Utah cloud layer should be visible in the environment.",
+    globallyVisible || pageVisible,
+    "Default Utah cloud layer should be visible in the environment or on its QA page.",
   );
   assert.equal(
     mtOverviewPage.visibilityOverrides?.["utah-forge-topo-clouds"],

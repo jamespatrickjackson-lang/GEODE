@@ -7,6 +7,10 @@ function readJson(...segments) {
   return JSON.parse(readFileSync(join(...segments), "utf8"));
 }
 
+function assetFilePath(assetPath) {
+  return String(assetPath).split("?")[0];
+}
+
 const seismicManifestPath = [
   "projects",
   "utah-forge",
@@ -90,12 +94,24 @@ function allRequiredProductIds() {
   return Object.values(requiredLineProductIds).flat();
 }
 
+function readText(...segments) {
+  return readFileSync(join(...segments), "utf8");
+}
+
 function requiredProductsById(manifest) {
   return new Map(
     manifest.products
       .filter((product) => allRequiredProductIds().includes(product.id))
       .map((product) => [product.id, product]),
   );
+}
+
+function sourceSlice(source, startNeedle, endNeedle) {
+  const start = source.indexOf(startNeedle);
+  assert.notEqual(start, -1, `source should include ${startNeedle}`);
+  const end = source.indexOf(endNeedle, start);
+  assert.notEqual(end, -1, `source should include ${endNeedle}`);
+  return source.slice(start, end);
 }
 
 function assertProductMetadata(product, expectedLineId) {
@@ -129,7 +145,7 @@ test("required Utah FORGE seismic line products have canonical source-backed lab
       for (const section of product.sections) {
         assert.ok(section.amplitudeFile, `${product.id}/${section.id} amplitude file`);
         assert.ok(
-          existsSync(join(browserRoot, section.amplitudeFile)),
+          existsSync(join(browserRoot, assetFilePath(section.amplitudeFile))),
           `${product.id}/${section.id} generated amplitude artifact should exist`,
         );
       }
@@ -140,6 +156,46 @@ test("required Utah FORGE seismic line products have canonical source-backed lab
     const product = productsById.get(productId);
     assert.equal(product?.canonicalLabel, canonicalLabel, productId);
   }
+});
+
+test("seismic browser loader preserves trace-derived section geometry", () => {
+  const source = readText("src", "loaders", "loadSeismicBrowser.ts");
+  const sectionSpec = sourceSlice(
+    source,
+    "interface SeismicSectionSpec",
+    "interface SeismicVolumeLodSpec",
+  );
+  assert.match(sectionSpec, /geometrySource\?:/, "section metadata should expose geometry source");
+  assert.match(sectionSpec, /sourceAxis\?:/, "section metadata should expose source axis");
+  assert.match(sectionSpec, /path\?: Vec3\[\]/, "section metadata should preserve trace path vertices");
+  assert.match(sectionSpec, /surfaceGrid\?:/, "section metadata should expose trace surface grids");
+
+  const geometryBuilder = sourceSlice(
+    source,
+    "function buildSectionPlaneGeometry",
+    "function buildSectionAmplitudeTexture",
+  );
+  assert.doesNotMatch(
+    geometryBuilder,
+    /Float32Array\(4 \* 3\)/,
+    "section geometry must not force every section into four vertices",
+  );
+  assert.match(
+    geometryBuilder,
+    /buildPathCurtainGeometry/,
+    "line sections with interior path points should build tessellated path curtains",
+  );
+  assert.match(
+    geometryBuilder,
+    /surfaceGrid/,
+    "sample sections should use trace-derived surface grid geometry when available",
+  );
+
+  assert.match(
+    source,
+    /seismicVolumeGeometryModel:\s*"axis-aligned-envelope"/,
+    "raymarch volume userData should explicitly describe AABB/envelope geometry",
+  );
 });
 
 test("source inventory and project metadata retain seismic line grouping and name evidence", () => {
@@ -179,6 +235,173 @@ test("source inventory and project metadata retain seismic line grouping and nam
         );
       }
     }
+  }
+});
+
+test("GDR 1141 enhanced ANI PSDM 3D stack is audited as source-gated", () => {
+  const manifest = readJson(...seismicManifestPath);
+  const inventory = readJson(...seismicInventoryPath);
+  const project = readJson("projects", "utah-forge", "project.json");
+  const productId = "gdr-1141-forge3d-ani-psdm-stack-enh";
+  const seismicLayer = project.layers.find(
+    (layer) => layer.id === "utah-forge-phase3-seismic-browser",
+  );
+
+  assert.equal(
+    manifest.products.some((candidate) => candidate.id === productId),
+    false,
+    "enhanced ANI PSDM render product must not be fabricated while the SEG-Y member is corrupt",
+  );
+  assert.equal(
+    inventory.activeProducts.some((candidate) => candidate.id === productId),
+    false,
+    "enhanced ANI PSDM inventory product must not be fabricated while the SEG-Y member is corrupt",
+  );
+  assert.equal(
+    seismicLayer?.metadata?.seismicProducts?.some(
+      (candidate) => candidate.id === productId,
+    ),
+    false,
+    "enhanced ANI PSDM project product must not be fabricated while the SEG-Y member is corrupt",
+  );
+
+  for (const [label, gates] of [
+    ["manifest", manifest.requiredProductSourceGates],
+    ["inventory", inventory.requiredProductSourceGates],
+    ["project", seismicLayer?.metadata?.seismicRequiredProductSourceGates],
+  ]) {
+    assert.ok(Array.isArray(gates), `${label} required product gates`);
+    const gate = gates.find((candidate) => candidate.id === productId);
+    assert.ok(gate, `${label} enhanced ANI PSDM source gate`);
+    assert.equal(gate.label, "3D anisotropic PSDM depth stack (enhanced)");
+    assert.equal(gate.filename, "Forge3d_ANI_PSDM_Stack_Enh.segy");
+    assert.equal(gate.expectedBytes, 153_678_840);
+    assert.equal(gate.sourceSubmission, "GDR 1141");
+    assert.equal(gate.downloadLandingPage, "https://gdr.openei.org/submissions/1141");
+    assert.equal(gate.status, "source-member-corrupt");
+    assert.match(
+      gate.sourceZipMember,
+      /2018-19 Reflection Processing\/3D Survey\/Forge3d_ANI_PSDM_Stack_Enh\.segy/,
+      `${label} enhanced ANI PSDM zip member`,
+    );
+  }
+});
+
+test("seismic prep recovers required zip-contained GDR 1141 source members", () => {
+  const prepSource = readText("prep", "build_utah_forge_seismic_browser.py");
+  assert.match(
+    prepSource,
+    /Forge3d_ANI_PSDM_Stack_Enh\.segy/,
+    "prep script should name the required zip-contained enhanced ANI PSDM source",
+  );
+  assert.match(
+    prepSource,
+    /extract_required_zip_source_members/,
+    "prep script should recover required SEG-Y members that remain inside source zips",
+  );
+});
+
+test("seismic editor exposes first-class all-2D section controls", () => {
+  const controlsSource = readText(
+    "src",
+    "editor",
+    "layerControls",
+    "seismic",
+    "SeismicCapabilityLayerContainers.tsx",
+  );
+  assert.match(
+    controlsSource,
+    /seismic-capability-all-2d-sections/,
+    "editor should expose a direct all-2D section visibility command",
+  );
+  assert.match(
+    controlsSource,
+    /seismic-capability-hide-2d-sections/,
+    "editor should expose a direct 2D section hide command",
+  );
+  assert.match(
+    controlsSource,
+    /seismic-capability-survey-plus-2d-sections/,
+    "editor should expose a survey geometry plus 2D sections command",
+  );
+  assert.match(
+    controlsSource,
+    /seismic-source-gate-/,
+    "editor should expose source-gated seismic product headings",
+  );
+  assert.match(
+    controlsSource,
+    /product\.surveyKind !== "3d"/,
+    "2D section controls should derive scope from surveyKind rather than hard-coded page fixtures",
+  );
+  assert.match(
+    controlsSource,
+    /visible:\s*true,[\s\S]*seismicProductVisibility: selectedOnlyVisibility/,
+    "direct product capability activation should make the seismic layer visible",
+  );
+  assert.match(
+    controlsSource,
+    /visible:\s*true,[\s\S]*seismicProductVisibility: Object\.fromEntries\([\s\S]*product\.surveyKind !== "3d"/,
+    "all-2D section activation should make the seismic layer visible",
+  );
+});
+
+test("seismic show actions restore real layer visibility before product loading", () => {
+  const layerPanelSource = readText("src", "editor", "LayerPanel.tsx");
+  const layerPanelGroupsSource = readText(
+    "src",
+    "editor",
+    "LayerPanelGroups.tsx",
+  );
+  const browserControlsSource = readText(
+    "src",
+    "editor",
+    "layerControls",
+    "seismic",
+    "SeismicBrowserControls.tsx",
+  );
+  const capabilityControlsSource = readText(
+    "src",
+    "editor",
+    "layerControls",
+    "seismic",
+    "SeismicCapabilityLayerContainers.tsx",
+  );
+
+  assert.match(
+    layerPanelSource,
+    /const ensureLayerVisible = \(\) => \{[\s\S]*setPageVisibilityOverride\(currentPage\.id, layer\.id, true\)/,
+    "LayerPanel should expose a page-visibility restore callback for hidden seismic layers",
+  );
+  assert.match(
+    layerPanelSource,
+    /ensureLayerVisible=\{ensureLayerVisible\}/,
+    "active seismic controls should receive the layer visibility restore callback",
+  );
+  assert.match(
+    layerPanelGroupsSource,
+    /const ensureSeismicLayerVisible = \(\) => \{[\s\S]*setPageVisibilityOverride\(currentPage\.id, seismicLayer\.id, true\)/,
+    "grouped seismic controls should restore page visibility for hidden seismic layers",
+  );
+  assert.match(
+    layerPanelGroupsSource,
+    /ensureLayerVisible=\{ensureSeismicLayerVisible\}/,
+    "grouped seismic controls should receive the layer visibility restore callback",
+  );
+  for (const [label, source] of [
+    ["browser", browserControlsSource],
+    ["capability", capabilityControlsSource],
+  ]) {
+    assert.match(
+      source,
+      /ensureLayerVisible\?: \(\) => void/,
+      `${label} seismic controls should accept the layer visibility restore callback`,
+    );
+    assert.match(
+      source,
+      /patch\.visible === true[\s\S]*ensureLayerVisible\?\.\(\)/,
+      `${label} seismic controls should restore layer visibility for show-producing patches`,
+    );
   }
 });
 

@@ -998,7 +998,22 @@
           "computationRole": "visual-context",
           "notes": "Default editable single cloud for Topo > Environment > Clouds visual QA."
         },
-        "notes": "Default editable visual cloud bank for Topo Environment. It is a local atmosphere impostor, not measured weather, plume, or geoscience data."
+        "notes": "Default editable visual cloud bank for Topo Environment. It is a local atmosphere impostor, not measured weather, plume, or geoscience data.",
+        "crsRegistration": {
+          "horizontalCrs": "EPSG:26912",
+          "verticalDatum": "scene-local atmosphere volume bounds in metres above project scene datum",
+          "units": "m",
+          "coordinateBasis": "utm",
+          "origin": {
+            "easting_m": 341467.35,
+            "northing_m": 4273374.5,
+            "elevation_m": 0
+          },
+          "rotationDeg": 0,
+          "registrationStatus": "unverified",
+          "accuracyClaimStatus": "CRS/datum review required",
+          "notes": "Local atmosphere visual volume inherits the project UTM scene frame for authoring only; exact weather or plume CRS is not claimed."
+        }
       }
     },
     {
@@ -1146,7 +1161,22 @@
             ]
           }
         ],
-        "notes": "Temporary diagnostic overlay for locating NAIP county-source seams and missing-tile artifacts. Rectangles show source raster bounds for the current 9-county regional overview, not a crop request."
+        "notes": "Temporary diagnostic overlay for locating NAIP county-source seams and missing-tile artifacts. Rectangles show source raster bounds for the current 9-county regional overview, not a crop request.",
+        "crsRegistration": {
+          "horizontalCrs": "EPSG:26912",
+          "verticalDatum": "public terrain/vector source elevation or draped terrain context in metres",
+          "units": "m",
+          "coordinateBasis": "utm",
+          "origin": {
+            "easting_m": 341467.35,
+            "northing_m": 4273374.5,
+            "elevation_m": 0
+          },
+          "rotationDeg": 0,
+          "registrationStatus": "unverified",
+          "accuracyClaimStatus": "CRS/datum review required",
+          "notes": "NAIP county-source diagnostic bounds are derived from EPSG:26912 source rasters and remain review-gated for exact CRS/datum claims."
+        }
       }
     },
     {
@@ -1395,7 +1425,8 @@
                 "depthM": 975,
                 "depthReference": "below surface / report calibration point",
                 "expectedDepthConversionErrorM": 20
-              }
+              },
+              "sourceUnitStatus": "not-depth-m-domain"
             },
             "valueEncoding": {
               "storedTextureEncoding": "uint8-normalized-p02-p98",
@@ -1417,13 +1448,13 @@
               ],
               "sceneBounds": {
                 "min": [
-                  -12187.449999999953,
-                  -12692.299999999814,
+                  -8649.4125,
+                  -12673.5,
                   -6200
                 ],
                 "max": [
-                  54.65000000002328,
-                  -8059.5,
+                  -3305.2875,
+                  -8378.5,
                   1800
                 ]
               },
@@ -1432,7 +1463,8 @@
                 "unit": "ms",
                 "min": 0,
                 "max": 4000,
-                "verticalScaleMPerUnit": 2
+                "verticalScaleMPerUnit": 2,
+                "sourceUnitStatus": "not-depth-m-domain"
               },
               "verticalReference": {
                 "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
@@ -1449,7 +1481,8 @@
                   "depthM": 975,
                   "depthReference": "below surface / report calibration point",
                   "expectedDepthConversionErrorM": 20
-                }
+                },
+                "sourceUnitStatus": "not-depth-m-domain"
               },
               "valueEncoding": {
                 "storedTextureEncoding": "uint8-normalized-p02-p98",
@@ -1509,7 +1542,8 @@
                 "depthM": 975,
                 "depthReference": "below surface / report calibration point",
                 "expectedDepthConversionErrorM": 20
-              }
+              },
+              "sourceUnitStatus": "header-indicated-depth-m"
             },
             "valueEncoding": {
               "storedTextureEncoding": "uint8-normalized-p02-p98",
@@ -1518,26 +1552,26 @@
             },
             "sourceSubmission": "GDR 1141",
             "amplitudeStats": {
-              "min": -6.4774,
-              "max": 4.63094,
-              "p02": -0.733928,
-              "p98": 0.703527
+              "min": -6.530769,
+              "max": 4.771857,
+              "p02": -0.766484,
+              "p98": 0.773822
             },
             "raymarchVolume": {
               "dimensions": [
-                116,
-                116,
-                615
+                130,
+                104,
+                614
               ],
               "sceneBounds": {
                 "min": [
-                  -12187.449999999953,
-                  -12692.299999999814,
+                  -8666.85,
+                  -12688.5,
                   -3200
                 ],
                 "max": [
-                  54.65000000002328,
-                  -8059.5,
+                  -3293.9125,
+                  -8372.5,
                   1800
                 ]
               },
@@ -1546,7 +1580,8 @@
                 "unit": "m",
                 "min": 0,
                 "max": 5000,
-                "verticalScaleMPerUnit": 1
+                "verticalScaleMPerUnit": 1,
+                "sourceUnitStatus": "header-indicated-depth-m"
               },
               "verticalReference": {
                 "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
@@ -1563,7 +1598,8 @@
                   "depthM": 975,
                   "depthReference": "below surface / report calibration point",
                   "expectedDepthConversionErrorM": 20
-                }
+                },
+                "sourceUnitStatus": "header-indicated-depth-m"
               },
               "valueEncoding": {
                 "storedTextureEncoding": "uint8-normalized-p02-p98",
@@ -1572,10 +1608,10 @@
               },
               "amplitudeStats": {
                 "min": -6.4774,
-                "max": 4.63094,
-                "p02": -0.702802,
-                "p98": 0.703527,
-                "mean": 0.000045
+                "max": 4.771857,
+                "p02": -0.703672,
+                "p98": 0.704369,
+                "mean": 0.000062
               }
             },
             "raymarchCapable": true
@@ -1623,7 +1659,8 @@
                 "depthM": 975,
                 "depthReference": "below surface / report calibration point",
                 "expectedDepthConversionErrorM": 20
-              }
+              },
+              "sourceUnitStatus": "not-depth-m-domain"
             },
             "valueEncoding": {
               "storedTextureEncoding": "uint8-normalized-p02-p98",
@@ -1645,13 +1682,13 @@
               ],
               "sceneBounds": {
                 "min": [
-                  -12187.449999999953,
-                  -12692.299999999814,
+                  -8649.4125,
+                  -12673.5,
                   -6200
                 ],
                 "max": [
-                  54.65000000002328,
-                  -8059.5,
+                  -3305.2875,
+                  -8378.5,
                   1800
                 ]
               },
@@ -1660,7 +1697,8 @@
                 "unit": "ms",
                 "min": 0,
                 "max": 4000,
-                "verticalScaleMPerUnit": 2
+                "verticalScaleMPerUnit": 2,
+                "sourceUnitStatus": "not-depth-m-domain"
               },
               "verticalReference": {
                 "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
@@ -1677,7 +1715,8 @@
                   "depthM": 975,
                   "depthReference": "below surface / report calibration point",
                   "expectedDepthConversionErrorM": 20
-                }
+                },
+                "sourceUnitStatus": "not-depth-m-domain"
               },
               "valueEncoding": {
                 "storedTextureEncoding": "uint8-normalized-p02-p98",
@@ -1737,7 +1776,8 @@
                 "depthM": 975,
                 "depthReference": "below surface / report calibration point",
                 "expectedDepthConversionErrorM": 20
-              }
+              },
+              "sourceUnitStatus": "not-depth-m-domain"
             },
             "valueEncoding": {
               "storedTextureEncoding": "uint8-normalized-p02-p98",
@@ -1763,13 +1803,13 @@
               ],
               "sceneBounds": {
                 "min": [
-                  -12187.449999999953,
-                  -12692.299999999814,
+                  -8666.85,
+                  -12687.5,
                   -6200
                 ],
                 "max": [
-                  54.65000000002328,
-                  -8059.5,
+                  -3347.85,
+                  -8596.5,
                   1800
                 ]
               },
@@ -1778,7 +1818,8 @@
                 "unit": "ms",
                 "min": 0,
                 "max": 4000,
-                "verticalScaleMPerUnit": 2
+                "verticalScaleMPerUnit": 2,
+                "sourceUnitStatus": "not-depth-m-domain"
               },
               "verticalReference": {
                 "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
@@ -1795,7 +1836,8 @@
                   "depthM": 975,
                   "depthReference": "below surface / report calibration point",
                   "expectedDepthConversionErrorM": 20
-                }
+                },
+                "sourceUnitStatus": "not-depth-m-domain"
               },
               "valueEncoding": {
                 "storedTextureEncoding": "uint8-normalized-p02-p98",
@@ -1859,7 +1901,8 @@
                 "depthM": 975,
                 "depthReference": "below surface / report calibration point",
                 "expectedDepthConversionErrorM": 20
-              }
+              },
+              "sourceUnitStatus": "header-indicated-depth-m"
             },
             "valueEncoding": {
               "storedTextureEncoding": "uint8-normalized-p02-p98",
@@ -1919,7 +1962,8 @@
                 "depthM": 975,
                 "depthReference": "below surface / report calibration point",
                 "expectedDepthConversionErrorM": 20
-              }
+              },
+              "sourceUnitStatus": "header-indicated-depth-m"
             },
             "valueEncoding": {
               "storedTextureEncoding": "uint8-normalized-p02-p98",
@@ -1979,7 +2023,9 @@
                 "depthM": 975,
                 "depthReference": "below surface / report calibration point",
                 "expectedDepthConversionErrorM": 20
-              }
+              },
+              "sourceUnitStatus": "header-unresolved-filename-inferred-depth-m",
+              "sourceUnitCaveat": "SEG-Y textual header does not prove the source sample unit; depth metres are inferred from filename and product classification."
             },
             "valueEncoding": {
               "storedTextureEncoding": "uint8-normalized-p02-p98",
@@ -2039,7 +2085,8 @@
                 "depthM": 975,
                 "depthReference": "below surface / report calibration point",
                 "expectedDepthConversionErrorM": 20
-              }
+              },
+              "sourceUnitStatus": "header-indicated-depth-m"
             },
             "valueEncoding": {
               "storedTextureEncoding": "uint8-normalized-p02-p98",
@@ -2099,7 +2146,8 @@
                 "depthM": 975,
                 "depthReference": "below surface / report calibration point",
                 "expectedDepthConversionErrorM": 20
-              }
+              },
+              "sourceUnitStatus": "header-indicated-depth-m"
             },
             "valueEncoding": {
               "storedTextureEncoding": "uint8-normalized-p02-p98",
@@ -2165,7 +2213,8 @@
                 "depthM": 975,
                 "depthReference": "below surface / report calibration point",
                 "expectedDepthConversionErrorM": 20
-              }
+              },
+              "sourceUnitStatus": "header-indicated-nonmetric-depth-review-required"
             },
             "valueEncoding": {
               "storedTextureEncoding": "uint8-normalized-p02-p98",
@@ -2231,7 +2280,8 @@
                 "depthM": 975,
                 "depthReference": "below surface / report calibration point",
                 "expectedDepthConversionErrorM": 20
-              }
+              },
+              "sourceUnitStatus": "header-indicated-depth-m"
             },
             "valueEncoding": {
               "storedTextureEncoding": "uint8-normalized-p02-p98",
@@ -2297,7 +2347,8 @@
                 "depthM": 975,
                 "depthReference": "below surface / report calibration point",
                 "expectedDepthConversionErrorM": 20
-              }
+              },
+              "sourceUnitStatus": "header-indicated-nonmetric-depth-review-required"
             },
             "valueEncoding": {
               "storedTextureEncoding": "uint8-normalized-p02-p98",
@@ -2363,7 +2414,8 @@
                 "depthM": 975,
                 "depthReference": "below surface / report calibration point",
                 "expectedDepthConversionErrorM": 20
-              }
+              },
+              "sourceUnitStatus": "header-indicated-nonmetric-depth-review-required"
             },
             "valueEncoding": {
               "storedTextureEncoding": "uint8-normalized-p02-p98",
@@ -2429,7 +2481,8 @@
                 "depthM": 975,
                 "depthReference": "below surface / report calibration point",
                 "expectedDepthConversionErrorM": 20
-              }
+              },
+              "sourceUnitStatus": "header-indicated-depth-m"
             },
             "valueEncoding": {
               "storedTextureEncoding": "uint8-normalized-p02-p98",
@@ -2495,7 +2548,8 @@
                 "depthM": 975,
                 "depthReference": "below surface / report calibration point",
                 "expectedDepthConversionErrorM": 20
-              }
+              },
+              "sourceUnitStatus": "header-indicated-nonmetric-depth-review-required"
             },
             "valueEncoding": {
               "storedTextureEncoding": "uint8-normalized-p02-p98",
@@ -2561,7 +2615,8 @@
                 "depthM": 975,
                 "depthReference": "below surface / report calibration point",
                 "expectedDepthConversionErrorM": 20
-              }
+              },
+              "sourceUnitStatus": "header-indicated-depth-m"
             },
             "valueEncoding": {
               "storedTextureEncoding": "uint8-normalized-p02-p98",
@@ -2621,7 +2676,8 @@
                 "depthM": 975,
                 "depthReference": "below surface / report calibration point",
                 "expectedDepthConversionErrorM": 20
-              }
+              },
+              "sourceUnitStatus": "not-depth-m-domain"
             },
             "valueEncoding": {
               "storedTextureEncoding": "uint8-normalized-p02-p98",
@@ -2681,7 +2737,8 @@
                 "depthM": 975,
                 "depthReference": "below surface / report calibration point",
                 "expectedDepthConversionErrorM": 20
-              }
+              },
+              "sourceUnitStatus": "not-depth-m-domain"
             },
             "valueEncoding": {
               "storedTextureEncoding": "uint8-normalized-p02-p98",
@@ -2741,7 +2798,8 @@
                 "depthM": 975,
                 "depthReference": "below surface / report calibration point",
                 "expectedDepthConversionErrorM": 20
-              }
+              },
+              "sourceUnitStatus": "not-depth-m-domain"
             },
             "valueEncoding": {
               "storedTextureEncoding": "uint8-normalized-p02-p98",
@@ -2801,7 +2859,8 @@
                 "depthM": 975,
                 "depthReference": "below surface / report calibration point",
                 "expectedDepthConversionErrorM": 20
-              }
+              },
+              "sourceUnitStatus": "not-depth-m-domain"
             },
             "valueEncoding": {
               "storedTextureEncoding": "uint8-normalized-p02-p98",
@@ -2861,7 +2920,8 @@
                 "depthM": 975,
                 "depthReference": "below surface / report calibration point",
                 "expectedDepthConversionErrorM": 20
-              }
+              },
+              "sourceUnitStatus": "not-depth-m-domain"
             },
             "valueEncoding": {
               "storedTextureEncoding": "uint8-normalized-p02-p98",
@@ -2921,7 +2981,8 @@
                 "depthM": 975,
                 "depthReference": "below surface / report calibration point",
                 "expectedDepthConversionErrorM": 20
-              }
+              },
+              "sourceUnitStatus": "not-depth-m-domain"
             },
             "valueEncoding": {
               "storedTextureEncoding": "uint8-normalized-p02-p98",
@@ -2987,7 +3048,8 @@
                 "depthM": 975,
                 "depthReference": "below surface / report calibration point",
                 "expectedDepthConversionErrorM": 20
-              }
+              },
+              "sourceUnitStatus": "not-depth-m-domain"
             },
             "valueEncoding": {
               "storedTextureEncoding": "uint8-normalized-p02-p98",
@@ -3053,7 +3115,8 @@
                 "depthM": 975,
                 "depthReference": "below surface / report calibration point",
                 "expectedDepthConversionErrorM": 20
-              }
+              },
+              "sourceUnitStatus": "not-depth-m-domain"
             },
             "valueEncoding": {
               "storedTextureEncoding": "uint8-normalized-p02-p98",
@@ -3119,7 +3182,8 @@
                 "depthM": 975,
                 "depthReference": "below surface / report calibration point",
                 "expectedDepthConversionErrorM": 20
-              }
+              },
+              "sourceUnitStatus": "not-depth-m-domain"
             },
             "valueEncoding": {
               "storedTextureEncoding": "uint8-normalized-p02-p98",
@@ -3185,7 +3249,8 @@
                 "depthM": 975,
                 "depthReference": "below surface / report calibration point",
                 "expectedDepthConversionErrorM": 20
-              }
+              },
+              "sourceUnitStatus": "not-depth-m-domain"
             },
             "valueEncoding": {
               "storedTextureEncoding": "uint8-normalized-p02-p98",
@@ -3251,7 +3316,8 @@
                 "depthM": 975,
                 "depthReference": "below surface / report calibration point",
                 "expectedDepthConversionErrorM": 20
-              }
+              },
+              "sourceUnitStatus": "not-depth-m-domain"
             },
             "valueEncoding": {
               "storedTextureEncoding": "uint8-normalized-p02-p98",
@@ -3317,7 +3383,8 @@
                 "depthM": 975,
                 "depthReference": "below surface / report calibration point",
                 "expectedDepthConversionErrorM": 20
-              }
+              },
+              "sourceUnitStatus": "not-depth-m-domain"
             },
             "valueEncoding": {
               "storedTextureEncoding": "uint8-normalized-p02-p98",
@@ -3377,7 +3444,8 @@
                 "depthM": 975,
                 "depthReference": "below surface / report calibration point",
                 "expectedDepthConversionErrorM": 20
-              }
+              },
+              "sourceUnitStatus": "not-depth-m-domain"
             },
             "valueEncoding": {
               "storedTextureEncoding": "uint8-normalized-p02-p98",
@@ -3437,7 +3505,8 @@
                 "depthM": 975,
                 "depthReference": "below surface / report calibration point",
                 "expectedDepthConversionErrorM": 20
-              }
+              },
+              "sourceUnitStatus": "not-depth-m-domain"
             },
             "valueEncoding": {
               "storedTextureEncoding": "uint8-normalized-p02-p98",
@@ -3497,7 +3566,8 @@
                 "depthM": 975,
                 "depthReference": "below surface / report calibration point",
                 "expectedDepthConversionErrorM": 20
-              }
+              },
+              "sourceUnitStatus": "not-depth-m-domain"
             },
             "valueEncoding": {
               "storedTextureEncoding": "uint8-normalized-p02-p98",
@@ -3561,7 +3631,8 @@
                 "depthM": 975,
                 "depthReference": "below surface / report calibration point",
                 "expectedDepthConversionErrorM": 20
-              }
+              },
+              "sourceUnitStatus": "not-depth-m-domain"
             },
             "valueEncoding": {
               "storedTextureEncoding": "uint8-normalized-p02-p98",
@@ -3631,7 +3702,8 @@
                 "depthM": 975,
                 "depthReference": "below surface / report calibration point",
                 "expectedDepthConversionErrorM": 20
-              }
+              },
+              "sourceUnitStatus": "not-depth-m-domain"
             },
             "valueEncoding": {
               "storedTextureEncoding": "uint8-normalized-p02-p98",
@@ -3701,7 +3773,8 @@
                 "depthM": 975,
                 "depthReference": "below surface / report calibration point",
                 "expectedDepthConversionErrorM": 20
-              }
+              },
+              "sourceUnitStatus": "not-depth-m-domain"
             },
             "valueEncoding": {
               "storedTextureEncoding": "uint8-normalized-p02-p98",
@@ -6810,6 +6883,27 @@
             ],
             "reason": "No matching SEG-Y source product was found in the active source path or GeoSee archive."
           }
+        ],
+        "seismicRequiredProductSourceGates": [
+          {
+            "id": "gdr-1141-forge3d-ani-psdm-stack-enh",
+            "label": "3D anisotropic PSDM depth stack (enhanced)",
+            "filename": "Forge3d_ANI_PSDM_Stack_Enh.segy",
+            "expectedBytes": 153678840,
+            "sourceSubmission": "GDR 1141",
+            "sourceCitation": "GDR 1141, Miller (2019)",
+            "downloadLandingPage": "https://gdr.openei.org/submissions/1141",
+            "sourceZip": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing.zip",
+            "sourceZipMember": "2018-19 Reflection Processing/3D Survey/Forge3d_ANI_PSDM_Stack_Enh.segy",
+            "normalizedPath": null,
+            "status": "source-member-corrupt",
+            "reason": "The required SEG-Y member is listed in the official GDR zip, but the zip member cannot be fully extracted or CRC-validated.",
+            "error": "error: Error -3 while decompressing data: invalid code lengths set",
+            "surveyKind": "3d",
+            "productKind": "psdm",
+            "domainKind": "depth",
+            "domainUnit": "m"
+          }
         ]
       }
     },
@@ -7457,6 +7551,21 @@
       "files": {},
       "metadata": {
         "classification": "environmental",
+        "crsRegistration": {
+          "horizontalCrs": "EPSG:26912",
+          "verticalDatum": "scene-local atmosphere volume bounds in metres above project scene datum",
+          "units": "m",
+          "coordinateBasis": "utm",
+          "origin": {
+            "easting_m": 341467.35,
+            "northing_m": 4273374.5,
+            "elevation_m": 0
+          },
+          "rotationDeg": 0,
+          "registrationStatus": "unverified",
+          "accuracyClaimStatus": "CRS/datum review required",
+          "notes": "Local atmosphere visual volume inherits the project UTM scene frame for authoring only; exact weather or plume CRS is not claimed."
+        },
         "geoSeeTool": {
           "id": "topo-map",
           "role": "environment-clouds",
@@ -7491,6 +7600,21 @@
       "files": {},
       "metadata": {
         "classification": "environmental",
+        "crsRegistration": {
+          "horizontalCrs": "EPSG:26912",
+          "verticalDatum": "scene-local atmosphere volume bounds in metres above project scene datum",
+          "units": "m",
+          "coordinateBasis": "utm",
+          "origin": {
+            "easting_m": 341467.35,
+            "northing_m": 4273374.5,
+            "elevation_m": 0
+          },
+          "rotationDeg": 0,
+          "registrationStatus": "unverified",
+          "accuracyClaimStatus": "CRS/datum review required",
+          "notes": "Local atmosphere visual volume inherits the project UTM scene frame for authoring only; exact weather or plume CRS is not claimed."
+        },
         "geoSeeTool": {
           "id": "topo-map",
           "role": "environment-clouds",

@@ -45,6 +45,7 @@ export function SeismicBrowserControls({
   sceneSectionStyle,
   sceneHandle,
   onToggleOverride,
+  ensureLayerVisible,
   setEnvLayerStyle,
   setPageLayerOverride,
 }: {
@@ -58,6 +59,7 @@ export function SeismicBrowserControls({
   sceneSectionStyle: EditableStyle;
   sceneHandle: SceneHandle;
   onToggleOverride?: (enabled: boolean) => void;
+  ensureLayerVisible?: () => void;
   setEnvLayerStyle: LayerStyleSetter;
   setPageLayerOverride: PageStyleSetter;
 }) {
@@ -174,6 +176,9 @@ export function SeismicBrowserControls({
     patch: Partial<EditableStyle>,
   ) => {
     if (disabled) return;
+    if (targetLayerId === layerId && patch.visible === true) {
+      ensureLayerVisible?.();
+    }
     if (isEnv) {
       setEnvLayerStyle(targetLayerId, patch);
     } else if (currentPage) {
@@ -209,7 +214,7 @@ export function SeismicBrowserControls({
   const applyPreset = (presetId: string) => {
     const preset = presets.find((candidate) => candidate.id === presetId);
     if (!preset) return;
-    commit(seismicPresetPatch(preset, products, productId));
+    commit({ visible: true, ...seismicPresetPatch(preset, products, productId) });
     if (preset.mtStylePatch) {
       commitLayerStyle(
         UTAH_FORGE_MT_RESISTIVITY_FULL_DENSITY_LAYER_ID,
@@ -233,6 +238,7 @@ export function SeismicBrowserControls({
     const product = products.find((candidate) => candidate.id === id);
     if (!product) return;
     const patch: Partial<EditableStyle> = {
+      visible: true,
       seismicProductId: id,
       seismicAudiencePresetId: undefined,
       seismicColormap: isVelocityProduct(product) ? "velocity" : colormap,
@@ -258,6 +264,7 @@ export function SeismicBrowserControls({
       return;
     }
     commit({
+      visible: true,
       seismicComparisonProductId: id,
       seismicComparisonMode: comparisonMode,
       seismicProductVisibility: {

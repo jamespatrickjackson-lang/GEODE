@@ -64,10 +64,30 @@ async function openSeismicWorkbench(
   await expect(page.locator("canvas")).toHaveCount(1);
   await page.getByRole("button", { name: "Forge" }).click();
   await openForgeDataEditorContainers(page);
+  await ensureSeismicSceneLayerVisible(page);
   await expect
     .poll(() =>
       capture.loadedUrls.some((url) => url.endsWith(SEISMIC_MANIFEST_URL)),
     )
+    .toBe(true);
+}
+
+async function ensureSeismicSceneLayerVisible(page: Page): Promise<void> {
+  await page.evaluate(() => {
+    const manager = (
+      window as unknown as {
+        __scene?: {
+          manager?: {
+            getLayer?: (id: string) => { visible: boolean } | undefined;
+          };
+        };
+      }
+    ).__scene?.manager;
+    const layer = manager?.getLayer?.("utah-forge-phase3-seismic-browser");
+    if (layer) layer.visible = true;
+  });
+  await expect
+    .poll(async () => (await seismicSceneState(page)).layerVisible)
     .toBe(true);
 }
 
@@ -136,6 +156,13 @@ test("Utah FORGE seismic manifest and capability containers render", async ({
   await expect(page.locator("body")).toContainText(
     "2D / legacy section theatre",
   );
+  await expect(page.locator("body")).toContainText("Source-gated products");
+  await expect(page.locator("body")).toContainText(
+    "3D anisotropic PSDM depth stack (enhanced)",
+  );
+  await expect(page.locator("body")).toContainText(
+    "Forge3d_ANI_PSDM_Stack_Enh.segy",
+  );
   await expect(page.locator("body")).toContainText("Processing comparison");
   await expect(page.locator("body")).toContainText("Display cleanup");
   await expect(page.locator("body")).toContainText("Survey geometry");
@@ -151,6 +178,24 @@ test("Utah FORGE seismic manifest and capability containers render", async ({
   await expect(
     page.getByTestId("seismic-audience-preset-select"),
   ).toBeVisible();
+  await expect(
+    page.getByTestId("seismic-capability-all-2d-sections"),
+  ).toBeVisible();
+  await expect(
+    page.getByTestId("seismic-capability-survey-plus-2d-sections"),
+  ).toBeVisible();
+  await expect(
+    page.getByTestId("seismic-capability-hide-2d-sections"),
+  ).toBeVisible();
+  await expect(
+    page.getByTestId(
+      "seismic-source-gate-gdr-1141-forge3d-ani-psdm-stack-enh",
+    ),
+  ).toBeVisible();
+  await revealSeismicCapabilityProduct(page, FIRST_RAYMARCH_PRODUCT_ID);
+  await page
+    .getByTestId(`seismic-capability-volume-${FIRST_RAYMARCH_PRODUCT_ID}`)
+    .click();
 
   await expect
     .poll(() =>
@@ -158,7 +203,7 @@ test("Utah FORGE seismic manifest and capability containers render", async ({
         (url) =>
           url.includes(
             "/projects/utah-forge/data/geosee_processed/utah_forge_phase_3/seismic_analysis/browser/products/",
-          ) && url.endsWith(".u8"),
+          ) && /\.u8(?:\?|$)/.test(url),
       ),
     )
     .toBe(true);
@@ -171,8 +216,61 @@ test("Utah FORGE seismic manifest and capability containers render", async ({
       Boolean(product.raymarchVolume),
     ).length,
   ).toBe(4);
+  const twoDimensionalProductCount = seismicManifest.products.filter(
+    (product: { surveyKind?: string }) => product.surveyKind !== "3d",
+  ).length;
 
   await openAllDetails(page);
+  await page.getByTestId("seismic-capability-all-2d-sections").click();
+  await expect
+    .poll(async () => {
+      const state = await seismicSceneState(page);
+      return {
+        visibleProductCount: state.visibleProductIds.length,
+        visibleVolumes: state.visibleVolumes,
+        capabilityPresetId: state.capabilityPresetId,
+      };
+    })
+    .toMatchObject({
+      visibleProductCount: twoDimensionalProductCount,
+      visibleVolumes: 0,
+      capabilityPresetId: "all-2d-sections",
+    });
+
+  await page.getByTestId("seismic-capability-hide-2d-sections").click();
+  await expect
+    .poll(async () => {
+      const state = await seismicSceneState(page);
+      return {
+        visibleProductIds: state.visibleProductIds,
+        visibleSections: state.visibleSections,
+        capabilityPresetId: state.capabilityPresetId,
+      };
+    })
+    .toEqual({
+      visibleProductIds: [],
+      visibleSections: 0,
+      capabilityPresetId: "hide-2d-sections",
+    });
+
+  await page.getByTestId("seismic-capability-survey-plus-2d-sections").click();
+  await expect
+    .poll(async () => {
+      const state = await seismicSceneState(page);
+      return {
+        visibleProductCount: state.visibleProductIds.length,
+        capabilityPresetId: state.capabilityPresetId,
+      };
+    })
+    .toMatchObject({
+      visibleProductCount: twoDimensionalProductCount,
+      capabilityPresetId: "all-2d-survey-sections",
+    });
+  const all2dSceneState = await seismicSceneState(page);
+  expect(all2dSceneState.visibleNavigationByRole.sources).toBeGreaterThan(0);
+  expect(all2dSceneState.visibleNavigationByRole.receivers).toBeGreaterThan(0);
+  expect(all2dSceneState.visibleNavigationByRole.lines).toBeGreaterThan(0);
+
   await expect(
     page.locator(
       '[data-testid^="seismic-capability-product-"]:not([data-testid^="seismic-capability-product-visible-"])',
@@ -422,7 +520,7 @@ test("Utah FORGE seismic display cleanup and scene sections update runtime state
     .getByTestId(`seismic-capability-volume-${SECOND_RAYMARCH_PRODUCT_ID}`)
     .click();
   await expect
-    .poll(() => capture.loadedUrls.some((url) => url.endsWith("/volume.u8")))
+    .poll(() => capture.loadedUrls.some((url) => /\/volume\.u8(?:\?|$)/.test(url)))
     .toBe(true);
   await expect
     .poll(() => seismicSceneState(page))

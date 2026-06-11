@@ -338,6 +338,27 @@
         "sha256": "341efc7ab8752b98ae0d866ca9c44b3fe7b41424c59a6aa950ed21af2ef816da"
       }
     ],
+    "requiredProductSourceGates": [
+      {
+        "id": "gdr-1141-forge3d-ani-psdm-stack-enh",
+        "label": "3D anisotropic PSDM depth stack (enhanced)",
+        "filename": "Forge3d_ANI_PSDM_Stack_Enh.segy",
+        "expectedBytes": 153678840,
+        "sourceSubmission": "GDR 1141",
+        "sourceCitation": "GDR 1141, Miller (2019)",
+        "downloadLandingPage": "https://gdr.openei.org/submissions/1141",
+        "sourceZip": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing.zip",
+        "sourceZipMember": "2018-19 Reflection Processing/3D Survey/Forge3d_ANI_PSDM_Stack_Enh.segy",
+        "normalizedPath": null,
+        "status": "source-member-corrupt",
+        "reason": "The required SEG-Y member is listed in the official GDR zip, but the zip member cannot be fully extracted or CRC-validated.",
+        "error": "error: Error -3 while decompressing data: invalid code lengths set",
+        "surveyKind": "3d",
+        "productKind": "psdm",
+        "domainKind": "depth",
+        "domainUnit": "m"
+      }
+    ],
     "skippedRawFiles": 0,
     "sourceRoot": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis",
     "sourceRootRole": "archive-normalized-source-fallback"

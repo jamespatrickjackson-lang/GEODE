@@ -425,11 +425,11 @@ export function applySeismicBrowserStyle(this: unknown, id: string, style: Edita
       productId,
       previousProductId,
     ).tier;
-    ensureProductsLoaded(Array.from(requestedLoadProductIds), targetTier).catch(
-      (error: unknown) => {
-        console.warn("[seismic] product load failed", error);
-      },
-    );
+    ensureProductsLoaded(Array.from(requestedLoadProductIds), targetTier, {
+      includeVolume: renderMode === "raymarch",
+    }).catch((error: unknown) => {
+      console.warn("[seismic] product load failed", error);
+    });
   }
   const selectedSections = new Set<THREE.Object3D>();
 

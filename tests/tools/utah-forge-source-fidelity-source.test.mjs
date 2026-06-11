@@ -182,6 +182,53 @@ test("legacy seismic fallback lines cannot claim precise registration", () => {
   }
 });
 
+test("audited missing-source gates are non-blocking only after source search is recorded", async () => {
+  const { isBlockingRequiredSourceGate } = await import(
+    "../../tools/validate-seismic-source-gates.mjs"
+  );
+
+  assert.equal(
+    isBlockingRequiredSourceGate({
+      required: true,
+      status: "missing-source",
+      productIds: [],
+      searchedRoots: ["active-source-root"],
+    }),
+    false,
+    "audited missing-source gates with no generated products should be non-blocking",
+  );
+  assert.equal(
+    isBlockingRequiredSourceGate({
+      required: true,
+      status: "missing-source",
+      productIds: ["line-95-product"],
+      searchedRoots: ["active-source-root"],
+    }),
+    true,
+    "missing-source gates with product ids should remain blocking",
+  );
+  assert.equal(
+    isBlockingRequiredSourceGate({
+      required: true,
+      status: "missing-source",
+      productIds: [],
+      searchedRoots: [],
+    }),
+    true,
+    "missing-source gates without searched roots are not audited",
+  );
+  assert.equal(
+    isBlockingRequiredSourceGate({
+      required: true,
+      status: "source-present-not-generated",
+      productIds: [],
+      searchedRoots: ["active-source-root"],
+    }),
+    true,
+    "source-present-not-generated gates should remain blocking",
+  );
+});
+
 test("Utah FORGE runtime layers declare CRS registration status", () => {
   const project = readJson("projects", "utah-forge", "project.json");
   assert.equal(project.registrationFrame?.horizontalCrs, "EPSG:26912");
@@ -196,24 +243,37 @@ test("Utah FORGE runtime layers declare CRS registration status", () => {
     "rotationDeg",
     "registrationStatus",
   ];
+  const missingRegistration = [];
+  const malformedRegistration = [];
   for (const layer of project.layers) {
     const registration = layer.metadata?.crsRegistration;
-    assert.ok(registration, `${layer.id} registration metadata`);
+    if (!registration) {
+      missingRegistration.push(layer.id);
+      continue;
+    }
     for (const field of requiredFields) {
-      assert.ok(
-        Object.hasOwn(registration, field),
-        `${layer.id} registration should include ${field}`,
+      if (!Object.hasOwn(registration, field)) {
+        malformedRegistration.push(`${layer.id} missing ${field}`);
+      }
+    }
+    if (!/^(unverified|validated)$/.test(registration.registrationStatus)) {
+      malformedRegistration.push(
+        `${layer.id} invalid registrationStatus ${registration.registrationStatus}`,
       );
     }
-    assert.match(registration.registrationStatus, /^(unverified|validated)$/);
     if (registration.registrationStatus === "validated") {
-      assert.ok(
-        Array.isArray(registration.controlPoints) &&
-          registration.controlPoints.length > 0,
-        `${layer.id} validated registration requires control points`,
-      );
+      if (
+        !Array.isArray(registration.controlPoints) ||
+        registration.controlPoints.length === 0
+      ) {
+        malformedRegistration.push(
+          `${layer.id} validated registration requires control points`,
+        );
+      }
     }
   }
+  assert.deepEqual(missingRegistration, [], "layers missing CRS registration");
+  assert.deepEqual(malformedRegistration, [], "malformed CRS registration");
 });
 
 test("Utah FORGE Bore Holes container keeps priority records honest", () => {

@@ -3,12 +3,15 @@ from __future__ import annotations
 import hashlib
 import json
 import math
+import mmap
 import os
 import re
 import shutil
+import struct
 import zipfile
+import zlib
 from dataclasses import dataclass
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any
 
 import numpy as np
@@ -82,6 +85,26 @@ RAW_DIR_MARKERS = (
     "Pilot_Aux",
 )
 
+REQUIRED_ZIP_SOURCE_MEMBERS = (
+    {
+        "productId": "gdr-1141-forge3d-ani-psdm-stack-enh",
+        "label": "3D anisotropic PSDM depth stack (enhanced)",
+        "filename": "Forge3d_ANI_PSDM_Stack_Enh.segy",
+        "expectedBytes": 153_678_840,
+        "sourceSubmission": "GDR 1141",
+        "sourceCitation": "GDR 1141, Miller (2019)",
+        "downloadLandingPage": "https://gdr.openei.org/submissions/1141",
+        "zipRelativePath": Path("from_submission_1141")
+        / "2018-19 Reflection Processing.zip",
+        "memberPath": "2018-19 Reflection Processing/3D Survey/Forge3d_ANI_PSDM_Stack_Enh.segy",
+        "role": "extracted-required-reprocessed-product",
+        "surveyKind": "3d",
+        "productKind": "psdm",
+        "domainKind": "depth",
+        "domainUnit": "m",
+    },
+)
+
 
 @dataclass
 class Product:
@@ -105,6 +128,9 @@ class Product:
     sample_min: float
     sample_max: float
     sample_interval: float
+    sample_spacing: float
+    source_geometry: dict[str, Any]
+    source_unit_status: str
     stats: dict[str, Any]
     sections: list[dict[str, Any]]
     raymarch_volume: dict[str, Any] | None
@@ -170,9 +196,245 @@ def is_raw_path(path: Path) -> bool:
     return any(marker in path.parts for marker in RAW_DIR_MARKERS) or path.name.startswith("._")
 
 
+def safe_zip_member_destination(zip_path: Path, member_path: str) -> Path:
+    member = PurePosixPath(member_path)
+    if member.is_absolute() or any(part in {"", ".."} for part in member.parts):
+        raise ValueError(f"Unsafe zip member path: {member_path}")
+    destination_root = zip_path.parent.resolve()
+    destination = (zip_path.parent / Path(*member.parts)).resolve()
+    if not destination.is_relative_to(destination_root):
+        raise ValueError(f"Zip member escapes destination root: {member_path}")
+    return destination
+
+
+def required_zip_source_gate(
+    required: dict[str, Any],
+    zip_path: Path,
+    status: str,
+    reason: str,
+    destination: Path | None = None,
+    error: str | None = None,
+) -> dict[str, Any]:
+    return {
+        "id": required["productId"],
+        "label": required["label"],
+        "filename": required["filename"],
+        "expectedBytes": required["expectedBytes"],
+        "sourceSubmission": required["sourceSubmission"],
+        "sourceCitation": required["sourceCitation"],
+        "downloadLandingPage": required["downloadLandingPage"],
+        "sourceZip": rel(zip_path),
+        "sourceZipMember": required["memberPath"],
+        "normalizedPath": rel(destination) if destination else None,
+        "status": status,
+        "reason": reason,
+        "error": error,
+        "surveyKind": required["surveyKind"],
+        "productKind": required["productKind"],
+        "domainKind": required["domainKind"],
+        "domainUnit": required["domainUnit"],
+    }
+
+
+def find_zip_member_local_header(zip_path: Path, member_path: str) -> dict[str, Any]:
+    member_bytes = member_path.encode("utf-8")
+    with zip_path.open("rb") as source:
+        with mmap.mmap(source.fileno(), 0, access=mmap.ACCESS_READ) as mapped:
+            search_at = 0
+            while True:
+                name_at = mapped.find(member_bytes, search_at)
+                if name_at < 0:
+                    raise KeyError(member_path)
+                header_at = mapped.rfind(b"PK\x03\x04", 0, name_at)
+                if header_at >= 0 and header_at + 30 <= len(mapped):
+                    (
+                        signature,
+                        _version,
+                        flag,
+                        method,
+                        _mtime,
+                        _mdate,
+                        crc,
+                        compressed_size,
+                        uncompressed_size,
+                        name_length,
+                        extra_length,
+                    ) = struct.unpack_from("<IHHHHHIIIHH", mapped, header_at)
+                    if signature == 0x04034B50:
+                        filename_start = header_at + 30
+                        filename_end = filename_start + name_length
+                        filename = bytes(mapped[filename_start:filename_end])
+                        if filename == member_bytes:
+                            return {
+                                "method": method,
+                                "flag": flag,
+                                "crc": crc,
+                                "compressedSize": compressed_size,
+                                "uncompressedSize": uncompressed_size,
+                                "dataOffset": filename_end + extra_length,
+                            }
+                search_at = name_at + 1
+
+
+def extract_zip_member_from_local_header_scan(
+    zip_path: Path,
+    member_path: str,
+    destination: Path,
+) -> None:
+    import binascii
+
+    header = find_zip_member_local_header(zip_path, member_path)
+    method = header["method"]
+    compressed_size = header["compressedSize"]
+    expected_size = header["uncompressedSize"]
+    expected_crc = header["crc"]
+    data_offset = header["dataOffset"]
+    temporary = destination.with_name(f".{destination.name}.partial")
+    if temporary.exists():
+        temporary.unlink()
+    ensure_dir(destination.parent)
+    crc = 0
+    written = 0
+    try:
+        with zip_path.open("rb") as source, temporary.open("wb") as output:
+            source.seek(data_offset)
+            if method == 0:
+                remaining = compressed_size
+                while remaining > 0:
+                    chunk = source.read(min(1024 * 1024, remaining))
+                    if not chunk:
+                        break
+                    output.write(chunk)
+                    crc = binascii.crc32(chunk, crc)
+                    written += len(chunk)
+                    remaining -= len(chunk)
+            elif method == 8:
+                decompressor = zlib.decompressobj(-15)
+                remaining = compressed_size
+                while remaining > 0 and not decompressor.eof:
+                    chunk = source.read(min(1024 * 1024, remaining))
+                    if not chunk:
+                        break
+                    remaining -= len(chunk)
+                    decoded = decompressor.decompress(chunk)
+                    if decoded:
+                        output.write(decoded)
+                        crc = binascii.crc32(decoded, crc)
+                        written += len(decoded)
+                if not decompressor.eof:
+                    raise zipfile.BadZipFile(
+                        f"deflate stream did not terminate for {member_path}"
+                    )
+            else:
+                raise NotImplementedError(f"Unsupported zip compression method {method}")
+        if written != expected_size:
+            raise zipfile.BadZipFile(
+                f"recovered size {written} did not match expected {expected_size}"
+            )
+        if (crc & 0xFFFFFFFF) != expected_crc:
+            raise zipfile.BadZipFile(
+                f"recovered CRC {crc & 0xFFFFFFFF} did not match expected {expected_crc}"
+            )
+        temporary.replace(destination)
+    except Exception:
+        if temporary.exists():
+            temporary.unlink()
+        raise
+
+
+def extract_required_zip_source_members(source_root: Path) -> dict[str, list[dict[str, Any]]]:
+    extracted: list[dict[str, Any]] = []
+    source_gates: list[dict[str, Any]] = []
+    for required in REQUIRED_ZIP_SOURCE_MEMBERS:
+        zip_path = source_root / required["zipRelativePath"]
+        if not zip_path.exists():
+            source_gates.append(
+                required_zip_source_gate(
+                    required,
+                    zip_path,
+                    "missing-source-zip",
+                    "The required GDR zip is not available in the active source root.",
+                )
+            )
+            continue
+        member_name = str(required["memberPath"])
+        try:
+            with zipfile.ZipFile(zip_path) as archive:
+                member_lookup = {
+                    name.lower(): name
+                    for name in archive.namelist()
+                    if not name.endswith("/")
+                    and "__MACOSX" not in name.split("/")
+                    and not PurePosixPath(name).name.startswith("._")
+                }
+                matched_member = member_lookup.get(member_name.lower())
+                if matched_member is None:
+                    source_gates.append(
+                        required_zip_source_gate(
+                            required,
+                            zip_path,
+                            "missing-source-member",
+                            "The required SEG-Y member is not present in the GDR zip central directory.",
+                        )
+                    )
+                    continue
+                info = archive.getinfo(matched_member)
+                destination = safe_zip_member_destination(zip_path, matched_member)
+                ensure_dir(destination.parent)
+                if not destination.exists() or destination.stat().st_size != info.file_size:
+                    try:
+                        temporary = destination.with_name(f".{destination.name}.partial")
+                        if temporary.exists():
+                            temporary.unlink()
+                        with archive.open(info) as src, temporary.open("wb") as dst:
+                            shutil.copyfileobj(src, dst)
+                        temporary.replace(destination)
+                    except Exception:
+                        if temporary.exists():
+                            temporary.unlink()
+                        extract_zip_member_from_local_header_scan(
+                            zip_path,
+                            matched_member,
+                            destination,
+                        )
+                extracted.append(
+                    {
+                        "source": f"{rel(zip_path)}::{matched_member}",
+                        "normalizedPath": rel(destination),
+                        "role": required["role"],
+                        "bytes": destination.stat().st_size,
+                        "sha256": sha256_file(destination),
+                    }
+                )
+                source_gates.append(
+                    required_zip_source_gate(
+                        required,
+                        zip_path,
+                        "available",
+                        "The required SEG-Y member was extracted and is available to the browser builder.",
+                        destination,
+                    )
+                )
+        except Exception as exc:
+            source_gates.append(
+                required_zip_source_gate(
+                    required,
+                    zip_path,
+                    "source-member-corrupt",
+                    "The required SEG-Y member is listed in the official GDR zip, but the zip member cannot be fully extracted or CRC-validated.",
+                    None,
+                    f"{type(exc).__name__}: {exc}",
+                )
+            )
+    return {"normalizedFiles": extracted, "sourceGates": source_gates}
+
+
 def normalize_sources() -> dict[str, Any]:
     existing_root = active_phase3_source_root()
     if existing_root != PHASE3_SOURCE_ROOT and (existing_root / "source").exists():
+        required_zip_result = extract_required_zip_source_members(existing_root / "source")
+        extracted_required = required_zip_result["normalizedFiles"]
+        extracted_paths = {entry["normalizedPath"] for entry in extracted_required}
         normalized_files = [
             {
                 "source": rel(path),
@@ -182,10 +444,13 @@ def normalize_sources() -> dict[str, Any]:
                 "sha256": sha256_file(path),
             }
             for path in sorted((existing_root / "source").rglob("*"))
-            if path.is_file() and not is_raw_path(path)
+            if path.is_file()
+            and not is_raw_path(path)
+            and rel(path) not in extracted_paths
         ]
         return {
-            "normalizedFiles": normalized_files,
+            "normalizedFiles": [*extracted_required, *normalized_files],
+            "requiredProductSourceGates": required_zip_result["sourceGates"],
             "skippedRawFiles": 0,
             "sourceRoot": rel(existing_root),
             "sourceRootRole": "archive-normalized-source-fallback",
@@ -254,12 +519,16 @@ def normalize_sources() -> dict[str, Any]:
         destination = dest1015 / source.relative_to(src1015)
         record_copy(source, destination, "active-navigation-or-velocity")
 
+    required_zip_result = extract_required_zip_source_members(PHASE3_SOURCE_ROOT / "source")
+    normalized.extend(required_zip_result["normalizedFiles"])
+
     return {
         "sourceRoots": {
             "submission1015": rel(src1015),
             "submission1141": rel(src1141),
         },
         "normalizedFiles": normalized,
+        "requiredProductSourceGates": required_zip_result["sourceGates"],
         "skippedRawGatherFileCount": skipped_raw,
         "notes": [
             "Active processed products, navigation, velocity, and documentation are normalized into the Phase 3 seismic source slot.",
@@ -469,14 +738,18 @@ def datum_for(text_header: str) -> float:
     return parsed_datum_m(text_header) or SEISMIC_REFERENCE_DATUM_M
 
 
-def vertical_reference_for(domain: tuple[str, str], datum_m: float) -> dict[str, Any]:
+def vertical_reference_for(
+    domain: tuple[str, str],
+    datum_m: float,
+    source_unit_status: str | None = None,
+) -> dict[str, Any]:
     domain_kind_value, domain_unit = domain
     mode = (
         "depth-below-datum-to-absolute-elevation"
         if domain_unit == "m"
         else "display-depth-below-datum-to-absolute-elevation"
     )
-    return {
+    reference = {
         "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
         "sourceDatumM": datum_m,
         "referenceDatumM": SEISMIC_REFERENCE_DATUM_M,
@@ -487,6 +760,14 @@ def vertical_reference_for(domain: tuple[str, str], datum_m: float) -> dict[str,
         "domainKind": domain_kind_value,
         "calibration": TOP_OF_GRANITE_CALIBRATION,
     }
+    if source_unit_status:
+        reference["sourceUnitStatus"] = source_unit_status
+        if source_unit_status.startswith("header-unresolved"):
+            reference["sourceUnitCaveat"] = (
+                "SEG-Y textual header does not prove the source sample unit; "
+                "depth metres are inferred from filename and product classification."
+            )
+    return reference
 
 
 def value_encoding_for(kind: str) -> dict[str, Any]:
@@ -665,6 +946,340 @@ def read_text_header(f: segyio.SegyFile) -> str:
     return ""
 
 
+def sample_byte_size(format_code: int) -> int:
+    return {
+        1: 4,
+        2: 4,
+        3: 2,
+        5: 4,
+        6: 8,
+        8: 1,
+    }.get(format_code, 4)
+
+
+def segy_header_offset(byte_number: int) -> int:
+    return byte_number - 1
+
+
+def ibm_float32(raw: bytes) -> float | None:
+    if len(raw) != 4 or raw == b"\x00\x00\x00\x00":
+        return None
+    word = int.from_bytes(raw, "big", signed=False)
+    sign = -1.0 if word & 0x80000000 else 1.0
+    exponent = ((word >> 24) & 0x7F) - 64
+    fraction = word & 0x00FFFFFF
+    if fraction == 0:
+        return 0.0
+    return sign * (fraction / float(0x01000000)) * (16.0**exponent)
+
+
+def int16_be(raw: bytes) -> int | None:
+    if len(raw) != 2:
+        return None
+    return struct.unpack(">h", raw)[0]
+
+
+def plausible_utm(easting: float | None, northing: float | None) -> bool:
+    if easting is None or northing is None:
+        return False
+    return (
+        math.isfinite(easting)
+        and math.isfinite(northing)
+        and 250000.0 <= easting <= 450000.0
+        and 4200000.0 <= northing <= 4350000.0
+    )
+
+
+def round_scene_point(point: list[float] | tuple[float, ...]) -> list[float]:
+    return [round(float(point[0]), 4), round(float(point[1]), 4), round(float(point[2]), 4)]
+
+
+def scene_from_utm(easting: float, northing: float, elevation: float = 0.0) -> list[float]:
+    return round_scene_point(source_to_scene(easting, northing, elevation, UTAH_FORGE_HORIZONTAL_CRS))
+
+
+def scaled_header_coordinate(value: float, scalar: int) -> float:
+    if scalar > 0:
+        return value * scalar
+    if scalar < 0:
+        return value / abs(scalar)
+    return value
+
+
+def standard_header_coordinate_pair(header: segyio.Field) -> tuple[float, float, str] | None:
+    scalar = int(header.get(segyio.TraceField.SourceGroupScalar, 0) or 0)
+    candidate_fields = [
+        ("CDP_X", "CDP_Y"),
+        ("SourceX", "SourceY"),
+        ("GroupX", "GroupY"),
+    ]
+    for x_name, y_name in candidate_fields:
+        x_field = getattr(segyio.TraceField, x_name, None)
+        y_field = getattr(segyio.TraceField, y_name, None)
+        if x_field is None or y_field is None:
+            continue
+        raw_x = float(header.get(x_field, 0) or 0)
+        raw_y = float(header.get(y_field, 0) or 0)
+        for mode, x_value, y_value in (
+            ("scaled", scaled_header_coordinate(raw_x, scalar), scaled_header_coordinate(raw_y, scalar)),
+            ("raw", raw_x, raw_y),
+        ):
+            if plausible_utm(x_value, y_value):
+                return x_value, y_value, f"{x_name}/{y_name}:{mode}"
+    return None
+
+
+def geometry_bounds_utm(rows: list[dict[str, Any]]) -> dict[str, list[float]]:
+    eastings = [float(row["cmpUtm"][0]) for row in rows]
+    northings = [float(row["cmpUtm"][1]) for row in rows]
+    return {
+        "min": [round(min(eastings), 4), round(min(northings), 4)],
+        "max": [round(max(eastings), 4), round(max(northings), 4)],
+    }
+
+
+def geometry_bounds_scene(
+    rows: list[dict[str, Any]],
+    sample_min: float,
+    sample_max: float,
+    datum_m: float,
+    vertical_scale: float,
+) -> dict[str, list[float]]:
+    xs = [float(row["scene"][0]) for row in rows]
+    ys = [float(row["scene"][1]) for row in rows]
+    z_min = datum_m - sample_max * vertical_scale
+    z_max = datum_m - sample_min * vertical_scale
+    return {
+        "min": [round(min(xs), 4), round(min(ys), 4), round(min(z_min, z_max), 4)],
+        "max": [round(max(xs), 4), round(max(ys), 4), round(max(z_min, z_max), 4)],
+    }
+
+
+def trace_geometry_grid(rows: list[dict[str, Any]]) -> dict[str, Any] | None:
+    keyed_rows = [
+        row
+        for row in rows
+        if isinstance(row.get("inline"), int) and isinstance(row.get("crossline"), int)
+    ]
+    if len(keyed_rows) < 4:
+        return None
+    inline_values = sorted({int(row["inline"]) for row in keyed_rows})
+    crossline_values = sorted({int(row["crossline"]) for row in keyed_rows})
+    trace_by_key = {
+        (int(row["inline"]), int(row["crossline"])): row
+        for row in keyed_rows
+    }
+    if len(trace_by_key) < max(4, int(len(inline_values) * len(crossline_values) * 0.8)):
+        return None
+    return {
+        "inlineValues": inline_values,
+        "crosslineValues": crossline_values,
+        "traceByKey": trace_by_key,
+    }
+
+
+def grid_corner_rows(grid: dict[str, Any]) -> dict[str, dict[str, Any]] | None:
+    inline_values = grid["inlineValues"]
+    crossline_values = grid["crosslineValues"]
+    trace_by_key = grid["traceByKey"]
+    keys = {
+        "sw": (inline_values[0], crossline_values[0]),
+        "nw": (inline_values[-1], crossline_values[0]),
+        "ne": (inline_values[-1], crossline_values[-1]),
+        "se": (inline_values[0], crossline_values[-1]),
+    }
+    if not all(key in trace_by_key for key in keys.values()):
+        return None
+    return {label: trace_by_key[key] for label, key in keys.items()}
+
+
+def trace_geometry_manifest_summary(
+    geometry: dict[str, Any],
+    samples: np.ndarray,
+    domain: tuple[str, str],
+    datum_m: float,
+) -> dict[str, Any]:
+    rows = geometry["rows"]
+    vertical_scale = TIME_SCALE_M_PER_MS if domain[1] == "ms" else 1.0
+    summary = {
+        "status": geometry["status"],
+        "geometrySource": geometry["geometrySource"],
+        "horizontalCrs": {
+            "epsg": 26912,
+            "name": "NAD83 / UTM Zone 12N",
+        },
+        "coordinateBasis": "utm-trace-header-cmp",
+        "traceCount": geometry["traceCount"],
+        "validTraceCount": len(rows),
+        "coordinateFields": geometry["coordinateFields"],
+        "cmpBoundsUtm": geometry_bounds_utm(rows) if rows else None,
+        "sceneBounds": (
+            geometry_bounds_scene(rows, float(samples[0]), float(samples[-1]), datum_m, vertical_scale)
+            if rows and len(samples)
+            else None
+        ),
+        "registrationStatus": "unverified",
+        "canClaimPreciseRegistration": False,
+        "reason": (
+            "Trace-header coordinates are used for placement; survey-grade "
+            "registration claims remain review-gated until control-point validation."
+        ),
+    }
+    grid = geometry.get("grid")
+    if grid:
+        corner_rows = grid_corner_rows(grid)
+        summary["inlineRange"] = [grid["inlineValues"][0], grid["inlineValues"][-1]]
+        summary["crosslineRange"] = [grid["crosslineValues"][0], grid["crosslineValues"][-1]]
+        summary["grid"] = {
+            "inlineCount": len(grid["inlineValues"]),
+            "crosslineCount": len(grid["crosslineValues"]),
+            "completeTraceCount": len(grid["traceByKey"]),
+        }
+        if corner_rows:
+            summary["cmpCornersUtm"] = {
+                key: [round(float(row["cmpUtm"][0]), 4), round(float(row["cmpUtm"][1]), 4)]
+                for key, row in corner_rows.items()
+            }
+            summary["sceneCorners"] = {
+                key: row["scene"]
+                for key, row in corner_rows.items()
+            }
+    return summary
+
+
+def read_custom_trace_header_geometry(
+    path: Path,
+    trace_count: int,
+    sample_count: int,
+    sample_format: int,
+    ext_headers: int,
+) -> dict[str, Any] | None:
+    trace_stride = 240 + sample_count * sample_byte_size(sample_format)
+    data_start = 3600 + ext_headers * 3200
+    rows: list[dict[str, Any]] = []
+    with path.open("rb") as source:
+        for trace_index in range(trace_count):
+            source.seek(data_start + trace_index * trace_stride)
+            header = source.read(240)
+            if len(header) < 240:
+                break
+            inline = int16_be(header[segy_header_offset(9) : segy_header_offset(9) + 2])
+            crossline = int16_be(header[segy_header_offset(13) : segy_header_offset(13) + 2])
+            cmp_x = ibm_float32(header[segy_header_offset(189) : segy_header_offset(189) + 4])
+            cmp_y = ibm_float32(header[segy_header_offset(193) : segy_header_offset(193) + 4])
+            if not plausible_utm(cmp_x, cmp_y):
+                continue
+            rows.append(
+                {
+                    "traceIndex": trace_index,
+                    "inline": inline if inline and inline > 0 else None,
+                    "crossline": crossline if crossline and crossline > 0 else None,
+                    "cmpUtm": [float(cmp_x), float(cmp_y)],
+                    "scene": scene_from_utm(float(cmp_x), float(cmp_y), 0.0),
+                }
+            )
+    if len(rows) < max(4, int(trace_count * 0.8)):
+        return None
+    geometry: dict[str, Any] = {
+        "status": "trace-header-derived",
+        "geometrySource": "trace-header-cmp-ibm-real",
+        "traceCount": trace_count,
+        "rows": rows,
+        "coordinateFields": {
+            "cmpX": {"byte": 189, "format": "ibm-real-4"},
+            "cmpY": {"byte": 193, "format": "ibm-real-4"},
+            "inline": {"bytes": [9, 10], "format": "int16"},
+            "crossline": {"bytes": [13, 14], "format": "int16"},
+        },
+    }
+    grid = trace_geometry_grid(rows)
+    if grid:
+        geometry["grid"] = grid
+    return geometry
+
+
+def read_standard_trace_header_geometry(path: Path, trace_count: int) -> dict[str, Any] | None:
+    rows: list[dict[str, Any]] = []
+    coordinate_field_counts: dict[str, int] = {}
+    with segyio.open(str(path), "r", strict=False, ignore_geometry=True) as f:
+        for trace_index in range(trace_count):
+            header = f.header[trace_index]
+            pair = standard_header_coordinate_pair(header)
+            if pair is None:
+                continue
+            cmp_x, cmp_y, field_name = pair
+            coordinate_field_counts[field_name] = coordinate_field_counts.get(field_name, 0) + 1
+            inline_value = int(header.get(segyio.TraceField.INLINE_3D, 0) or 0)
+            crossline_value = int(header.get(segyio.TraceField.CROSSLINE_3D, 0) or 0)
+            rows.append(
+                {
+                    "traceIndex": trace_index,
+                    "inline": inline_value if 0 < inline_value < 100000 else None,
+                    "crossline": crossline_value if 0 < crossline_value < 100000 else None,
+                    "cmpUtm": [float(cmp_x), float(cmp_y)],
+                    "scene": scene_from_utm(float(cmp_x), float(cmp_y), 0.0),
+                }
+            )
+    if len(rows) < max(4, int(trace_count * 0.8)):
+        return None
+    dominant_field = max(coordinate_field_counts, key=coordinate_field_counts.get)
+    return {
+        "status": "trace-header-derived",
+        "geometrySource": "trace-header-standard-coordinate",
+        "traceCount": trace_count,
+        "rows": rows,
+        "coordinateFields": {
+            "coordinatePair": dominant_field,
+            "coordinateScalar": "SEG-Y SourceGroupScalar when plausible; raw coordinates fallback",
+        },
+    }
+
+
+def read_trace_header_geometry(
+    path: Path,
+    trace_count: int,
+    sample_count: int,
+    sample_format: int,
+    ext_headers: int,
+) -> dict[str, Any]:
+    custom = read_custom_trace_header_geometry(
+        path,
+        trace_count,
+        sample_count,
+        sample_format,
+        ext_headers,
+    )
+    if custom:
+        return custom
+    standard = read_standard_trace_header_geometry(path, trace_count)
+    if standard:
+        return standard
+    return {
+        "status": "unresolved",
+        "geometrySource": "navigation-or-envelope-fallback",
+        "traceCount": trace_count,
+        "rows": [],
+        "coordinateFields": {},
+    }
+
+
+def source_unit_status_for(
+    path: Path,
+    text_header: str,
+    domain: tuple[str, str],
+) -> str:
+    if domain[1] != "m":
+        return "not-depth-m-domain"
+    text = text_header.lower()
+    if re.search(r"\b(meters?|metres?)\b", text) or re.search(r"\b[0-9]+(?:\.[0-9]+)?\s*m\b", text):
+        return "header-indicated-depth-m"
+    if re.search(r"\b(feet|foot|ft)\b", text):
+        return "header-indicated-nonmetric-depth-review-required"
+    if "migr-depth" in path.name.lower() or "migrated" in text and "depth" in text:
+        return "header-unresolved-filename-inferred-depth-m"
+    return "header-unresolved-filename-inferred-depth-m"
+
+
 def selected_trace_indices(trace_count: int, width: int, fraction: float | None = None) -> np.ndarray:
     width = max(2, min(width, trace_count))
     if fraction is None:
@@ -765,6 +1380,92 @@ def source_aligned_volume_shape(
     return nx, ny, nz
 
 
+def source_aligned_volume_shape_for_grid(
+    grid_width: int,
+    grid_height: int,
+    sample_count: int,
+    max_voxels: int = SOURCE_FIDELITY_VOLUME_MAX_VOXELS,
+) -> tuple[int, int, int]:
+    nx = max(2, grid_width)
+    ny = max(2, grid_height)
+    nz = max(2, sample_count)
+    if nx * ny * nz <= max_voxels:
+        return nx, ny, nz
+    scale = (max_voxels / max(1, nx * ny * nz)) ** (1 / 3)
+    nx = max(2, int(nx * scale))
+    ny = max(2, int(ny * scale))
+    nz = max(2, int(nz * scale))
+    while nx * ny * nz > max_voxels and nz > 2:
+        nz -= 1
+    return nx, ny, nz
+
+
+def select_values(values: list[int], target_count: int) -> list[int]:
+    indices = selected_trace_indices(len(values), target_count)
+    return [values[int(index)] for index in indices]
+
+
+def grid_trace_indices(
+    grid: dict[str, Any],
+    inline_values: list[int] | None = None,
+    crossline_values: list[int] | None = None,
+) -> np.ndarray:
+    selected_inlines = inline_values or grid["inlineValues"]
+    selected_crosslines = crossline_values or grid["crosslineValues"]
+    trace_by_key = grid["traceByKey"]
+    trace_indices: list[int] = []
+    for inline_value in selected_inlines:
+        for crossline_value in selected_crosslines:
+            row = trace_by_key.get((inline_value, crossline_value))
+            if row is None:
+                raise ValueError(f"Missing SEG-Y trace for IL {inline_value} XL {crossline_value}")
+            trace_indices.append(int(row["traceIndex"]))
+    return np.asarray(trace_indices, dtype=np.int64)
+
+
+def selected_grid_axis_section(
+    grid: dict[str, Any],
+    axis: str,
+    fraction: float,
+) -> tuple[int, np.ndarray, list[list[float]]]:
+    inline_values = grid["inlineValues"]
+    crossline_values = grid["crosslineValues"]
+    trace_by_key = grid["traceByKey"]
+    if axis == "inline":
+        inline_value = inline_values[int(round(fraction * (len(inline_values) - 1)))]
+        rows = [trace_by_key[(inline_value, crossline)] for crossline in crossline_values]
+        return inline_value, np.asarray([int(row["traceIndex"]) for row in rows], dtype=np.int64), [
+            row["scene"] for row in rows
+        ]
+    crossline_value = crossline_values[int(round(fraction * (len(crossline_values) - 1)))]
+    rows = [trace_by_key[(inline_value, crossline_value)] for inline_value in inline_values]
+    return crossline_value, np.asarray([int(row["traceIndex"]) for row in rows], dtype=np.int64), [
+        row["scene"] for row in rows
+    ]
+
+
+def surface_grid_spec(trace_geometry: dict[str, Any]) -> dict[str, Any] | None:
+    grid = trace_geometry.get("grid")
+    if not grid:
+        return None
+    corner_rows = grid_corner_rows(grid)
+    if not corner_rows:
+        return None
+    return {
+        "geometrySource": trace_geometry["geometrySource"],
+        "width": len(grid["crosslineValues"]),
+        "height": len(grid["inlineValues"]),
+        "inlineRange": [grid["inlineValues"][0], grid["inlineValues"][-1]],
+        "crosslineRange": [grid["crosslineValues"][0], grid["crosslineValues"][-1]],
+        "corners": {label: row["scene"] for label, row in corner_rows.items()},
+        "cmpCornersUtm": {
+            label: [round(float(row["cmpUtm"][0]), 4), round(float(row["cmpUtm"][1]), 4)]
+            for label, row in corner_rows.items()
+        },
+        "traceCount": len(grid["traceByKey"]),
+    }
+
+
 def sample_matrix(path: Path, trace_idx: np.ndarray, sample_idx: np.ndarray) -> np.ndarray:
     out = np.zeros((len(sample_idx), len(trace_idx)), dtype=np.float32)
     with segyio.open(str(path), "r", strict=False, ignore_geometry=True) as f:
@@ -822,6 +1523,11 @@ def downsample_volume_budget(volume: np.ndarray, max_voxels: int) -> np.ndarray:
     y_idx = selected_trace_indices(ny, target_ny)
     z_idx = selected_sample_indices(nz, target_nz)
     return volume[np.ix_(z_idx, y_idx, x_idx)]
+
+
+def versioned_product_asset(product_id: str, file_name: str, payload: bytes) -> str:
+    version = zlib.crc32(payload) & 0xFFFFFFFF
+    return f"products/{product_id}/{file_name}?v={version:08x}"
 
 
 def navigation_paths(navigation: dict[str, Any]) -> dict[str, list[list[float]]]:
@@ -903,20 +1609,56 @@ def aggregate_navigation_placement(sections: list[dict[str, Any]]) -> dict[str, 
     )
 
 
-def line_endpoints_for(
+def path_scene_bounds(
+    path_points: list[list[float]],
+    domain_values: list[float],
+    domain: tuple[str, str],
+    datum_m: float,
+) -> dict[str, list[float]]:
+    xs = [float(point[0]) for point in path_points]
+    ys = [float(point[1]) for point in path_points]
+    domain_min = min(domain_values)
+    domain_max = max(domain_values)
+    z_scale = TIME_SCALE_M_PER_MS if domain[1] == "ms" else 1.0
+    z_min = datum_m - domain_max * z_scale
+    z_max = datum_m - domain_min * z_scale
+    return {
+        "min": [round(min(xs), 4), round(min(ys), 4), round(min(z_min, z_max), 4)],
+        "max": [round(max(xs), 4), round(max(ys), 4), round(max(z_min, z_max), 4)],
+    }
+
+
+def line_path_for(
     product_path: Path,
+    trace_geometry: dict[str, Any],
     nav_paths: dict[str, list[list[float]]],
     bounds: dict[str, list[float]],
-) -> tuple[list[list[float]], dict[str, Any]]:
+) -> tuple[list[list[float]], str, dict[str, Any]]:
     line_id = trace_line_id(product_path)
-    if line_id in nav_paths and len(nav_paths[line_id]) >= 2:
-        coords = nav_paths[line_id]
-        return [coords[0], coords[-1]], seismic_placement_metadata(
+    rows = trace_geometry.get("rows") or []
+    if rows:
+        ordered_rows = sorted(rows, key=lambda row: int(row["traceIndex"]))
+        return [row["scene"] for row in ordered_rows], trace_geometry["geometrySource"], seismic_placement_metadata(
             navigation_source="delivered",
             placement_accuracy="unknown",
             can_claim_precise_registration=False,
             line_id=line_id,
-            reason="Line endpoints are derived from delivered SEG-P1 navigation; control-point validation is still required before precision claims.",
+            reason=(
+                "Line curtain path is derived from SEG-Y trace-header CMP coordinates; "
+                "control-point validation is still required before precision claims."
+            ),
+        )
+    if line_id in nav_paths and len(nav_paths[line_id]) >= 2:
+        coords = nav_paths[line_id]
+        return coords, "seg-p1-navigation-line", seismic_placement_metadata(
+            navigation_source="delivered",
+            placement_accuracy="unknown",
+            can_claim_precise_registration=False,
+            line_id=line_id,
+            reason=(
+                "Line curtain path is derived from delivered SEG-P1 navigation; "
+                "control-point validation is still required before precision claims."
+            ),
         )
     min_x, min_y, _ = bounds["min"]
     max_x, max_y, _ = bounds["max"]
@@ -925,7 +1667,7 @@ def line_endpoints_for(
         return [
             [min_x - 6000, min_y + 2500, mid_z],
             [max_x + 4500, max_y - 2200, mid_z],
-        ], seismic_placement_metadata(
+        ], "fallback-endpoints", seismic_placement_metadata(
             navigation_source="fallback",
             placement_accuracy="approximate",
             can_claim_precise_registration=False,
@@ -936,7 +1678,7 @@ def line_endpoints_for(
         return [
             [min_x - 5000, max_y + 2800, mid_z],
             [max_x + 5500, min_y - 3000, mid_z],
-        ], seismic_placement_metadata(
+        ], "fallback-endpoints", seismic_placement_metadata(
             navigation_source="fallback",
             placement_accuracy="approximate",
             can_claim_precise_registration=False,
@@ -946,7 +1688,7 @@ def line_endpoints_for(
     return [
         [min_x, (min_y + max_y) / 2, mid_z],
         [max_x, (min_y + max_y) / 2, mid_z],
-    ], seismic_placement_metadata(
+    ], "fallback-endpoints", seismic_placement_metadata(
         navigation_source="fallback",
         placement_accuracy="unknown",
         can_claim_precise_registration=False,
@@ -969,20 +1711,36 @@ def make_section_spec(
     datum_m: float,
     bounds: dict[str, list[float]],
     nav_paths: dict[str, list[list[float]]],
+    trace_geometry: dict[str, Any],
+    *,
+    path_points: list[list[float]] | None = None,
+    geometry_source: str | None = None,
+    source_axis: dict[str, Any] | None = None,
+    surface_grid: dict[str, Any] | None = None,
+    source_unit_status: str | None = None,
 ) -> tuple[dict[str, Any], dict[str, float]]:
     stats = amplitude_stats(matrix)
     encoded = encode_u8(matrix, stats)
     file_name = f"{section_id}.u8"
-    (product_dir / file_name).write_bytes(encoded.tobytes(order="C"))
+    encoded_bytes = encoded.tobytes(order="C")
+    (product_dir / file_name).write_bytes(encoded_bytes)
+    amplitude_file = versioned_product_asset(product_id, file_name, encoded_bytes)
     coarse_matrix = downsample_matrix_long_edge(
         matrix,
         BROWSER_COARSE_SECTION_MAX_LONG_EDGE,
     )
     coarse_file_name = file_name
+    coarse_amplitude_file = amplitude_file
     if coarse_matrix.shape != matrix.shape:
         coarse_file_name = f"{section_id}__coarse.u8"
         coarse_encoded = encode_u8(coarse_matrix, stats)
-        (product_dir / coarse_file_name).write_bytes(coarse_encoded.tobytes(order="C"))
+        coarse_encoded_bytes = coarse_encoded.tobytes(order="C")
+        (product_dir / coarse_file_name).write_bytes(coarse_encoded_bytes)
+        coarse_amplitude_file = versioned_product_asset(
+            product_id,
+            coarse_file_name,
+            coarse_encoded_bytes,
+        )
     domain_kind_value, domain_unit = domain
     spec: dict[str, Any] = {
         "id": section_id,
@@ -991,22 +1749,22 @@ def make_section_spec(
         "fraction": round(fraction, 4),
         "width": int(matrix.shape[1]),
         "height": int(matrix.shape[0]),
-        "amplitudeFile": f"products/{product_id}/{file_name}",
+        "amplitudeFile": amplitude_file,
         "lods": {
             "coarse": {
                 "width": int(coarse_matrix.shape[1]),
                 "height": int(coarse_matrix.shape[0]),
-                "amplitudeFile": f"products/{product_id}/{coarse_file_name}",
+                "amplitudeFile": coarse_amplitude_file,
             },
             "standard": {
                 "width": int(matrix.shape[1]),
                 "height": int(matrix.shape[0]),
-                "amplitudeFile": f"products/{product_id}/{file_name}",
+                "amplitudeFile": amplitude_file,
             },
             "source": {
                 "width": int(matrix.shape[1]),
                 "height": int(matrix.shape[0]),
-                "amplitudeFile": f"products/{product_id}/{file_name}",
+                "amplitudeFile": amplitude_file,
             },
         },
         "amplitudeEncoding": "uint8-normalized-p02-p98",
@@ -1019,22 +1777,64 @@ def make_section_spec(
             "verticalScaleMPerUnit": TIME_SCALE_M_PER_MS if domain_unit == "ms" else 1.0,
         },
         "datumM": datum_m,
-        "verticalReference": vertical_reference_for(domain, datum_m),
+        "verticalReference": vertical_reference_for(domain, datum_m, source_unit_status),
         "valueEncoding": value_encoding_for(product_kind(product_path)),
     }
+    if source_unit_status:
+        spec["sampleDomain"]["sourceUnitStatus"] = source_unit_status
     if axis == "line":
-        path_points, placement = line_endpoints_for(product_path, nav_paths, bounds)
+        path_points, line_geometry_source, placement = line_path_for(
+            product_path,
+            trace_geometry,
+            nav_paths,
+            bounds,
+        )
+        spec["geometrySource"] = line_geometry_source
+        spec["sourceAxis"] = {"kind": "line", "value": trace_line_id(product_path)}
         spec["path"] = path_points
+        spec["sceneBounds"] = path_scene_bounds(path_points, domain_values, domain, datum_m)
         spec["navigationPlacement"] = placement
-    else:
-        spec["sceneBounds"] = bounds
+    elif path_points:
+        spec["geometrySource"] = geometry_source or trace_geometry.get("geometrySource")
+        spec["sourceAxis"] = source_axis
+        spec["path"] = path_points
+        spec["sceneBounds"] = path_scene_bounds(path_points, domain_values, domain, datum_m)
         spec["navigationPlacement"] = seismic_placement_metadata(
             navigation_source="delivered",
             placement_accuracy="unknown",
             can_claim_precise_registration=False,
             line_id="3d",
-            reason="3D section placement uses source geometry and navigation envelope; control-point validation is still required.",
+            reason=(
+                "3D section path is derived from SEG-Y trace-header CMP coordinates; "
+                "control-point validation is still required."
+            ),
         )
+    else:
+        spec["sceneBounds"] = bounds
+        if geometry_source:
+            spec["geometrySource"] = geometry_source
+        if source_axis:
+            spec["sourceAxis"] = source_axis
+        if surface_grid:
+            spec["surfaceGrid"] = surface_grid
+        spec["navigationPlacement"] = seismic_placement_metadata(
+            navigation_source="delivered",
+            placement_accuracy="unknown",
+            can_claim_precise_registration=False,
+            line_id="3d" if axis != "line" else trace_line_id(product_path),
+            reason=(
+                "Section placement uses trace-header surface-grid geometry when available; "
+                "control-point validation is still required."
+                if surface_grid
+                else "Section placement uses navigation envelope fallback; control-point validation is still required."
+            ),
+        )
+    if surface_grid:
+        spec["surfaceGrid"] = surface_grid
+    if geometry_source and "geometrySource" not in spec:
+        spec["geometrySource"] = geometry_source
+    if source_axis and "sourceAxis" not in spec:
+        spec["sourceAxis"] = source_axis
     return spec, stats
 
 
@@ -1046,42 +1846,92 @@ def build_volume(
     samples: np.ndarray,
     datum_m: float,
     bounds: dict[str, list[float]],
+    trace_geometry: dict[str, Any],
+    source_unit_status: str | None = None,
     max_voxels: int = SOURCE_FIDELITY_VOLUME_MAX_VOXELS,
 ) -> tuple[dict[str, Any], dict[str, float]]:
     with segyio.open(str(path), "r", strict=False, ignore_geometry=True) as f:
         trace_count = f.tracecount
         sample_count = len(f.samples)
-    nx, ny, nz = source_aligned_volume_shape(trace_count, sample_count, max_voxels)
-    trace_idx = selected_trace_indices(trace_count, nx * ny)
+    grid = trace_geometry.get("grid")
+    if grid:
+        nx, ny, nz = source_aligned_volume_shape_for_grid(
+            len(grid["crosslineValues"]),
+            len(grid["inlineValues"]),
+            sample_count,
+            max_voxels,
+        )
+        selected_crosslines = select_values(grid["crosslineValues"], nx)
+        selected_inlines = select_values(grid["inlineValues"], ny)
+        trace_idx = grid_trace_indices(grid, selected_inlines, selected_crosslines)
+    else:
+        nx, ny, nz = source_aligned_volume_shape(trace_count, sample_count, max_voxels)
+        trace_idx = selected_trace_indices(trace_count, nx * ny)
     sample_idx = selected_sample_indices(sample_count, nz)
     matrix = sample_matrix(path, trace_idx, sample_idx)
     volume = matrix.reshape((nz, ny, nx))
     stats = amplitude_stats(volume)
     encoded = encode_u8(volume, stats)
     file_name = "volume.u8"
-    (product_dir / file_name).write_bytes(encoded.tobytes(order="C"))
+    encoded_bytes = encoded.tobytes(order="C")
+    (product_dir / file_name).write_bytes(encoded_bytes)
+    volume_file = versioned_product_asset(product_id, file_name, encoded_bytes)
     coarse_volume = downsample_volume_budget(volume, BROWSER_COARSE_VOLUME_MAX_VOXELS)
     coarse_file_name = file_name
+    coarse_volume_file = volume_file
     if coarse_volume.shape != volume.shape:
         coarse_file_name = "volume__coarse.u8"
         coarse_encoded = encode_u8(coarse_volume, stats)
-        (product_dir / coarse_file_name).write_bytes(coarse_encoded.tobytes(order="C"))
+        coarse_encoded_bytes = coarse_encoded.tobytes(order="C")
+        (product_dir / coarse_file_name).write_bytes(coarse_encoded_bytes)
+        coarse_volume_file = versioned_product_asset(
+            product_id,
+            coarse_file_name,
+            coarse_encoded_bytes,
+        )
     domain_kind_value, domain_unit = domain
     domain_min = float(samples[int(sample_idx[0])])
     domain_max = float(samples[int(sample_idx[-1])])
     z_scale = TIME_SCALE_M_PER_MS if domain_unit == "ms" else 1.0
-    volume_bounds = {
-        "min": [bounds["min"][0], bounds["min"][1], datum_m - domain_max * z_scale],
-        "max": [bounds["max"][0], bounds["max"][1], datum_m - domain_min * z_scale],
-    }
+    if trace_geometry.get("rows"):
+        volume_bounds = geometry_bounds_scene(
+            trace_geometry["rows"],
+            domain_min,
+            domain_max,
+            datum_m,
+            z_scale,
+        )
+    else:
+        volume_bounds = {
+            "min": [bounds["min"][0], bounds["min"][1], datum_m - domain_max * z_scale],
+            "max": [bounds["max"][0], bounds["max"][1], datum_m - domain_min * z_scale],
+        }
+    grid_geometry: dict[str, Any] | None = None
+    if grid:
+        grid_geometry = {
+            "geometrySource": trace_geometry["geometrySource"],
+            "placementAccuracy": "trace-header-aabb-envelope",
+            "inlineRange": [grid["inlineValues"][0], grid["inlineValues"][-1]],
+            "crosslineRange": [grid["crosslineValues"][0], grid["crosslineValues"][-1]],
+            "sourceDimensions": [len(grid["crosslineValues"]), len(grid["inlineValues"]), sample_count],
+            "sampledDimensions": [nx, ny, nz],
+            "canClaimPreciseRegistration": False,
+            "reason": (
+                "Raymarch payload preserves trace-header grid sampling but renders in an AABB envelope; "
+                "visible sections carry trace-derived placement geometry."
+            ),
+        }
     return (
         {
-            "file": f"products/{product_id}/{file_name}",
+            "file": volume_file,
             "encoding": "uint8-normalized-p02-p98",
             "dimensions": [nx, ny, nz],
+            "geometrySource": trace_geometry.get("geometrySource"),
+            "placementAccuracy": "trace-header-aabb-envelope" if grid else "navigation-envelope-fallback",
+            "gridGeometry": grid_geometry,
             "lods": {
                 "coarse": {
-                    "file": f"products/{product_id}/{coarse_file_name}",
+                    "file": coarse_volume_file,
                     "dimensions": [
                         int(coarse_volume.shape[2]),
                         int(coarse_volume.shape[1]),
@@ -1089,11 +1939,11 @@ def build_volume(
                     ],
                 },
                 "standard": {
-                    "file": f"products/{product_id}/{file_name}",
+                    "file": volume_file,
                     "dimensions": [nx, ny, nz],
                 },
                 "source": {
-                    "file": f"products/{product_id}/{file_name}",
+                    "file": volume_file,
                     "dimensions": [nx, ny, nz],
                 },
             },
@@ -1104,8 +1954,9 @@ def build_volume(
                 "min": round(domain_min, 6),
                 "max": round(domain_max, 6),
                 "verticalScaleMPerUnit": z_scale,
+                "sourceUnitStatus": source_unit_status,
             },
-            "verticalReference": vertical_reference_for(domain, datum_m),
+            "verticalReference": vertical_reference_for(domain, datum_m, source_unit_status),
             "valueEncoding": value_encoding_for(product_kind(path)),
             "amplitudeStats": {k: round(v, 6) for k, v in stats.items()},
         },
@@ -1153,10 +2004,102 @@ def build_product(
         samples = np.asarray(f.samples[:], dtype=np.float32)
         sample_count = len(samples)
         sample_interval = float(segyio.tools.dt(f) or 0)
+        sample_format = int(f.bin[segyio.BinField.Format])
+        ext_headers = int(getattr(f, "ext_headers", 0) or 0)
         text_header = read_text_header(f)
         datum = datum_for(text_header)
+    sample_spacing = (
+        float(abs(float(samples[1]) - float(samples[0])))
+        if sample_count > 1
+        else 0.0
+    )
+    source_unit_status = source_unit_status_for(path, text_header, domain)
+    trace_geometry = read_trace_header_geometry(
+        path,
+        trace_count,
+        sample_count,
+        sample_format,
+        ext_headers,
+    )
+    source_geometry = trace_geometry_manifest_summary(trace_geometry, samples, domain, datum)
+    product_bounds = source_geometry.get("sceneBounds") or nav_bounds
 
-    if survey == "3d":
+    if survey == "3d" and trace_geometry.get("grid"):
+        grid = trace_geometry["grid"]
+        for axis in ("inline", "crossline"):
+            for fraction in (0.25, 0.5, 0.75):
+                axis_value, trace_idx, path_points = selected_grid_axis_section(
+                    grid,
+                    axis,
+                    fraction,
+                )
+                sample_idx = selected_sample_indices(sample_count, sample_count)
+                matrix = sample_matrix(path, trace_idx, sample_idx)
+                spec, stats = make_section_spec(
+                    product_dir,
+                    product_id,
+                    f"{axis}_{int(fraction * 100):02d}",
+                    f"{axis.title()} {axis_value}",
+                    axis,
+                    fraction,
+                    matrix,
+                    [float(samples[int(sample_idx[0])]), float(samples[int(sample_idx[-1])])],
+                    path,
+                    domain,
+                    datum,
+                    product_bounds,
+                    nav_paths,
+                    trace_geometry,
+                    path_points=path_points,
+                    geometry_source=trace_geometry["geometrySource"],
+                    source_axis={"kind": axis, "value": axis_value},
+                    source_unit_status=source_unit_status,
+                )
+                sections.append(spec)
+                section_stats.append(stats)
+        for fraction in (0.25, 0.5, 0.75):
+            plane_width = len(grid["crosslineValues"])
+            plane_height = len(grid["inlineValues"])
+            trace_idx = grid_trace_indices(grid)
+            sample_no = int(round(fraction * (sample_count - 1)))
+            matrix = sample_matrix(path, trace_idx, np.array([sample_no], dtype=np.int64))
+            plane = matrix.reshape((plane_height, plane_width))
+            spec, stats = make_section_spec(
+                product_dir,
+                product_id,
+                f"sample_{int(fraction * 100):02d}",
+                f"Sample {int(fraction * 100)}%",
+                "sample",
+                fraction,
+                plane,
+                [float(samples[sample_no])],
+                path,
+                domain,
+                datum,
+                product_bounds,
+                nav_paths,
+                trace_geometry,
+                geometry_source=trace_geometry["geometrySource"],
+                source_axis={"kind": "sample", "value": float(samples[sample_no])},
+                surface_grid=surface_grid_spec(trace_geometry),
+                source_unit_status=source_unit_status,
+            )
+            sections.append(spec)
+            section_stats.append(stats)
+        raymarch_volume, volume_stats = build_volume(
+            path,
+            product_dir,
+            product_id,
+            domain,
+            samples,
+            datum,
+            product_bounds,
+            trace_geometry,
+            source_unit_status,
+            BROWSER_3D_VOLUME_MAX_VOXELS,
+        )
+        section_stats.append(volume_stats)
+    elif survey == "3d":
         for axis in ("inline", "crossline"):
             for fraction in (0.25, 0.5, 0.75):
                 section_width, section_height = section_shape_for_product(
@@ -1180,8 +2123,12 @@ def build_product(
                     path,
                     domain,
                     datum,
-                    nav_bounds,
+                    product_bounds,
                     nav_paths,
+                    trace_geometry,
+                    geometry_source=trace_geometry.get("geometrySource"),
+                    source_axis={"kind": axis, "value": fraction},
+                    source_unit_status=source_unit_status,
                 )
                 sections.append(spec)
                 section_stats.append(stats)
@@ -1203,8 +2150,12 @@ def build_product(
                 path,
                 domain,
                 datum,
-                nav_bounds,
+                product_bounds,
                 nav_paths,
+                trace_geometry,
+                geometry_source=trace_geometry.get("geometrySource"),
+                source_axis={"kind": "sample", "value": float(samples[sample_no])},
+                source_unit_status=source_unit_status,
             )
             sections.append(spec)
             section_stats.append(stats)
@@ -1215,7 +2166,9 @@ def build_product(
             domain,
             samples,
             datum,
-            nav_bounds,
+            product_bounds,
+            trace_geometry,
+            source_unit_status,
             BROWSER_3D_VOLUME_MAX_VOXELS,
         )
         section_stats.append(volume_stats)
@@ -1236,8 +2189,10 @@ def build_product(
             path,
             domain,
             datum,
-            nav_bounds,
+            product_bounds,
             nav_paths,
+            trace_geometry,
+            source_unit_status=source_unit_status,
         )
         sections.append(spec)
         section_stats.append(stats)
@@ -1277,6 +2232,9 @@ def build_product(
         sample_min=float(samples[0]) if len(samples) else 0,
         sample_max=float(samples[-1]) if len(samples) else 0,
         sample_interval=sample_interval,
+        sample_spacing=sample_spacing,
+        source_geometry=source_geometry,
+        source_unit_status=source_unit_status,
         stats=stats,
         sections=sections,
         raymarch_volume=raymarch_volume,
@@ -1311,12 +2269,27 @@ def product_to_manifest(product: Product) -> dict[str, Any]:
         "verticalReference": vertical_reference_for(
             (product.domain_kind, product.domain_unit),
             product.datum_m,
+            product.source_unit_status,
         ),
         "valueEncoding": value_encoding_for(product.product_kind),
+        "sourceGeometry": product.source_geometry,
+        "sourceUnitStatus": product.source_unit_status,
         "traceCount": product.trace_count,
         "sampleCount": product.sample_count,
         "sampleRange": [round(product.sample_min, 6), round(product.sample_max, 6)],
         "sampleInterval": product.sample_interval,
+        "sampleDomain": {
+            "kind": product.domain_kind,
+            "unit": product.domain_unit,
+            "min": round(product.sample_min, 6),
+            "max": round(product.sample_max, 6),
+            "spacing": {
+                "value": round(product.sample_spacing, 6),
+                "unit": product.domain_unit,
+            },
+            "segySampleIntervalRaw": product.sample_interval,
+            "sourceUnitStatus": product.source_unit_status,
+        },
         "amplitudeStats": {k: round(v, 6) for k, v in product.stats.items()},
         "sections": product.sections,
         "raymarchVolume": product.raymarch_volume,
@@ -1416,6 +2389,7 @@ def main() -> None:
     products = [build_product(path, navigation, index) for index, path in enumerate(product_paths)]
     products.sort(key=lambda p: (p.survey_kind != "3d", p.product_kind, p.label))
     source_gates = required_line_source_gates(products)
+    required_product_source_gates = normalization.get("requiredProductSourceGates", [])
 
     inventory = {
         "schema": "geosee.seismic-source-inventory.v1",
@@ -1423,6 +2397,7 @@ def main() -> None:
         "derivedDate": DERIVED_DATE,
         "normalization": normalization,
         "requiredLineSourceGates": source_gates,
+        "requiredProductSourceGates": required_product_source_gates,
         "activeProductCount": len(products),
         "activeProducts": [
             {
@@ -1438,6 +2413,10 @@ def main() -> None:
                 "surveyKind": p.survey_kind,
                 "productKind": p.product_kind,
                 "domainKind": p.domain_kind,
+                "domainUnit": p.domain_unit,
+                "datumM": p.datum_m,
+                "sourceGeometry": p.source_geometry,
+                "sourceUnitStatus": p.source_unit_status,
                 "traceCount": p.trace_count,
                 "sampleCount": p.sample_count,
                 "raymarchCapable": p.raymarch_volume is not None,
@@ -1467,6 +2446,7 @@ def main() -> None:
             "geojson": rel(navigation_path),
             "pointCount": navigation["properties"]["pointCount"],
             "sceneBounds": navigation["properties"]["sceneBounds"],
+            "registration": navigation["properties"]["registration"],
         },
         "crs": {
             "rendered": "scene-local meters",
@@ -1515,6 +2495,7 @@ def main() -> None:
         },
         "products": [product_to_manifest(product) for product in products],
         "sourceFiles": [entry["normalizedPath"] for entry in normalization["normalizedFiles"]],
+        "requiredProductSourceGates": required_product_source_gates,
         "provenance": {
             "classification": "source-derived seismic browser visual representation",
             "sourceOrigin": "Utah FORGE GDR submissions 1015 and 1141",

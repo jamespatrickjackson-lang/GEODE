@@ -40,6 +40,20 @@ export interface SeismicProductOption {
   raymarchCapable?: boolean;
 }
 
+export interface SeismicRequiredProductSourceGate {
+  id: string;
+  label: string;
+  filename?: string;
+  expectedBytes?: number;
+  sourceSubmission?: string;
+  sourceCitation?: string;
+  downloadLandingPage?: string;
+  sourceZipMember?: string;
+  status?: string;
+  reason?: string;
+  error?: string;
+}
+
 export interface SeismicAudiencePresetOption {
   id: string;
   label: string;
@@ -211,6 +225,52 @@ export function seismicProductOptions(
       };
     })
     .filter((product): product is SeismicProductOption => product !== null);
+}
+
+export function seismicRequiredProductSourceGates(
+  layer: ProjectLayerSpec,
+): SeismicRequiredProductSourceGate[] {
+  const rawGates = (layer.metadata as Record<string, unknown>)
+    .seismicRequiredProductSourceGates;
+  if (!Array.isArray(rawGates)) return [];
+  return rawGates
+    .map((raw): SeismicRequiredProductSourceGate | null => {
+      if (!raw || typeof raw !== "object") return null;
+      const gate = raw as Record<string, unknown>;
+      if (typeof gate.id !== "string" || typeof gate.label !== "string") {
+        return null;
+      }
+      return {
+        id: gate.id,
+        label: seismicIndustryLabel(gate.label),
+        filename:
+          typeof gate.filename === "string" ? gate.filename : undefined,
+        expectedBytes:
+          typeof gate.expectedBytes === "number"
+            ? gate.expectedBytes
+            : undefined,
+        sourceSubmission:
+          typeof gate.sourceSubmission === "string"
+            ? gate.sourceSubmission
+            : undefined,
+        sourceCitation:
+          typeof gate.sourceCitation === "string"
+            ? gate.sourceCitation
+            : undefined,
+        downloadLandingPage:
+          typeof gate.downloadLandingPage === "string"
+            ? gate.downloadLandingPage
+            : undefined,
+        sourceZipMember:
+          typeof gate.sourceZipMember === "string"
+            ? gate.sourceZipMember
+            : undefined,
+        status: typeof gate.status === "string" ? gate.status : undefined,
+        reason: typeof gate.reason === "string" ? gate.reason : undefined,
+        error: typeof gate.error === "string" ? gate.error : undefined,
+      };
+    })
+    .filter((gate): gate is SeismicRequiredProductSourceGate => gate !== null);
 }
 
 const SEISMIC_LINE_GROUP_ORDER = ["3d", "301", "302", "95", "L11", "L5"];

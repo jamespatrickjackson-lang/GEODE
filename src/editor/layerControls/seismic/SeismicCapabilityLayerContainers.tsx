@@ -30,8 +30,10 @@ import {
   seismicDefaultProductId,
   seismicPresetPatch,
   seismicProductOptions,
+  seismicRequiredProductSourceGates,
   seismicProductVisibilityFromStyle,
   type SeismicProductOption,
+  type SeismicRequiredProductSourceGate,
 } from "./seismicModel";
 
 function formatHorizonPoints(points: EditableStyle["seismicFigureHorizonPoints"]): string {
@@ -62,6 +64,13 @@ function parseHorizonPoints(text: string): Array<[number, number]> {
       return [Math.max(0, Math.min(1, x)), Math.max(0, Math.min(1, y))];
     })
     .filter((point): point is [number, number] => point !== null);
+}
+
+function formatSourceGateBytes(bytes: number | undefined): string {
+  if (typeof bytes !== "number" || !Number.isFinite(bytes) || bytes <= 0) {
+    return "source size unknown";
+  }
+  return `${(bytes / 1_000_000).toFixed(1)} MB`;
 }
 
 const compactTextInputStyle: React.CSSProperties = {
@@ -99,6 +108,7 @@ export function SeismicCapabilityLayerContainers({
   isEnv,
   currentPage,
   layerId,
+  ensureLayerVisible,
   setEnvLayerStyle,
   setPageLayerOverride,
   sceneHandle,
@@ -109,12 +119,14 @@ export function SeismicCapabilityLayerContainers({
   isEnv: boolean;
   currentPage: PresentationPage | null;
   layerId: string;
+  ensureLayerVisible?: () => void;
   setEnvLayerStyle: LayerStyleSetter;
   setPageLayerOverride: PageStyleSetter;
   sceneHandle: SceneHandle;
 }) {
   const { canApplyLiveSceneEdits } = useEditor();
   const products = seismicProductOptions(layer);
+  const sourceGatedProducts = seismicRequiredProductSourceGates(layer);
   const capabilityPresets = seismicCapabilityPresets(layer);
   const defaultProductId = seismicDefaultProductId(layer);
   const rawProductId = styleString(style, "seismicProductId", defaultProductId);
@@ -278,6 +290,9 @@ export function SeismicCapabilityLayerContainers({
     patch: Partial<EditableStyle>,
   ) => {
     if (disabled) return;
+    if (targetLayerId === layerId && patch.visible === true) {
+      ensureLayerVisible?.();
+    }
     if (targetLayerId === layerId) {
       const merged = { ...liveSeismicStyleRef.current, ...patch };
       liveSeismicStyleRef.current = merged;
@@ -368,6 +383,7 @@ export function SeismicCapabilityLayerContainers({
     );
   const setProductVisible = (id: string, visible: boolean) => {
     commitProductState(id, {
+      ...(visible ? { visible: true } : {}),
       seismicProductVisibility: {
         ...productVisibility,
         [id]: visible,
@@ -385,6 +401,7 @@ export function SeismicCapabilityLayerContainers({
       seismicCapabilityPresetId: `${product.id}-${nextRenderMode}${
         syncSlice ? "-sync" : ""
       }`,
+      visible: true,
       seismicProductId: product.id,
       seismicProductVisibility: selectedOnlyVisibility(product.id),
       seismicRenderMode: nextRenderMode,
@@ -412,7 +429,7 @@ export function SeismicCapabilityLayerContainers({
       (candidate) => candidate.id === presetId,
     );
     if (!preset) return;
-    commit(seismicPresetPatch(preset, products, productId));
+    commit({ visible: true, ...seismicPresetPatch(preset, products, productId) });
     if (preset.mtStylePatch) {
       commitLayerStyle(
         UTAH_FORGE_MT_RESISTIVITY_FULL_DENSITY_LAYER_ID,
@@ -464,6 +481,65 @@ export function SeismicCapabilityLayerContainers({
   const sectionOnlyProducts = products.filter(
     (product) => product.raymarchCapable !== true,
   );
+  const twoDimensionalSectionProducts = products.filter(
+    (product) => product.surveyKind !== "3d",
+  );
+  const visibleTwoDimensionalSectionCount = twoDimensionalSectionProducts.filter(
+    (product) => productVisibility[product.id] === true,
+  ).length;
+  const setTwoDimensionalSectionsVisible = (withSurveyGeometry: boolean) => {
+    const firstSectionProduct = twoDimensionalSectionProducts[0];
+    if (!firstSectionProduct) return;
+    commit({
+      seismicCapabilityPresetId: withSurveyGeometry
+        ? "all-2d-survey-sections"
+        : "all-2d-sections",
+      visible: true,
+      seismicProductId: firstSectionProduct.id,
+      seismicProductVisibility: Object.fromEntries(
+        products.map((product) => [product.id, product.surveyKind !== "3d"]),
+      ),
+      seismicRenderMode: "slice",
+      seismicSliceAxis: "line",
+      seismicSliceThroughVolume: false,
+      seismicComparisonProductId: undefined,
+      seismicComparisonMode: "overlay",
+      seismicNavigationVisible: withSurveyGeometry ? true : navigationVisible,
+      ...(withSurveyGeometry
+        ? {
+            seismicNavigationRoleVisibility: {
+              sources: true,
+              receivers: true,
+              lines: true,
+            },
+          }
+        : {}),
+    });
+  };
+  const hideTwoDimensionalSections = () => {
+    const visibleThreeDimensionalProduct =
+      products.find(
+        (product) =>
+          product.surveyKind === "3d" && productVisibility[product.id] === true,
+      ) ?? products.find((product) => product.surveyKind === "3d");
+    commit({
+      seismicCapabilityPresetId: "hide-2d-sections",
+      seismicProductId:
+        selectedProduct?.surveyKind === "3d"
+          ? selectedProduct.id
+          : visibleThreeDimensionalProduct?.id ?? productId,
+      seismicProductVisibility: Object.fromEntries(
+        products.map((product) => [
+          product.id,
+          product.surveyKind === "3d"
+            ? productVisibility[product.id] === true
+            : false,
+        ]),
+      ),
+      seismicSliceThroughVolume: false,
+      seismicComparisonProductId: undefined,
+    });
+  };
   const productControlActive = (product: SeismicProductOption) =>
     product.id === productId;
 
@@ -593,6 +669,110 @@ export function SeismicCapabilityLayerContainers({
       </SeismicCapabilityLayerItem>
     );
   };
+  const renderSourceGatedProductItem = (
+    gate: SeismicRequiredProductSourceGate,
+  ) => (
+    <SeismicCapabilityLayerItem
+      key={gate.id}
+      testId={`seismic-source-gate-${gate.id}`}
+      title={gate.label}
+      type="source gate"
+      inactive
+    >
+      <div style={nestedControlRowStyle}>
+        <label style={nestedFieldLabelStyle}>File</label>
+        <span
+          style={{
+            flex: 1,
+            color: vibrancyTertiaryLabel,
+            fontSize: 11,
+            opacity: controlOpacity,
+          }}
+        >
+          {gate.filename ?? gate.id}
+        </span>
+      </div>
+      <div style={nestedControlRowStyle}>
+        <label style={nestedFieldLabelStyle}>Size</label>
+        <span
+          style={{
+            flex: 1,
+            color: vibrancyTertiaryLabel,
+            fontSize: 11,
+            opacity: controlOpacity,
+          }}
+        >
+          {formatSourceGateBytes(gate.expectedBytes)}
+        </span>
+      </div>
+      <div style={nestedControlRowStyle}>
+        <label style={nestedFieldLabelStyle}>Source</label>
+        <span
+          style={{
+            flex: 1,
+            color: vibrancyTertiaryLabel,
+            fontSize: 11,
+            opacity: controlOpacity,
+          }}
+        >
+          {gate.sourceCitation ?? gate.sourceSubmission ?? "GDR source"}
+        </span>
+      </div>
+      <div style={nestedControlRowStyle}>
+        <label style={nestedFieldLabelStyle}>Status</label>
+        <span
+          style={{
+            flex: 1,
+            color:
+              gate.status === "available" ? "#9fdc8f" : vibrancyTertiaryLabel,
+            fontSize: 11,
+            opacity: controlOpacity,
+          }}
+        >
+          {gate.status ?? "source-gated"}
+        </span>
+      </div>
+      <div style={nestedControlRowStyle}>
+        <label style={nestedFieldLabelStyle}>Member</label>
+        <span
+          style={{
+            flex: 1,
+            color: vibrancyTertiaryLabel,
+            fontSize: 11,
+            opacity: controlOpacity,
+          }}
+        >
+          {gate.sourceZipMember ?? "GDR archive"}
+        </span>
+      </div>
+      {gate.downloadLandingPage ? (
+        <div style={{ ...nestedControlRowStyle, gap: 6, flexWrap: "wrap" }}>
+          <label style={nestedFieldLabelStyle}>GDR</label>
+          <button
+            type="button"
+            data-testid={`seismic-source-gate-open-${gate.id}`}
+            disabled={disabled}
+            onClick={() =>
+              window.open(
+                gate.downloadLandingPage,
+                "_blank",
+                "noopener,noreferrer",
+              )
+            }
+            style={{
+              ...panelStyles.iconButton,
+              width: "auto",
+              padding: "3px 7px",
+              fontSize: 10,
+              opacity: controlOpacity,
+            }}
+          >
+            Landing page
+          </button>
+        </div>
+      ) : null}
+    </SeismicCapabilityLayerItem>
+  );
 
   return (
     <>
@@ -614,6 +794,15 @@ export function SeismicCapabilityLayerContainers({
         </details>
       ) : null}
 
+      {sourceGatedProducts.length > 0 ? (
+        <details style={nestedDetailsStyle} open>
+          <summary style={panelStyles.summary}>Source-gated products</summary>
+          <div style={detailsContentStyle}>
+            {sourceGatedProducts.map(renderSourceGatedProductItem)}
+          </div>
+        </details>
+      ) : null}
+
       {sectionOnlyProducts.length > 0 ? (
         <details style={nestedDetailsStyle} open>
           <summary style={panelStyles.summary}>Section-only products</summary>
@@ -628,6 +817,68 @@ export function SeismicCapabilityLayerContainers({
         title="2D / legacy section theatre"
         type="section"
       >
+        <div style={nestedControlRowStyle}>
+          <label style={nestedFieldLabelStyle}>All 2D</label>
+          <span
+            style={{
+              flex: 1,
+              color: vibrancyTertiaryLabel,
+              fontSize: 11,
+              opacity: controlOpacity,
+            }}
+          >
+            visible {visibleTwoDimensionalSectionCount}/
+            {twoDimensionalSectionProducts.length}
+          </span>
+        </div>
+        <div style={{ ...nestedControlRowStyle, gap: 6, flexWrap: "wrap" }}>
+          <label style={nestedFieldLabelStyle}>Survey</label>
+          <button
+            type="button"
+            data-testid="seismic-capability-all-2d-sections"
+            disabled={disabled || twoDimensionalSectionProducts.length === 0}
+            onClick={() => setTwoDimensionalSectionsVisible(false)}
+            style={{
+              ...panelStyles.iconButton,
+              width: "auto",
+              padding: "3px 7px",
+              fontSize: 10,
+              opacity: controlOpacity,
+            }}
+          >
+            All 2D sections
+          </button>
+          <button
+            type="button"
+            data-testid="seismic-capability-survey-plus-2d-sections"
+            disabled={disabled || twoDimensionalSectionProducts.length === 0}
+            onClick={() => setTwoDimensionalSectionsVisible(true)}
+            style={{
+              ...panelStyles.iconButton,
+              width: "auto",
+              padding: "3px 7px",
+              fontSize: 10,
+              opacity: controlOpacity,
+            }}
+          >
+            Survey + sections
+          </button>
+          <button
+            type="button"
+            data-testid="seismic-capability-hide-2d-sections"
+            disabled={disabled || twoDimensionalSectionProducts.length === 0}
+            onClick={hideTwoDimensionalSections}
+            style={{
+              ...panelStyles.iconButton,
+              width: "auto",
+              padding: "3px 7px",
+              fontSize: 10,
+              opacity: controlOpacity,
+            }}
+          >
+            Hide 2D
+          </button>
+        </div>
         <div style={{ ...nestedControlRowStyle, gap: 6, flexWrap: "wrap" }}>
           <label style={nestedFieldLabelStyle}>Curtain</label>
           {[
@@ -714,6 +965,7 @@ export function SeismicCapabilityLayerContainers({
                     action.label === "301"
                       ? "enhanced-vs-unenhanced"
                       : `enhanced-vs-unenhanced-${action.label.toLowerCase()}`,
+                  visible: true,
                   seismicProductId: action.primary,
                   seismicProductVisibility: Object.fromEntries(
                     products.map((product) => [

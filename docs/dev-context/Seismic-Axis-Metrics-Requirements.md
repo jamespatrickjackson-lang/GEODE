@@ -37,9 +37,12 @@ V1 limits:
 - Optional well and horizon marks are authored normalized figure overlays. They
   are not spatial picks or control-point validation until a later source-backed
   workflow exists.
-- Current labels use section endpoint geometry for scale/direction. Full curved
-  line-distance annotation remains a future enhancement when per-line
-  navigation polyline metrics are promoted into the renderer.
+- Current labels use trace-derived section paths or surface-grid corners when
+  present, with endpoint/envelope geometry only as a fallback. Full curved
+  line-distance tick annotation remains a future enhancement.
+- Raymarch volumes currently render inside the axis-aligned `sceneBounds`
+  envelope. Runtime diagnostics expose this as `axis-aligned-envelope`; exact
+  trace-grid orientation is not validated by the volume renderer.
 
 ## Current Utah FORGE Product Audit
 

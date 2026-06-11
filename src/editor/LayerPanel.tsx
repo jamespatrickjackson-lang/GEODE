@@ -399,6 +399,16 @@ export function LayerPanel({
       const nextVisible = !effectiveLayerVisible;
       setPageVisibilityOverride(currentPage.id, layer.id, nextVisible);
     };
+    const ensureLayerVisible = () => {
+      if (effectiveLayerVisible) return;
+      if (isEnv) {
+        toggleEnvDefaultVisible(layer.id);
+        return;
+      }
+      if (!currentPage) return;
+      if (pageStyleControlsDisabled) return;
+      setPageVisibilityOverride(currentPage.id, layer.id, true);
+    };
     const isGeology = layer.id === "bedrock-geology";
     const isTrees = layer.id === "trees-vri";
     const isEzGamma = layer.id === "ez-gamma-2024";
@@ -2173,6 +2183,7 @@ export function LayerPanel({
                   overridden={seismicBrowserOverridden}
                   sceneSectionStyle={effectiveSceneSectionStyle}
                   sceneHandle={sceneHandle}
+                  ensureLayerVisible={ensureLayerVisible}
                   onToggleOverride={
                     currentPage
                       ? (enabled) => {

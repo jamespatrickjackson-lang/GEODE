@@ -334,6 +334,27 @@
         "sha256": "341efc7ab8752b98ae0d866ca9c44b3fe7b41424c59a6aa950ed21af2ef816da"
       }
     ],
+    "requiredProductSourceGates": [
+      {
+        "id": "gdr-1141-forge3d-ani-psdm-stack-enh",
+        "label": "3D anisotropic PSDM depth stack (enhanced)",
+        "filename": "Forge3d_ANI_PSDM_Stack_Enh.segy",
+        "expectedBytes": 153678840,
+        "sourceSubmission": "GDR 1141",
+        "sourceCitation": "GDR 1141, Miller (2019)",
+        "downloadLandingPage": "https://gdr.openei.org/submissions/1141",
+        "sourceZip": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing.zip",
+        "sourceZipMember": "2018-19 Reflection Processing/3D Survey/Forge3d_ANI_PSDM_Stack_Enh.segy",
+        "normalizedPath": null,
+        "status": "source-member-corrupt",
+        "reason": "The required SEG-Y member is listed in the official GDR zip, but the zip member cannot be fully extracted or CRC-validated.",
+        "error": "error: Error -3 while decompressing data: invalid code lengths set",
+        "surveyKind": "3d",
+        "productKind": "psdm",
+        "domainKind": "depth",
+        "domainUnit": "m"
+      }
+    ],
     "skippedRawFiles": 0,
     "sourceRoot": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis",
     "sourceRootRole": "archive-normalized-source-fallback"
@@ -473,6 +494,27 @@
       "reason": "No matching SEG-Y source product was found in the active source path or GeoSee archive."
     }
   ],
+  "requiredProductSourceGates": [
+    {
+      "id": "gdr-1141-forge3d-ani-psdm-stack-enh",
+      "label": "3D anisotropic PSDM depth stack (enhanced)",
+      "filename": "Forge3d_ANI_PSDM_Stack_Enh.segy",
+      "expectedBytes": 153678840,
+      "sourceSubmission": "GDR 1141",
+      "sourceCitation": "GDR 1141, Miller (2019)",
+      "downloadLandingPage": "https://gdr.openei.org/submissions/1141",
+      "sourceZip": "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/seismic_analysis/source/from_submission_1141/2018-19 Reflection Processing.zip",
+      "sourceZipMember": "2018-19 Reflection Processing/3D Survey/Forge3d_ANI_PSDM_Stack_Enh.segy",
+      "normalizedPath": null,
+      "status": "source-member-corrupt",
+      "reason": "The required SEG-Y member is listed in the official GDR zip, but the zip member cannot be fully extracted or CRC-validated.",
+      "error": "error: Error -3 while decompressing data: invalid code lengths set",
+      "surveyKind": "3d",
+      "productKind": "psdm",
+      "domainKind": "depth",
+      "domainUnit": "m"
+    }
+  ],
   "activeProductCount": 34,
   "activeProducts": [
     {
@@ -495,6 +537,69 @@
       "surveyKind": "3d",
       "productKind": "poststack-time-migration",
       "domainKind": "time",
+      "domainUnit": "ms",
+      "datumM": 1800.0,
+      "sourceGeometry": {
+        "status": "trace-header-derived",
+        "geometrySource": "trace-header-cmp-ibm-real",
+        "horizontalCrs": {
+          "epsg": 26912,
+          "name": "NAD83 / UTM Zone 12N"
+        },
+        "coordinateBasis": "utm-trace-header-cmp",
+        "traceCount": 28526,
+        "validTraceCount": 28526,
+        "coordinateFields": {
+          "cmpX": {
+            "byte": 189,
+            "format": "ibm-real-4"
+          },
+          "cmpY": {
+            "byte": 193,
+            "format": "ibm-real-4"
+          },
+          "inline": {
+            "bytes": [
+              9,
+              10
+            ],
+            "format": "int16"
+          },
+          "crossline": {
+            "bytes": [
+              13,
+              14
+            ],
+            "format": "int16"
+          }
+        },
+        "cmpBoundsUtm": {
+          "min": [
+            332817.9375,
+            4260701.0
+          ],
+          "max": [
+            338162.0625,
+            4264996.0
+          ]
+        },
+        "sceneBounds": {
+          "min": [
+            -8649.4125,
+            -12673.5,
+            -6200.0
+          ],
+          "max": [
+            -3305.2875,
+            -8378.5,
+            1800.0
+          ]
+        },
+        "registrationStatus": "unverified",
+        "canClaimPreciseRegistration": false,
+        "reason": "Trace-header coordinates are used for placement; survey-grade registration claims remain review-gated until control-point validation."
+      },
+      "sourceUnitStatus": "not-depth-m-domain",
       "traceCount": 28526,
       "sampleCount": 2001,
       "raymarchCapable": true
@@ -519,6 +624,122 @@
       "surveyKind": "3d",
       "productKind": "psdm",
       "domainKind": "depth",
+      "domainUnit": "m",
+      "datumM": 1800.0,
+      "sourceGeometry": {
+        "status": "trace-header-derived",
+        "geometrySource": "trace-header-cmp-ibm-real",
+        "horizontalCrs": {
+          "epsg": 26912,
+          "name": "NAD83 / UTM Zone 12N"
+        },
+        "coordinateBasis": "utm-trace-header-cmp",
+        "traceCount": 36210,
+        "validTraceCount": 36210,
+        "coordinateFields": {
+          "cmpX": {
+            "byte": 189,
+            "format": "ibm-real-4"
+          },
+          "cmpY": {
+            "byte": 193,
+            "format": "ibm-real-4"
+          },
+          "inline": {
+            "bytes": [
+              9,
+              10
+            ],
+            "format": "int16"
+          },
+          "crossline": {
+            "bytes": [
+              13,
+              14
+            ],
+            "format": "int16"
+          }
+        },
+        "cmpBoundsUtm": {
+          "min": [
+            332800.5,
+            4260686.0
+          ],
+          "max": [
+            338173.4375,
+            4265002.0
+          ]
+        },
+        "sceneBounds": {
+          "min": [
+            -8666.85,
+            -12688.5,
+            -3200.0
+          ],
+          "max": [
+            -3293.9125,
+            -8372.5,
+            1800.0
+          ]
+        },
+        "registrationStatus": "unverified",
+        "canClaimPreciseRegistration": false,
+        "reason": "Trace-header coordinates are used for placement; survey-grade registration claims remain review-gated until control-point validation.",
+        "inlineRange": [
+          1,
+          170
+        ],
+        "crosslineRange": [
+          1,
+          213
+        ],
+        "grid": {
+          "inlineCount": 170,
+          "crosslineCount": 213,
+          "completeTraceCount": 36210
+        },
+        "cmpCornersUtm": {
+          "sw": [
+            332800.5,
+            4260778.0
+          ],
+          "nw": [
+            332874.25,
+            4265002.0
+          ],
+          "ne": [
+            338173.4375,
+            4264910.0
+          ],
+          "se": [
+            338099.6875,
+            4260686.0
+          ]
+        },
+        "sceneCorners": {
+          "sw": [
+            -8666.85,
+            -12596.5,
+            0.0
+          ],
+          "nw": [
+            -8593.1,
+            -8372.5,
+            0.0
+          ],
+          "ne": [
+            -3293.9125,
+            -8464.5,
+            0.0
+          ],
+          "se": [
+            -3367.6625,
+            -12688.5,
+            0.0
+          ]
+        }
+      },
+      "sourceUnitStatus": "header-indicated-depth-m",
       "traceCount": 36210,
       "sampleCount": 1001,
       "raymarchCapable": true
@@ -543,6 +764,69 @@
       "surveyKind": "3d",
       "productKind": "pstm",
       "domainKind": "time",
+      "domainUnit": "ms",
+      "datumM": 1800.0,
+      "sourceGeometry": {
+        "status": "trace-header-derived",
+        "geometrySource": "trace-header-cmp-ibm-real",
+        "horizontalCrs": {
+          "epsg": 26912,
+          "name": "NAD83 / UTM Zone 12N"
+        },
+        "coordinateBasis": "utm-trace-header-cmp",
+        "traceCount": 28526,
+        "validTraceCount": 28526,
+        "coordinateFields": {
+          "cmpX": {
+            "byte": 189,
+            "format": "ibm-real-4"
+          },
+          "cmpY": {
+            "byte": 193,
+            "format": "ibm-real-4"
+          },
+          "inline": {
+            "bytes": [
+              9,
+              10
+            ],
+            "format": "int16"
+          },
+          "crossline": {
+            "bytes": [
+              13,
+              14
+            ],
+            "format": "int16"
+          }
+        },
+        "cmpBoundsUtm": {
+          "min": [
+            332817.9375,
+            4260701.0
+          ],
+          "max": [
+            338162.0625,
+            4264996.0
+          ]
+        },
+        "sceneBounds": {
+          "min": [
+            -8649.4125,
+            -12673.5,
+            -6200.0
+          ],
+          "max": [
+            -3305.2875,
+            -8378.5,
+            1800.0
+          ]
+        },
+        "registrationStatus": "unverified",
+        "canClaimPreciseRegistration": false,
+        "reason": "Trace-header coordinates are used for placement; survey-grade registration claims remain review-gated until control-point validation."
+      },
+      "sourceUnitStatus": "not-depth-m-domain",
       "traceCount": 28526,
       "sampleCount": 1001,
       "raymarchCapable": true
@@ -567,6 +851,49 @@
       "surveyKind": "3d",
       "productKind": "velocity",
       "domainKind": "velocity-time",
+      "domainUnit": "ms",
+      "datumM": 1800.0,
+      "sourceGeometry": {
+        "status": "trace-header-derived",
+        "geometrySource": "trace-header-standard-coordinate",
+        "horizontalCrs": {
+          "epsg": 26912,
+          "name": "NAD83 / UTM Zone 12N"
+        },
+        "coordinateBasis": "utm-trace-header-cmp",
+        "traceCount": 374,
+        "validTraceCount": 374,
+        "coordinateFields": {
+          "coordinatePair": "CDP_X/CDP_Y:scaled",
+          "coordinateScalar": "SEG-Y SourceGroupScalar when plausible; raw coordinates fallback"
+        },
+        "cmpBoundsUtm": {
+          "min": [
+            332800.5,
+            4260687.0
+          ],
+          "max": [
+            338119.5,
+            4264778.0
+          ]
+        },
+        "sceneBounds": {
+          "min": [
+            -8666.85,
+            -12687.5,
+            -6200.0
+          ],
+          "max": [
+            -3347.85,
+            -8596.5,
+            1800.0
+          ]
+        },
+        "registrationStatus": "unverified",
+        "canClaimPreciseRegistration": false,
+        "reason": "Trace-header coordinates are used for placement; survey-grade registration claims remain review-gated until control-point validation."
+      },
+      "sourceUnitStatus": "not-depth-m-domain",
       "traceCount": 374,
       "sampleCount": 201,
       "raymarchCapable": true
@@ -591,6 +918,69 @@
       "surveyKind": "2d",
       "productKind": "psdm",
       "domainKind": "depth",
+      "domainUnit": "m",
+      "datumM": 1800.0,
+      "sourceGeometry": {
+        "status": "trace-header-derived",
+        "geometrySource": "trace-header-cmp-ibm-real",
+        "horizontalCrs": {
+          "epsg": 26912,
+          "name": "NAD83 / UTM Zone 12N"
+        },
+        "coordinateBasis": "utm-trace-header-cmp",
+        "traceCount": 321,
+        "validTraceCount": 321,
+        "coordinateFields": {
+          "cmpX": {
+            "byte": 189,
+            "format": "ibm-real-4"
+          },
+          "cmpY": {
+            "byte": 193,
+            "format": "ibm-real-4"
+          },
+          "inline": {
+            "bytes": [
+              9,
+              10
+            ],
+            "format": "int16"
+          },
+          "crossline": {
+            "bytes": [
+              13,
+              14
+            ],
+            "format": "int16"
+          }
+        },
+        "cmpBoundsUtm": {
+          "min": [
+            329279.875,
+            4264388.0
+          ],
+          "max": [
+            333124.3125,
+            4265315.0
+          ]
+        },
+        "sceneBounds": {
+          "min": [
+            -12187.475,
+            -8986.5,
+            -4200.0
+          ],
+          "max": [
+            -8343.0375,
+            -8059.5,
+            1800.0
+          ]
+        },
+        "registrationStatus": "unverified",
+        "canClaimPreciseRegistration": false,
+        "reason": "Trace-header coordinates are used for placement; survey-grade registration claims remain review-gated until control-point validation."
+      },
+      "sourceUnitStatus": "header-indicated-depth-m",
       "traceCount": 321,
       "sampleCount": 6001,
       "raymarchCapable": false
@@ -615,6 +1005,69 @@
       "surveyKind": "2d",
       "productKind": "psdm",
       "domainKind": "depth",
+      "domainUnit": "m",
+      "datumM": 1800.0,
+      "sourceGeometry": {
+        "status": "trace-header-derived",
+        "geometrySource": "trace-header-cmp-ibm-real",
+        "horizontalCrs": {
+          "epsg": 26912,
+          "name": "NAD83 / UTM Zone 12N"
+        },
+        "coordinateBasis": "utm-trace-header-cmp",
+        "traceCount": 321,
+        "validTraceCount": 321,
+        "coordinateFields": {
+          "cmpX": {
+            "byte": 189,
+            "format": "ibm-real-4"
+          },
+          "cmpY": {
+            "byte": 193,
+            "format": "ibm-real-4"
+          },
+          "inline": {
+            "bytes": [
+              9,
+              10
+            ],
+            "format": "int16"
+          },
+          "crossline": {
+            "bytes": [
+              13,
+              14
+            ],
+            "format": "int16"
+          }
+        },
+        "cmpBoundsUtm": {
+          "min": [
+            329279.875,
+            4264388.0
+          ],
+          "max": [
+            333124.3125,
+            4265315.0
+          ]
+        },
+        "sceneBounds": {
+          "min": [
+            -12187.475,
+            -8986.5,
+            -4200.0
+          ],
+          "max": [
+            -8343.0375,
+            -8059.5,
+            1800.0
+          ]
+        },
+        "registrationStatus": "unverified",
+        "canClaimPreciseRegistration": false,
+        "reason": "Trace-header coordinates are used for placement; survey-grade registration claims remain review-gated until control-point validation."
+      },
+      "sourceUnitStatus": "header-indicated-depth-m",
       "traceCount": 321,
       "sampleCount": 6001,
       "raymarchCapable": false
@@ -639,6 +1092,49 @@
       "surveyKind": "2d",
       "productKind": "psdm",
       "domainKind": "depth",
+      "domainUnit": "m",
+      "datumM": 1800.0,
+      "sourceGeometry": {
+        "status": "trace-header-derived",
+        "geometrySource": "trace-header-standard-coordinate",
+        "horizontalCrs": {
+          "epsg": 26912,
+          "name": "NAD83 / UTM Zone 12N"
+        },
+        "coordinateBasis": "utm-trace-header-cmp",
+        "traceCount": 321,
+        "validTraceCount": 321,
+        "coordinateFields": {
+          "coordinatePair": "CDP_X/CDP_Y:scaled",
+          "coordinateScalar": "SEG-Y SourceGroupScalar when plausible; raw coordinates fallback"
+        },
+        "cmpBoundsUtm": {
+          "min": [
+            329279.9,
+            4264378.56
+          ],
+          "max": [
+            333124.32,
+            4265314.88
+          ]
+        },
+        "sceneBounds": {
+          "min": [
+            -12187.45,
+            -8995.94,
+            -6365.0801
+          ],
+          "max": [
+            -8343.03,
+            -8059.62,
+            1800.0
+          ]
+        },
+        "registrationStatus": "unverified",
+        "canClaimPreciseRegistration": false,
+        "reason": "Trace-header coordinates are used for placement; survey-grade registration claims remain review-gated until control-point validation."
+      },
+      "sourceUnitStatus": "header-unresolved-filename-inferred-depth-m",
       "traceCount": 321,
       "sampleCount": 1929,
       "raymarchCapable": false
@@ -663,6 +1159,26 @@
       "surveyKind": "2d",
       "productKind": "psdm",
       "domainKind": "depth",
+      "domainUnit": "m",
+      "datumM": 1800.0,
+      "sourceGeometry": {
+        "status": "unresolved",
+        "geometrySource": "navigation-or-envelope-fallback",
+        "horizontalCrs": {
+          "epsg": 26912,
+          "name": "NAD83 / UTM Zone 12N"
+        },
+        "coordinateBasis": "utm-trace-header-cmp",
+        "traceCount": 307,
+        "validTraceCount": 0,
+        "coordinateFields": {},
+        "cmpBoundsUtm": null,
+        "sceneBounds": null,
+        "registrationStatus": "unverified",
+        "canClaimPreciseRegistration": false,
+        "reason": "Trace-header coordinates are used for placement; survey-grade registration claims remain review-gated until control-point validation."
+      },
+      "sourceUnitStatus": "header-indicated-depth-m",
       "traceCount": 307,
       "sampleCount": 6001,
       "raymarchCapable": false
@@ -687,6 +1203,69 @@
       "surveyKind": "2d",
       "productKind": "psdm",
       "domainKind": "depth",
+      "domainUnit": "m",
+      "datumM": 1800.0,
+      "sourceGeometry": {
+        "status": "trace-header-derived",
+        "geometrySource": "trace-header-cmp-ibm-real",
+        "horizontalCrs": {
+          "epsg": 26912,
+          "name": "NAD83 / UTM Zone 12N"
+        },
+        "coordinateBasis": "utm-trace-header-cmp",
+        "traceCount": 307,
+        "validTraceCount": 307,
+        "coordinateFields": {
+          "cmpX": {
+            "byte": 189,
+            "format": "ibm-real-4"
+          },
+          "cmpY": {
+            "byte": 193,
+            "format": "ibm-real-4"
+          },
+          "inline": {
+            "bytes": [
+              9,
+              10
+            ],
+            "format": "int16"
+          },
+          "crossline": {
+            "bytes": [
+              13,
+              14
+            ],
+            "format": "int16"
+          }
+        },
+        "cmpBoundsUtm": {
+          "min": [
+            337748.5625,
+            4263756.0
+          ],
+          "max": [
+            341532.875,
+            4264313.0
+          ]
+        },
+        "sceneBounds": {
+          "min": [
+            -3718.7875,
+            -9618.5,
+            -4200.0
+          ],
+          "max": [
+            65.525,
+            -9061.5,
+            1800.0
+          ]
+        },
+        "registrationStatus": "unverified",
+        "canClaimPreciseRegistration": false,
+        "reason": "Trace-header coordinates are used for placement; survey-grade registration claims remain review-gated until control-point validation."
+      },
+      "sourceUnitStatus": "header-indicated-depth-m",
       "traceCount": 307,
       "sampleCount": 6001,
       "raymarchCapable": false
@@ -711,6 +1290,26 @@
       "surveyKind": "legacy-2d",
       "productKind": "psdm",
       "domainKind": "depth",
+      "domainUnit": "m",
+      "datumM": 1800.0,
+      "sourceGeometry": {
+        "status": "unresolved",
+        "geometrySource": "navigation-or-envelope-fallback",
+        "horizontalCrs": {
+          "epsg": 26912,
+          "name": "NAD83 / UTM Zone 12N"
+        },
+        "coordinateBasis": "utm-trace-header-cmp",
+        "traceCount": 681,
+        "validTraceCount": 0,
+        "coordinateFields": {},
+        "cmpBoundsUtm": null,
+        "sceneBounds": null,
+        "registrationStatus": "unverified",
+        "canClaimPreciseRegistration": false,
+        "reason": "Trace-header coordinates are used for placement; survey-grade registration claims remain review-gated until control-point validation."
+      },
+      "sourceUnitStatus": "header-indicated-nonmetric-depth-review-required",
       "traceCount": 681,
       "sampleCount": 10001,
       "raymarchCapable": false
@@ -735,6 +1334,26 @@
       "surveyKind": "legacy-2d",
       "productKind": "psdm",
       "domainKind": "depth",
+      "domainUnit": "m",
+      "datumM": 1800.0,
+      "sourceGeometry": {
+        "status": "unresolved",
+        "geometrySource": "navigation-or-envelope-fallback",
+        "horizontalCrs": {
+          "epsg": 26912,
+          "name": "NAD83 / UTM Zone 12N"
+        },
+        "coordinateBasis": "utm-trace-header-cmp",
+        "traceCount": 681,
+        "validTraceCount": 0,
+        "coordinateFields": {},
+        "cmpBoundsUtm": null,
+        "sceneBounds": null,
+        "registrationStatus": "unverified",
+        "canClaimPreciseRegistration": false,
+        "reason": "Trace-header coordinates are used for placement; survey-grade registration claims remain review-gated until control-point validation."
+      },
+      "sourceUnitStatus": "header-indicated-depth-m",
       "traceCount": 681,
       "sampleCount": 10001,
       "raymarchCapable": false
@@ -759,6 +1378,26 @@
       "surveyKind": "legacy-2d",
       "productKind": "psdm",
       "domainKind": "depth",
+      "domainUnit": "m",
+      "datumM": 1800.0,
+      "sourceGeometry": {
+        "status": "unresolved",
+        "geometrySource": "navigation-or-envelope-fallback",
+        "horizontalCrs": {
+          "epsg": 26912,
+          "name": "NAD83 / UTM Zone 12N"
+        },
+        "coordinateBasis": "utm-trace-header-cmp",
+        "traceCount": 681,
+        "validTraceCount": 0,
+        "coordinateFields": {},
+        "cmpBoundsUtm": null,
+        "sceneBounds": null,
+        "registrationStatus": "unverified",
+        "canClaimPreciseRegistration": false,
+        "reason": "Trace-header coordinates are used for placement; survey-grade registration claims remain review-gated until control-point validation."
+      },
+      "sourceUnitStatus": "header-indicated-nonmetric-depth-review-required",
       "traceCount": 681,
       "sampleCount": 10001,
       "raymarchCapable": false
@@ -783,6 +1422,26 @@
       "surveyKind": "legacy-2d",
       "productKind": "psdm",
       "domainKind": "depth",
+      "domainUnit": "m",
+      "datumM": 1800.0,
+      "sourceGeometry": {
+        "status": "unresolved",
+        "geometrySource": "navigation-or-envelope-fallback",
+        "horizontalCrs": {
+          "epsg": 26912,
+          "name": "NAD83 / UTM Zone 12N"
+        },
+        "coordinateBasis": "utm-trace-header-cmp",
+        "traceCount": 439,
+        "validTraceCount": 0,
+        "coordinateFields": {},
+        "cmpBoundsUtm": null,
+        "sceneBounds": null,
+        "registrationStatus": "unverified",
+        "canClaimPreciseRegistration": false,
+        "reason": "Trace-header coordinates are used for placement; survey-grade registration claims remain review-gated until control-point validation."
+      },
+      "sourceUnitStatus": "header-indicated-nonmetric-depth-review-required",
       "traceCount": 439,
       "sampleCount": 2001,
       "raymarchCapable": false
@@ -807,6 +1466,26 @@
       "surveyKind": "legacy-2d",
       "productKind": "psdm",
       "domainKind": "depth",
+      "domainUnit": "m",
+      "datumM": 1800.0,
+      "sourceGeometry": {
+        "status": "unresolved",
+        "geometrySource": "navigation-or-envelope-fallback",
+        "horizontalCrs": {
+          "epsg": 26912,
+          "name": "NAD83 / UTM Zone 12N"
+        },
+        "coordinateBasis": "utm-trace-header-cmp",
+        "traceCount": 439,
+        "validTraceCount": 0,
+        "coordinateFields": {},
+        "cmpBoundsUtm": null,
+        "sceneBounds": null,
+        "registrationStatus": "unverified",
+        "canClaimPreciseRegistration": false,
+        "reason": "Trace-header coordinates are used for placement; survey-grade registration claims remain review-gated until control-point validation."
+      },
+      "sourceUnitStatus": "header-indicated-depth-m",
       "traceCount": 439,
       "sampleCount": 1161,
       "raymarchCapable": false
@@ -831,6 +1510,26 @@
       "surveyKind": "legacy-2d",
       "productKind": "psdm",
       "domainKind": "depth",
+      "domainUnit": "m",
+      "datumM": 1800.0,
+      "sourceGeometry": {
+        "status": "unresolved",
+        "geometrySource": "navigation-or-envelope-fallback",
+        "horizontalCrs": {
+          "epsg": 26912,
+          "name": "NAD83 / UTM Zone 12N"
+        },
+        "coordinateBasis": "utm-trace-header-cmp",
+        "traceCount": 439,
+        "validTraceCount": 0,
+        "coordinateFields": {},
+        "cmpBoundsUtm": null,
+        "sceneBounds": null,
+        "registrationStatus": "unverified",
+        "canClaimPreciseRegistration": false,
+        "reason": "Trace-header coordinates are used for placement; survey-grade registration claims remain review-gated until control-point validation."
+      },
+      "sourceUnitStatus": "header-indicated-nonmetric-depth-review-required",
       "traceCount": 439,
       "sampleCount": 2001,
       "raymarchCapable": false
@@ -855,6 +1554,26 @@
       "surveyKind": "legacy-2d",
       "productKind": "psdm",
       "domainKind": "depth",
+      "domainUnit": "m",
+      "datumM": 1800.0,
+      "sourceGeometry": {
+        "status": "unresolved",
+        "geometrySource": "navigation-or-envelope-fallback",
+        "horizontalCrs": {
+          "epsg": 26912,
+          "name": "NAD83 / UTM Zone 12N"
+        },
+        "coordinateBasis": "utm-trace-header-cmp",
+        "traceCount": 439,
+        "validTraceCount": 0,
+        "coordinateFields": {},
+        "cmpBoundsUtm": null,
+        "sceneBounds": null,
+        "registrationStatus": "unverified",
+        "canClaimPreciseRegistration": false,
+        "reason": "Trace-header coordinates are used for placement; survey-grade registration claims remain review-gated until control-point validation."
+      },
+      "sourceUnitStatus": "header-indicated-depth-m",
       "traceCount": 439,
       "sampleCount": 1161,
       "raymarchCapable": false
@@ -879,6 +1598,26 @@
       "surveyKind": "2d",
       "productKind": "pstm",
       "domainKind": "time",
+      "domainUnit": "ms",
+      "datumM": 1800.0,
+      "sourceGeometry": {
+        "status": "unresolved",
+        "geometrySource": "navigation-or-envelope-fallback",
+        "horizontalCrs": {
+          "epsg": 26912,
+          "name": "NAD83 / UTM Zone 12N"
+        },
+        "coordinateBasis": "utm-trace-header-cmp",
+        "traceCount": 321,
+        "validTraceCount": 0,
+        "coordinateFields": {},
+        "cmpBoundsUtm": null,
+        "sceneBounds": null,
+        "registrationStatus": "unverified",
+        "canClaimPreciseRegistration": false,
+        "reason": "Trace-header coordinates are used for placement; survey-grade registration claims remain review-gated until control-point validation."
+      },
+      "sourceUnitStatus": "not-depth-m-domain",
       "traceCount": 321,
       "sampleCount": 4001,
       "raymarchCapable": false
@@ -903,6 +1642,26 @@
       "surveyKind": "2d",
       "productKind": "pstm",
       "domainKind": "time",
+      "domainUnit": "ms",
+      "datumM": 1800.0,
+      "sourceGeometry": {
+        "status": "unresolved",
+        "geometrySource": "navigation-or-envelope-fallback",
+        "horizontalCrs": {
+          "epsg": 26912,
+          "name": "NAD83 / UTM Zone 12N"
+        },
+        "coordinateBasis": "utm-trace-header-cmp",
+        "traceCount": 321,
+        "validTraceCount": 0,
+        "coordinateFields": {},
+        "cmpBoundsUtm": null,
+        "sceneBounds": null,
+        "registrationStatus": "unverified",
+        "canClaimPreciseRegistration": false,
+        "reason": "Trace-header coordinates are used for placement; survey-grade registration claims remain review-gated until control-point validation."
+      },
+      "sourceUnitStatus": "not-depth-m-domain",
       "traceCount": 321,
       "sampleCount": 4001,
       "raymarchCapable": false
@@ -927,6 +1686,69 @@
       "surveyKind": "2d",
       "productKind": "pstm",
       "domainKind": "time",
+      "domainUnit": "ms",
+      "datumM": 1800.0,
+      "sourceGeometry": {
+        "status": "trace-header-derived",
+        "geometrySource": "trace-header-cmp-ibm-real",
+        "horizontalCrs": {
+          "epsg": 26912,
+          "name": "NAD83 / UTM Zone 12N"
+        },
+        "coordinateBasis": "utm-trace-header-cmp",
+        "traceCount": 321,
+        "validTraceCount": 321,
+        "coordinateFields": {
+          "cmpX": {
+            "byte": 189,
+            "format": "ibm-real-4"
+          },
+          "cmpY": {
+            "byte": 193,
+            "format": "ibm-real-4"
+          },
+          "inline": {
+            "bytes": [
+              9,
+              10
+            ],
+            "format": "int16"
+          },
+          "crossline": {
+            "bytes": [
+              13,
+              14
+            ],
+            "format": "int16"
+          }
+        },
+        "cmpBoundsUtm": {
+          "min": [
+            329279.875,
+            4264388.0
+          ],
+          "max": [
+            333124.3125,
+            4265315.0
+          ]
+        },
+        "sceneBounds": {
+          "min": [
+            -12187.475,
+            -8986.5,
+            -6200.0
+          ],
+          "max": [
+            -8343.0375,
+            -8059.5,
+            1800.0
+          ]
+        },
+        "registrationStatus": "unverified",
+        "canClaimPreciseRegistration": false,
+        "reason": "Trace-header coordinates are used for placement; survey-grade registration claims remain review-gated until control-point validation."
+      },
+      "sourceUnitStatus": "not-depth-m-domain",
       "traceCount": 321,
       "sampleCount": 4001,
       "raymarchCapable": false
@@ -951,6 +1773,26 @@
       "surveyKind": "2d",
       "productKind": "pstm",
       "domainKind": "time",
+      "domainUnit": "ms",
+      "datumM": 2100.0,
+      "sourceGeometry": {
+        "status": "unresolved",
+        "geometrySource": "navigation-or-envelope-fallback",
+        "horizontalCrs": {
+          "epsg": 26912,
+          "name": "NAD83 / UTM Zone 12N"
+        },
+        "coordinateBasis": "utm-trace-header-cmp",
+        "traceCount": 307,
+        "validTraceCount": 0,
+        "coordinateFields": {},
+        "cmpBoundsUtm": null,
+        "sceneBounds": null,
+        "registrationStatus": "unverified",
+        "canClaimPreciseRegistration": false,
+        "reason": "Trace-header coordinates are used for placement; survey-grade registration claims remain review-gated until control-point validation."
+      },
+      "sourceUnitStatus": "not-depth-m-domain",
       "traceCount": 307,
       "sampleCount": 4001,
       "raymarchCapable": false
@@ -975,6 +1817,26 @@
       "surveyKind": "2d",
       "productKind": "pstm",
       "domainKind": "time",
+      "domainUnit": "ms",
+      "datumM": 2100.0,
+      "sourceGeometry": {
+        "status": "unresolved",
+        "geometrySource": "navigation-or-envelope-fallback",
+        "horizontalCrs": {
+          "epsg": 26912,
+          "name": "NAD83 / UTM Zone 12N"
+        },
+        "coordinateBasis": "utm-trace-header-cmp",
+        "traceCount": 307,
+        "validTraceCount": 0,
+        "coordinateFields": {},
+        "cmpBoundsUtm": null,
+        "sceneBounds": null,
+        "registrationStatus": "unverified",
+        "canClaimPreciseRegistration": false,
+        "reason": "Trace-header coordinates are used for placement; survey-grade registration claims remain review-gated until control-point validation."
+      },
+      "sourceUnitStatus": "not-depth-m-domain",
       "traceCount": 307,
       "sampleCount": 4001,
       "raymarchCapable": false
@@ -999,6 +1861,69 @@
       "surveyKind": "2d",
       "productKind": "pstm",
       "domainKind": "time",
+      "domainUnit": "ms",
+      "datumM": 1800.0,
+      "sourceGeometry": {
+        "status": "trace-header-derived",
+        "geometrySource": "trace-header-cmp-ibm-real",
+        "horizontalCrs": {
+          "epsg": 26912,
+          "name": "NAD83 / UTM Zone 12N"
+        },
+        "coordinateBasis": "utm-trace-header-cmp",
+        "traceCount": 307,
+        "validTraceCount": 307,
+        "coordinateFields": {
+          "cmpX": {
+            "byte": 189,
+            "format": "ibm-real-4"
+          },
+          "cmpY": {
+            "byte": 193,
+            "format": "ibm-real-4"
+          },
+          "inline": {
+            "bytes": [
+              9,
+              10
+            ],
+            "format": "int16"
+          },
+          "crossline": {
+            "bytes": [
+              13,
+              14
+            ],
+            "format": "int16"
+          }
+        },
+        "cmpBoundsUtm": {
+          "min": [
+            337748.5625,
+            4263756.0
+          ],
+          "max": [
+            341532.875,
+            4264313.0
+          ]
+        },
+        "sceneBounds": {
+          "min": [
+            -3718.7875,
+            -9618.5,
+            -6200.0
+          ],
+          "max": [
+            65.525,
+            -9061.5,
+            1800.0
+          ]
+        },
+        "registrationStatus": "unverified",
+        "canClaimPreciseRegistration": false,
+        "reason": "Trace-header coordinates are used for placement; survey-grade registration claims remain review-gated until control-point validation."
+      },
+      "sourceUnitStatus": "not-depth-m-domain",
       "traceCount": 307,
       "sampleCount": 4001,
       "raymarchCapable": false
@@ -1023,6 +1948,26 @@
       "surveyKind": "legacy-2d",
       "productKind": "pstm",
       "domainKind": "time",
+      "domainUnit": "ms",
+      "datumM": 1800.0,
+      "sourceGeometry": {
+        "status": "unresolved",
+        "geometrySource": "navigation-or-envelope-fallback",
+        "horizontalCrs": {
+          "epsg": 26912,
+          "name": "NAD83 / UTM Zone 12N"
+        },
+        "coordinateBasis": "utm-trace-header-cmp",
+        "traceCount": 681,
+        "validTraceCount": 0,
+        "coordinateFields": {},
+        "cmpBoundsUtm": null,
+        "sceneBounds": null,
+        "registrationStatus": "unverified",
+        "canClaimPreciseRegistration": false,
+        "reason": "Trace-header coordinates are used for placement; survey-grade registration claims remain review-gated until control-point validation."
+      },
+      "sourceUnitStatus": "not-depth-m-domain",
       "traceCount": 681,
       "sampleCount": 2192,
       "raymarchCapable": false
@@ -1047,6 +1992,26 @@
       "surveyKind": "legacy-2d",
       "productKind": "pstm",
       "domainKind": "time",
+      "domainUnit": "ms",
+      "datumM": 1800.0,
+      "sourceGeometry": {
+        "status": "unresolved",
+        "geometrySource": "navigation-or-envelope-fallback",
+        "horizontalCrs": {
+          "epsg": 26912,
+          "name": "NAD83 / UTM Zone 12N"
+        },
+        "coordinateBasis": "utm-trace-header-cmp",
+        "traceCount": 681,
+        "validTraceCount": 0,
+        "coordinateFields": {},
+        "cmpBoundsUtm": null,
+        "sceneBounds": null,
+        "registrationStatus": "unverified",
+        "canClaimPreciseRegistration": false,
+        "reason": "Trace-header coordinates are used for placement; survey-grade registration claims remain review-gated until control-point validation."
+      },
+      "sourceUnitStatus": "not-depth-m-domain",
       "traceCount": 681,
       "sampleCount": 2192,
       "raymarchCapable": false
@@ -1071,6 +2036,26 @@
       "surveyKind": "legacy-2d",
       "productKind": "pstm",
       "domainKind": "time",
+      "domainUnit": "ms",
+      "datumM": 1800.0,
+      "sourceGeometry": {
+        "status": "unresolved",
+        "geometrySource": "navigation-or-envelope-fallback",
+        "horizontalCrs": {
+          "epsg": 26912,
+          "name": "NAD83 / UTM Zone 12N"
+        },
+        "coordinateBasis": "utm-trace-header-cmp",
+        "traceCount": 681,
+        "validTraceCount": 0,
+        "coordinateFields": {},
+        "cmpBoundsUtm": null,
+        "sceneBounds": null,
+        "registrationStatus": "unverified",
+        "canClaimPreciseRegistration": false,
+        "reason": "Trace-header coordinates are used for placement; survey-grade registration claims remain review-gated until control-point validation."
+      },
+      "sourceUnitStatus": "not-depth-m-domain",
       "traceCount": 681,
       "sampleCount": 2192,
       "raymarchCapable": false
@@ -1095,6 +2080,26 @@
       "surveyKind": "legacy-2d",
       "productKind": "pstm",
       "domainKind": "time",
+      "domainUnit": "ms",
+      "datumM": 1800.0,
+      "sourceGeometry": {
+        "status": "unresolved",
+        "geometrySource": "navigation-or-envelope-fallback",
+        "horizontalCrs": {
+          "epsg": 26912,
+          "name": "NAD83 / UTM Zone 12N"
+        },
+        "coordinateBasis": "utm-trace-header-cmp",
+        "traceCount": 439,
+        "validTraceCount": 0,
+        "coordinateFields": {},
+        "cmpBoundsUtm": null,
+        "sceneBounds": null,
+        "registrationStatus": "unverified",
+        "canClaimPreciseRegistration": false,
+        "reason": "Trace-header coordinates are used for placement; survey-grade registration claims remain review-gated until control-point validation."
+      },
+      "sourceUnitStatus": "not-depth-m-domain",
       "traceCount": 439,
       "sampleCount": 2192,
       "raymarchCapable": false
@@ -1119,6 +2124,26 @@
       "surveyKind": "legacy-2d",
       "productKind": "pstm",
       "domainKind": "time",
+      "domainUnit": "ms",
+      "datumM": 1800.0,
+      "sourceGeometry": {
+        "status": "unresolved",
+        "geometrySource": "navigation-or-envelope-fallback",
+        "horizontalCrs": {
+          "epsg": 26912,
+          "name": "NAD83 / UTM Zone 12N"
+        },
+        "coordinateBasis": "utm-trace-header-cmp",
+        "traceCount": 439,
+        "validTraceCount": 0,
+        "coordinateFields": {},
+        "cmpBoundsUtm": null,
+        "sceneBounds": null,
+        "registrationStatus": "unverified",
+        "canClaimPreciseRegistration": false,
+        "reason": "Trace-header coordinates are used for placement; survey-grade registration claims remain review-gated until control-point validation."
+      },
+      "sourceUnitStatus": "not-depth-m-domain",
       "traceCount": 439,
       "sampleCount": 2192,
       "raymarchCapable": false
@@ -1143,6 +2168,26 @@
       "surveyKind": "legacy-2d",
       "productKind": "pstm",
       "domainKind": "time",
+      "domainUnit": "ms",
+      "datumM": 1800.0,
+      "sourceGeometry": {
+        "status": "unresolved",
+        "geometrySource": "navigation-or-envelope-fallback",
+        "horizontalCrs": {
+          "epsg": 26912,
+          "name": "NAD83 / UTM Zone 12N"
+        },
+        "coordinateBasis": "utm-trace-header-cmp",
+        "traceCount": 439,
+        "validTraceCount": 0,
+        "coordinateFields": {},
+        "cmpBoundsUtm": null,
+        "sceneBounds": null,
+        "registrationStatus": "unverified",
+        "canClaimPreciseRegistration": false,
+        "reason": "Trace-header coordinates are used for placement; survey-grade registration claims remain review-gated until control-point validation."
+      },
+      "sourceUnitStatus": "not-depth-m-domain",
       "traceCount": 439,
       "sampleCount": 2151,
       "raymarchCapable": false
@@ -1167,6 +2212,49 @@
       "surveyKind": "2d",
       "productKind": "stack",
       "domainKind": "time",
+      "domainUnit": "ms",
+      "datumM": 1800.0,
+      "sourceGeometry": {
+        "status": "trace-header-derived",
+        "geometrySource": "trace-header-standard-coordinate",
+        "horizontalCrs": {
+          "epsg": 26912,
+          "name": "NAD83 / UTM Zone 12N"
+        },
+        "coordinateBasis": "utm-trace-header-cmp",
+        "traceCount": 321,
+        "validTraceCount": 321,
+        "coordinateFields": {
+          "coordinatePair": "CDP_X/CDP_Y:scaled",
+          "coordinateScalar": "SEG-Y SourceGroupScalar when plausible; raw coordinates fallback"
+        },
+        "cmpBoundsUtm": {
+          "min": [
+            329279.9,
+            4264378.56
+          ],
+          "max": [
+            333124.32,
+            4265314.88
+          ]
+        },
+        "sceneBounds": {
+          "min": [
+            -12187.45,
+            -8995.94,
+            -6200.0
+          ],
+          "max": [
+            -8343.03,
+            -8059.62,
+            1800.0
+          ]
+        },
+        "registrationStatus": "unverified",
+        "canClaimPreciseRegistration": false,
+        "reason": "Trace-header coordinates are used for placement; survey-grade registration claims remain review-gated until control-point validation."
+      },
+      "sourceUnitStatus": "not-depth-m-domain",
       "traceCount": 321,
       "sampleCount": 4001,
       "raymarchCapable": false
@@ -1191,6 +2279,49 @@
       "surveyKind": "2d",
       "productKind": "stack",
       "domainKind": "time",
+      "domainUnit": "ms",
+      "datumM": 1800.0,
+      "sourceGeometry": {
+        "status": "trace-header-derived",
+        "geometrySource": "trace-header-standard-coordinate",
+        "horizontalCrs": {
+          "epsg": 26912,
+          "name": "NAD83 / UTM Zone 12N"
+        },
+        "coordinateBasis": "utm-trace-header-cmp",
+        "traceCount": 321,
+        "validTraceCount": 321,
+        "coordinateFields": {
+          "coordinatePair": "CDP_X/CDP_Y:scaled",
+          "coordinateScalar": "SEG-Y SourceGroupScalar when plausible; raw coordinates fallback"
+        },
+        "cmpBoundsUtm": {
+          "min": [
+            337720.31,
+            4263866.5
+          ],
+          "max": [
+            341522.0,
+            4264422.0
+          ]
+        },
+        "sceneBounds": {
+          "min": [
+            -3747.04,
+            -9508.0,
+            -6200.0
+          ],
+          "max": [
+            54.65,
+            -8952.5,
+            1800.0
+          ]
+        },
+        "registrationStatus": "unverified",
+        "canClaimPreciseRegistration": false,
+        "reason": "Trace-header coordinates are used for placement; survey-grade registration claims remain review-gated until control-point validation."
+      },
+      "sourceUnitStatus": "not-depth-m-domain",
       "traceCount": 321,
       "sampleCount": 4001,
       "raymarchCapable": false
@@ -1215,6 +2346,69 @@
       "surveyKind": "2d",
       "productKind": "velocity",
       "domainKind": "velocity-time",
+      "domainUnit": "ms",
+      "datumM": 1800.0,
+      "sourceGeometry": {
+        "status": "trace-header-derived",
+        "geometrySource": "trace-header-cmp-ibm-real",
+        "horizontalCrs": {
+          "epsg": 26912,
+          "name": "NAD83 / UTM Zone 12N"
+        },
+        "coordinateBasis": "utm-trace-header-cmp",
+        "traceCount": 81,
+        "validTraceCount": 81,
+        "coordinateFields": {
+          "cmpX": {
+            "byte": 189,
+            "format": "ibm-real-4"
+          },
+          "cmpY": {
+            "byte": 193,
+            "format": "ibm-real-4"
+          },
+          "inline": {
+            "bytes": [
+              9,
+              10
+            ],
+            "format": "int16"
+          },
+          "crossline": {
+            "bytes": [
+              13,
+              14
+            ],
+            "format": "int16"
+          }
+        },
+        "cmpBoundsUtm": {
+          "min": [
+            329279.875,
+            4264388.0
+          ],
+          "max": [
+            333124.3125,
+            4265315.0
+          ]
+        },
+        "sceneBounds": {
+          "min": [
+            -12187.475,
+            -8986.5,
+            -18200.0
+          ],
+          "max": [
+            -8343.0375,
+            -8059.5,
+            1800.0
+          ]
+        },
+        "registrationStatus": "unverified",
+        "canClaimPreciseRegistration": false,
+        "reason": "Trace-header coordinates are used for placement; survey-grade registration claims remain review-gated until control-point validation."
+      },
+      "sourceUnitStatus": "not-depth-m-domain",
       "traceCount": 81,
       "sampleCount": 1251,
       "raymarchCapable": false
@@ -1239,6 +2433,69 @@
       "surveyKind": "2d",
       "productKind": "velocity",
       "domainKind": "velocity-time",
+      "domainUnit": "ms",
+      "datumM": 1800.0,
+      "sourceGeometry": {
+        "status": "trace-header-derived",
+        "geometrySource": "trace-header-cmp-ibm-real",
+        "horizontalCrs": {
+          "epsg": 26912,
+          "name": "NAD83 / UTM Zone 12N"
+        },
+        "coordinateBasis": "utm-trace-header-cmp",
+        "traceCount": 103,
+        "validTraceCount": 103,
+        "coordinateFields": {
+          "cmpX": {
+            "byte": 189,
+            "format": "ibm-real-4"
+          },
+          "cmpY": {
+            "byte": 193,
+            "format": "ibm-real-4"
+          },
+          "inline": {
+            "bytes": [
+              9,
+              10
+            ],
+            "format": "int16"
+          },
+          "crossline": {
+            "bytes": [
+              13,
+              14
+            ],
+            "format": "int16"
+          }
+        },
+        "cmpBoundsUtm": {
+          "min": [
+            337748.5625,
+            4263756.0
+          ],
+          "max": [
+            341532.875,
+            4264313.0
+          ]
+        },
+        "sceneBounds": {
+          "min": [
+            -3718.7875,
+            -9618.5,
+            -10984.0
+          ],
+          "max": [
+            65.525,
+            -9061.5,
+            1800.0
+          ]
+        },
+        "registrationStatus": "unverified",
+        "canClaimPreciseRegistration": false,
+        "reason": "Trace-header coordinates are used for placement; survey-grade registration claims remain review-gated until control-point validation."
+      },
+      "sourceUnitStatus": "not-depth-m-domain",
       "traceCount": 103,
       "sampleCount": 800,
       "raymarchCapable": false
@@ -1263,6 +2520,26 @@
       "surveyKind": "legacy-2d",
       "productKind": "velocity",
       "domainKind": "velocity-time",
+      "domainUnit": "ms",
+      "datumM": 1800.0,
+      "sourceGeometry": {
+        "status": "unresolved",
+        "geometrySource": "navigation-or-envelope-fallback",
+        "horizontalCrs": {
+          "epsg": 26912,
+          "name": "NAD83 / UTM Zone 12N"
+        },
+        "coordinateBasis": "utm-trace-header-cmp",
+        "traceCount": 137,
+        "validTraceCount": 0,
+        "coordinateFields": {},
+        "cmpBoundsUtm": null,
+        "sceneBounds": null,
+        "registrationStatus": "unverified",
+        "canClaimPreciseRegistration": false,
+        "reason": "Trace-header coordinates are used for placement; survey-grade registration claims remain review-gated until control-point validation."
+      },
+      "sourceUnitStatus": "not-depth-m-domain",
       "traceCount": 137,
       "sampleCount": 2501,
       "raymarchCapable": false
@@ -1287,6 +2564,26 @@
       "surveyKind": "legacy-2d",
       "productKind": "velocity",
       "domainKind": "velocity-time",
+      "domainUnit": "ms",
+      "datumM": 1800.0,
+      "sourceGeometry": {
+        "status": "unresolved",
+        "geometrySource": "navigation-or-envelope-fallback",
+        "horizontalCrs": {
+          "epsg": 26912,
+          "name": "NAD83 / UTM Zone 12N"
+        },
+        "coordinateBasis": "utm-trace-header-cmp",
+        "traceCount": 89,
+        "validTraceCount": 0,
+        "coordinateFields": {},
+        "cmpBoundsUtm": null,
+        "sceneBounds": null,
+        "registrationStatus": "unverified",
+        "canClaimPreciseRegistration": false,
+        "reason": "Trace-header coordinates are used for placement; survey-grade registration claims remain review-gated until control-point validation."
+      },
+      "sourceUnitStatus": "not-depth-m-domain",
       "traceCount": 89,
       "sampleCount": 2001,
       "raymarchCapable": false

@@ -6,6 +6,9 @@ const SOURCE_FIDELITY_MAX_SAMPLE_STEPS = 384;
 
 type Vec3 = [number, number, number];
 type SeismicLodTierName = "coarse" | "standard" | "source";
+type SeismicProductLoadOptions = {
+  includeVolume?: boolean;
+};
 
 const SEISMIC_DEFAULT_LOD_TIER: SeismicLodTierName = "standard";
 const SEISMIC_COARSE_LOD_TIER: SeismicLodTierName = "coarse";
@@ -52,6 +55,15 @@ interface SeismicSectionLodSpec {
   amplitudeFile: string;
 }
 
+interface SeismicSurfaceGridSpec {
+  corners?: Vec3[] | Partial<Record<"sw" | "nw" | "ne" | "se", Vec3>>;
+  points?: Vec3[];
+  width?: number;
+  height?: number;
+  columns?: number;
+  rows?: number;
+}
+
 interface SeismicSectionSpec {
   id: string;
   label: string;
@@ -63,7 +75,10 @@ interface SeismicSectionSpec {
   sampleDomain: SeismicSampleDomain;
   datumM: number;
   sceneBounds?: SeismicBounds;
+  geometrySource?: string;
+  sourceAxis?: string | Record<string, unknown>;
   path?: Vec3[];
+  surfaceGrid?: SeismicSurfaceGridSpec;
   lods?: Partial<Record<SeismicLodTierName, SeismicSectionLodSpec>>;
   verticalReference?: Record<string, unknown>;
   valueEncoding?: Record<string, unknown>;
@@ -184,17 +199,31 @@ function volumeForLod(
 function estimateProductBytes(
   product: SeismicProductSpec,
   tier: SeismicLodTierName,
+  options: SeismicProductLoadOptions = {},
 ): number {
   let total = 0;
   for (const section of product.sections) {
     const resolved = sectionForLod(section, tier);
     const samples = resolved.width * resolved.height;
+    const surfaceGridPointCount = surfaceGridPoints(resolved.surfaceGrid)?.length ?? 0;
+    const geometryVertexCount =
+      resolved.path && resolved.path.length >= 2
+        ? resolved.path.length * 2
+        : resolved.axis === "sample" && surfaceGridPointCount >= 4
+          ? surfaceGridPointCount
+          : 4;
+    const geometryQuadCount =
+      resolved.path && resolved.path.length >= 2
+        ? Math.max(0, resolved.path.length - 1)
+        : resolved.axis === "sample" && surfaceGridPointCount >= 4
+          ? Math.max(0, geometryVertexCount - 1)
+          : 1;
     total += samples; // amplitude texture bytes
-    total += 4 * 3 * 4; // section plane corner positions
-    total += 4 * 2 * 4; // section plane UVs
-    total += 6 * 4; // section plane indices
+    total += geometryVertexCount * 3 * 4; // section plane positions
+    total += geometryVertexCount * 2 * 4; // section plane UVs
+    total += geometryQuadCount * 6 * 4; // section plane indices
   }
-  if (product.raymarchVolume) {
+  if (options.includeVolume === true && product.raymarchVolume) {
     const volume = volumeForLod(product.raymarchVolume, tier);
     const [nx, ny, nz] = volume.dimensions;
     total += nx * ny * nz;
@@ -401,16 +430,6 @@ function sectionVertexPosition(
   const sample = sampleMin + (sampleMax - sampleMin) * heightT;
   const z = section.datumM - sample * section.sampleDomain.verticalScaleMPerUnit;
 
-  if (section.axis === "line" && section.path && section.path.length >= 2) {
-    const first = section.path[0];
-    const last = section.path[section.path.length - 1];
-    return [
-      first[0] + (last[0] - first[0]) * widthT,
-      first[1] + (last[1] - first[1]) * widthT,
-      z,
-    ];
-  }
-
   const bounds = section.sceneBounds;
   if (!bounds) return [0, 0, z];
   const min = bounds.min;
@@ -446,7 +465,209 @@ function sectionSampleValue(section: SeismicSectionSpec, yIndex: number): number
   return section.sampleDomain.min + (section.sampleDomain.max - section.sampleDomain.min) * heightT;
 }
 
-function buildSectionPlaneGeometry(section: SeismicSectionSpec): THREE.BufferGeometry {
+function makeSectionGeometry(
+  section: SeismicSectionSpec,
+  positions: Float32Array,
+  uvs: Float32Array,
+  indices: Uint16Array | Uint32Array,
+  sampleValues: Float32Array,
+  geometryKind: string,
+): THREE.BufferGeometry {
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+  geometry.setAttribute("uv", new THREE.BufferAttribute(uvs, 2));
+  geometry.setIndex(new THREE.BufferAttribute(indices, 1));
+  geometry.userData.seismicSampleValues = sampleValues;
+  geometry.userData.seismicSection = section;
+  geometry.userData.seismicTexturePlane = true;
+  geometry.userData.seismicSectionTextureSize = [section.width, section.height];
+  geometry.userData.seismicSectionGeometryKind = geometryKind;
+  geometry.userData.seismicSectionGeometrySource =
+    section.geometrySource ?? (geometryKind === "legacy-corners" ? "scene-bounds" : "trace-derived");
+  geometry.userData.seismicSectionPathPointCount = section.path?.length ?? 0;
+  geometry.userData.seismicSectionSurfaceGridPointCount =
+    surfaceGridPoints(section.surfaceGrid)?.length ?? 0;
+  geometry.computeVertexNormals();
+  geometry.computeBoundingBox();
+  geometry.computeBoundingSphere();
+  return geometry;
+}
+
+function linePathDistanceFractions(path: Vec3[]): number[] {
+  const distances = new Array<number>(path.length).fill(0);
+  for (let i = 1; i < path.length; i += 1) {
+    const previous = path[i - 1];
+    const current = path[i];
+    distances[i] =
+      distances[i - 1] +
+      Math.hypot(
+        current[0] - previous[0],
+        current[1] - previous[1],
+        current[2] - previous[2],
+      );
+  }
+  const total = distances[distances.length - 1] || 1;
+  return distances.map((distance) => distance / total);
+}
+
+function buildPathCurtainGeometry(
+  section: SeismicSectionSpec,
+  path: Vec3[],
+): THREE.BufferGeometry {
+  const vertexCount = path.length * 2;
+  const indexArray =
+    vertexCount > 65535 ? new Uint32Array((path.length - 1) * 6) : new Uint16Array((path.length - 1) * 6);
+  const positions = new Float32Array(vertexCount * 3);
+  const uvs = new Float32Array(vertexCount * 2);
+  const sampleValues = new Float32Array(vertexCount);
+  const sampleMin = section.sampleDomain.min;
+  const sampleMax = section.sampleDomain.max;
+  const topZ = section.datumM - sampleMin * section.sampleDomain.verticalScaleMPerUnit;
+  const bottomZ = section.datumM - sampleMax * section.sampleDomain.verticalScaleMPerUnit;
+  const distanceFractions = linePathDistanceFractions(path);
+
+  for (let pathIndex = 0; pathIndex < path.length; pathIndex += 1) {
+    const point = path[pathIndex];
+    const u = distanceFractions[pathIndex];
+    const topVertex = pathIndex * 2;
+    const bottomVertex = topVertex + 1;
+    positions[topVertex * 3] = point[0];
+    positions[topVertex * 3 + 1] = point[1];
+    positions[topVertex * 3 + 2] = topZ;
+    positions[bottomVertex * 3] = point[0];
+    positions[bottomVertex * 3 + 1] = point[1];
+    positions[bottomVertex * 3 + 2] = bottomZ;
+    uvs[topVertex * 2] = u;
+    uvs[topVertex * 2 + 1] = 0;
+    uvs[bottomVertex * 2] = u;
+    uvs[bottomVertex * 2 + 1] = 1;
+    sampleValues[topVertex] = sampleMin;
+    sampleValues[bottomVertex] = sampleMax;
+  }
+
+  for (let segmentIndex = 0; segmentIndex < path.length - 1; segmentIndex += 1) {
+    const indexOffset = segmentIndex * 6;
+    const topLeft = segmentIndex * 2;
+    const bottomLeft = topLeft + 1;
+    const topRight = topLeft + 2;
+    const bottomRight = topLeft + 3;
+    indexArray[indexOffset] = topLeft;
+    indexArray[indexOffset + 1] = bottomLeft;
+    indexArray[indexOffset + 2] = topRight;
+    indexArray[indexOffset + 3] = topRight;
+    indexArray[indexOffset + 4] = bottomLeft;
+    indexArray[indexOffset + 5] = bottomRight;
+  }
+
+  return makeSectionGeometry(
+    section,
+    positions,
+    uvs,
+    indexArray,
+    sampleValues,
+    "trace-path-curtain",
+  );
+}
+
+function surfaceGridPoints(surfaceGrid?: SeismicSurfaceGridSpec): Vec3[] | null {
+  if (!surfaceGrid) return null;
+  if (surfaceGrid.points && surfaceGrid.points.length >= 4) return surfaceGrid.points;
+  const corners = surfaceGrid.corners;
+  if (Array.isArray(corners)) return corners.length >= 4 ? corners : null;
+  if (corners?.sw && corners?.nw && corners?.ne && corners?.se) {
+    return [corners.sw, corners.nw, corners.ne, corners.se];
+  }
+  return null;
+}
+
+function buildSurfaceGridGeometry(
+  section: SeismicSectionSpec,
+  surfaceGrid: SeismicSurfaceGridSpec,
+): THREE.BufferGeometry | null {
+  const points = surfaceGridPoints(surfaceGrid);
+  if (!points || points.length < 4) return null;
+  const columns = surfaceGrid.width ?? surfaceGrid.columns;
+  const rows = surfaceGrid.height ?? surfaceGrid.rows;
+  const hasStructuredGrid =
+    typeof columns === "number" &&
+    typeof rows === "number" &&
+    columns >= 2 &&
+    rows >= 2 &&
+    columns * rows === points.length;
+  const vertexCount = points.length;
+  const indexCount = hasStructuredGrid
+    ? (columns - 1) * (rows - 1) * 6
+    : Math.max(0, points.length - 2) * 3;
+  const indexArray =
+    vertexCount > 65535 ? new Uint32Array(indexCount) : new Uint16Array(indexCount);
+  const positions = new Float32Array(vertexCount * 3);
+  const uvs = new Float32Array(vertexCount * 2);
+  const sampleValues = new Float32Array(vertexCount);
+  const sampleValue = section.sampleDomain.min;
+  const planeZ =
+    section.datumM - sampleValue * section.sampleDomain.verticalScaleMPerUnit;
+  const minX = Math.min(...points.map((point) => point[0]));
+  const maxX = Math.max(...points.map((point) => point[0]));
+  const minY = Math.min(...points.map((point) => point[1]));
+  const maxY = Math.max(...points.map((point) => point[1]));
+  const rangeX = maxX - minX || 1;
+  const rangeY = maxY - minY || 1;
+
+  for (let pointIndex = 0; pointIndex < points.length; pointIndex += 1) {
+    const point = points[pointIndex];
+    positions[pointIndex * 3] = point[0];
+    positions[pointIndex * 3 + 1] = point[1];
+    positions[pointIndex * 3 + 2] = planeZ;
+    if (hasStructuredGrid) {
+      const column = pointIndex % columns;
+      const row = Math.floor(pointIndex / columns);
+      uvs[pointIndex * 2] = column / (columns - 1);
+      uvs[pointIndex * 2 + 1] = row / (rows - 1);
+    } else {
+      uvs[pointIndex * 2] = (point[0] - minX) / rangeX;
+      uvs[pointIndex * 2 + 1] = (point[1] - minY) / rangeY;
+    }
+    sampleValues[pointIndex] = sampleValue;
+  }
+
+  if (hasStructuredGrid) {
+    let indexOffset = 0;
+    for (let row = 0; row < rows - 1; row += 1) {
+      for (let column = 0; column < columns - 1; column += 1) {
+        const topLeft = row * columns + column;
+        const topRight = topLeft + 1;
+        const bottomLeft = topLeft + columns;
+        const bottomRight = bottomLeft + 1;
+        indexArray[indexOffset] = topLeft;
+        indexArray[indexOffset + 1] = bottomLeft;
+        indexArray[indexOffset + 2] = topRight;
+        indexArray[indexOffset + 3] = topRight;
+        indexArray[indexOffset + 4] = bottomLeft;
+        indexArray[indexOffset + 5] = bottomRight;
+        indexOffset += 6;
+      }
+    }
+  } else {
+    let indexOffset = 0;
+    for (let pointIndex = 1; pointIndex < points.length - 1; pointIndex += 1) {
+      indexArray[indexOffset] = 0;
+      indexArray[indexOffset + 1] = pointIndex;
+      indexArray[indexOffset + 2] = pointIndex + 1;
+      indexOffset += 3;
+    }
+  }
+
+  return makeSectionGeometry(
+    section,
+    positions,
+    uvs,
+    indexArray,
+    sampleValues,
+    surfaceGrid.points ? "trace-surface-grid" : "trace-surface-corners",
+  );
+}
+
+function buildLegacyCornerGeometry(section: SeismicSectionSpec): THREE.BufferGeometry {
   const right = Math.max(0, section.width - 1);
   const bottom = Math.max(0, section.height - 1);
   const corners: Array<[number, number, number, number]> = [
@@ -470,20 +691,25 @@ function buildSectionPlaneGeometry(section: SeismicSectionSpec): THREE.BufferGeo
     sampleValues[i] = sectionSampleValue(section, yIndex);
   }
 
-  const geometry = new THREE.BufferGeometry();
-  geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
-  geometry.setAttribute("uv", new THREE.BufferAttribute(uvs, 2));
-  geometry.setIndex(
-    new THREE.BufferAttribute(new Uint16Array([0, 2, 1, 1, 2, 3]), 1),
+  return makeSectionGeometry(
+    section,
+    positions,
+    uvs,
+    new Uint16Array([0, 2, 1, 1, 2, 3]),
+    sampleValues,
+    "legacy-corners",
   );
-  geometry.userData.seismicSampleValues = sampleValues;
-  geometry.userData.seismicSection = section;
-  geometry.userData.seismicTexturePlane = true;
-  geometry.userData.seismicSectionTextureSize = [section.width, section.height];
-  geometry.computeVertexNormals();
-  geometry.computeBoundingBox();
-  geometry.computeBoundingSphere();
-  return geometry;
+}
+
+function buildSectionPlaneGeometry(section: SeismicSectionSpec): THREE.BufferGeometry {
+  if (section.path && section.path.length >= 2) {
+    return buildPathCurtainGeometry(section, section.path);
+  }
+  if (section.axis === "sample" && section.surfaceGrid) {
+    const surfaceGeometry = buildSurfaceGridGeometry(section, section.surfaceGrid);
+    if (surfaceGeometry) return surfaceGeometry;
+  }
+  return buildLegacyCornerGeometry(section);
 }
 
 function buildSectionAmplitudeTexture(
@@ -595,7 +821,17 @@ async function buildSectionMesh(
     seismicProductValueStats: product.amplitudeStats,
     seismicSectionId: section.id,
     seismicSectionAxis: section.axis,
+    seismicSectionSourceAxis: section.sourceAxis,
     seismicSectionFraction: section.fraction,
+    seismicSectionGeometrySource:
+      section.geometrySource ?? geometry.userData.seismicSectionGeometrySource,
+    seismicSectionGeometryKind: geometry.userData.seismicSectionGeometryKind,
+    seismicSectionVertexCount:
+      geometry.getAttribute("position")?.count ?? 0,
+    seismicSectionPathPointCount:
+      geometry.userData.seismicSectionPathPointCount,
+    seismicSectionSurfaceGridPointCount:
+      geometry.userData.seismicSectionSurfaceGridPointCount,
     seismicLodTier: tier,
     seismicSampleDomainUnit: section.sampleDomain.unit,
     seismicDatumM: section.datumM,
@@ -883,6 +1119,9 @@ async function buildRaymarchMesh(
     seismicVolumeBaseBounds: volume.sceneBounds,
     seismicVolumeCurrentBounds: volume.sceneBounds,
     seismicVolumeBaseSize: [size.x, size.y, size.z],
+    seismicVolumeGeometryModel: "axis-aligned-envelope",
+    seismicVolumeGeometryModelDescription:
+      "Raymarch volume renders inside the axis-aligned sceneBounds envelope; exact trace-grid orientation is not validated here.",
     seismicVolumeVerticalReference:
       volume.verticalReference ?? product.verticalReference,
     seismicVolumeValueEncoding: volume.valueEncoding ?? product.valueEncoding,
@@ -1022,6 +1261,7 @@ async function buildSeismicProductGroup(
   product: SeismicProductSpec,
   resolveAsset: (path: string) => string,
   tier: SeismicLodTierName,
+  options: SeismicProductLoadOptions = {},
 ): Promise<THREE.Group> {
   const productGroup = new THREE.Group();
   productGroup.name = product.label;
@@ -1029,6 +1269,8 @@ async function buildSeismicProductGroup(
   productGroup.userData.seismicProductLabel = product.label;
   productGroup.userData.seismicProductSurveyKind = product.surveyKind;
   productGroup.userData.seismicProductLodTier = tier;
+  productGroup.userData.seismicProductIncludesVolume =
+    options.includeVolume === true;
   productGroup.userData.seismicNavigationPlacement = product.navigationPlacement;
 
   const sectionMeshes = await Promise.all(
@@ -1038,7 +1280,7 @@ async function buildSeismicProductGroup(
   );
   productGroup.add(...sectionMeshes);
 
-  if (product.raymarchVolume) {
+  if (options.includeVolume === true && product.raymarchVolume) {
     productGroup.add(
       await buildRaymarchMesh(
         product,
@@ -1097,11 +1339,20 @@ export async function loadSeismicBrowser(manifestUrl: string): Promise<THREE.Obj
   );
   const loadedProducts = new Map<
     string,
-    { group: THREE.Group; tier: SeismicLodTierName; approxBytes: number }
+    {
+      group: THREE.Group;
+      tier: SeismicLodTierName;
+      includeVolume: boolean;
+      approxBytes: number;
+    }
   >();
   const pendingProducts = new Map<
     string,
-    { promise: Promise<void>; tier: SeismicLodTierName }
+    {
+      promise: Promise<void>;
+      tier: SeismicLodTierName;
+      includeVolume: boolean;
+    }
   >();
   const loadSequences = new Map<string, number>();
   const retainedProductIds = new Set<string>();
@@ -1142,6 +1393,7 @@ export async function loadSeismicBrowser(manifestUrl: string): Promise<THREE.Obj
     productId: string,
     productGroup: THREE.Group,
     tier: SeismicLodTierName,
+    options: SeismicProductLoadOptions,
   ) => {
     const existing = loadedProducts.get(productId);
     if (existing) {
@@ -1151,7 +1403,8 @@ export async function loadSeismicBrowser(manifestUrl: string): Promise<THREE.Obj
     loadedProducts.set(productId, {
       group: productGroup,
       tier,
-      approxBytes: estimateProductBytes(productsById.get(productId)!, tier),
+      includeVolume: options.includeVolume === true,
+      approxBytes: estimateProductBytes(productsById.get(productId)!, tier, options),
     });
     group.add(productGroup);
     publishRuntimeState();
@@ -1172,13 +1425,16 @@ export async function loadSeismicBrowser(manifestUrl: string): Promise<THREE.Obj
   const ensureOneProductLoaded = async (
     productId: string,
     requestedTier: SeismicLodTierName,
+    options: SeismicProductLoadOptions = {},
   ): Promise<void> => {
     const product = productsById.get(productId);
     if (!product) return;
+    const includeVolume = options.includeVolume === true;
     const loaded = loadedProducts.get(productId);
     const exactTierRequired = requestedTier === SEISMIC_COARSE_LOD_TIER;
     const keepLoaded =
       loaded &&
+      (loaded.includeVolume || !includeVolume) &&
       (loaded.tier === requestedTier ||
         (!exactTierRequired &&
           SEISMIC_LOD_RANK[loaded.tier] >= SEISMIC_LOD_RANK[requestedTier]));
@@ -1186,9 +1442,22 @@ export async function loadSeismicBrowser(manifestUrl: string): Promise<THREE.Obj
       return;
     }
     const pending = pendingProducts.get(productId);
-    if (pending?.tier === requestedTier) {
+    if (pending?.tier === requestedTier && (pending.includeVolume || !includeVolume)) {
       await pending.promise;
       return;
+    }
+    if (pending?.tier === requestedTier) {
+      await pending.promise;
+      const afterPending = loadedProducts.get(productId);
+      if (
+        afterPending &&
+        afterPending.includeVolume &&
+        (afterPending.tier === requestedTier ||
+          (!exactTierRequired &&
+            SEISMIC_LOD_RANK[afterPending.tier] >= SEISMIC_LOD_RANK[requestedTier]))
+      ) {
+        return;
+      }
     }
     const nextSeq = (loadSequences.get(productId) ?? 0) + 1;
     loadSequences.set(productId, nextSeq);
@@ -1198,13 +1467,19 @@ export async function loadSeismicBrowser(manifestUrl: string): Promise<THREE.Obj
         const exactLoadTierRequired = tier === SEISMIC_COARSE_LOD_TIER;
         const keepCurrent =
           current &&
+          (current.includeVolume || !includeVolume) &&
           (current.tier === tier ||
             (!exactLoadTierRequired &&
               SEISMIC_LOD_RANK[current.tier] >= SEISMIC_LOD_RANK[tier]));
         if (keepCurrent) {
           return;
         }
-        const productGroup = await buildSeismicProductGroup(product, resolveAsset, tier);
+        const productGroup = await buildSeismicProductGroup(
+          product,
+          resolveAsset,
+          tier,
+          { includeVolume },
+        );
         if (
           loadSequences.get(productId) !== nextSeq ||
           (retainedProductIds.size > 0 && !retainedProductIds.has(productId))
@@ -1212,7 +1487,7 @@ export async function loadSeismicBrowser(manifestUrl: string): Promise<THREE.Obj
           disposeSeismicProductObject(productGroup);
           return;
         }
-        installProductGroup(productId, productGroup, tier);
+        installProductGroup(productId, productGroup, tier, { includeVolume });
       };
       if (!loadedProducts.has(productId) && requestedTier !== SEISMIC_COARSE_LOD_TIER) {
         await loadTier(SEISMIC_COARSE_LOD_TIER);
@@ -1225,7 +1500,11 @@ export async function loadSeismicBrowser(manifestUrl: string): Promise<THREE.Obj
       }
       publishRuntimeState();
     });
-    pendingProducts.set(productId, { promise: task, tier: requestedTier });
+    pendingProducts.set(productId, {
+      promise: task,
+      tier: requestedTier,
+      includeVolume,
+    });
     publishRuntimeState();
     await task;
   };
@@ -1243,7 +1522,11 @@ export async function loadSeismicBrowser(manifestUrl: string): Promise<THREE.Obj
     seismicApproxBytesByProduct: {},
     seismicApproxTotalBytes: 0,
     seismicProductPayloadPolicy: "visible-style-request-only",
-    seismicEnsureProductsLoaded(productIds: string[], tier?: SeismicLodTierName) {
+    seismicEnsureProductsLoaded(
+      productIds: string[],
+      tier?: SeismicLodTierName,
+      options?: SeismicProductLoadOptions,
+    ) {
       const requestedTier =
         tier === "coarse" || tier === "source" || tier === "standard"
           ? tier
@@ -1253,7 +1536,7 @@ export async function loadSeismicBrowser(manifestUrl: string): Promise<THREE.Obj
       );
       return Promise.all(
         uniqueProductIds.map((productId) =>
-          ensureOneProductLoaded(productId, requestedTier),
+          ensureOneProductLoaded(productId, requestedTier, options),
         ),
       ).then(() => undefined);
     },

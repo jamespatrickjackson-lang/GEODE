@@ -1180,6 +1180,54 @@
       "backedBy": "EditableStyle.seismicTimeScale",
       "setterRoute": "setEnvLayerStyle/setPageLayerOverride",
       "status": "active"
+    },
+    {
+      "id": "seismic.sections.all-2d",
+      "label": "All 2D sections",
+      "kind": "control",
+      "parentId": "section.forge-data",
+      "sourceFile": "src/editor/layerControls/seismic/SeismicCapabilityLayerContainers.tsx",
+      "sourceAnchor": "data-testid=\"seismic-capability-all-2d-sections\"",
+      "scope": "seismic layers",
+      "backedBy": "EditableStyle.seismicProductVisibility, EditableStyle.seismicRenderMode, EditableStyle.seismicSliceAxis",
+      "setterRoute": "SeismicCapabilityLayerContainers commit",
+      "status": "active"
+    },
+    {
+      "id": "seismic.sections.survey-plus-2d",
+      "label": "Survey + sections",
+      "kind": "control",
+      "parentId": "section.forge-data",
+      "sourceFile": "src/editor/layerControls/seismic/SeismicCapabilityLayerContainers.tsx",
+      "sourceAnchor": "data-testid=\"seismic-capability-survey-plus-2d-sections\"",
+      "scope": "seismic layers",
+      "backedBy": "EditableStyle.seismicProductVisibility, EditableStyle.seismicNavigationVisible, EditableStyle.seismicNavigationRoleVisibility",
+      "setterRoute": "SeismicCapabilityLayerContainers commit",
+      "status": "active"
+    },
+    {
+      "id": "seismic.sections.hide-2d",
+      "label": "Hide 2D",
+      "kind": "control",
+      "parentId": "section.forge-data",
+      "sourceFile": "src/editor/layerControls/seismic/SeismicCapabilityLayerContainers.tsx",
+      "sourceAnchor": "data-testid=\"seismic-capability-hide-2d-sections\"",
+      "scope": "seismic layers",
+      "backedBy": "EditableStyle.seismicProductVisibility",
+      "setterRoute": "SeismicCapabilityLayerContainers commit",
+      "status": "active"
+    },
+    {
+      "id": "seismic.products.source-gated",
+      "label": "Source-gated products",
+      "kind": "control-family",
+      "parentId": "section.forge-data",
+      "sourceFile": "src/editor/layerControls/seismic/SeismicCapabilityLayerContainers.tsx",
+      "sourceAnchor": "seismic-source-gate-${gate.id}",
+      "scope": "seismic layers",
+      "backedBy": "ProjectLayerSpec.metadata.seismicRequiredProductSourceGates",
+      "setterRoute": "read-only source gate with optional GDR landing-page action",
+      "status": "active"
     }
   ]
 }

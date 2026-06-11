@@ -34,6 +34,7 @@ export function SeismicProductVisibilityControls({
   const productGroups = seismicProductGroups(products);
   const setProductVisible = (id: string, visible: boolean) => {
     commit({
+      ...(visible ? { visible: true } : {}),
       seismicProductVisibility: {
         ...productVisibility,
         [id]: visible,
@@ -43,14 +44,18 @@ export function SeismicProductVisibilityControls({
   const setVisibilityForProducts = (
     predicate: (product: SeismicProductOption) => boolean,
   ) => {
+    const nextVisibility = Object.fromEntries(
+      products.map((product) => [product.id, predicate(product)]),
+    );
+    const anyVisible = Object.values(nextVisibility).some(Boolean);
     commit({
-      seismicProductVisibility: Object.fromEntries(
-        products.map((product) => [product.id, predicate(product)]),
-      ),
+      ...(anyVisible ? { visible: true } : {}),
+      seismicProductVisibility: nextVisibility,
     });
   };
   const selectProduct = (id: string) => {
     commit({
+      visible: true,
       seismicProductId: id,
       seismicProductVisibility: {
         ...productVisibility,

@@ -963,6 +963,30 @@ def diagnostic_tile_entries(catalog: list[dict]) -> list[dict]:
     return entries
 
 
+def ensure_naip_diagnostic_crs_registration(metadata: dict) -> bool:
+    if isinstance(metadata.get("crsRegistration"), dict):
+        return False
+    metadata["crsRegistration"] = {
+        "horizontalCrs": "EPSG:26912",
+        "verticalDatum": "public terrain/vector source elevation or draped terrain context in metres",
+        "units": "m",
+        "coordinateBasis": "utm",
+        "origin": {
+            "easting_m": 341467.35,
+            "northing_m": 4273374.5,
+            "elevation_m": 0,
+        },
+        "rotationDeg": 0,
+        "registrationStatus": "unverified",
+        "accuracyClaimStatus": "CRS/datum review required",
+        "notes": (
+            "NAIP county-source diagnostic bounds are derived from EPSG:26912 "
+            "source rasters and remain review-gated for exact CRS/datum claims."
+        ),
+    }
+    return True
+
+
 def object_uses_regional_naip(value: dict) -> bool:
     if value.get("materialPreset") == f"image:{NAIP_MATERIAL_ID}":
         return True
@@ -1009,6 +1033,7 @@ def update_naip_metadata_value(
             and isinstance(value.get("metadata"), dict)
         ):
             metadata = value["metadata"]
+            changed = ensure_naip_diagnostic_crs_registration(metadata) or changed
             tiles = diagnostic_tile_entries(catalog)
             if metadata.get("naipTiles") != tiles:
                 metadata["naipTiles"] = tiles

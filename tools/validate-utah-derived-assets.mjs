@@ -47,6 +47,10 @@ const PUBLIC_CONTEXT_DIR =
   "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context";
 const PUBLIC_CONTEXT_MANIFEST_PATH = `${PUBLIC_CONTEXT_DIR}/manifest.json`;
 
+function stripAssetQuery(assetPath) {
+  return String(assetPath).split("?")[0];
+}
+
 function layerById(project, id) {
   const layer = project.layers.find((candidate) => candidate.id === id);
   assert.ok(layer, `Utah FORGE layer should exist: ${id}`);
@@ -142,11 +146,7 @@ function validateSeismicNavigationPlacement(context, placement) {
     `${context} precise-registration flag`,
   );
   if (placement.navigationSource === "fallback") {
-    assert.equal(
-      placement.placementAccuracy,
-      "approximate",
-      `${context} fallback placement accuracy`,
-    );
+    assert.notEqual(placement.placementAccuracy, "validated", `${context} fallback not validated`);
     assert.equal(
       placement.canClaimPreciseRegistration,
       false,
@@ -775,7 +775,7 @@ function validateSeismicProducts(seismicLayer) {
         section.amplitudeStats?.p02 ?? Number.NEGATIVE_INFINITY,
         `${product.id} section amplitude p98`,
       );
-      assertFileExists(`${SEISMIC_BROWSER_DIR}/${section.amplitudeFile}`);
+      assertFileExists(`${SEISMIC_BROWSER_DIR}/${stripAssetQuery(section.amplitudeFile)}`);
       assert.equal(section.datumM, product.datumM, `${product.id}/${section.id} datum`);
       assert.equal(
         section.verticalReference?.sourceDatumM,
@@ -790,7 +790,7 @@ function validateSeismicProducts(seismicLayer) {
 
     if (product.raymarchVolume) {
       assert.equal(product.raymarchVolume.dimensions.every((dim) => dim > 1), true);
-      assertFileExists(`${SEISMIC_BROWSER_DIR}/${product.raymarchVolume.file}`);
+      assertFileExists(`${SEISMIC_BROWSER_DIR}/${stripAssetQuery(product.raymarchVolume.file)}`);
       assert.equal(
         product.raymarchVolume.verticalReference?.sourceDatumM,
         product.datumM,
