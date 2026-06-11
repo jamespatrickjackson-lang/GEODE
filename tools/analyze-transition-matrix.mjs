@@ -1890,4 +1890,3 @@ if (process.argv[1] && path.resolve(process.argv[1]) === thisFile) {
 }
 
 export { analyzeManifest, formatAnalysisMarkdown };
-

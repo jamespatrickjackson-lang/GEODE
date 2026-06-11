@@ -81,4 +81,3 @@ derived from SEG-Y trace-header UTM/source coordinates and textual-header
 datum/sample metadata when those fields are present. Tests may inspect deck
 review pages only as deck-state checks; app/runtime behavior tests must assert
 the reusable loader, manifest, source-gate, and mesh-generation contracts.
-

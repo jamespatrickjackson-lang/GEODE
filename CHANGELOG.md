@@ -165,4 +165,3 @@
 Earlier session-snapshot entries (2026-05-11 and 2026-05-12) moved to
 [CHANGELOG-Archive.md](./CHANGELOG-Archive.md) on 2026-05-26 to keep
 this log scannable.
-

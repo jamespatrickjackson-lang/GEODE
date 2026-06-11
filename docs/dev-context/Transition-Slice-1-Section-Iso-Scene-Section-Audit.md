@@ -38,7 +38,7 @@ Hypotheses to confirm or reject:
 
 ## Transition classifier / layer tween runtime
 
-Pattern: `transitionEffectiveLayersForPage|LayerTransitionKind|transitionEnvelopeAllowsLayer|tickLayerTweens|layerTween|snapshot|crossfade|full-density-scalar|discrete-crossfade|fade-opacity` 
+Pattern: `transitionEffectiveLayersForPage|LayerTransitionKind|transitionEnvelopeAllowsLayer|tickLayerTweens|layerTween|snapshot|crossfade|full-density-scalar|discrete-crossfade|fade-opacity`
 
 - src\scene\CLAUDE.md:21 — and `transitions/layerTweenRuntime.ts` — R2 extracted helpers.
 - src\scene\layerDiagnostics.ts:9 — export interface LayerDiagnosticsSnapshot {
@@ -368,7 +368,7 @@ Pattern: `transitionEffectiveLayersForPage|LayerTransitionKind|transitionEnvelop
 
 ## Scene section masks, helpers, and no-bleed paths
 
-Pattern: `sceneSection|SceneSection|sceneSectionEnabled|sceneSectionFrameEnabled|sceneSectionHelperTransitionOpacity|rebuildSceneSectionHelpers|applySceneSectionPlanes|applySceneSectionHelperTransitionOpacity|groundTrace|frame outline|helper snapshot|active-to-inactive|target-active` 
+Pattern: `sceneSection|SceneSection|sceneSectionEnabled|sceneSectionFrameEnabled|sceneSectionHelperTransitionOpacity|rebuildSceneSectionHelpers|applySceneSectionPlanes|applySceneSectionHelperTransitionOpacity|groundTrace|frame outline|helper snapshot|active-to-inactive|target-active`
 
 - src\scene\CLAUDE.md:17 — - `section/sceneSectionController.ts` — ~1,180 lines; largest extracted
 - src\scene\SceneManager.ts:95 — type SceneSectionStyleTween,
@@ -2032,7 +2032,7 @@ Pattern: `sceneSection|SceneSection|sceneSectionEnabled|sceneSectionFrameEnabled
 
 ## Section ISO / cut ISO derived roots
 
-Pattern: `sectionIso|SectionIso|section-iso|isoOverlay|volumeCutIso|targetRoots|sourceRoots|transitionOwned|heightSampler|root|dispose|attach|clear|rebuild|line|band|isobar|isoline` 
+Pattern: `sectionIso|SectionIso|section-iso|isoOverlay|volumeCutIso|targetRoots|sourceRoots|transitionOwned|heightSampler|root|dispose|attach|clear|rebuild|line|band|isobar|isoline`
 
 - src\scene\captureCameraPathOverlayLine.ts:2 — import { Line2 } from "three/examples/jsm/lines/Line2.js";
 - src\scene\captureCameraPathOverlayLine.ts:3 — import { LineGeometry } from "three/examples/jsm/lines/LineGeometry.js";
@@ -5876,7 +5876,7 @@ Pattern: `sectionIso|SectionIso|section-iso|isoOverlay|volumeCutIso|targetRoots|
 
 ## Opacity composition and direct opacity writes
 
-Pattern: `material\.opacity|uOpacity|opacityPolicy|transitionOpacity|authoredOpacity|baseOpacity|layerRenderOpacity|sectionIsoSourceOpacity|scalarVolumeOpacity|renderOpacity|outsideOpacity|attenuation|composed` 
+Pattern: `material\.opacity|uOpacity|opacityPolicy|transitionOpacity|authoredOpacity|baseOpacity|layerRenderOpacity|sectionIsoSourceOpacity|scalarVolumeOpacity|renderOpacity|outsideOpacity|attenuation|composed`
 
 - src\scene\layerLoaders.ts:274 — lineMaterial.opacity = 1;
 - src\scene\SceneManager.ts:157 — applySceneSectionHelperTransitionOpacity as applySceneSectionHelperTransitionOpacityImpl,
@@ -6246,7 +6246,7 @@ Pattern: `material\.opacity|uOpacity|opacityPolicy|transitionOpacity|authoredOpa
 
 ## Working-area focus composition
 
-Pattern: `workingArea|WorkingArea|working-area|focusTween|uWorkingAreaFocus|outsideOpacity|targetLayerIds|mask|clip|attenuation` 
+Pattern: `workingArea|WorkingArea|working-area|focusTween|uWorkingAreaFocus|outsideOpacity|targetLayerIds|mask|clip|attenuation`
 
 - src\scene\CLAUDE.md:20 — `terrain/terrainStyleController.ts`, `workingArea/workingAreaFocusController.ts`,
 - src\scene\CLAUDE.md:28 — - `scalarFocus.ts` — scalar focus / working-area clip helpers.
@@ -7296,7 +7296,7 @@ Pattern: `workingArea|WorkingArea|working-area|focusTween|uWorkingAreaFocus|outs
 
 ## Live state vs saved/default/global state
 
-Pattern: `previewEnvironmentBase|Global Settings|environmentBase|visibilityOverrides|layerOverrides|effectiveStyle|effectiveVisibility|selectedAuthoringTarget|authoringTarget|current live|saved page|target resolved|source graph|target graph` 
+Pattern: `previewEnvironmentBase|Global Settings|environmentBase|visibilityOverrides|layerOverrides|effectiveStyle|effectiveVisibility|selectedAuthoringTarget|authoringTarget|current live|saved page|target resolved|source graph|target graph`
 
 - src\pages\effective.ts:124 — //                page.visibilityOverrides, force-show on true / force-hide
 - src\pages\effective.ts:126 — //   styling:     shallow-merge env.layerStyles[id] then page.layerOverrides[id]
@@ -7648,7 +7648,7 @@ Pattern: `previewEnvironmentBase|Global Settings|environmentBase|visibilityOverr
 
 ## Final commit / delayed async reapply
 
-Pattern: `finalizePageTransitionCommit|final commit|post-commit|lateReapply|deferred|target apply|overlay-end|tween-completion|commitTrace|final target|reassert|replay` 
+Pattern: `finalizePageTransitionCommit|final commit|post-commit|lateReapply|deferred|target apply|overlay-end|tween-completion|commitTrace|final target|reassert|replay`
 
 - src\pages\PageController.tsx:165 — lateReapply: NonNullable<SceneTransitionDebugState>["lateReapply"] | null;
 - src\pages\PageController.tsx:195 — lateReapplyTotalCount: number;

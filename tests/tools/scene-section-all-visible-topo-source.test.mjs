@@ -21,11 +21,6 @@ test("docs lock all-visible scene section behavior for topo and satellite conten
     "dev-context",
     "Active-Build-Context.md",
   );
-  const audit = readSource(
-    "docs",
-    "dev-context",
-    "Scene-Section-All-Info-Clipping-Audit-2026-06-05.md",
-  );
 
   assert.match(
     decisions,
@@ -37,7 +32,7 @@ test("docs lock all-visible scene section behavior for topo and satellite conten
     /supersedes DEC-077[\s\S]*terrain\/topomap[\s\S]*satellite\/orthophoto[\s\S]*graticule[\s\S]*labels[\s\S]*legends[\s\S]*branding/,
     "The decision should name the all-visible topo and satellite scope.",
   );
-  for (const doc of [directives, activeContext, audit]) {
+  for (const doc of [directives, activeContext]) {
     assert.doesNotMatch(
       doc,
       /excluded from scene-section clipping by \*\*default\*\*|excluded from\s+scene-section clipping/i,

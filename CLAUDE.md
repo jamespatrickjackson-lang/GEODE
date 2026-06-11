@@ -199,4 +199,3 @@ Before transition runtime, editor/save transition gating, scene-section, Section
 docs/dev-context/Transition-Runtime-Operating-Spec.md
 
 This spec is the active operating contract for current transition work. Older audits and matrix logs are evidence only.
-
