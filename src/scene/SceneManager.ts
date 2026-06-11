@@ -1634,6 +1634,18 @@ export class SceneManager {
         : this.cloneTransitionMaterial(sourceRenderable.material);
     }
     for (const child of source.children) {
+      // Section ISO overlay roots are derived transition-scene entities with
+      // their own crossfade owner (TRD-011). Cloning them into layer
+      // snapshots double-draws the contours and drags them through the
+      // layer envelope against that owner.
+      if (
+        child.userData?.mtVolumeSectionIsoOverlayGroup === true ||
+        child.userData?.seismicVolumeSectionIsoOverlayGroup === true ||
+        child.userData?.seismicResistivitySectionIsoOverlayGroup === true ||
+        child.userData?.sectionIsoOverlayTransitionRoot === true
+      ) {
+        continue;
+      }
       snapshot.add(this.cloneTransitionObjectTree(id, child));
     }
     return snapshot;
@@ -1888,6 +1900,26 @@ export class SceneManager {
   commitSectionIsoOverlayTransition(): void {
     const transition = this.sectionIsoOverlayTransition;
     if (!transition) return;
+    if (transition.targetOpacity < 0.98) {
+      // The crossfade has not landed yet. Snapping the remaining envelope
+      // to 1 in one frame is the visible "iso pop" regression, so land the
+      // remainder on a short residual clock instead; tickLayerTweens keeps
+      // ticking this transition until it really finishes.
+      const now = performance.now();
+      const elapsed =
+        transition.durationMs <= 0
+          ? 1
+          : (now - transition.startMs) / transition.durationMs;
+      if (elapsed < 1) return;
+      const remainingMs = Math.max(
+        120,
+        (1 - transition.targetOpacity) * 360,
+      );
+      transition.startMs = now - remainingMs * transition.targetOpacity;
+      transition.durationMs = remainingMs;
+      transition.easing = "linear";
+      return;
+    }
     this.tickSectionIsoOverlayTransition(
       transition.startMs + transition.durationMs,
       1,
@@ -4055,6 +4087,14 @@ export class SceneManager {
     environment: EnvironmentSetup,
     page: PresentationPage,
   ): void {
+    // A full reapply may land while a Section ISO root crossfade is still
+    // ramping (late async layer resolve, deferred editor reapply). Discarding
+    // that ramp and rebuilding overlays at full opacity is the visible
+    // "isolines pop in after the transition" regression, so capture the
+    // in-flight envelope and resume the landing after the rebuild.
+    const inFlightIsoEnvelope = this.sectionIsoOverlayTransition
+      ? clamp01(this.sectionIsoOverlayTransition.targetOpacity)
+      : null;
     this.layerTweens.clear();
     this.scalarStyleTweens.clear();
     this.workingAreaFocusTween = null;
@@ -4075,6 +4115,26 @@ export class SceneManager {
       effectiveStyle(environment, page, UTAH_FORGE_WORKING_AREA_FOCUS_LAYER_ID),
     );
     this.applyLakesToTerrain(environment, page);
+    if (inFlightIsoEnvelope !== null && inFlightIsoEnvelope < 0.98) {
+      this.resumeSectionIsoOverlayLanding(inFlightIsoEnvelope);
+    }
+  }
+
+  private resumeSectionIsoOverlayLanding(envelope: number): void {
+    const groups = this.sectionIsoOverlayGroupsForTransition();
+    if (groups.length === 0) return;
+    const remainingMs = Math.max(160, (1 - envelope) * 420);
+    this.sectionIsoOverlayTransition = {
+      sourceRoots: [],
+      targetRoots: [],
+      startMs: performance.now() - remainingMs * envelope,
+      durationMs: remainingMs,
+      easing: "linear",
+      targetOpacity: envelope,
+    };
+    for (const { kind, layerId, group } of groups) {
+      this.registerSectionIsoOverlayTransitionTargetRoot(kind, layerId, group);
+    }
   }
 
   applyEffectiveVisibilityForPage(

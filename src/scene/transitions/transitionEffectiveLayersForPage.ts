@@ -3,7 +3,9 @@ import { effectiveStyle, effectiveVisibility } from "../../pages/effective";
 import { CASE_STUDY_B_DEMO_LAYER_ALIASES } from "../../projectModules/caseStudyB/demoLayerAliases";
 import {
   UTAH_FORGE_MT_RESISTIVITY_FULL_DENSITY_LAYER_ID,
+  UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID,
   UTAH_FORGE_SCENE_SECTION_LAYER_ID,
+  UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID,
 } from "../../projectModules/utahForge/layerIds";
 import {
   productTransitionDecisionsForLayer,
@@ -674,13 +676,46 @@ export function transitionEffectiveLayersForPage(
       }),
     );
   }
-  this.beginSectionIsoOverlayTransition(
-    fromSceneSectionStyle,
-    targetSceneSectionStyle,
-    now,
-    duration,
-    easing,
-  );
+  // Section ISO roots crossfade only when their resolved state actually
+  // changes. Matched cut identity with unchanged section masks and unchanged
+  // overlay style must stay continuous (no self-crossfade dip); the live
+  // roots are protected through the sectionIsoStable envelope instead.
+  const sectionIsoRootSourceLayerIds = [
+    UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID,
+    UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID,
+  ];
+  const sectionIsoRootStateChanged = sectionIsoRootSourceLayerIds.some((id) => {
+    const fromStyle = effectiveStyle(fromEnvironment, fromPage, id);
+    const toStyle = effectiveStyle(toEnvironment, toPage, id);
+    const fromOn = fromVisible.has(id) && sectionIsoOverlayVisible(fromStyle);
+    const toOn = toVisible.has(id) && sectionIsoOverlayVisible(toStyle);
+    if (fromOn !== toOn) return true;
+    if (!toOn) return false;
+    if (scalarTransitionStyleChanged(fromStyle, toStyle)) return true;
+    if (
+      (fromStyle.sectionIsoLinesVisible !== false) !==
+        (toStyle.sectionIsoLinesVisible !== false) ||
+      (fromStyle.sectionIsoBandsVisible !== false) !==
+        (toStyle.sectionIsoBandsVisible !== false)
+    ) {
+      return true;
+    }
+    return (
+      JSON.stringify(fromStyle.sectionIsoTargetIds ?? null) !==
+      JSON.stringify(toStyle.sectionIsoTargetIds ?? null)
+    );
+  });
+  if (sceneSectionStyleChanged || sectionIsoRootStateChanged) {
+    this.beginSectionIsoOverlayTransition(
+      fromSceneSectionStyle,
+      targetSceneSectionStyle,
+      now,
+      duration,
+      easing,
+    );
+  } else {
+    this.discardSectionIsoOverlayTransition?.();
+  }
 
   this.sceneSectionReapplySuspended = true;
   try {
