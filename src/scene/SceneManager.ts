@@ -1771,13 +1771,24 @@ export class SceneManager {
   discardSectionIsoOverlayTransition(): void {
     const transition = this.sectionIsoOverlayTransition;
     if (!transition) return;
-    for (const root of transition.targetRoots) {
-      root.group.parent?.remove(root.group);
-      disposeObjectTree(root.group);
-    }
-    for (const root of transition.sourceRoots) {
-      root.group.parent?.remove(root.group);
-      disposeObjectTree(root.group);
+    for (const root of [...transition.sourceRoots, ...transition.targetRoots]) {
+      const isCloneSnapshot =
+        root.group.userData?.sectionIsoOverlayTransitionRole === "source" ||
+        root.group.userData?.transitionSnapshotForLayer !== undefined;
+      if (isCloneSnapshot) {
+        root.group.parent?.remove(root.group);
+        disposeObjectTree(root.group);
+        continue;
+      }
+      // Live overlay groups are registered as transition target roots.
+      // Disposing them here destroys visible Section ISO content the moment
+      // a chained navigation interrupts a running transition (instant pop
+      // out, then pop back in at the next full apply). Leave live roots in
+      // the scene at their current envelope; the next transition snapshots
+      // them as sources, and inactive-target exits still clear them through
+      // the section-iso-disabled style path.
+      delete root.group.userData.sectionIsoOverlayTransitionRoot;
+      delete root.group.userData.sectionIsoOverlayTransitionRole;
     }
     this.sectionIsoOverlayTransition = null;
   }
@@ -4518,11 +4529,41 @@ export class SceneManager {
       "async-layer-resolve",
       "full-current-page-state",
     );
+    const previousLayerOpacity = new Map<string, number>();
+    if (isAsyncLayerResolve && env && page) {
+      for (const [id, group] of this.layers) {
+        previousLayerOpacity.set(
+          id,
+          group.visible ? this.currentRenderOpacityForTree(group, 0) : 0,
+        );
+      }
+    }
     if (env) this.applyEnvironment(env);
     if (env && page) {
       this.applyEffectiveVisibilityForPage(env, page);
       this.applyEffectiveStylesForPage(env, page);
       this.applyPageScene(page);
+      if (isAsyncLayerResolve) {
+        // Readiness rule: a layer whose data resolves after the page landed
+        // must not flash to full opacity. Each late arrival popped at its
+        // own load moment ("things snap in at different paces"); enter it
+        // on the default layer fade instead.
+        const now = performance.now();
+        for (const [id, group] of this.layers) {
+          if (!group.visible) continue;
+          const target = this.targetOpacityForLayer(env, page, id);
+          if (target <= 0.001) continue;
+          if ((previousLayerOpacity.get(id) ?? 0) > 0.001) continue;
+          this.applyLayerRenderOpacity(id, 0);
+          this.layerTweens.set(id, {
+            from: 0,
+            to: target,
+            startMs: now,
+            durationMs: DEFAULT_LAYER_FADE_MS,
+            easing: "easeInOutCubic",
+          });
+        }
+      }
     }
   }
 

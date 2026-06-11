@@ -56,6 +56,36 @@ threshold-ghosting commit referencing this doc)
    authored `timeCurve` is now the motion authority (DEC-144); the hidden
    power-2.6 re-ease and the 0.72-window boundary rewrite are gone.
 
+## Slice 3 findings (2026-06-11, after first user test on the fixed branch)
+
+User report: content snaps in/out too fast at differing paces, terrain
+("full elevated map") pops back, pop in/out during chained navigation.
+Two mechanisms found and fixed:
+
+1. `discardSectionIsoOverlayTransition` disposed transition TARGET roots,
+   which are the LIVE overlay groups. Every navigation calls discard at
+   transition setup, so chained navigation (next nav within the previous
+   transition/landing window) destroyed visible ISO content instantly and
+   the matched-hop gate no longer rebuilt it with a fade. Fix: discard now
+   disposes only clone snapshots (role "source" /
+   `transitionSnapshotForLayer`); live groups stay in the scene at their
+   current envelope so the next transition snapshots them for continuity.
+   Inactive-target exits still clear through the section-iso-disabled style
+   path.
+2. Async layer loads resolving AFTER a transition finalized fell through
+   `reapplyCurrentPageState` to a full style/visibility apply, so each
+   late-loading layer (terrain tiles, products) appeared instantly at full
+   opacity at its own data-arrival moment — "snap in at different paces".
+   Fix: the full reapply path now records which layers were effectively
+   invisible before, and newly visible layers enter through an 800 ms
+   `layerTweens` fade (Operating Spec readiness rule).
+
+Camera-travel-time awareness: the camera tween and all scene fades already
+share the authored `transition.duration` and start together
+(PageController `goto`). Distance-adaptive durations (longer flights ->
+longer fades) would be a new authored-timing decision (needs a TRD/DEC
+entry); not implemented.
+
 ## Open items, in priority order
 
 -1. **FIXED (2026-06-11):** the remaining mid-tween line-overlay jump was a
