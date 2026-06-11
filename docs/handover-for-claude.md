@@ -87,8 +87,11 @@ Important:
 - Utah FORGE now has public topo/terrain context, Phase 3 MT products, seismic
   browser records, section tooling, site details, product pages, overlays, and
   legends.
-- The current visible cloud QA fixture is `Topo test cloud`, an
-  `atmosphere-volume` environmental layer.
+- The current cloud QA layer is `Topo test cloud`, an `atmosphere-volume`
+  environmental layer with authoring-state scoped visibility.
+- Seismic sections are trace-header driven before navigation/envelope fallback.
+  L5/L11 may use transformed trace-header paths, but precise registration
+  remains unvalidated.
 - Visual alignment is not survey-grade registration. Imported geospatial layers
   still need explicit CRS, vertical datum, and registration-status evidence
   before precise claims.

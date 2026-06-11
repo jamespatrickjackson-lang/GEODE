@@ -457,8 +457,8 @@ projects/utah-forge/
 
 Utah FORGE is no longer foundation-only. It is an active geothermal/geophysics
 case-study project with public topo context, Phase 3 MT products, seismic
-browser records, section/working-area tooling, and a current visible Topo test
-cloud. Older prose that describes it as procedural-only is historical unless
+browser records, section/working-area tooling, and an editable Topo test cloud
+local atmosphere layer. Older prose that describes it as procedural-only is historical unless
 confirmed against current project files.
 
 Runtime content is loaded from `project.json`, `environment.json`, pages,
@@ -496,7 +496,10 @@ Geophysical layers include source-derived Phase 3 MT stations, full-density MT
 point/volume/slice/threshold/top-surface products, seismic browser products,
 well/site context, and public reference context. Precise registration language
 is blocked unless layer metadata records validated CRS/control-point evidence.
-Approximate/fallback seismic placement remains renderable visual context but
+Seismic section placement is trace-header driven when source coordinates exist:
+visible curtains use stored trace paths or surface grids rather than row/column
+image indexes or endpoint-only rectangles. Approximate/envelope fallback remains
+renderable visual context only when source trace geometry is unavailable and
 must not be described as survey-accurate.
 
 ## Shahbazi Data Architecture

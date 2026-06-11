@@ -119,6 +119,32 @@ scene coordinates. The ANI PSDM unenhanced 3D product reports IL `1-170`, XL
 source headers. The enhanced ANI PSDM file remains source-gated and is not
 substituted from the unenhanced product.
 
+L5/L11 legacy sections are no longer treated as endpoint-only fallback when
+trace-header CMP coordinates can be transformed plausibly from legacy NAD27
+State Plane feet into EPSG:26912. They remain unvalidated for precise
+registration: manifests and sections must keep `canClaimPreciseRegistration:
+false`, non-validated placement wording, and review-gated CRS/status metadata.
+
+Review pages `59_all_seismic_sections_review` and
+`60_all_2d_seismic_sections_review` are deck-state review pages. They must not
+be used as reusable app-runtime proof, and guards must not depend on deleted or
+renumbered Utah FORGE pages such as former page 5. Runtime correctness is
+protected by manifest/loader/source-gate tests, not by page fixture identity.
+
+The 2026-06-11 integration with the Claude transition/capture branch resolved
+known conflicts by keeping the regenerated trace-header seismic manifest,
+preserving Claude's transition/capture runtime work, retaining the
+topo-cloud/source-fidelity guards, and appending the seismic decisions after
+Claude's DEC-142 through DEC-145 sequence as DEC-146 and DEC-147.
+
+Regression guard commands:
+
+- `node tests/tools/seismic-trace-geometry-source.test.mjs`
+- `node tests/tools/seismic-product-catalog-source.test.mjs`
+- `node tests/tools/utah-forge-source-fidelity-source.test.mjs`
+- `npm run check:seismic-source-gates`
+- `npm run check:editor-controls`
+
 ## Follow-Up
 
 If a corrected GDR zip or standalone SEG-Y is supplied, place it in the Phase 3

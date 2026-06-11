@@ -46,7 +46,8 @@
 | Public topo map is the first global toolset pattern. | Observed | `src/topoMap/`, `src/editor/topoMap/`, `docs/dev-context/Global-Toolset-Structure.md`, `tests/topo-map/` |
 | Topo Environment is now grouped under Topo with Scene atmosphere, Clouds, Sun, and Fog. | Observed | `src/editor/topoMap/TopoMapPanel.tsx`, `src/editor/layerControls/atmosphere/AtmosphereVolumeControls.tsx`, `docs/dev-context/Topo-Editor-Panel-Audit-2026-06-03.md` |
 | Local clouds/mist are `atmosphere-volume` environmental layers with generated-canvas sprite puffs, no external asset, no `Data3DTexture`, and no global fog mutation path. | Observed | `src/scene/atmosphere/`, `src/scene/layerLoaders.ts`, `src/scene/styles/atmosphereVolumeStyle.ts`, `tests/tools/local-atmosphere-volume-source.test.mjs` |
-| Utah FORGE has an intentionally visible one-puff Topo test cloud for current visual review. | Observed + human accepted in thread | `projects/utah-forge/project.json`, `projects/utah-forge/environment.json`, `projects/utah-forge/pages/<disposable-page>.json`, `tests/tools/topo-cloud-authoring-source.test.mjs` |
+| Utah FORGE has an editable one-puff Topo test cloud atmosphere layer for current visual review. Visibility is authoring-state scoped, not guaranteed by a durable page fixture. | Observed | `projects/utah-forge/project.json`, `projects/utah-forge/environment.json`, `tests/tools/topo-cloud-authoring-source.test.mjs` |
+| Utah FORGE seismic sections are trace-header driven before navigation/envelope fallback. L5/L11 may use transformed trace-header paths but remain unvalidated for precise registration. | Observed | `prep/build_utah_forge_seismic_browser.py`, `projects/utah-forge/data/geosee_processed/utah_forge_phase_3/seismic_analysis/browser/seismic_manifest.json`, `tests/tools/seismic-trace-geometry-source.test.mjs` |
 | Sun authoring now separates terrain light source, visible sky orb, halo, and source marker. | Observed | `src/scene/environment/sunVisual.ts`, `src/scene/environment/applyEnvironment.ts`, `tests/tools/topo-environment-sun-source.test.mjs` |
 | Cinematic page motion and post-processing transitions are active build surfaces. | Observed | `src/pages/dynamicCameraPose.ts`, `src/scene/transitions/cinematicSceneTransitions.ts`, `docs/rendering/cinematic-render-presets.md`, `tests/topo-map/cinematicCameraMotion.spec.ts` |
 | MT resistivity now has product-aware transition handling for sectioned scalar volumes, section ISO overlays, and threshold boundaries. | Observed | `src/scene/SceneManager.ts`, `tests/utah-forge/mt-rendering.spec.ts`, `docs/dev-context/Global-Toolset-Structure.md` |
@@ -67,10 +68,13 @@
 ## Utah FORGE Seismic State
 
 - Observed: Seismic browser products, manifests, prep scripts, source loader/editor/scene code, project config, environment config, and focused Utah browser tests exist.
+- Observed: Seismic section placement is trace-header driven. 3D inline/crossline sections carry trace-derived paths and sample-plane surface grids; 2D sections carry per-trace CMP paths when available.
+- Observed: L5/L11 legacy section paths can be derived from plausible transformed trace-header coordinates, but precise registration remains unvalidated and must not be claimed.
+- Observed: `Forge3d_ANI_PSDM_Stack_Enh.segy` remains source-gated and non-renderable until a complete CRC-valid source member exists.
 - Observed: Seismic section products now have editable figure annotations for outside-frame axes, ticks, titles, captions, distance scales, optional well traces, and optional horizon polylines. Labels and numbers are derived from active product/section metadata unless explicitly authored as presentation text.
 - Observed: Line 301 includes a figure-annotation presentation setup for the migrated-depth section. Optional interpretation overlays remain authored controls and are not source-validated picks by default.
 - Observed: `projects/utah-forge/DATA_LAYER_STATUS.md` records seismic as needed/underway, separates processed/render-ready/QA/provenance roles, and preserves the raw-to-computed artifact guardrail without changing runtime behavior.
-- Unverified / needs human review: Final demo loading/visibility policy for seismic remains pending human review.
+- Unverified / needs human review: Final visual acceptance for the current seismic review pages remains pending human browser review.
 
 ## Documentation Inventory Risk
 

@@ -84,8 +84,8 @@ In scope and currently kept:
 - Phase 3 seismic browser records and capability-product controls.
 - Section planes, working-area focus, site details, and current product pages.
 - Topo Environment controls for scene atmosphere, clouds, sun, and fog.
-- A current visible one-puff `Topo test cloud` used as the cloud visibility QA
-  fixture.
+- An editable one-puff `Topo test cloud` local atmosphere layer for Topo
+  Environment QA; visibility remains authoring-state scoped.
 
 Important scope note:
 
@@ -93,6 +93,8 @@ Utah FORGE is an active case study, not a foundation-only placeholder. Its
 current project/source/generated files are authoritative over older prose. Do
 not infer survey-grade accuracy from visual alignment; imported geospatial
 layers still require explicit registration status and review evidence.
+Seismic sections must use trace-header geometry before navigation/envelope
+fallback when source coordinates exist.
 
 ### Presenter / Preview
 

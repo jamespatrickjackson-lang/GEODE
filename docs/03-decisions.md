@@ -927,6 +927,11 @@ fake-cloud looks.
 
 **Trade-off accepted:** Some labels are longer than shorthand app names, and the editor needs grouped controls to keep them readable. Line 95 remains source-gated until a real product exists. Legacy L5/L11 fallback navigation remains approximate reference context under DEC-084 and cannot be promoted by renaming.
 
+**Superseded in part by DEC-147:** L5/L11 sections may use trace-header-derived
+State Plane-to-UTM paths when those coordinates are plausible. The approximate
+registration guard still applies; precise registration must not be claimed
+without control-point validation.
+
 ## DEC-088 - Site Details and station markers align to rendered topo as display-only state
 
 **Considered:** keep Site Details and MT station marker Z fixed at source-authored elevation regardless of terrain exaggeration and surface lift, or add authored display toggles that drape them to the currently rendered topo surface.
@@ -2362,6 +2367,9 @@ product through the normal manifest path.
 This decision supersedes any seismic browser behavior that placed 2D or 3D
 sections from file-order indexes, square trace-count grids, endpoint-only line
 segments, or the broad navigation envelope when trace coordinates are present.
+It also supersedes DEC-084 and DEC-087 only where those entries describe
+legacy L5/L11 sections as endpoint fallback geometry despite usable
+trace-header CMP coordinates.
 
 **Considered:** keep using existing section rectangles and page styles, repair
 only the visible editor toggles, approximate 3D sections from navigation
@@ -2390,4 +2398,7 @@ of collapsing them to first/last endpoints. Raymarch volumes may remain
 axis-aligned browser envelopes only when explicitly labeled as envelopes; do
 not claim validated exact volume orientation from those AABB meshes. Source
 gates such as `Forge3d_ANI_PSDM_Stack_Enh.segy` remain non-renderable until a
-complete CRC-valid source is available.
+complete CRC-valid source is available. L5/L11 trace-header paths may be used
+for placement after plausible State Plane-to-UTM transformation, but must keep
+`canClaimPreciseRegistration: false` and non-validated placement language until
+control-point validation exists.

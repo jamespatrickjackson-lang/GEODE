@@ -40,9 +40,9 @@ narrow patch
     high peaks.
   - Topo Environment is a Topo-owned container with Scene atmosphere, Clouds,
     Sun, and Fog. Fog and map fog belong there with the cloud and sun controls.
-  - The current Utah FORGE one-puff `Topo test cloud` is visible and was
-    accepted by the human in this thread. Its runtime texture source is
-    `generated-canvas`, not an external asset.
+  - The current Utah FORGE one-puff `Topo test cloud` is an editable
+    `atmosphere-volume` QA layer with authoring-state scoped visibility. Its
+    runtime texture source is `generated-canvas`, not an external asset.
   - Sun visual authoring separates light-source effects from visible sky
     imagery. The visible orb/halo/source marker can be hidden while terrain
     light remains active.

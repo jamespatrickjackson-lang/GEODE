@@ -30,6 +30,7 @@ Shared vocabulary for these states lives in `docs/dev-context/GeoSee-Terms.md`.
 - Utah runtime and derived-product integrity: `npm run check:utah-runtime`
 - Utah presentation snapshot drift: `npm run check:utah-snapshot`
 - Utah artifact metadata: `npm run check:artifacts`
+- Seismic source/geometry gates: `node tests/tools/seismic-trace-geometry-source.test.mjs`, `node tests/tools/seismic-product-catalog-source.test.mjs`, and `npm run check:seismic-source-gates`
 - Project artifact coverage: `npm run check:coverage`
 - Code/runtime compile risk: `npm run build`
 - Browser/render/editor behavior: targeted Utah browser scripts
@@ -41,6 +42,7 @@ Shared vocabulary for these states lives in `docs/dev-context/GeoSee-Terms.md`.
 - Project/page/overlay wiring changes: add `npm run check:pages`.
 - Layer file or runtime data path changes: add `npm run check:runtime-assets`.
 - Utah derived/data product changes: add `npm run check:utah-runtime`.
+- Seismic prep, seismic manifest, seismic editor controls, or seismic source-gate changes: run `node tests/tools/seismic-trace-geometry-source.test.mjs`, `node tests/tools/seismic-product-catalog-source.test.mjs`, and `npm run check:seismic-source-gates`. Add `node tests/tools/utah-forge-source-fidelity-source.test.mjs` when CRS, datum, registration, or source-fidelity metadata changes. Add `npm run check:editor-controls` when editor controls or the control manifest change.
 - Utah presentation sketch changes: use `npm run check:utah-snapshot` only when the sketch state is intentionally being checked.
 - Browser/render/editor behavior: run `npm run check:visual-qa-clean` before opening the app and again after closing the app, then use the smallest targeted Utah browser script that covers the changed behavior. If the after-check finds snapshot-sensitive files, stop and treat the browser evidence as contaminated by disposable page or overlay state until those files are reverted, stashed, or intentionally accepted.
 - Full `npm run test:utah-forge` is broad regression only, not default iteration. Treat it as committed-state evidence only when `npm run check:workspace` reports no relevant local sketch files.
@@ -71,4 +73,12 @@ App-behavior tests must use synthetic in-memory fixtures or fixture builders. Dy
 Deck snapshot, deck matrix, and presentation audit tools may inspect live pageOrder only when explicitly named as deck-state tools and excluded from app-health verification.
 
 If a failing behavior is observed on a page pair, the fix must be filed against the reusable behavior family: transition entity matching, effective-state resolution, layer style composition, visibility resolution, camera policy, legend state, save/persistence, or validation. Never fix by targeting the observed page pair.
+
+## Seismic Regression Rule
+
+Seismic browser placement is not a page-fixture problem. Section planes must be
+derived from SEG-Y trace-header UTM/source coordinates and textual-header
+datum/sample metadata when those fields are present. Tests may inspect deck
+review pages only as deck-state checks; app/runtime behavior tests must assert
+the reusable loader, manifest, source-gate, and mesh-generation contracts.
 

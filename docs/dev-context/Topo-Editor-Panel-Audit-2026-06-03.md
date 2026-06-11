@@ -22,9 +22,11 @@ select, show/hide, and page-override `atmosphere-volume` layers. The selected
 cloud uses `AtmosphereVolumeControls`, and its optional on-screen bounds helper
 uses the same bounds fields exposed in the panel.
 
-Utah FORGE now contains a deliberately visible one-puff `Topo test cloud`.
-Human review in this thread confirmed that the cloud was visible. Keep this
-fixture or an equivalent QA fixture available when making future cloud changes.
+At the time of this audit, Utah FORGE contained an explicitly enabled one-puff
+`Topo test cloud`, and human review in that thread confirmed that the cloud was
+visible. Current state is authoring-scoped: keep the editable cloud layer or an
+equivalent QA layer available when making future cloud changes, but do not force
+visibility through disposable page fixtures.
 
 ## Structure After Cleanup
 

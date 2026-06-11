@@ -95,11 +95,28 @@ APIs.
   the full-density target style to rebuild page-load Log10 Resistivity Window
   isolines. Skip that narrow refresh while a scalar tween is active, and never
   replace it with broad page visibility/style replay.
-- MT threshold boundary all-off maps are treated as empty/stale visibility
-  state. If the threshold-boundary layer is visible and no canonical or legacy
-  boundary is active, the resolver inherits default boundary visibility. Hide
-  the threshold-boundary layer to hide all boundary lines; do not repair this
-  with page-level fixture edits.
+- MT threshold boundary visibility maps carrying any explicit `visible` flag
+  are authoritative, including deliberate all-off maps ("show no
+  isosurfaces"). Only maps with no explicit visibility flags at all are
+  empty/stale and inherit default boundary visibility (DEC-145, supersedes
+  the earlier all-off-is-stale rule). Do not repair boundary visibility with
+  page-level fixture edits.
+- Utah FORGE seismic sections are trace-header driven. Do not plot 2D or 3D
+  seismic sections by product row/column index, square trace-count grids,
+  navigation envelopes, page fixtures, or endpoint-only paths when SEG-Y trace
+  geometry exists. `prep/build_utah_forge_seismic_browser.py` must preserve
+  Miller/GDR 1141 custom trace fields (CMP_X byte 189 and CMP_Y byte 193 as
+  4-byte IBM real values; inline bytes 9-10 and crossline bytes 13-14 as
+  2-byte integers), with standard SEG-Y coordinate fields only as fallback.
+  L5/L11 legacy sections may use trace-header-derived State Plane-to-UTM paths
+  when plausible, but must remain `canClaimPreciseRegistration: false` until
+  control-point validation exists. `Forge3d_ANI_PSDM_Stack_Enh.segy` remains a
+  source-gated non-renderable product until a complete CRC-valid source member
+  exists; use the GDR landing page only, never a constructed direct download
+  URL. For seismic geometry/source changes run
+  `node tests/tools/seismic-trace-geometry-source.test.mjs`,
+  `node tests/tools/seismic-product-catalog-source.test.mjs`, and
+  `npm run check:seismic-source-gates`.
 - No page-id, page-index, fixture-title, project page, or environment fixture
   special cases are allowed for viewport quick legends. Do not edit
   `projects/*/pages/**`, `projects/*/overlays/**`, `projects/*/project.json`,

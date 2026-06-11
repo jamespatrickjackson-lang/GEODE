@@ -134,6 +134,18 @@ figure annotations are a presentation layer on top of the seismic product rather
 than a new data product. Line 95 remains source-gated until a real source product
 exists.
 
+Current seismic section geometry is source-data driven. Visible 2D and 3D
+sections must use SEG-Y trace-header coordinates and source vertical metadata
+before any navigation or envelope fallback. Miller/GDR 1141 custom headers use
+CMP_X byte 189 and CMP_Y byte 193 as 4-byte IBM real values, plus inline bytes
+9-10 and crossline bytes 13-14 as 2-byte integers. Runtime section meshes
+tessellate the stored `path` or `surfaceGrid`; do not collapse them to
+first/last endpoints. L5/L11 legacy sections now use plausible transformed
+trace-header paths when available, but they remain unvalidated for precise
+registration. `Forge3d_ANI_PSDM_Stack_Enh.segy` is a visible source gate only
+until a complete CRC-valid source member exists; do not substitute the
+unenhanced product and do not construct direct GDR download URLs.
+
 Site Details and `GDR 1255 Station Locations` can align their display Z to the
 rendered topo surface. The alignment is display-only: source coordinates,
 registration manifests, and authored survey/source Z remain unchanged. Utah
@@ -177,8 +189,10 @@ public surface clip, visible map footprint, material edge fade, and edge outline
 controls; `Topo > Topo Settings` keeps map type, resolution, opacity, transform,
 height-map, and surface material controls.
 
-Utah FORGE currently includes a visible one-puff `Topo test cloud` layer for
-review. Its runtime debug state should report `textureSource:
+Utah FORGE currently includes an editable one-puff `Topo test cloud`
+`atmosphere-volume` layer for Topo Environment review. Its visibility is
+authoring-state scoped and should not be forced through page fixtures. Its
+runtime debug state should report `textureSource:
 generated-canvas`, cache key shape `local-atmosphere:<layerId>:<seed>:<softness>`,
 `THREE.SpriteMaterial`, and `THREE.Sprite` geometry. See
 `docs/dev-context/Topo-Environment-Clouds-Cinematics-Thread-Update-2026-06-03.md`

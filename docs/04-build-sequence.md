@@ -114,7 +114,10 @@ Complete/kept:
 - Section planes, working-area focus, site details, product pages, overlays, and
   legends are active build surfaces.
 - Topo Environment controls exist for Scene atmosphere, Clouds, Sun, and Fog.
-- Utah FORGE includes a visible one-puff `Topo test cloud` QA fixture.
+- Utah FORGE includes an editable one-puff `Topo test cloud` local atmosphere
+  layer for QA; visibility is authoring-state scoped.
+- Utah FORGE seismic section geometry must be trace-header driven before any
+  navigation/envelope fallback when source coordinates exist.
 
 Important kept boundary:
 

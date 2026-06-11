@@ -1,5 +1,21 @@
 ﻿# GeoSee Change Log
 
+## 2026-06-11 - Seismic Geometry, Source Gates, And Branch Integration
+
+- Regenerated Utah FORGE seismic browser artifacts so renderable 2D/3D sections
+  use SEG-Y trace-header geometry before navigation/envelope fallback.
+- Added source-gated handling for `Forge3d_ANI_PSDM_Stack_Enh.segy`; the
+  product is visible in editor/source metadata but remains non-renderable until
+  a complete CRC-valid source member exists.
+- Added all-2D seismic review pages and editor controls while keeping Line 95
+  missing-source gates non-blocking only when audited and productless.
+- Integrated the seismic work with Claude transition/capture work on
+  `codex/integrate-seismic-claude-2026-06-11`; preserved both branches and
+  updated docs/tests for the merged page cleanup and trace-header placement.
+- Hardened agent contracts and verification routing so future seismic changes
+  run `seismic-trace-geometry-source`, `seismic-product-catalog-source`, and
+  `check:seismic-source-gates` instead of repairing geometry with page fixtures.
+
 ## 2026-06-04 - Utah FORGE Seismic Figure Annotations And Site Detail Alignment
 
 - Added source-derived seismic figure annotations for section products: outside-frame axes, ticks, title, caption box, distance scale label, optional well trace, and optional horizon polyline.
