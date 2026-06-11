@@ -58,6 +58,16 @@ threshold-ghosting commit referencing this doc)
 
 ## Open items, in priority order
 
+-1. **FIXED (2026-06-11):** the remaining mid-tween line-overlay jump was a
+   discrete threshold-occlusion attenuation step (x0.8 per occluding surface,
+   ~12% composed opacity in one frame). `setSectionIsoLineThresholdOcclusion`
+   now ramps the attenuation at a bounded 0.04/frame instead of snapping.
+   Hold-fix verification (2026-06-11): the original ISO material pair now
+   survives the whole 158->159 tween; one post-settle rebuild remains and is
+   visually inert when geometry inputs are unchanged. Browser RAF throttling
+   after reloads degrades the per-frame recorder (~4 ticks/5s); re-measure
+   with a focused/visible tab if needed.
+
 0. **FIXED in this slice (per-material instrumentation closed item 1):** the
    terminal "iso pop" on enter was not an opacity lag. Material uuids showed
    the ISO root was fully REBUILT twice after the tween: once by the

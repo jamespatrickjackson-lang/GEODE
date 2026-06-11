@@ -4710,7 +4710,23 @@ export class SceneManager {
           : m.opacity;
       m.userData.sectionIsoBaseOpacity = baseOpacity;
       m.userData.sectionIsoThresholdOcclusionCount = occlusionCount;
-      m.userData.sectionIsoThresholdOcclusionAttenuation = attenuation;
+      // Occlusion count changes are discrete (x0.8 per occluding surface).
+      // Snapping the attenuation steps composed opacity ~12% in one frame
+      // mid-transition; ramp toward the target at a bounded per-frame rate
+      // instead. This runs from the per-frame occlusion update, so the ramp
+      // completes in roughly 0.2 / 0.04 = 5 frames per step.
+      const previousAttenuation =
+        typeof m.userData?.sectionIsoThresholdOcclusionAttenuation === "number" &&
+        Number.isFinite(m.userData.sectionIsoThresholdOcclusionAttenuation)
+          ? m.userData.sectionIsoThresholdOcclusionAttenuation
+          : attenuation;
+      const attenuationStep = 0.04;
+      const rampedAttenuation =
+        Math.abs(attenuation - previousAttenuation) <= attenuationStep
+          ? attenuation
+          : previousAttenuation +
+            Math.sign(attenuation - previousAttenuation) * attenuationStep;
+      m.userData.sectionIsoThresholdOcclusionAttenuation = rampedAttenuation;
       const transitionOpacity =
         typeof m.userData?.sectionIsoTransitionOpacity === "number"
           ? m.userData.sectionIsoTransitionOpacity
