@@ -223,11 +223,15 @@ export function resolveMtSurfaceBoundaries(
     style.mtSurfaceBoundariesById !== null
       ? style.mtSurfaceBoundariesById
       : {};
+  // A map carrying ANY explicit visibility flag is deliberate authoring and
+  // must be honored — including all-off ("show no isosurfaces"). Treating
+  // all-off as stale made the default surfaces appear on pages authored to
+  // show none. Only maps with no explicit flags at all inherit defaults.
   const canonicalHasVisibleBoundary = Object.values(authored).some(
-    (boundary) => boundary?.visible === true,
+    (boundary) => typeof boundary?.visible === "boolean",
   );
   const legacyHasVisibleBoundary = Object.values(legacyVisibility).some(
-    (visible) => visible === true,
+    (visible) => typeof visible === "boolean",
   );
 
   return order

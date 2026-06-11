@@ -93,11 +93,12 @@ copy under review, and required wording from tools, tests, or external APIs.
   the full-density target style to rebuild page-load Log10 Resistivity Window
   isolines. Skip that narrow refresh while a scalar tween is active, and never
   replace it with broad page visibility/style replay.
-- MT threshold boundary all-off maps are treated as empty/stale visibility
-  state. If the threshold-boundary layer is visible and no canonical or legacy
-  boundary is active, the resolver inherits default boundary visibility. Hide
-  the threshold-boundary layer to hide all boundary lines; do not repair this
-  with page-level fixture edits.
+- MT threshold boundary visibility maps carrying any explicit `visible` flag
+  are authoritative, including deliberate all-off maps ("show no
+  isosurfaces"). Only maps with no explicit visibility flags at all are
+  empty/stale and inherit default boundary visibility (DEC-145, supersedes
+  the earlier all-off-is-stale rule). Do not repair boundary visibility with
+  page-level fixture edits.
 - No page-id, page-index, fixture-title, project page, or environment fixture
   special cases are allowed for viewport quick legends. Do not edit
   `projects/*/pages/**`, `projects/*/overlays/**`, `projects/*/project.json`,

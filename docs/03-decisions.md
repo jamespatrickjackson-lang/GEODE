@@ -2304,3 +2304,26 @@ pause at handoff nodes with no speed spike. Do not reintroduce time-warp
 stages that replace or rewrite the authored `timeCurve`; new motion shaping
 must stay bounded, monotonic, endpoint-exact, and documented in
 `docs/capture-director/camera-path-surfacing-model.md`.
+
+## DEC-145 - Explicit MT boundary visibility maps are authoritative, including all-off
+
+Supersedes the all-off-is-stale clause used by the MT threshold boundary
+resolver and recorded in `CLAUDE.md`.
+
+**Considered:** keep treating all-off visibility maps as empty/stale state
+that inherits default boundary visibility, or treat any map carrying an
+explicit `visible` flag as deliberate authoring.
+
+**Chose:** `resolveMtSurfaceBoundaries` treats a canonical or legacy
+visibility map as authoritative when any entry carries an explicit boolean
+`visible` flag — including maps where every flag is `false`. Only maps with
+no explicit flags at all inherit default boundary visibility.
+
+**Why:** the stale-map rule made the default isosurfaces render on pages the
+author deliberately set to show none, so surfaces appeared "out of nowhere"
+during navigation onto those pages. An explicit all-off map is authored
+intent, not stale state; the stale-map fallback remains for genuinely empty
+legacy pages.
+
+**Guard:** do not reintroduce visible-true-only authority checks in
+`src/projectModules/utahForge/mtSurfaceBoundaries.ts`.
