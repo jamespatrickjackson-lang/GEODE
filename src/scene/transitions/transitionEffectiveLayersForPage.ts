@@ -917,12 +917,22 @@ export function transitionEffectiveLayersForPage(
     this.sceneSectionReapplySuspended = false;
   }
   if (this.sceneSectionStyleTween?.maskMode === "dual-mask") {
-    this.applySceneSectionPlanes(this.sceneSectionStyleTween.toStyle, {
-      maskTransition: this.sceneSectionMaskTransitionForTween(
-        this.sceneSectionStyleTween,
+    // Build the initial dual-mask state with compatible numeric channels at
+    // their SOURCE values (eased 0); applying raw toStyle here parked plane
+    // and frame positions at the target before the tween ever ticked.
+    this.applySceneSectionPlanes(
+      this.interpolatedSceneSectionStyle(
+        this.sceneSectionStyleTween.fromStyle,
+        this.sceneSectionStyleTween.toStyle,
         0,
       ),
-    });
+      {
+        maskTransition: this.sceneSectionMaskTransitionForTween(
+          this.sceneSectionStyleTween,
+          0,
+        ),
+      },
+    );
   } else {
     this.reapplySceneSectionPlanes();
   }

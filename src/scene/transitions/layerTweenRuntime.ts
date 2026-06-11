@@ -175,15 +175,18 @@ export function tickLayerTweensImpl(this: any, nowMs: number): void {
         tween.durationMs <= 0 ? 1 : (nowMs - tween.startMs) / tween.durationMs;
       const done = t >= 1;
       const eased = done ? 1 : easeProgress(t, tween.easing);
+      // Dual-mask handles the discrete clip difference through blended mask
+      // alpha, but compatible numeric channels (same-id plane positions,
+      // frame bounds) must still MOVE per DEC-071. Applying raw toStyle here
+      // snapped section positions to the target on the first tick whenever
+      // any discrete field differed between pages.
       const style = done
         ? tween.toStyle
-        : tween.maskMode === "dual-mask"
-          ? tween.toStyle
-          : this.interpolatedSceneSectionStyle(
-              tween.fromStyle,
-              tween.toStyle,
-              eased,
-            );
+        : this.interpolatedSceneSectionStyle(
+            tween.fromStyle,
+            tween.toStyle,
+            eased,
+          );
       const maskTransition =
         !done && tween.maskMode === "dual-mask"
           ? this.sceneSectionMaskTransitionForTween(tween, eased)
