@@ -43,7 +43,7 @@ test("source-location labels carry source ids and runtime label visibility", () 
   assert.match(styles, /sourceLocationItemLabelVisible/);
   assert.match(
     styles,
-    /sourceLocationItemVisible\(obj\) &&\s*sourceLocationItemLabelVisible\(obj\)/,
+    /boreholeElementVisible\(obj\) &&\s*sourceLocationItemLabelVisible\(obj\)/,
   );
 });
 

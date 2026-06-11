@@ -141,12 +141,9 @@
   "relatedPages": [
     "02_untitled",
     "04_mt_high_resistivity_seismic",
-    "05_mt_threshold_focus",
-    "06_mt_low_resistivity_seismic",
     "07_untitled",
     "08_mt_threshold_surfaces",
-    "11_untitled",
-    "12_mt_volume_overview"
+    "11_untitled"
   ],
   "review": {
     "requiredBy": "human",

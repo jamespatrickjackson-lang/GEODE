@@ -1,4 +1,4 @@
-# Transition Constitution
+﻿# Transition Constitution
 
 Status: draft source of truth.
 
@@ -81,3 +81,12 @@ These are not fully cemented yet and should be defined next:
 - Visual acceptance criteria for already-visible products, camera, section ISO,
   scene-section helpers, legends, overlays, labels, and assays.
 - Revisit rules for changing cadence, LOD, opacity, or camera duration.
+
+## Transition Runtime Operating Spec
+
+Before transition runtime, editor/save transition gating, scene-section, Section ISO, working-area focus, opacity, or page-navigation work, read:
+
+docs/dev-context/Transition-Runtime-Operating-Spec.md
+
+This spec is the active operating contract for current transition work. Older audits and matrix logs are evidence only.
+

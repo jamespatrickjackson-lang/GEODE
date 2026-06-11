@@ -1,4 +1,5 @@
 import type {
+  DemoBoreholeSourceLocationStyle,
   EditableStyle,
   EnvironmentSetup,
   PresentationPage,
@@ -124,6 +125,40 @@ export function normalizeEffectiveSceneSectionStyle(
 //                on false; missing entries inherit.
 //   styling:     shallow-merge env.layerStyles[id] then page.layerOverrides[id]
 //                so override fields win and unspecified fields inherit.
+//
+// Exception (DEC: app-level borehole kit): the demo-borehole style objects
+// deep-merge instead, so a page can carry a small diff (e.g. one borehole's
+// `items.<id>.visible`) without re-authoring the whole shared element kit.
+
+function mergeNestedRecord<T extends object>(
+  base: Record<string, T> | undefined,
+  override: Record<string, T> | undefined,
+): Record<string, T> | undefined {
+  if (!base) return override;
+  if (!override) return base;
+  const out: Record<string, T> = { ...base };
+  for (const [id, value] of Object.entries(override)) {
+    out[id] = { ...(base[id] ?? ({} as T)), ...value };
+  }
+  return out;
+}
+
+function mergeDemoBoreholeSourceLocations(
+  base: DemoBoreholeSourceLocationStyle | undefined,
+  override: DemoBoreholeSourceLocationStyle | undefined,
+): DemoBoreholeSourceLocationStyle | undefined {
+  if (!base) return override;
+  if (!override) return base;
+  return {
+    ...base,
+    ...override,
+    items: mergeNestedRecord(base.items, override.items),
+    icon:
+      base.icon || override.icon
+        ? { ...(base.icon ?? {}), ...(override.icon ?? {}) }
+        : undefined,
+  };
+}
 
 export function effectiveStyle(
   environment: EnvironmentSetup,
@@ -145,6 +180,26 @@ export function effectiveStyle(
     ) ?? {};
   const override = page.layerOverrides?.[layerId] ?? {};
   let merged = { ...base, ...presetPatch, ...contourPatch, ...override };
+  // Demo-borehole style objects deep-merge so page diffs layer over the
+  // app-level shared element kit instead of replacing it.
+  if (base.demoBoreholeSourceLocations || override.demoBoreholeSourceLocations) {
+    merged.demoBoreholeSourceLocations = mergeDemoBoreholeSourceLocations(
+      base.demoBoreholeSourceLocations,
+      override.demoBoreholeSourceLocations,
+    );
+  }
+  if (base.demoBoreholeWells || override.demoBoreholeWells) {
+    merged.demoBoreholeWells = mergeNestedRecord(
+      base.demoBoreholeWells,
+      override.demoBoreholeWells,
+    );
+  }
+  if (base.demoBoreholeBlock || override.demoBoreholeBlock) {
+    merged.demoBoreholeBlock = {
+      ...(base.demoBoreholeBlock ?? {}),
+      ...(override.demoBoreholeBlock ?? {}),
+    };
+  }
   // Page layer overrides should still win over preset-derived contour mode
   // values. These contourPreset* fields are internal line-material patches, so
   // clear them when an explicit page color/opacity/width override is present.

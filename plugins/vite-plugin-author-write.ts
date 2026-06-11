@@ -1,7 +1,17 @@
 import type { Plugin, ViteDevServer } from "vite";
 import { promises as fs } from "node:fs";
 import { spawn } from "node:child_process";
-import { dirname, isAbsolute, normalize, posix, resolve, sep } from "node:path";
+import type { ChildProcess } from "node:child_process";
+import { randomUUID } from "node:crypto";
+import {
+  basename,
+  dirname,
+  isAbsolute,
+  normalize,
+  posix,
+  resolve,
+  sep,
+} from "node:path";
 import type { IncomingMessage, ServerResponse } from "node:http";
 
 // Dev-only authoring write endpoint. Decision #022.
@@ -53,6 +63,50 @@ interface ConvertBrandingAssetBody {
   sourcePath: string;
   outputPath: string;
   sourceFormat?: string;
+}
+
+type CaptureVideoRunStatus =
+  | "queued"
+  | "preparing"
+  | "rendering"
+  | "encoding"
+  | "complete"
+  | "failed"
+  | "cancelled";
+
+interface CaptureVideoRenderBody {
+  job: unknown;
+  outputFilename?: string;
+  synthetic?: boolean;
+}
+
+interface CaptureVideoRunBody {
+  runId: string;
+}
+
+interface CaptureVideoRunRecord {
+  runId: string;
+  status: CaptureVideoRunStatus;
+  phase: CaptureVideoRunStatus;
+  startedAt: string;
+  completedAt?: string | null;
+  outputFilename: string;
+  outputPath: string;
+  outputUrl: string | null;
+  diagnosticsPath: string;
+  jobPath: string;
+  stdout: string;
+  stderr: string;
+  error?: string | null;
+  exitCode?: number | null;
+  child?: Pick<ChildProcess, "kill">;
+  renderedFrames?: number;
+  totalFrames?: number | null;
+  renderer?: string | null;
+  superscale?: number | null;
+  masterPath?: string | null;
+  masterUrl?: string | null;
+  frameSequenceDir?: string | null;
 }
 
 function badRequest(res: ServerResponse, msg: string, status = 400) {
@@ -257,12 +311,289 @@ async function convertBrandingAsset(
   return { outputPath: body.outputPath };
 }
 
+function safeVideoOutputFilename(job: any, requested?: string): string {
+  const format = job?.video?.format === "webm" ? "webm" : "mp4";
+  const raw = basename(
+    typeof requested === "string" && requested.trim()
+      ? requested.trim()
+      : typeof job?.video?.filename === "string" && job.video.filename.trim()
+        ? job.video.filename.trim()
+        : `geosee-capture-video.${format}`,
+  );
+  const stripped = raw
+    .replace(/\.[a-z0-9]+$/i, "")
+    .replace(/[^a-zA-Z0-9._-]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+  return `${stripped || "geosee-capture-video"}.${format}`;
+}
+
+function validateLocalCaptureVideoJob(job: any): string[] {
+  const errors: string[] = [];
+  if (!job || typeof job !== "object" || Array.isArray(job)) {
+    return ["job must be an object"];
+  }
+  if (job.schema !== "CaptureVideoRenderJobV1") {
+    errors.push("job.schema must be CaptureVideoRenderJobV1");
+  }
+  if (job.version !== 1) {
+    errors.push("job.version must be 1");
+  }
+  if (job.fidelity !== "max-detail-render") {
+    errors.push("job.fidelity must be max-detail-render");
+  }
+  if (!job.recipe || typeof job.recipe !== "object") {
+    errors.push("job.recipe is required");
+  } else {
+    if (job.recipe.mode === "full-ui" || job.recipe.mode === "off") {
+      errors.push("job.recipe.mode must be a scene marketing mode");
+    }
+    if (job.recipe.supersampleScale !== 1) {
+      errors.push("job.recipe.supersampleScale must be 1");
+    }
+  }
+  if (!job.video || typeof job.video !== "object") {
+    errors.push("job.video is required");
+  } else {
+    for (const field of ["width", "height", "fps", "totalFrames"] as const) {
+      if (!Number.isInteger(job.video[field]) || job.video[field] <= 0) {
+        errors.push(`job.video.${field} must be a positive integer`);
+      }
+    }
+    if (job.video.format !== "mp4" && job.video.format !== "webm") {
+      errors.push("job.video.format must be mp4 or webm");
+    }
+  }
+  return errors;
+}
+
+function captureVideoRunPublicStatus(
+  run: CaptureVideoRunRecord,
+): Omit<CaptureVideoRunRecord, "child" | "stdout" | "stderr" | "jobPath"> & {
+  elapsedSeconds: number;
+} {
+  const elapsedSeconds = Math.max(
+    0,
+    Math.floor(
+      ((run.completedAt ? Date.parse(run.completedAt) : Date.now()) -
+        Date.parse(run.startedAt)) /
+        1000,
+    ),
+  );
+  return {
+    runId: run.runId,
+    status: run.status,
+    phase: run.phase,
+    startedAt: run.startedAt,
+    completedAt: run.completedAt ?? null,
+    outputFilename: run.outputFilename,
+    outputPath: run.outputPath,
+    outputUrl: run.outputUrl,
+    diagnosticsPath: run.diagnosticsPath,
+    error: run.error ?? null,
+    exitCode: run.exitCode ?? null,
+    elapsedSeconds,
+    renderedFrames: run.renderedFrames ?? 0,
+    totalFrames: run.totalFrames ?? null,
+    renderer: run.renderer ?? null,
+    superscale: run.superscale ?? null,
+    masterUrl: run.masterUrl ?? null,
+    masterPath: run.masterPath ?? null,
+    frameSequenceDir: run.frameSequenceDir ?? null,
+  };
+}
+
+// The external render tool prints `@progress {json}` lines per phase/frame.
+// Translate them into live run-record fields the Capture Director polls.
+function applyCaptureVideoProgress(run: CaptureVideoRunRecord, payload: unknown): void {
+  if (!payload || typeof payload !== "object") return;
+  const p = payload as {
+    phase?: string;
+    renderedFrames?: number;
+    totalFrames?: number;
+    renderer?: string;
+    render?: { superscale?: number };
+    software?: boolean;
+  };
+  if (typeof p.renderedFrames === "number") run.renderedFrames = p.renderedFrames;
+  if (typeof p.totalFrames === "number") run.totalFrames = p.totalFrames;
+  if (typeof p.renderer === "string") run.renderer = p.renderer;
+  if (p.render && typeof p.render.superscale === "number") {
+    run.superscale = p.render.superscale;
+  }
+  if (run.status === "cancelled" || run.status === "complete") return;
+  if (p.phase === "encode") {
+    run.phase = "encoding";
+    run.status = "encoding";
+  } else if (p.phase === "render" || p.phase === "gpu" || p.phase === "prepare") {
+    run.phase = "rendering";
+    run.status = "rendering";
+  }
+}
+
+async function startCaptureVideoRun({
+  projectRoot,
+  runs,
+  body,
+}: {
+  projectRoot: string;
+  runs: Map<string, CaptureVideoRunRecord>;
+  body: CaptureVideoRenderBody;
+}): Promise<CaptureVideoRunRecord> {
+  const job = body.job as any;
+  const errors = validateLocalCaptureVideoJob(job);
+  if (errors.length > 0) {
+    throw new Error(errors.join("; "));
+  }
+
+  const runId = randomUUID();
+  const outputFilename = safeVideoOutputFilename(job, body.outputFilename);
+  const jobsDir = resolve(projectRoot, ".tmp", "capture-video-jobs");
+  const outputDir = resolve(projectRoot, ".tmp", "capture-video-outputs");
+  await fs.mkdir(jobsDir, { recursive: true });
+  await fs.mkdir(outputDir, { recursive: true });
+  const jobPath = resolve(jobsDir, `${runId}.json`);
+  const outputPath = resolve(outputDir, `${runId}-${outputFilename}`);
+  const diagnosticsPath = `${outputPath}.capture-diagnostics.json`;
+  await fs.writeFile(jobPath, `${JSON.stringify(job, null, 2)}\n`, "utf8");
+
+  const masterPath = `${outputPath.replace(/\.[^.]+$/, "")}.master.mov`;
+  const run: CaptureVideoRunRecord = {
+    runId,
+    status: "preparing",
+    phase: "preparing",
+    startedAt: new Date().toISOString(),
+    completedAt: null,
+    outputFilename,
+    outputPath,
+    outputUrl: `/api/capture/video-output?runId=${encodeURIComponent(runId)}`,
+    diagnosticsPath,
+    jobPath,
+    stdout: "",
+    stderr: "",
+    totalFrames:
+      typeof job?.video?.totalFrames === "number" ? job.video.totalFrames : undefined,
+    renderedFrames: 0,
+    masterPath,
+    masterUrl: `/api/capture/video-output?runId=${encodeURIComponent(runId)}&variant=master`,
+  };
+  runs.set(runId, run);
+
+  const args = [
+    "tools/render-capture-video-job.mjs",
+    "--job",
+    jobPath,
+    "--out",
+    outputPath,
+    "--diagnostics",
+    diagnosticsPath,
+  ];
+  if (typeof job?.app?.url === "string" && job.app.url.length > 0) {
+    args.push("--app-url", job.app.url);
+  }
+  if (body.synthetic === true) {
+    args.push("--synthetic");
+  }
+
+  const child = spawn(process.execPath, args, {
+    cwd: projectRoot,
+    windowsHide: true,
+    stdio: ["ignore", "pipe", "pipe"],
+  });
+  run.child = child;
+  run.status = "rendering";
+  run.phase = "rendering";
+
+  let stdoutLineBuffer = "";
+  child.stdout.on("data", (chunk) => {
+    const text = String(chunk);
+    run.stdout += text;
+    stdoutLineBuffer += text;
+    let newlineIndex = stdoutLineBuffer.indexOf("\n");
+    while (newlineIndex >= 0) {
+      const line = stdoutLineBuffer.slice(0, newlineIndex);
+      stdoutLineBuffer = stdoutLineBuffer.slice(newlineIndex + 1);
+      const marker = line.indexOf("@progress ");
+      if (marker >= 0) {
+        try {
+          applyCaptureVideoProgress(run, JSON.parse(line.slice(marker + 10)));
+        } catch {
+          // Ignore a malformed progress line.
+        }
+      }
+      newlineIndex = stdoutLineBuffer.indexOf("\n");
+    }
+  });
+  child.stderr.on("data", (chunk) => {
+    run.stderr += String(chunk);
+    const text = String(chunk);
+    if (/frame=\s*\d+/i.test(text)) {
+      run.phase = "encoding";
+      run.status = "encoding";
+    }
+  });
+  child.on("error", (error: NodeJS.ErrnoException) => {
+    run.status = "failed";
+    run.phase = "failed";
+    run.error = error.message || error.code || "failed to start renderer";
+    run.completedAt = new Date().toISOString();
+    run.child = undefined;
+  });
+  child.on("close", async (code) => {
+    run.exitCode = code;
+    run.completedAt = new Date().toISOString();
+    run.child = undefined;
+    if (run.status === "cancelled") return;
+    if (code !== 0) {
+      run.status = "failed";
+      run.phase = "failed";
+      run.error =
+        run.stderr.trim() ||
+        run.stdout.trim() ||
+        `external video renderer exited with code ${code}`;
+      return;
+    }
+    try {
+      const stats = await fs.lstat(outputPath);
+      if (!stats.isFile() || stats.size <= 0) {
+        throw new Error("external video renderer completed without a non-empty output file");
+      }
+      run.status = "complete";
+      run.phase = "complete";
+      run.error = null;
+      run.renderedFrames = run.totalFrames ?? run.renderedFrames;
+      try {
+        const diag = JSON.parse(await fs.readFile(diagnosticsPath, "utf8"));
+        if (typeof diag?.frameSequenceDir === "string") {
+          run.frameSequenceDir = diag.frameSequenceDir;
+        }
+        if (typeof diag?.gpu?.renderer === "string") run.renderer = diag.gpu.renderer;
+        if (typeof diag?.supersample === "number") run.superscale = diag.supersample;
+      } catch {
+        // Diagnostics are best-effort enrichment; absence is not fatal.
+      }
+      const masterStats = run.masterPath
+        ? await fs.lstat(run.masterPath).catch(() => null)
+        : null;
+      if (!masterStats?.isFile() || masterStats.size <= 0) {
+        run.masterUrl = null;
+      }
+    } catch (error) {
+      run.status = "failed";
+      run.phase = "failed";
+      run.error = error instanceof Error ? error.message : String(error);
+    }
+  });
+
+  return run;
+}
+
 export function authorWritePlugin(): Plugin {
   return {
     name: "author-write",
     apply: "serve", // dev only -- not present in `vite build` output
     configureServer(server: ViteDevServer) {
       const projectRoot = server.config.root;
+      const captureVideoRuns = new Map<string, CaptureVideoRunRecord>();
 
       server.middlewares.use(async (req, res, next) => {
         const url = req.url ?? "";
@@ -321,6 +652,49 @@ export function authorWritePlugin(): Plugin {
           return;
         }
 
+        if (req.method === "GET" && url.startsWith("/api/capture/video-output")) {
+          try {
+            const parsedUrl = new URL(url, "http://127.0.0.1");
+            const runId = parsedUrl.searchParams.get("runId") ?? "";
+            const variant = parsedUrl.searchParams.get("variant") ?? "playable";
+            const run = captureVideoRuns.get(runId);
+            if (!run) {
+              badRequest(res, "unknown capture video run", 404);
+              return;
+            }
+            if (run.status !== "complete") {
+              badRequest(res, "capture video run is not complete", 409);
+              return;
+            }
+            const isMaster = variant === "master";
+            const servePath = isMaster ? run.masterPath ?? "" : run.outputPath;
+            const stats = servePath ? await fs.lstat(servePath).catch(() => null) : null;
+            if (!stats?.isFile() || stats.size <= 0) {
+              badRequest(res, `capture video ${variant} output is missing`, 404);
+              return;
+            }
+            const downloadName = isMaster
+              ? run.outputFilename.replace(/\.[^.]+$/, "") + ".master.mov"
+              : run.outputFilename;
+            const contentType = isMaster
+              ? "video/quicktime"
+              : run.outputFilename.toLowerCase().endsWith(".webm")
+                ? "video/webm"
+                : "video/mp4";
+            res.statusCode = 200;
+            res.setHeader("content-type", contentType);
+            res.setHeader(
+              "content-disposition",
+              `attachment; filename="${downloadName.replace(/"/g, "")}"`,
+            );
+            res.end(await fs.readFile(servePath));
+          } catch (e) {
+            const msg = e instanceof Error ? e.message : String(e);
+            badRequest(res, msg, 400);
+          }
+          return;
+        }
+
         if (!url.startsWith("/api/")) return next();
         if (req.method !== "POST") {
           badRequest(res, "method not allowed", 405);
@@ -328,6 +702,54 @@ export function authorWritePlugin(): Plugin {
         }
 
         try {
+          if (url === "/api/capture/video-renderer-availability") {
+            ok(res, { available: true });
+            return;
+          }
+
+          if (url === "/api/capture/render-video") {
+            const body = await readJsonBody<CaptureVideoRenderBody>(req);
+            const run = await startCaptureVideoRun({
+              projectRoot,
+              runs: captureVideoRuns,
+              body,
+            });
+            ok(res, captureVideoRunPublicStatus(run));
+            return;
+          }
+
+          if (url === "/api/capture/video-status") {
+            const body = await readJsonBody<CaptureVideoRunBody>(req);
+            const run = captureVideoRuns.get(body.runId);
+            if (!run) {
+              badRequest(res, "unknown capture video run", 404);
+              return;
+            }
+            ok(res, captureVideoRunPublicStatus(run));
+            return;
+          }
+
+          if (url === "/api/capture/cancel-video") {
+            const body = await readJsonBody<CaptureVideoRunBody>(req);
+            const run = captureVideoRuns.get(body.runId);
+            if (!run) {
+              badRequest(res, "unknown capture video run", 404);
+              return;
+            }
+            if (run.child && run.status !== "complete") {
+              run.status = "cancelled";
+              run.phase = "cancelled";
+              run.completedAt = new Date().toISOString();
+              run.child.kill();
+              await Promise.allSettled([
+                fs.rm(run.outputPath, { force: true }),
+                fs.rm(run.diagnosticsPath, { force: true }),
+              ]);
+            }
+            ok(res, captureVideoRunPublicStatus(run));
+            return;
+          }
+
           if (url === "/api/write-file") {
             const body = await readJsonBody<WriteBody>(req);
             const abs = resolveSafePath(projectRoot, body.path);

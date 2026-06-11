@@ -33,6 +33,7 @@ import type { SceneOverlayDef } from "../pages/types";
 import { disposeObjectTree } from "./disposeObjectTree";
 import {
   UTAH_FORGE_MT_RESISTIVITY_FULL_DENSITY_LAYER_ID,
+  UTAH_FORGE_MT_RESISTIVITY_PREVIEW_LAYER_ID,
   UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID,
   UTAH_FORGE_MT_THRESHOLD_SURFACES_LAYER_ID,
   UTAH_FORGE_SCENE_SECTION_LAYER_ID,
@@ -1633,6 +1634,18 @@ export class SceneManager {
         : this.cloneTransitionMaterial(sourceRenderable.material);
     }
     for (const child of source.children) {
+      // Section ISO overlay roots are derived transition-scene entities with
+      // their own crossfade owner (TRD-011). Cloning them into layer
+      // snapshots double-draws the contours and drags them through the
+      // layer envelope against that owner.
+      if (
+        child.userData?.mtVolumeSectionIsoOverlayGroup === true ||
+        child.userData?.seismicVolumeSectionIsoOverlayGroup === true ||
+        child.userData?.seismicResistivitySectionIsoOverlayGroup === true ||
+        child.userData?.sectionIsoOverlayTransitionRoot === true
+      ) {
+        continue;
+      }
       snapshot.add(this.cloneTransitionObjectTree(id, child));
     }
     return snapshot;
@@ -1758,13 +1771,24 @@ export class SceneManager {
   discardSectionIsoOverlayTransition(): void {
     const transition = this.sectionIsoOverlayTransition;
     if (!transition) return;
-    for (const root of transition.targetRoots) {
-      root.group.parent?.remove(root.group);
-      disposeObjectTree(root.group);
-    }
-    for (const root of transition.sourceRoots) {
-      root.group.parent?.remove(root.group);
-      disposeObjectTree(root.group);
+    for (const root of [...transition.sourceRoots, ...transition.targetRoots]) {
+      const isCloneSnapshot =
+        root.group.userData?.sectionIsoOverlayTransitionRole === "source" ||
+        root.group.userData?.transitionSnapshotForLayer !== undefined;
+      if (isCloneSnapshot) {
+        root.group.parent?.remove(root.group);
+        disposeObjectTree(root.group);
+        continue;
+      }
+      // Live overlay groups are registered as transition target roots.
+      // Disposing them here destroys visible Section ISO content the moment
+      // a chained navigation interrupts a running transition (instant pop
+      // out, then pop back in at the next full apply). Leave live roots in
+      // the scene at their current envelope; the next transition snapshots
+      // them as sources, and inactive-target exits still clear them through
+      // the section-iso-disabled style path.
+      delete root.group.userData.sectionIsoOverlayTransitionRoot;
+      delete root.group.userData.sectionIsoOverlayTransitionRole;
     }
     this.sectionIsoOverlayTransition = null;
   }
@@ -1887,6 +1911,26 @@ export class SceneManager {
   commitSectionIsoOverlayTransition(): void {
     const transition = this.sectionIsoOverlayTransition;
     if (!transition) return;
+    if (transition.targetOpacity < 0.98) {
+      // The crossfade has not landed yet. Snapping the remaining envelope
+      // to 1 in one frame is the visible "iso pop" regression, so land the
+      // remainder on a short residual clock instead; tickLayerTweens keeps
+      // ticking this transition until it really finishes.
+      const now = performance.now();
+      const elapsed =
+        transition.durationMs <= 0
+          ? 1
+          : (now - transition.startMs) / transition.durationMs;
+      if (elapsed < 1) return;
+      const remainingMs = Math.max(
+        120,
+        (1 - transition.targetOpacity) * 360,
+      );
+      transition.startMs = now - remainingMs * transition.targetOpacity;
+      transition.durationMs = remainingMs;
+      transition.easing = "linear";
+      return;
+    }
     this.tickSectionIsoOverlayTransition(
       transition.startMs + transition.durationMs,
       1,
@@ -3350,11 +3394,59 @@ export class SceneManager {
     return buildMtVolumeCutMeshImpl.call(this, mesh, plane, options);
   }
 
+  private transitionAwareSectionIsoOverlayUpdateOptions(
+    style: EditableStyle,
+    options?: SectionIsoOverlayUpdateOptions,
+  ): SectionIsoOverlayUpdateOptions | undefined {
+    const transition = this.sectionIsoOverlayTransition;
+    if (!transition || style.sectionIsoEnabled !== true) return options;
+
+    const sceneSectionStyle = this.lastSceneSectionStyle;
+    const targetSectionActive =
+      !!sceneSectionStyle &&
+      sceneSectionStyle.sceneSectionEnabled === true &&
+      this.sceneSectionActivePlanes(sceneSectionStyle).length > 0;
+
+    if (!targetSectionActive) return options;
+
+    return {
+      ...(options ?? {}),
+      initialTransitionOpacity:
+        options?.initialTransitionOpacity ?? transition.targetOpacity,
+    };
+  }
+
+  // Once a Section ISO transition has registered a populated target root,
+  // further rebuilds during the tween (mid-tween reapplies, the commit-time
+  // full section apply) duplicate the root or swap contour geometry at full
+  // opacity — the measured post-transition "iso pop". Hold those rebuilds;
+  // only the delayed height-sampler retry may pass with an explicit bypass
+  // because it must replace untrimmed contours (it clears first and attaches
+  // at the current transition envelope).
+  private sectionIsoOverlayUpdateHeldByTransition(
+    kind: SectionIsoOverlayTransitionRootKind,
+    options?: SectionIsoOverlayUpdateOptions,
+  ): boolean {
+    if (options?.bypassTransitionHold === true) return false;
+    const transition = this.sectionIsoOverlayTransition;
+    if (!transition) return false;
+    return transition.targetRoots.some(
+      (root) => root.kind === kind && root.group.children.length > 0,
+    );
+  }
+
   updateMtVolumeCutIsoOverlays(
     style: EditableStyle,
     options?: SectionIsoOverlayUpdateOptions,
   ): void {
-    return updateMtVolumeCutIsoOverlaysImpl.call(this, style, options);
+    if (this.sectionIsoOverlayUpdateHeldByTransition("mt-volume", options)) {
+      return;
+    }
+    return updateMtVolumeCutIsoOverlaysImpl.call(
+      this,
+      style,
+      this.transitionAwareSectionIsoOverlayUpdateOptions(style, options),
+    );
   }
 
   seismicVolumeIsoOverlayGroup(seismicLayer: THREE.Group): THREE.Group {
@@ -3394,14 +3486,35 @@ export class SceneManager {
     style: EditableStyle,
     options?: SectionIsoOverlayUpdateOptions,
   ): void {
-    return updateSeismicVolumeCutIsoOverlaysImpl.call(this, style, options);
+    if (
+      this.sectionIsoOverlayUpdateHeldByTransition("seismic-volume", options)
+    ) {
+      return;
+    }
+    return updateSeismicVolumeCutIsoOverlaysImpl.call(
+      this,
+      style,
+      this.transitionAwareSectionIsoOverlayUpdateOptions(style, options),
+    );
   }
 
   updateSeismicResistivityIsoOverlays(
     style: EditableStyle,
     options?: SectionIsoOverlayUpdateOptions,
   ): void {
-    return updateSeismicResistivityIsoOverlaysImpl.call(this, style, options);
+    if (
+      this.sectionIsoOverlayUpdateHeldByTransition(
+        "seismic-resistivity",
+        options,
+      )
+    ) {
+      return;
+    }
+    return updateSeismicResistivityIsoOverlaysImpl.call(
+      this,
+      style,
+      this.transitionAwareSectionIsoOverlayUpdateOptions(style, options),
+    );
   }
 
   mtSurfaceBoundaryDefinitionsFromGroup(
@@ -3998,13 +4111,35 @@ export class SceneManager {
   }
 
   applyStyle(id: string, style: EditableStyle): void {
-    return applyStyleImpl.call(this, id, style);
+    applyStyleImpl.call(this, id, style);
+    // The full-density MT cloud isolates to the iso-bands selected on the volume
+    // layer's section config (the source of truth). applyStyle only re-styles the
+    // one layer, so refresh the cloud when the volume changes — otherwise band
+    // toggles authored on the volume never cross to the cloud.
+    if (id === UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID) {
+      for (const cloudId of [
+        UTAH_FORGE_MT_RESISTIVITY_FULL_DENSITY_LAYER_ID,
+        UTAH_FORGE_MT_RESISTIVITY_PREVIEW_LAYER_ID,
+      ]) {
+        if (this.layers.has(cloudId)) {
+          applyStyleImpl.call(this, cloudId, this.styleForLayer(cloudId));
+        }
+      }
+    }
   }
 
   applyEffectiveStylesForPage(
     environment: EnvironmentSetup,
     page: PresentationPage,
   ): void {
+    // A full reapply may land while a Section ISO root crossfade is still
+    // ramping (late async layer resolve, deferred editor reapply). Discarding
+    // that ramp and rebuilding overlays at full opacity is the visible
+    // "isolines pop in after the transition" regression, so capture the
+    // in-flight envelope and resume the landing after the rebuild.
+    const inFlightIsoEnvelope = this.sectionIsoOverlayTransition
+      ? clamp01(this.sectionIsoOverlayTransition.targetOpacity)
+      : null;
     this.layerTweens.clear();
     this.scalarStyleTweens.clear();
     this.workingAreaFocusTween = null;
@@ -4025,6 +4160,26 @@ export class SceneManager {
       effectiveStyle(environment, page, UTAH_FORGE_WORKING_AREA_FOCUS_LAYER_ID),
     );
     this.applyLakesToTerrain(environment, page);
+    if (inFlightIsoEnvelope !== null && inFlightIsoEnvelope < 0.98) {
+      this.resumeSectionIsoOverlayLanding(inFlightIsoEnvelope);
+    }
+  }
+
+  private resumeSectionIsoOverlayLanding(envelope: number): void {
+    const groups = this.sectionIsoOverlayGroupsForTransition();
+    if (groups.length === 0) return;
+    const remainingMs = Math.max(160, (1 - envelope) * 420);
+    this.sectionIsoOverlayTransition = {
+      sourceRoots: [],
+      targetRoots: [],
+      startMs: performance.now() - remainingMs * envelope,
+      durationMs: remainingMs,
+      easing: "linear",
+      targetOpacity: envelope,
+    };
+    for (const { kind, layerId, group } of groups) {
+      this.registerSectionIsoOverlayTransitionTargetRoot(kind, layerId, group);
+    }
   }
 
   applyEffectiveVisibilityForPage(
@@ -4374,11 +4529,62 @@ export class SceneManager {
       "async-layer-resolve",
       "full-current-page-state",
     );
+    const previousLayerOpacity = new Map<string, number>();
+    const previousEnterTweens = isAsyncLayerResolve
+      ? new Map(this.layerTweens)
+      : null;
+    if (isAsyncLayerResolve && env && page) {
+      for (const [id, group] of this.layers) {
+        previousLayerOpacity.set(
+          id,
+          group.visible ? this.currentRenderOpacityForTree(group, 0) : 0,
+        );
+      }
+    }
     if (env) this.applyEnvironment(env);
     if (env && page) {
       this.applyEffectiveVisibilityForPage(env, page);
       this.applyEffectiveStylesForPage(env, page);
       this.applyPageScene(page);
+      if (isAsyncLayerResolve) {
+        // Readiness rule: a layer whose data resolves after the page landed
+        // must not flash to full opacity. Async resolves arrive in bursts,
+        // and the full style apply above writes full target opacity and
+        // clears layerTweens — without restoring in-flight enter fades each
+        // burst snapped half-faded layers to full ("terrain snaps in") and
+        // restarted not-yet-visible ones. Restore running fades first, then
+        // start fades only for genuinely new arrivals.
+        const now = performance.now();
+        for (const [id, group] of this.layers) {
+          if (!group.visible) continue;
+          const target = this.targetOpacityForLayer(env, page, id);
+          if (target <= 0.001) continue;
+          const preserved = previousEnterTweens?.get(id);
+          if (preserved) {
+            const t =
+              preserved.durationMs <= 0
+                ? 1
+                : (now - preserved.startMs) / preserved.durationMs;
+            if (t < 1) {
+              this.layerTweens.set(id, { ...preserved, to: target });
+              this.applyLayerRenderOpacity(
+                id,
+                previousLayerOpacity.get(id) ?? 0,
+              );
+              continue;
+            }
+          }
+          if ((previousLayerOpacity.get(id) ?? 0) > 0.001) continue;
+          this.applyLayerRenderOpacity(id, 0);
+          this.layerTweens.set(id, {
+            from: 0,
+            to: target,
+            startMs: now,
+            durationMs: DEFAULT_LAYER_FADE_MS,
+            easing: "easeInOutCubic",
+          });
+        }
+      }
     }
   }
 
@@ -4566,7 +4772,23 @@ export class SceneManager {
           : m.opacity;
       m.userData.sectionIsoBaseOpacity = baseOpacity;
       m.userData.sectionIsoThresholdOcclusionCount = occlusionCount;
-      m.userData.sectionIsoThresholdOcclusionAttenuation = attenuation;
+      // Occlusion count changes are discrete (x0.8 per occluding surface).
+      // Snapping the attenuation steps composed opacity ~12% in one frame
+      // mid-transition; ramp toward the target at a bounded per-frame rate
+      // instead. This runs from the per-frame occlusion update, so the ramp
+      // completes in roughly 0.2 / 0.04 = 5 frames per step.
+      const previousAttenuation =
+        typeof m.userData?.sectionIsoThresholdOcclusionAttenuation === "number" &&
+        Number.isFinite(m.userData.sectionIsoThresholdOcclusionAttenuation)
+          ? m.userData.sectionIsoThresholdOcclusionAttenuation
+          : attenuation;
+      const attenuationStep = 0.04;
+      const rampedAttenuation =
+        Math.abs(attenuation - previousAttenuation) <= attenuationStep
+          ? attenuation
+          : previousAttenuation +
+            Math.sign(attenuation - previousAttenuation) * attenuationStep;
+      m.userData.sectionIsoThresholdOcclusionAttenuation = rampedAttenuation;
       const transitionOpacity =
         typeof m.userData?.sectionIsoTransitionOpacity === "number"
           ? m.userData.sectionIsoTransitionOpacity

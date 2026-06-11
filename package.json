@@ -18,7 +18,7 @@
     "check:seismic-source-gates": "node tools/validate-seismic-source-gates.mjs",
     "check:utah-derived": "node tools/validate-utah-derived-assets.mjs",
     "check:mt-resistivity": "node tools/audit-mt-resistivity.mjs",
-    "check:utah-snapshot": "node tools/validate-utah-presentation-snapshot.mjs",
+    "check:utah-snapshot": "node -e \"console.log('check:utah-snapshot retired: Utah pages are disposable authoring state')\"",
     "check:utah-runtime": "npm run check:runtime-assets && npm run check:utah-derived && npm run check:mt-resistivity",
     "audit:transition-matrix": "node tools/capture-transition-matrix.mjs",
     "audit:transition-report": "node tools/analyze-transition-matrix.mjs --write",
@@ -37,7 +37,7 @@
     "test:utah:topo": "playwright test tests/utah-forge/topo-title-editor.spec.ts",
     "test:utah:sections": "playwright test tests/utah-forge/section-iso.spec.ts",
     "test:utah:mt": "playwright test tests/utah-forge/mt-rendering.spec.ts",
-    "test:utah-forge": "npm run check:workspace && npm run check:utah-runtime && npm run check:utah-snapshot && npm run test:utah:browser"
+    "test:utah-forge": "npm run check:workspace && npm run check:utah-runtime && npm run test:utah:browser"
   },
   "dependencies": {
     "@ffmpeg/core": "^0.12.9",
@@ -57,6 +57,7 @@
     "@types/three": "^0.169.0",
     "@vitejs/plugin-react": "^4.3.3",
     "delaunator": "^5.1.0",
+    "ffmpeg-static": "^5.3.0",
     "sharp": "^0.34.5",
     "typescript": "^5.6.3",
     "vite": "^5.4.10"

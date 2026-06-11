@@ -28,7 +28,7 @@ const transitionDecisionLog = readFileSync(
   "utf8",
 );
 const tempLog = readFileSync(
-  "docs/dev-context/Section-Iso-Transition-Smoothing-Temp-Log-2026-06-05.md",
+  "docs/dev-context/Archive/Section-Iso-Transition-Smoothing-Temp-Log-2026-06-05.md",
   "utf8",
 );
 
@@ -164,5 +164,61 @@ test("durable docs lock Section ISO root crossfade after validation", () => {
     tempLog,
     /ready for visual check/,
     "Temporary log should preserve the manual visual verification status.",
+  );
+});
+
+
+
+test("SceneManager injects non-destructive Section ISO options during active target transitions", () => {
+  const sceneManager = readFileSync("src/scene/SceneManager.ts", "utf8");
+
+  assert.match(
+    sceneManager,
+    /private transitionAwareSectionIsoOverlayUpdateOptions\([\s\S]*?style: EditableStyle,[\s\S]*?options\?: SectionIsoOverlayUpdateOptions/,
+    "SceneManager should centralize transition-aware Section ISO update options.",
+  );
+
+  assert.match(
+    sceneManager,
+    /style\.sectionIsoEnabled !== true/,
+    "Inactive Section ISO target styles must not receive preserveExisting.",
+  );
+
+  assert.match(
+    sceneManager,
+    /!!sceneSectionStyle[\s\S]*?sceneSectionStyle\.sceneSectionEnabled === true[\s\S]*?sceneSectionActivePlanes\(sceneSectionStyle\)\.length > 0/,
+    "Preserve-existing injection must be target-section-active, not just transition-active.",
+  );
+
+  assert.match(
+    sceneManager,
+    /private sectionIsoOverlayUpdateHeldByTransition\([\s\S]*?kind: SectionIsoOverlayTransitionRootKind,[\s\S]*?options\?: SectionIsoOverlayUpdateOptions/,
+    "SceneManager should hold ISO overlay rebuilds while a transition owns populated target roots; rebuilds duplicate roots or swap contours at full opacity.",
+  );
+
+  assert.match(
+    sceneManager,
+    /options\?\.bypassTransitionHold === true\) return false/,
+    "Height-sampler retries must be able to bypass the transition hold to replace untrimmed contours.",
+  );
+
+  assert.match(
+    sceneManager,
+    /root\.kind === kind && root\.group\.children\.length > 0/,
+    "The transition hold must apply only to registered, populated target roots.",
+  );
+
+  assert.match(
+    sceneManager,
+    /initialTransitionOpacity:\s*options\?\.initialTransitionOpacity \?\? transition\.targetOpacity/,
+    "Active target preparation should attach target roots at the current transition opacity.",
+  );
+
+  const wrapperCalls =
+    sceneManager.match(/this\.transitionAwareSectionIsoOverlayUpdateOptions\(style, options\)/g) ?? [];
+
+  assert.ok(
+    wrapperCalls.length >= 3,
+    "MT, seismic-volume, and seismic-resistivity ISO update wrappers should all inject transition-aware options.",
   );
 });

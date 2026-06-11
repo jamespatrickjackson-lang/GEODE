@@ -2183,7 +2183,152 @@ that approval exists, tool and demo development remain on stale local datasets.
 Controlled handoff must carry explicit risks and client-side technical
 acceptance by the head of engineering or equivalent authority.
 
-## DEC-142 - Source-gated seismic products stay visible but non-rendered
+## DEC-142 - Capture Director 4K video uses external deterministic render jobs
+
+This decision records the 4K video production boundary after browser FFmpeg
+encoding proved ambiguous for large page-sequence renders.
+
+**Considered:** keep 4K final Render Out and Render Path Video inside browser
+FFmpeg, only improve status copy, or route final 4K video through an external
+local render job while keeping browser encoding for smaller/preview outputs.
+
+**Chose:** 4K-or-higher deterministic video starts a dev-only local external
+renderer by default. Capture Director posts a `CaptureVideoRenderJobV1` to
+`/api/capture/render-video`; the Vite dev server runs
+`tools/render-capture-video-job.mjs`, writes the MP4/WebM under
+`.tmp/capture-video-outputs/`, and reports output and diagnostics paths back to
+the in-app job runtime. The job preserves the CaptureRecipe, Page Bar, Camera
+Path, resolution, FPS, format, app URL, and max-detail no-downsampling fidelity.
+Browser FFmpeg remains available for shorter/smaller deterministic videos, but
+it now has explicit frame-writing, encoding, finalizing, timeout, and
+stall-failure handling. JSON job download is a fallback/export artifact, not
+the normal result of pressing Render.
+
+**Why:** final marketing video must not hang behind a browser worker with no
+clear destination. The external route renders deterministic frames from the
+real app state, encodes through local FFmpeg, writes diagnostics, and gives the
+operator a concrete output path. Browser output exists only after a blob has
+been successfully encoded.
+
+**Guard:** do not use browser display capture or browser FFmpeg as the only
+4K/page-sequence final-video route. Do not write project/page fixtures while
+creating or running external video jobs; local outputs live under `.tmp/`.
+Equation, spline, camera-path, and editor overlays remain authoring/session aids
+and are excluded from marketing output unless explicitly enabled in a future
+export-overlay option.
+
+## DEC-143 - Boreholes use an app-level composable element kit; pages carry per-borehole diffs
+
+This decision records the borehole visualization model after source-location
+boreholes (`58-32`, `78B-32`, the unnamed `BOR` seismic candidates) were found
+hidden on most pages: the app-level `demoBoreholeSourceLocations.visible` was
+`false`, and the shallow env→page style merge meant only the three pages that
+re-authored the whole block showed any source markers.
+
+**Considered:** keep the conservative default-off stance and enable boreholes
+page by page; keep the exclusive `mode` shape selector; or make the visual model
+an app-level, composable element kit shared across every borehole with
+per-borehole show/hide.
+
+**Chose:** every borehole carries a shared, composable element kit — line
+(location/trajectory/depth, with width/color/opacity/dashed + dash settings),
+ground torus, ground ball, ground crosshair, depth trace, label, and an optional
+loadable SVG icon on top (axis or billboard). Element styling is shared across
+all boreholes; show/hide is per borehole (`items[id]` for source-location
+boreholes, the well `visible` for trajectory wells). The exclusive `mode` enum is
+retained only for back-compat and is migrated to the per-element `*Visible` flags
+by the resolver. App-level defaults are line + ground torus on. Trajectory wells
+`16A(78)-32` / `16B(78)-32` keep their pipe + centerline and gain the same kit
+layered at the collar.
+
+**Why:** "pages are disposable presentation boards"; the canonical element kit
+and default visibility belong at the app level (environment layer style), not in
+page fixtures. The composable element set replaces the all-or-nothing shape mode
+so multiple elements can show at once.
+
+**Trade-off accepted:** the env→page style merge for `demoBoreholeSourceLocations`,
+`demoBoreholeWells`, and `demoBoreholeBlock` is now a targeted deep merge
+(including nested `items`/`icon`), so a page diff layers over the shared kit
+instead of replacing it. This narrows the shallow-merge composition rule (#023)
+for these specific keys only.
+
+**Claim safety:** `58-32` / `78B-32` / `BOR*` render as source-location markers
+from GDR 1358 surface coordinates only (no trajectory or calibration claim).
+`Acord-1` and `FDST / FORGE test drill site` remain registry-only with no source
+geometry. `16A`/`16B`/`16B` keep orientation-only status.
+
+**Guard:** do not move the canonical borehole element kit or default visibility
+into page fixtures. Keep the per-key deep merge for borehole style objects.
+Source-location boreholes must not be relabeled as trajectory or
+survey-validated geometry.
+
+## DEC-144 - Camera Path authored time curves are the motion authority
+
+This decision repairs Capture Director camera-path transition motion so the
+authored `timeCurve` on each transition container is the temporal authority
+for playback, scrub preview, Render Out, and Still Capture sampling.
+
+**Considered:** keep the v3 adaptive speed law that re-eased every transition
+with a hidden power ease and blended segment boundaries back toward raw linear
+time, gate that law behind an authoring option, or reduce it to a bounded
+guard that never overrides the authored curve.
+
+**Chose:** `sampleCaptureCameraPathV3` applies the authored `timeCurve` and
+then a bounded motion guard only. The guard is identity on calm geometry, so
+`linear` means constant time progression and each easing mode reads exactly as
+authored. On stressed geometry the guard applies monotonic, endpoint-exact
+warps: deceleration into and out of sharp travel corners (cubic Hermite with
+reduced endpoint slope) and mid-segment compression for large look-direction
+flips, near-focal orbits, and big FOV moves (sine-based warp, slope bounded
+above zero). The equation-handoff stage that rewrote up to 72% of each segment
+toward raw linear time was removed; adjacent segments meet exactly as their
+authored boundary equations dictate. Newly authored transitions default to
+`ease-in-out`; loaded paths keep their stored easing.
+
+**Why:** the previous pipeline composed the authored curve with an
+unconditional power-2.6 ease and boundary rewrites, so a default `linear`
+transition crawled through roughly the first quarter of its duration, rushed
+the middle at almost four times average speed, and the Timing easing control
+produced no visible change. The corner law was also inverted: progress lagged
+linear approaching a sharp corner, so arrival speed at the corner exceeded
+average speed. The surfacing model and agent guide define `T` as an authored
+stack; hidden time warps that override it break that contract and make
+transition feel un-authorable.
+
+**Guard:** `tests/tools/capture-director-camera-path-v3-runtime.test.mjs`
+asserts guard identity on calm geometry, ahead-of-linear deceleration into
+tight corners, flip-zone compression, monotonic focus-regulated progress, and
+endpoint exactness. `tests/tools/capture-director-camera-path-v3-spline-runtime.test.mjs`
+asserts that authored boundary equations meet in a continuous, symmetric soft
+pause at handoff nodes with no speed spike. Do not reintroduce time-warp
+stages that replace or rewrite the authored `timeCurve`; new motion shaping
+must stay bounded, monotonic, endpoint-exact, and documented in
+`docs/capture-director/camera-path-surfacing-model.md`.
+
+## DEC-145 - Explicit MT boundary visibility maps are authoritative, including all-off
+
+Supersedes the all-off-is-stale clause used by the MT threshold boundary
+resolver and recorded in `CLAUDE.md`.
+
+**Considered:** keep treating all-off visibility maps as empty/stale state
+that inherits default boundary visibility, or treat any map carrying an
+explicit `visible` flag as deliberate authoring.
+
+**Chose:** `resolveMtSurfaceBoundaries` treats a canonical or legacy
+visibility map as authoritative when any entry carries an explicit boolean
+`visible` flag — including maps where every flag is `false`. Only maps with
+no explicit flags at all inherit default boundary visibility.
+
+**Why:** the stale-map rule made the default isosurfaces render on pages the
+author deliberately set to show none, so surfaces appeared "out of nowhere"
+during navigation onto those pages. An explicit all-off map is authored
+intent, not stale state; the stale-map fallback remains for genuinely empty
+legacy pages.
+
+**Guard:** do not reintroduce visible-true-only authority checks in
+`src/projectModules/utahForge/mtSurfaceBoundaries.ts`.
+
+## DEC-146 - Source-gated seismic products stay visible but non-rendered
 
 This decision governs required seismic products named by public source records
 when the deliverable cannot be validated into renderable browser artifacts.
@@ -2212,7 +2357,7 @@ download URLs. If a valid source copy is later supplied, rerun the seismic
 browser builder so the gate can transition to a source-backed renderable
 product through the normal manifest path.
 
-## DEC-143 - Seismic sections use trace-header geometry before envelopes
+## DEC-147 - Seismic sections use trace-header geometry before envelopes
 
 This decision supersedes any seismic browser behavior that placed 2D or 3D
 sections from file-order indexes, square trace-count grids, endpoint-only line

@@ -3,8 +3,10 @@ import { SECTION_ISO_OVERLAY_POLICY } from "../../loaders/surfaceRenderPolicy";
 import { disposeObjectTree } from "../disposeObjectTree";
 import {
   deterministicScalarSample,
+  scalarValueInBands,
   scalarValueIsVisible,
   scalarVisibilityWeight,
+  type ScalarBand,
 } from "../scalarFocus";
 import { geometryOriginalIndex, sequentialIndex } from "../styles/scalarEdgeLines";
 import { scalarColorAt, seismicColorAt } from "../styles/colorScales";
@@ -1439,13 +1441,19 @@ export function applyScalarFocusIndex(
   filterActive: boolean,
   supportValues: Float32Array | null = null,
   noiseThreshold = 0,
+  bands: ReadonlyArray<ScalarBand> = [],
 ): void {
   const geometry = obj.geometry;
   const position = geometry.getAttribute("position");
   if (!(position instanceof THREE.BufferAttribute)) return;
 
+  // Selected iso-bands isolate the cloud to the points in those windows. This
+  // is the 3D form of "selective isobands" and overrides the single focus
+  // window when present.
+  const bandSelect = bands.length > 0;
+
   const originalIndex = geometryOriginalIndex(geometry);
-  if (!filterActive) {
+  if (!filterActive && !bandSelect) {
     geometry.setIndex(
       originalIndex
         ? new THREE.BufferAttribute(originalIndex.slice(), 1)
@@ -1459,10 +1467,10 @@ export function applyScalarFocusIndex(
     const scratch = new Uint32Array(position.count);
     let count = 0;
     for (let i = 0; i < position.count; i += 1) {
-      if (
-        scalarValueIsVisible(values, i, trimMin, blendMin, blendMax, trimMax) &&
-        (!supportValues || supportValues[i] >= noiseThreshold)
-      ) {
+      const passesWindow = bandSelect
+        ? scalarValueInBands(values[i], bands)
+        : scalarValueIsVisible(values, i, trimMin, blendMin, blendMax, trimMax);
+      if (passesWindow && (!supportValues || supportValues[i] >= noiseThreshold)) {
         scratch[count] = i;
         count += 1;
       }

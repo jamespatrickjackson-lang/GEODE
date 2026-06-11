@@ -134,6 +134,7 @@ export function tickLayerTweensImpl(this: any, nowMs: number): void {
       !this.sceneSectionStyleTween &&
       !this.sceneSectionHelperTransitionSnapshot &&
       !this.workingAreaFocusTween &&
+      !this.sectionIsoOverlayTransition &&
       !this.activeSceneTransitionContext
     ) {
       this.lastLayerTweenTickDebug = {
@@ -174,15 +175,18 @@ export function tickLayerTweensImpl(this: any, nowMs: number): void {
         tween.durationMs <= 0 ? 1 : (nowMs - tween.startMs) / tween.durationMs;
       const done = t >= 1;
       const eased = done ? 1 : easeProgress(t, tween.easing);
+      // Dual-mask handles the discrete clip difference through blended mask
+      // alpha, but compatible numeric channels (same-id plane positions,
+      // frame bounds) must still MOVE per DEC-071. Applying raw toStyle here
+      // snapped section positions to the target on the first tick whenever
+      // any discrete field differed between pages.
       const style = done
         ? tween.toStyle
-        : tween.maskMode === "dual-mask"
-          ? tween.toStyle
-          : this.interpolatedSceneSectionStyle(
-              tween.fromStyle,
-              tween.toStyle,
-              eased,
-            );
+        : this.interpolatedSceneSectionStyle(
+            tween.fromStyle,
+            tween.toStyle,
+            eased,
+          );
       const maskTransition =
         !done && tween.maskMode === "dual-mask"
           ? this.sceneSectionMaskTransitionForTween(tween, eased)
@@ -200,7 +204,9 @@ export function tickLayerTweensImpl(this: any, nowMs: number): void {
         sceneSectionApplyMode = "transition-frame";
         if (tween.discreteChanged) tween.appliedDiscreteTarget = true;
       } else {
-        this.tickSectionIsoOverlayTransition(nowMs, 1);
+        // Let the Section ISO crossfade land on its own clock; forcing
+        // eased = 1 here snaps the roots when the clocks diverge.
+        this.tickSectionIsoOverlayTransition(nowMs);
         this.applySceneSectionPlanes(style);
         sceneSectionApplyDebug = this.lastSceneSectionApplyDebug ?? null;
         sceneSectionApplyMode = "full";
@@ -346,7 +352,14 @@ export function tickLayerTweensImpl(this: any, nowMs: number): void {
         !transition ||
         transition.durationMs <= 0 ||
         performance.now() - transition.startMs >= transition.durationMs;
-      if (transitionDone) {
+      // Section ISO root crossfades land on their own clock; committing
+      // before they finish snaps the roots to full opacity in one frame.
+      const isoTransition = this.sectionIsoOverlayTransition;
+      const isoTransitionDone =
+        !isoTransition ||
+        isoTransition.durationMs <= 0 ||
+        performance.now() - isoTransition.startMs >= isoTransition.durationMs;
+      if (transitionDone && isoTransitionDone) {
         this.commitSectionIsoOverlayTransition?.();
         this.recordTransitionCommitAttempt?.({
           phase: "tween-completion",

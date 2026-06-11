@@ -205,13 +205,10 @@ const DEFAULT_FAIRING_V3: CaptureCameraPathFairingV3 = {
   autoHandles: true,
 };
 const CAPTURE_CAMERA_PATH_ARC_LENGTH_STEPS = 64;
-const CAPTURE_CAMERA_PATH_EQUATION_HANDOFF_WINDOW = 0.72;
-const CAPTURE_CAMERA_PATH_SOFT_TIME_CURVE_MODES = new Set<CaptureCameraPathTimeCurveModeV3>([
-  "ease-in",
-  "ease-out",
-  "ease-in-out",
-  "custom-ramp",
-]);
+const CAPTURE_CAMERA_PATH_MOTION_GUARD_MIN_STRESS = 0.002;
+const CAPTURE_CAMERA_PATH_MOTION_GUARD_CORNER_MAX = 0.6;
+const CAPTURE_CAMERA_PATH_MOTION_GUARD_CORNER_GAIN = 0.9;
+const CAPTURE_CAMERA_PATH_MOTION_GUARD_FLIP_MAX = 0.85;
 export const DEFAULT_CAPTURE_CAMERA_PATH_SPLINE_CONTROLS_V3: CaptureCameraPathSplineControlsV3 =
   {
     enabled: true,
@@ -1600,16 +1597,24 @@ function nodeTarget(path: CaptureCameraPathV3, node: CaptureCameraPathNodeV3): C
   return fallbackTarget(node);
 }
 
-function smoothstep01(value: number): number {
-  const t = Math.max(0, Math.min(1, value));
-  return t * t * (3 - 2 * t);
+function monotonicFlipCompression(value: number, amount: number): number {
+  // Slope is 1 - amount at the segment midpoint and 1 + amount at the
+  // endpoints; monotonic for amount <= 1 and exact at 0/1.
+  return value + (amount * Math.sin(2 * Math.PI * value)) / (2 * Math.PI);
 }
 
-function easeInOutPower01(value: number, exponent = 2.6): number {
-  const t = Math.max(0, Math.min(1, value));
-  return t < 0.5
-    ? Math.pow(2 * t, exponent) / 2
-    : 1 - Math.pow(2 * (1 - t), exponent) / 2;
+function monotonicCornerGuard(
+  value: number,
+  departSlow: number,
+  arriveSlow: number,
+): number {
+  // Cubic Hermite with endpoint slopes 1 - departSlow and 1 - arriveSlow.
+  // The derivative is a downward parabola, so its minimum sits at an
+  // endpoint and stays >= 0 for amounts <= 1: monotonic by construction.
+  const c = 1 - departSlow;
+  const a = -(departSlow + arriveSlow);
+  const b = 2 * departSlow + arriveSlow;
+  return ((a * value + b) * value + c) * value;
 }
 
 function directionStress(a: CaptureVec3 | null, b: CaptureVec3 | null): number {
@@ -1712,114 +1717,44 @@ export function resolveCaptureCameraPathV3AdaptiveProgress(
     nodeForwardDirection(path, neighbors.to),
   );
   const fovStress = Math.max(0, Math.min(1, Math.abs(neighbors.to.fov - neighbors.from.fov) / 90));
+  // Sampled at the segment midpoint so the guard is one fixed monotonic
+  // warp per segment instead of a progress-dependent (and therefore
+  // potentially non-monotonic) reshaping.
   const focalAngularStress = resolveCaptureCameraPathV3FocalAngularStress(
     path,
     segment,
-    baseProgress,
+    0.5,
   );
   const centerStress = Math.max(lookStress, focalAngularStress, fovStress * 0.55);
-  if (Math.max(startStress, endStress, centerStress) <= 0.002) {
-    return easeInOutPower01(baseProgress);
+  if (
+    Math.max(startStress, endStress, centerStress) <=
+    CAPTURE_CAMERA_PATH_MOTION_GUARD_MIN_STRESS
+  ) {
+    // Calm geometry: the authored time curve is the motion authority.
+    return baseProgress;
   }
-
-  const startEnvelope = 1 - smoothstep01(baseProgress / 0.42);
-  const endEnvelope = smoothstep01((baseProgress - 0.58) / 0.42);
-  const centerEnvelope = Math.pow(
-    1 - Math.min(1, Math.abs(baseProgress - 0.5) / 0.34),
-    2,
+  const flipAmount = Math.min(
+    CAPTURE_CAMERA_PATH_MOTION_GUARD_FLIP_MAX,
+    centerStress,
   );
-  const startCatchup =
-    startStress * 0.28 * startEnvelope * baseProgress * 4;
-  const endLag =
-    endStress * 0.28 * endEnvelope * (1 - baseProgress) * 4;
-  const centered =
-    0.5 +
-    (baseProgress - 0.5) *
-      (1 - Math.min(0.82, centerStress * centerEnvelope * 0.82));
-  const centerDelta = (centered - baseProgress) * centerEnvelope;
-  return Math.max(
-    0,
-    Math.min(1, baseProgress + startCatchup - endLag + centerDelta),
+  const departSlow = Math.min(
+    CAPTURE_CAMERA_PATH_MOTION_GUARD_CORNER_MAX,
+    startStress * CAPTURE_CAMERA_PATH_MOTION_GUARD_CORNER_GAIN,
   );
-}
-
-function previousSegmentFor(
-  path: CaptureCameraPathV3,
-  segment: CaptureCameraPathSegmentV3,
-): CaptureCameraPathSegmentV3 | null {
-  return [...path.segments].reverse().find(
-    (candidate) => candidate.toNodeId === segment.fromNodeId,
-  ) ?? null;
-}
-
-function nextSegmentFor(
-  path: CaptureCameraPathV3,
-  segment: CaptureCameraPathSegmentV3,
-): CaptureCameraPathSegmentV3 | null {
-  return path.segments.find(
-    (candidate) => candidate.fromNodeId === segment.toNodeId,
-  ) ?? null;
-}
-
-function timeCurveEquationStress(
-  a: CaptureCameraPathTimeCurveV3,
-  b: CaptureCameraPathTimeCurveV3,
-): number {
-  if (a.mode === b.mode) {
-    if (a.mode !== "custom-ramp") return 0;
-    return JSON.stringify(a.ramp ?? []) === JSON.stringify(b.ramp ?? []) ? 0 : 0.45;
-  }
-  return CAPTURE_CAMERA_PATH_SOFT_TIME_CURVE_MODES.has(a.mode) ||
-    CAPTURE_CAMERA_PATH_SOFT_TIME_CURVE_MODES.has(b.mode)
-    ? 0.75
-    : 0.35;
-}
-
-function segmentEquationMismatchStress(
-  path: CaptureCameraPathV3,
-  a: CaptureCameraPathSegmentV3,
-  b: CaptureCameraPathSegmentV3,
-): number {
-  const aContinuity = resolveCaptureCameraPathBezierSegment(path, a).diagnostics.effectiveContinuity;
-  const bContinuity = resolveCaptureCameraPathBezierSegment(path, b).diagnostics.effectiveContinuity;
-  const continuityStress = Math.abs(
-    continuityRank(aContinuity) - continuityRank(bContinuity),
-  ) / 3;
-  return Math.max(
-    continuityStress,
-    timeCurveEquationStress(a.timeCurve, b.timeCurve),
+  const arriveSlow = Math.min(
+    CAPTURE_CAMERA_PATH_MOTION_GUARD_CORNER_MAX,
+    endStress * CAPTURE_CAMERA_PATH_MOTION_GUARD_CORNER_GAIN,
   );
-}
-
-function resolveCaptureCameraPathV3EquationHandoffProgress(
-  path: CaptureCameraPathV3,
-  segment: CaptureCameraPathSegmentV3,
-  localT: number,
-  progress: number,
-): number {
-  const t = Math.max(0, Math.min(1, localT));
-  let nextProgress = Math.max(0, Math.min(1, progress));
-  const nodes = nodeById(path);
-  const from = nodes.get(segment.fromNodeId);
-  const to = nodes.get(segment.toNodeId);
-  const previous = previousSegmentFor(path, segment);
-  const next = nextSegmentFor(path, segment);
-  if (previous && from && from.holdSecondsAfter <= 0) {
-    const stress = segmentEquationMismatchStress(path, previous, segment);
-    const weight =
-      Math.min(1, stress * 1.18) *
-      (1 - smoothstep01(t / CAPTURE_CAMERA_PATH_EQUATION_HANDOFF_WINDOW));
-    nextProgress = lerp(nextProgress, t, weight);
-  }
-  if (next && to && to.holdSecondsAfter <= 0) {
-    const stress = segmentEquationMismatchStress(path, segment, next);
-    const weight =
-      Math.min(1, stress * 1.18) *
-      smoothstep01((t - (1 - CAPTURE_CAMERA_PATH_EQUATION_HANDOFF_WINDOW)) /
-        CAPTURE_CAMERA_PATH_EQUATION_HANDOFF_WINDOW);
-    nextProgress = lerp(nextProgress, t, weight);
-  }
-  return Math.max(0, Math.min(1, nextProgress));
+  const compressed =
+    flipAmount > CAPTURE_CAMERA_PATH_MOTION_GUARD_MIN_STRESS
+      ? monotonicFlipCompression(baseProgress, flipAmount)
+      : baseProgress;
+  const guarded =
+    departSlow > CAPTURE_CAMERA_PATH_MOTION_GUARD_MIN_STRESS ||
+    arriveSlow > CAPTURE_CAMERA_PATH_MOTION_GUARD_MIN_STRESS
+      ? monotonicCornerGuard(compressed, departSlow, arriveSlow)
+      : compressed;
+  return Math.max(0, Math.min(1, guarded));
 }
 
 function poseFromNode(
@@ -2844,16 +2779,10 @@ export function sampleCaptureCameraPathV3(
       ? 1
       : Math.max(0, Math.min(1, (safeTime - entry.startSeconds) / entry.durationSeconds));
   const timeProgress = applyCaptureCameraPathV3TimeCurve(segment.timeCurve, localT);
-  const adaptiveProgress = resolveCaptureCameraPathV3AdaptiveProgress(
+  const progress = resolveCaptureCameraPathV3AdaptiveProgress(
     path,
     segment,
     timeProgress,
-  );
-  const progress = resolveCaptureCameraPathV3EquationHandoffProgress(
-    path,
-    segment,
-    localT,
-    adaptiveProgress,
   );
   const geometry =
     geometrySampleForSegment(path, segment, progress) ?? {

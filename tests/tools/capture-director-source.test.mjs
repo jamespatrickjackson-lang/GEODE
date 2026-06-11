@@ -35,6 +35,7 @@ const requiredCaptureFiles = [
   "captureJobTypes.ts",
   "captureJobRuntime.ts",
   "captureJobDiagnostics.ts",
+  "externalVideoRenderJob.ts",
   "captureVideoSaveOptions.ts",
   "previewVideoTranscoder.ts",
   "CameraPathLineItemEditor.tsx",
@@ -2069,6 +2070,7 @@ test("Capture Job Runtime and deterministic path render wiring exist", () => {
     '"path-preview-transcode"',
     '"deterministic-video"',
     '"path-video"',
+    '"external-video"',
     '"external-still"',
     "CaptureJobStatus",
     '"preparing"',
@@ -2135,6 +2137,9 @@ test("Capture Job Runtime and deterministic path render wiring exist", () => {
     "Full UI is not supported for deterministic path video",
     "exportDeterministicFrameSequence",
     "encodeDeterministicFrameSequenceWithFfmpeg",
+    "createExternalVideoRenderJob",
+    "externalVideoRenderCommand",
+    "externalVideoJobUrl",
   ]) {
     assert.ok(provider.includes(expected), `provider should include ${expected}`);
   }
@@ -2181,5 +2186,105 @@ test("Capture Job Runtime and deterministic path render wiring exist", () => {
     "Preview MP4 conversion",
   ]) {
     assert.ok(transcoder.includes(expected), `preview transcoder should include ${expected}`);
+  }
+});
+
+test("4K deterministic video has external job and encoder-stall guardrails", () => {
+  const encoder = readSource("src", "capture", "frameSequenceVideoEncoder.ts");
+  for (const expected of [
+    "CaptureVideoEncodeProgress",
+    "stallTimeoutMs",
+    "execTimeoutMs",
+    "onProgress",
+    "Encoding stalled",
+    "writing-frames",
+    "finalizing",
+  ]) {
+    assert.ok(encoder.includes(expected), `encoder should include ${expected}`);
+  }
+
+  const browserRuntime = readSource("src", "capture", "browserFfmpegRuntime.ts");
+  for (const expected of [
+    "BrowserFfmpegProgressEvent",
+    "onProgress",
+    "timeoutMs",
+    "activeFfmpeg.on",
+    "activeFfmpeg.off",
+  ]) {
+    assert.ok(browserRuntime.includes(expected), `browser runtime should include ${expected}`);
+  }
+
+  const externalVideo = readSource("src", "capture", "externalVideoRenderJob.ts");
+  for (const expected of [
+    "CaptureVideoRenderJobV1",
+    'schema: "CaptureVideoRenderJobV1"',
+    "CAPTURE_VIDEO_RENDER_JOB_SCHEMA",
+    "createExternalVideoRenderJob",
+    "validateExternalVideoRenderJob",
+    "serializeExternalVideoRenderJob",
+    "parseExternalVideoRenderJobJson",
+    "externalVideoRenderJobFilename",
+    "externalVideoRenderCommand",
+    "recipe.mode full-ui is not supported by external video jobs",
+  ]) {
+    assert.ok(externalVideo.includes(expected), `external video job should include ${expected}`);
+  }
+
+  const localVideoRunner = readSource("src", "capture", "localVideoRenderRunner.ts");
+  for (const expected of [
+    "startLocalVideoRenderJob",
+    "pollLocalVideoRenderJob",
+    "cancelLocalVideoRenderJob",
+    "/api/capture/render-video",
+    "/api/capture/video-status",
+    "/api/capture/cancel-video",
+    "/api/capture/video-output",
+    "localRendererAvailable",
+  ]) {
+    assert.ok(
+      localVideoRunner.includes(expected),
+      `local video runner should include ${expected}`,
+    );
+  }
+
+  const provider = readSource("src", "capture", "CaptureDirectorProvider.tsx");
+  for (const expected of [
+    "startLocalVideoRenderJob",
+    "pollLocalVideoRenderJob",
+    "cancelLocalVideoRenderJob",
+    "runExternalVideoRenderJob",
+    "Local renderer unavailable",
+    "External video render complete",
+  ]) {
+    assert.ok(provider.includes(expected), `provider should include ${expected}`);
+  }
+
+  const authorWritePlugin = readSource("plugins", "vite-plugin-author-write.ts");
+  for (const expected of [
+    "/api/capture/render-video",
+    "/api/capture/video-status",
+    "/api/capture/cancel-video",
+    "/api/capture/video-output",
+    "render-capture-video-job.mjs",
+    "capture-video-outputs",
+  ]) {
+    assert.ok(
+      authorWritePlugin.includes(expected),
+      `Vite local capture runner should include ${expected}`,
+    );
+  }
+
+  const cli = readSource("tools", "render-capture-video-job.mjs");
+  for (const expected of [
+    "CaptureVideoRenderJobV1",
+    "--synthetic",
+    "--keep-frames",
+    "ffmpeg-static",
+    "FFMPEG_PATH",
+    "spawn",
+    "frameDiagnostics",
+    "CaptureVideoRenderJobDiagnosticsV1",
+  ]) {
+    assert.ok(cli.includes(expected), `external video CLI should include ${expected}`);
   }
 });

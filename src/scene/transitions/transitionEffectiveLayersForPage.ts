@@ -3,7 +3,9 @@ import { effectiveStyle, effectiveVisibility } from "../../pages/effective";
 import { CASE_STUDY_B_DEMO_LAYER_ALIASES } from "../../projectModules/caseStudyB/demoLayerAliases";
 import {
   UTAH_FORGE_MT_RESISTIVITY_FULL_DENSITY_LAYER_ID,
+  UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID,
   UTAH_FORGE_SCENE_SECTION_LAYER_ID,
+  UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID,
 } from "../../projectModules/utahForge/layerIds";
 import {
   productTransitionDecisionsForLayer,
@@ -674,13 +676,46 @@ export function transitionEffectiveLayersForPage(
       }),
     );
   }
-  this.beginSectionIsoOverlayTransition(
-    fromSceneSectionStyle,
-    targetSceneSectionStyle,
-    now,
-    duration,
-    easing,
-  );
+  // Section ISO roots crossfade only when their resolved state actually
+  // changes. Matched cut identity with unchanged section masks and unchanged
+  // overlay style must stay continuous (no self-crossfade dip); the live
+  // roots are protected through the sectionIsoStable envelope instead.
+  const sectionIsoRootSourceLayerIds = [
+    UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID,
+    UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID,
+  ];
+  const sectionIsoRootStateChanged = sectionIsoRootSourceLayerIds.some((id) => {
+    const fromStyle = effectiveStyle(fromEnvironment, fromPage, id);
+    const toStyle = effectiveStyle(toEnvironment, toPage, id);
+    const fromOn = fromVisible.has(id) && sectionIsoOverlayVisible(fromStyle);
+    const toOn = toVisible.has(id) && sectionIsoOverlayVisible(toStyle);
+    if (fromOn !== toOn) return true;
+    if (!toOn) return false;
+    if (scalarTransitionStyleChanged(fromStyle, toStyle)) return true;
+    if (
+      (fromStyle.sectionIsoLinesVisible !== false) !==
+        (toStyle.sectionIsoLinesVisible !== false) ||
+      (fromStyle.sectionIsoBandsVisible !== false) !==
+        (toStyle.sectionIsoBandsVisible !== false)
+    ) {
+      return true;
+    }
+    return (
+      JSON.stringify(fromStyle.sectionIsoTargetIds ?? null) !==
+      JSON.stringify(toStyle.sectionIsoTargetIds ?? null)
+    );
+  });
+  if (sceneSectionStyleChanged || sectionIsoRootStateChanged) {
+    this.beginSectionIsoOverlayTransition(
+      fromSceneSectionStyle,
+      targetSceneSectionStyle,
+      now,
+      duration,
+      easing,
+    );
+  } else {
+    this.discardSectionIsoOverlayTransition?.();
+  }
 
   this.sceneSectionReapplySuspended = true;
   try {
@@ -713,13 +748,29 @@ export function transitionEffectiveLayersForPage(
           targetStyle,
           this.layerSpecFor(id),
         );
+      // A discrete section change alone must not crossfade a layer whose own
+      // resolved state is unchanged: crossfading two identical translucent
+      // copies dips composite alpha mid-fade and shimmers (threshold-surface
+      // "ghosting"). The TRD-010 dual-mask path owns the clip-difference fade
+      // on material uniforms; the layer snapshot crossfade is reserved for
+      // layers whose own presentation state also changes.
+      const sectionAffectedLayerStateUnchanged =
+        Math.abs(fromOpacity - toOpacity) < 0.001 &&
+        !forgeDiscreteDataStyleChanged(
+          id,
+          fromStyle,
+          targetStyle,
+          this.layerSpecFor(id),
+        ) &&
+        !scalarTransitionStyleChanged(fromStyle, targetStyle);
       const shouldCrossfadeSceneSection =
         !!group &&
         duration > 0 &&
         sceneSectionDiscreteChanged &&
         targetSceneSectionTransitionActive &&
         fromOpacity > 0.001 &&
-        SCENE_SECTION_AFFECTED_LAYER_IDS.has(id);
+        SCENE_SECTION_AFFECTED_LAYER_IDS.has(id) &&
+        !sectionAffectedLayerStateUnchanged;
       const shouldTweenFullDensityScalarStyle =
         id === UTAH_FORGE_MT_RESISTIVITY_FULL_DENSITY_LAYER_ID &&
         scalarTransitionStyleChanged(fromStyle, targetStyle);
@@ -866,12 +917,22 @@ export function transitionEffectiveLayersForPage(
     this.sceneSectionReapplySuspended = false;
   }
   if (this.sceneSectionStyleTween?.maskMode === "dual-mask") {
-    this.applySceneSectionPlanes(this.sceneSectionStyleTween.toStyle, {
-      maskTransition: this.sceneSectionMaskTransitionForTween(
-        this.sceneSectionStyleTween,
+    // Build the initial dual-mask state with compatible numeric channels at
+    // their SOURCE values (eased 0); applying raw toStyle here parked plane
+    // and frame positions at the target before the tween ever ticked.
+    this.applySceneSectionPlanes(
+      this.interpolatedSceneSectionStyle(
+        this.sceneSectionStyleTween.fromStyle,
+        this.sceneSectionStyleTween.toStyle,
         0,
       ),
-    });
+      {
+        maskTransition: this.sceneSectionMaskTransitionForTween(
+          this.sceneSectionStyleTween,
+          0,
+        ),
+      },
+    );
   } else {
     this.reapplySceneSectionPlanes();
   }

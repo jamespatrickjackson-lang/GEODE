@@ -119,7 +119,7 @@ FORGE render baseline are:
 - Effective texture: `projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/naip_2024/naip_2024_regional_8192.webp?v=14db7e6b94489d80`.
 - Texture cache key: `v=14db7e6b94489d80`.
 - Public raster bounds: `[229069.2, 4144854, 484164, 4414308]`.
-- Public clip: the render-stack trace for page `12_mt_volume_overview` reports
+- Public clip: the render-stack trace for page `<disposable-utah-page>` reports
   enabled clip bounds with center `[0, 0, 2000]` and size
   `[1395706.5, 1139445, 12600]`. The same trace reports a
   `layer.terrain.publicSurfaceClipEnabled` authority conflict where the

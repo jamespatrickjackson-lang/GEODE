@@ -1,0 +1,7772 @@
+﻿# Transition Slice 1 — Section ISO / Scene Section / Working-Area Derived Roots Audit
+
+Status: read-only code audit before runtime code changes.
+
+Purpose: identify the first narrow transition runtime patch for Section ISO, scene-section helpers, working-area focus, and derived-root opacity/lifecycle.
+
+Scope:
+- No runtime code changes in this pass.
+- No page JSON changes.
+- No project manifest changes.
+- No test rewrites.
+- No easing/duration tuning.
+- Preserve MT full-density / scalar cloud transition behavior.
+
+Primary symptoms:
+- Isobars / isolines snap in and out.
+- Section ISO roots ghost during transitions.
+- Section visuals persist into unrelated pages.
+- Same section on source and target does not move/interpolate cleanly.
+- Working-area-sectioned ISO/surface entities ghost or fail controls on some pages.
+- Page-local opacity/state can appear to fall back to global/default state during transitions.
+
+Operating spec:
+- docs/dev-context/Transition-Runtime-Operating-Spec.md
+
+Hypotheses to confirm or reject:
+1. Active-to-inactive / active-to-unrelated section transitions do not discard every derived root/helper path.
+2. Late-built Section ISO roots can still attach at full opacity instead of current transition opacity.
+3. Some opacity paths write directly to material opacity instead of composed authored × transition × mask/attenuation opacity.
+4. Working-area focus opacity/mask can overwrite Section ISO or product opacity instead of composing with it.
+5. Scene section geometry has opacity/crossfade support but incomplete spatial move/interpolation support.
+6. Source graph capture can still use saved/default/global state instead of live current visual state in some paths.
+7. Final commit can still rebuild or reassert target visual state visibly if in-flight transition did not already land every channel.
+
+
+## Code Surface Inventory
+
+
+## Transition classifier / layer tween runtime
+
+Pattern: `transitionEffectiveLayersForPage|LayerTransitionKind|transitionEnvelopeAllowsLayer|tickLayerTweens|layerTween|snapshot|crossfade|full-density-scalar|discrete-crossfade|fade-opacity` 
+
+- src\scene\CLAUDE.md:21 — and `transitions/layerTweenRuntime.ts` — R2 extracted helpers.
+- src\scene\layerDiagnostics.ts:9 — export interface LayerDiagnosticsSnapshot {
+- src\scene\layerDiagnostics.ts:32 — getSnapshot: () => LayerDiagnosticsSnapshot;
+- src\scene\layerDiagnostics.ts:33 — logSnapshot: () => LayerDiagnosticsSnapshot;
+- src\scene\layerDiagnostics.ts:34 — getLastSnapshot: () => LayerDiagnosticsSnapshot | null;
+- src\scene\layerDiagnostics.ts:140 — export function collectLayerDiagnosticsSnapshot(
+- src\scene\layerDiagnostics.ts:143 — ): LayerDiagnosticsSnapshot {
+- src\scene\layerDiagnostics.ts:234 — let lastSnapshot: LayerDiagnosticsSnapshot | null = null;
+- src\scene\layerDiagnostics.ts:236 — getSnapshot: () => {
+- src\scene\layerDiagnostics.ts:237 — lastSnapshot = collectLayerDiagnosticsSnapshot(handle, context);
+- src\scene\layerDiagnostics.ts:238 — return lastSnapshot;
+- src\scene\layerDiagnostics.ts:240 — logSnapshot: () => {
+- src\scene\layerDiagnostics.ts:241 — const snapshot = hook.getSnapshot();
+- src\scene\layerDiagnostics.ts:242 — console.log("[GeoVox diagnostics]", snapshot);
+- src\scene\layerDiagnostics.ts:243 — return snapshot;
+- src\scene\layerDiagnostics.ts:245 — getLastSnapshot: () => lastSnapshot,
+- src\scene\SceneManager.ts:88 — type LayerTransitionSnapshot,
+- src\scene\SceneManager.ts:186 — sceneSectionHelperSnapshotAllowedForTween as sceneSectionHelperSnapshotAllowedForTweenImpl,
+- src\scene\SceneManager.ts:250 — import { transitionEffectiveLayersForPage as transitionEffectiveLayersForPageImpl } from "./transitions/transitionEffectiveLayersForPage";
+- src\scene\SceneManager.ts:270 — tickLayerTweensImpl,
+- src\scene\SceneManager.ts:271 — transitionEnvelopeAllowsLayerImpl,
+- src\scene\SceneManager.ts:274 — } from "./transitions/layerTweenRuntime";
+- src\scene\SceneManager.ts:609 — interface LayerTweenTickDebugState {
+- src\scene\SceneManager.ts:617 — snapshotMs: number;
+- src\scene\SceneManager.ts:618 — helperSnapshotMs: number;
+- src\scene\SceneManager.ts:622 — layerTweenIds: string[];
+- src\scene\SceneManager.ts:624 — snapshotIds: string[];
+- src\scene\SceneManager.ts:625 — layerTweenCountBefore: number;
+- src\scene\SceneManager.ts:627 — snapshotCountBefore: number;
+- src\scene\SceneManager.ts:629 — helperSnapshotActiveBefore: boolean;
+- src\scene\SceneManager.ts:637 — layerTweensMs: number;
+- src\scene\SceneManager.ts:666 — groundTracePolicy: "mirror-delayed-ground-trace-into-helper-snapshot";
+- src\scene\SceneManager.ts:668 — snapshotGroundTraceCount: number;
+- src\scene\SceneManager.ts:669 — snapshotActive: boolean;
+- src\scene\SceneManager.ts:752 — private sceneSectionHelperTransitionSnapshot: LayerTransitionSnapshot | null =
+- src\scene\SceneManager.ts:768 — private layerTweens = new Map<string, LayerOpacityTween>();
+- src\scene\SceneManager.ts:770 — private layerTransitionSnapshots = new Map<string, LayerTransitionSnapshot>();
+- src\scene\SceneManager.ts:805 — private lastLayerTweenTickDebug: LayerTweenTickDebugState | null = null;
+- src\scene\SceneManager.ts:1399 — const snapshot = this.layerTransitionSnapshots.get(id);
+- src\scene\SceneManager.ts:1400 — const snapshotOpacity = snapshot
+- src\scene\SceneManager.ts:1401 — ? this.currentRenderOpacityForTree(snapshot.group, snapshot.from)
+- src\scene\SceneManager.ts:1403 — const useSnapshot =
+- src\scene\SceneManager.ts:1404 — !!snapshot &&
+- src\scene\SceneManager.ts:1405 — snapshotOpacity > opacity + 0.001 &&
+- src\scene\SceneManager.ts:1406 — snapshot.style !== undefined;
+- src\scene\SceneManager.ts:1410 — ? (group.visible && opacity > 0.001) || snapshotOpacity > 0.001
+- src\scene\SceneManager.ts:1412 — opacity: Math.max(opacity, snapshotOpacity),
+- src\scene\SceneManager.ts:1413 — style: { ...(useSnapshot ? snapshot.style! : appliedStyle) },
+- src\scene\SceneManager.ts:1606 — let snapshot: THREE.Object3D;
+- src\scene\SceneManager.ts:1608 — snapshot = source.clone(false);
+- src\scene\SceneManager.ts:1612 — snapshot.userData = {
+- src\scene\SceneManager.ts:1614 — transitionSnapshotForLayer: id,
+- src\scene\SceneManager.ts:1620 — const snapshotRenderable = snapshot as THREE.Object3D & {
+- src\scene\SceneManager.ts:1625 — snapshotRenderable.geometry = this.cloneTransitionGeometry(
+- src\scene\SceneManager.ts:1630 — snapshotRenderable.material = Array.isArray(sourceRenderable.material)
+- src\scene\SceneManager.ts:1637 — snapshot.add(this.cloneTransitionObjectTree(id, child));
+- src\scene\SceneManager.ts:1639 — return snapshot;
+- src\scene\SceneManager.ts:1642 — cloneLayerTransitionSnapshot(
+- src\scene\SceneManager.ts:1646 — const snapshot = this.cloneTransitionObjectTree(id, source) as THREE.Group;
+- src\scene\SceneManager.ts:1647 — snapshot.name = `${id}-transition-snapshot`;
+- src\scene\SceneManager.ts:1648 — snapshot.userData = {
+- src\scene\SceneManager.ts:1649 — ...snapshot.userData,
+- src\scene\SceneManager.ts:1650 — transitionSnapshotForLayer: id,
+- src\scene\SceneManager.ts:1652 — this.scene.add(snapshot);
+- src\scene\SceneManager.ts:1653 — return snapshot;
+- src\scene\SceneManager.ts:1656 — private removeLayerTransitionSnapshot(id: string): void {
+- src\scene\SceneManager.ts:1657 — const snapshot = this.layerTransitionSnapshots.get(id);
+- src\scene\SceneManager.ts:1658 — if (!snapshot) return;
+- src\scene\SceneManager.ts:1659 — this.layerTransitionSnapshots.delete(id);
+- src\scene\SceneManager.ts:1660 — snapshot.group.parent?.remove(snapshot.group);
+- src\scene\SceneManager.ts:1661 — disposeObjectTree(snapshot.group);
+- src\scene\SceneManager.ts:1664 — private clearLayerTransitionSnapshots(): void {
+- src\scene\SceneManager.ts:1665 — for (const id of Array.from(this.layerTransitionSnapshots.keys())) {
+- src\scene\SceneManager.ts:1666 — this.removeLayerTransitionSnapshot(id);
+- src\scene\SceneManager.ts:1668 — this.removeSceneSectionHelperTransitionSnapshot();
+- src\scene\SceneManager.ts:1671 — private removeSceneSectionHelperTransitionSnapshot(): void {
+- src\scene\SceneManager.ts:1672 — const snapshot = this.sceneSectionHelperTransitionSnapshot;
+- src\scene\SceneManager.ts:1673 — if (!snapshot) return;
+- src\scene\SceneManager.ts:1674 — this.sceneSectionHelperTransitionSnapshot = null;
+- src\scene\SceneManager.ts:1675 — snapshot.group.parent?.remove(snapshot.group);
+- src\scene\SceneManager.ts:1676 — disposeObjectTree(snapshot.group);
+- src\scene\SceneManager.ts:1679 — beginSceneSectionHelperTransitionSnapshot(
+- src\scene\SceneManager.ts:1684 — this.removeSceneSectionHelperTransitionSnapshot();
+- src\scene\SceneManager.ts:1693 — const snapshot = this.cloneTransitionObjectTree(
+- src\scene\SceneManager.ts:1697 — snapshot.name = "scene-section-helper-transition-snapshot";
+- src\scene\SceneManager.ts:1698 — snapshot.userData = {
+- src\scene\SceneManager.ts:1699 — ...snapshot.userData,
+- src\scene\SceneManager.ts:1700 — transitionSnapshotForLayer: UTAH_FORGE_SCENE_SECTION_LAYER_ID,
+- src\scene\SceneManager.ts:1701 — sceneSectionHelperTransitionSnapshot: true,
+- src\scene\SceneManager.ts:1703 — this.scene.add(snapshot);
+- src\scene\SceneManager.ts:1704 — this.applyRenderOpacityToTree(snapshot, 1);
+- src\scene\SceneManager.ts:1705 — this.sceneSectionHelperTransitionSnapshot = {
+- src\scene\SceneManager.ts:1707 — group: snapshot,
+- src\scene\SceneManager.ts:1807 — const snapshot = this.cloneTransitionObjectTree(
+- src\scene\SceneManager.ts:1811 — snapshot.name = `${group.name || "section-iso-overlay"}-transition-source`;
+- src\scene\SceneManager.ts:1812 — snapshot.userData = {
+- src\scene\SceneManager.ts:1813 — ...snapshot.userData,
+- src\scene\SceneManager.ts:1818 — parent.add(snapshot);
+- src\scene\SceneManager.ts:1819 — this.applyRenderOpacityToTree(snapshot, 1, 1);
+- src\scene\SceneManager.ts:1823 — group: snapshot,
+- src\scene\SceneManager.ts:1905 — addSceneSectionHelperObjectToTransitionSnapshot(
+- src\scene\SceneManager.ts:1908 — const snapshot = this.sceneSectionHelperTransitionSnapshot;
+- src\scene\SceneManager.ts:1909 — if (!snapshot) return false;
+- src\scene\SceneManager.ts:1911 — snapshot.durationMs <= 0
+- src\scene\SceneManager.ts:1913 — : (performance.now() - snapshot.startMs) / snapshot.durationMs;
+- src\scene\SceneManager.ts:1915 — const eased = easeProgress(elapsed, snapshot.easing);
+- src\scene\SceneManager.ts:1916 — const opacity = snapshot.from + (snapshot.to - snapshot.from) * eased;
+- src\scene\SceneManager.ts:1923 — sceneSectionLateHelperSnapshotObject: true,
+- src\scene\SceneManager.ts:1925 — snapshot.group.add(clone);
+- src\scene\SceneManager.ts:2214 — sceneSectionHelperSnapshotAllowedForTween(
+- src\scene\SceneManager.ts:2217 — return sceneSectionHelperSnapshotAllowedForTweenImpl.call(this, tween);
+- src\scene\SceneManager.ts:2704 — groundTracePolicy: "mirror-delayed-ground-trace-into-helper-snapshot",
+- src\scene\SceneManager.ts:2708 — snapshotGroundTraceCount: this.countGroundTraceObjects(
+- src\scene\SceneManager.ts:2709 — this.sceneSectionHelperTransitionSnapshot?.group,
+- src\scene\SceneManager.ts:2711 — snapshotActive: this.sceneSectionHelperTransitionSnapshot !== null,
+- src\scene\SceneManager.ts:2722 — snapshotCount: number;
+- src\scene\SceneManager.ts:2724 — layerTweenCount: number;
+- src\scene\SceneManager.ts:2727 — sceneSectionHelperTransitionSnapshotActive: boolean;
+- src\scene\SceneManager.ts:2729 — layerTweenTick: LayerTweenTickDebugState | null;
+- src\scene\SceneManager.ts:2756 — this.layerTweens.size +
+- src\scene\SceneManager.ts:2759 — snapshotCount: this.layerTransitionSnapshots.size,
+- src\scene\SceneManager.ts:2761 — layerTweenCount: this.layerTweens.size,
+- src\scene\SceneManager.ts:2764 — sceneSectionHelperTransitionSnapshotActive:
+- src\scene\SceneManager.ts:2765 — this.sceneSectionHelperTransitionSnapshot !== null,
+- src\scene\SceneManager.ts:2767 — layerTweenTick: this.lastLayerTweenTickDebug,
+- src\scene\SceneManager.ts:3039 — if (!this.transitionEnvelopeAllowsLayer(id)) continue;
+- src\scene\SceneManager.ts:4023 — this.layerTweens.clear();
+- src\scene\SceneManager.ts:4029 — this.clearLayerTransitionSnapshots();
+- src\scene\SceneManager.ts:4049 — this.layerTweens.clear();
+- src\scene\SceneManager.ts:4055 — this.clearLayerTransitionSnapshots();
+- src\scene\SceneManager.ts:4066 — transitionEffectiveLayersForPage(
+- src\scene\SceneManager.ts:4078 — return transitionEffectiveLayersForPageImpl.call(this, fromEnvironment, toEnvironment, fromPage, toPage, durationMs, easing, scalarStyleDurationMs, scalarStyleEasing, reason, transitionId);
+- src\scene\SceneManager.ts:4404 — transitionEnvelopeAllowsLayer(id: string): boolean {
+- src\scene\SceneManager.ts:4405 — return transitionEnvelopeAllowsLayerImpl.call(this, id);
+- src\scene\SceneManager.ts:4416 — tickLayerTweens(nowMs: number): void {
+- src\scene\SceneManager.ts:4417 — return tickLayerTweensImpl.call(this, nowMs);
+- src\scene\SceneManager.ts:4524 — const snapshot = this.layerTransitionSnapshots.get(
+- src\scene\SceneManager.ts:4527 — if (snapshot) this.collectMtThresholdSurfacesFromRoot(snapshot.group);
+- src\scene\SceneManager.ts:4552 — for (const snapshot of this.layerTransitionSnapshots.values()) {
+- src\scene\SceneManager.ts:4553 — this.collectSectionIsoLineOverlaysFromRoot(snapshot.group);
+- src\scene\SceneManager.ts:4706 — this.tickLayerTweens(nowMs);
+- src\scene\SceneManager.ts:4707 — const layerTweensMs = transitionDebugMs(performance.now() - stageStart);
+- src\scene\SceneManager.ts:4781 — layerTweensMs,
+- src\scene\section\sceneSectionController.ts:2465 — export function sceneSectionHelperSnapshotAllowedForTween(
+- src\scene\section\sceneSectionController.ts:3353 — const snapshotTargetActive =
+- src\scene\section\sceneSectionController.ts:3354 — this.sceneSectionHelperTransitionSnapshot !== null;
+- src\scene\section\sceneSectionController.ts:3355 — if (!traceGroup.parent && !snapshotTargetActive) return;
+- src\scene\section\sceneSectionController.ts:3392 — const addedToSnapshot =
+- src\scene\section\sceneSectionController.ts:3393 — this.addSceneSectionHelperObjectToTransitionSnapshot?.(mesh) === true;
+- src\scene\section\sceneSectionController.ts:3394 — if (!addToLiveTrace && !addedToSnapshot) {
+- src\scene\terrain\applyLakesToTerrain.ts:168 — // overrides against a previous snapshot.
+- src\scene\transitions\layerTweenRuntime.ts:64 — export function transitionEnvelopeAllowsLayerImpl(this: any, id: string): boolean {
+- src\scene\transitions\layerTweenRuntime.ts:71 — this.layerTransitionSnapshots.has(id)
+- src\scene\transitions\layerTweenRuntime.ts:102 — if (this.transitionEnvelopeAllowsLayer(id)) {
+- src\scene\transitions\layerTweenRuntime.ts:104 — !this.layerTweens.has(id) &&
+- src\scene\transitions\layerTweenRuntime.ts:105 — !this.layerTransitionSnapshots.has(id)
+- src\scene\transitions\layerTweenRuntime.ts:121 — export function tickLayerTweensImpl(this: any, nowMs: number): void {
+- src\scene\transitions\layerTweenRuntime.ts:123 — const layerTweenIdsBefore = Array.from(this.layerTweens.keys());
+- src\scene\transitions\layerTweenRuntime.ts:125 — const snapshotIdsBefore = Array.from(this.layerTransitionSnapshots.keys());
+- src\scene\transitions\layerTweenRuntime.ts:127 — const helperSnapshotActiveBefore =
+- src\scene\transitions\layerTweenRuntime.ts:128 — !!this.sceneSectionHelperTransitionSnapshot;
+- src\scene\transitions\layerTweenRuntime.ts:131 — this.layerTweens.size === 0 &&
+- src\scene\transitions\layerTweenRuntime.ts:133 — this.layerTransitionSnapshots.size === 0 &&
+- src\scene\transitions\layerTweenRuntime.ts:135 — !this.sceneSectionHelperTransitionSnapshot &&
+- src\scene\transitions\layerTweenRuntime.ts:139 — this.lastLayerTweenTickDebug = {
+- src\scene\transitions\layerTweenRuntime.ts:147 — snapshotMs: 0,
+- src\scene\transitions\layerTweenRuntime.ts:148 — helperSnapshotMs: 0,
+- src\scene\transitions\layerTweenRuntime.ts:152 — layerTweenIds: [],
+- src\scene\transitions\layerTweenRuntime.ts:154 — snapshotIds: [],
+- src\scene\transitions\layerTweenRuntime.ts:155 — layerTweenCountBefore: 0,
+- src\scene\transitions\layerTweenRuntime.ts:157 — snapshotCountBefore: 0,
+- src\scene\transitions\layerTweenRuntime.ts:159 — helperSnapshotActiveBefore: false,
+- src\scene\transitions\layerTweenRuntime.ts:251 — for (const [id, tween] of this.layerTweens) {
+- src\scene\transitions\layerTweenRuntime.ts:263 — if (done) this.layerTweens.delete(id);
+- src\scene\transitions\layerTweenRuntime.ts:268 — for (const [id, snapshot] of this.layerTransitionSnapshots) {
+- src\scene\transitions\layerTweenRuntime.ts:270 — snapshot.durationMs <= 0
+- src\scene\transitions\layerTweenRuntime.ts:272 — : (nowMs - snapshot.startMs) / snapshot.durationMs;
+- src\scene\transitions\layerTweenRuntime.ts:274 — const eased = done ? 1 : easeProgress(t, snapshot.easing);
+- src\scene\transitions\layerTweenRuntime.ts:275 — const opacity = snapshot.from + (snapshot.to - snapshot.from) * eased;
+- src\scene\transitions\layerTweenRuntime.ts:277 — snapshot.group,
+- src\scene\transitions\layerTweenRuntime.ts:278 — done ? snapshot.to : opacity,
+- src\scene\transitions\layerTweenRuntime.ts:280 — snapshot.from,
+- src\scene\transitions\layerTweenRuntime.ts:281 — snapshot.to,
+- src\scene\transitions\layerTweenRuntime.ts:282 — done ? snapshot.to : opacity,
+- src\scene\transitions\layerTweenRuntime.ts:285 — if (done) this.removeLayerTransitionSnapshot(id);
+- src\scene\transitions\layerTweenRuntime.ts:287 — const snapshotMs = transitionDebugMs(performance.now() - stageStart);
+- src\scene\transitions\layerTweenRuntime.ts:290 — if (this.sceneSectionHelperTransitionSnapshot) {
+- src\scene\transitions\layerTweenRuntime.ts:291 — const snapshot = this.sceneSectionHelperTransitionSnapshot;
+- src\scene\transitions\layerTweenRuntime.ts:293 — snapshot.durationMs <= 0
+- src\scene\transitions\layerTweenRuntime.ts:295 — : (nowMs - snapshot.startMs) / snapshot.durationMs;
+- src\scene\transitions\layerTweenRuntime.ts:297 — const eased = done ? 1 : easeProgress(t, snapshot.easing);
+- src\scene\transitions\layerTweenRuntime.ts:298 — const opacity = snapshot.from + (snapshot.to - snapshot.from) * eased;
+- src\scene\transitions\layerTweenRuntime.ts:300 — snapshot.group,
+- src\scene\transitions\layerTweenRuntime.ts:301 — done ? snapshot.to : opacity,
+- src\scene\transitions\layerTweenRuntime.ts:303 — if (done) this.removeSceneSectionHelperTransitionSnapshot();
+- src\scene\transitions\layerTweenRuntime.ts:305 — const helperSnapshotMs = transitionDebugMs(performance.now() - stageStart);
+- src\scene\transitions\layerTweenRuntime.ts:312 — this.lastLayerTweenTickDebug = {
+- src\scene\transitions\layerTweenRuntime.ts:320 — snapshotMs,
+- src\scene\transitions\layerTweenRuntime.ts:321 — helperSnapshotMs,
+- src\scene\transitions\layerTweenRuntime.ts:325 — layerTweenIds: layerTweenIdsBefore.slice(0, 16),
+- src\scene\transitions\layerTweenRuntime.ts:327 — snapshotIds: snapshotIdsBefore.slice(0, 16),
+- src\scene\transitions\layerTweenRuntime.ts:328 — layerTweenCountBefore: layerTweenIdsBefore.length,
+- src\scene\transitions\layerTweenRuntime.ts:330 — snapshotCountBefore: snapshotIdsBefore.length,
+- src\scene\transitions\layerTweenRuntime.ts:332 — helperSnapshotActiveBefore,
+- src\scene\transitions\layerTweenRuntime.ts:337 — this.layerTweens.size === 0 &&
+- src\scene\transitions\layerTweenRuntime.ts:339 — this.layerTransitionSnapshots.size === 0 &&
+- src\scene\transitions\layerTweenRuntime.ts:341 — !this.sceneSectionHelperTransitionSnapshot &&
+- src\scene\transitions\layerTweenRuntime.ts:353 — attemptedBy: "layerTweenRuntime.tickLayerTweens",
+- src\scene\transitions\productFamilyRegistry.ts:15 — LayerTransitionKind,
+- src\scene\transitions\productFamilyRegistry.ts:90 — transitionKind: LayerTransitionKind,
+- src\scene\transitions\productFamilyRegistry.ts:100 — if (transitionKind === "discrete-crossfade") return "crossfade-discrete";
+- src\scene\transitions\productFamilyRegistry.ts:101 — if (transitionKind === "full-density-scalar") {
+- src\scene\transitions\productFamilyRegistry.ts:102 — return "interpolate-full-density-scalar";
+- src\scene\transitions\productFamilyRegistry.ts:109 — return "fade-opacity";
+- src\scene\transitions\productFamilyRegistry.ts:115 — transitionKind: LayerTransitionKind,
+- src\scene\transitions\productFamilyRegistry.ts:129 — if (transitionKind === "discrete-crossfade") {
+- src\scene\transitions\productFamilyRegistry.ts:130 — return "discrete data/style changed, using snapshot crossfade";
+- src\scene\transitions\productFamilyRegistry.ts:132 — if (transitionKind === "full-density-scalar") {
+- src\scene\transitions\productFamilyRegistry.ts:152 — transitionKind: LayerTransitionKind;
+- src\scene\transitions\transitionCommitGate.ts:12 — export interface TransitionCommitChannelSnapshot {
+- src\scene\transitions\transitionCommitGate.ts:26 — channels?: Readonly<Record<string, TransitionCommitChannelSnapshot | unknown>>;
+- src\scene\transitions\transitionCommitGate.ts:180 — const snapshot = value as TransitionCommitChannelSnapshot;
+- src\scene\transitions\transitionCommitGate.ts:182 — channelClass: snapshot.channelClass ?? null,
+- src\scene\transitions\transitionCommitGate.ts:183 — value: snapshot.value,
+- src\scene\transitions\transitionCommitGate.ts:184 — coverage: snapshot.coverage ?? "known",
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:25 — type LayerTransitionKind,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:336 — export function transitionEffectiveLayersForPage(
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:377 — this.layerTweens.clear();
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:383 — this.clearLayerTransitionSnapshots();
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:397 — const layerKinds: Record<string, LayerTransitionKind> = {};
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:558 — transitionKind: LayerTransitionKind,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:589 — ): LayerTransitionKind => {
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:599 — return "discrete-crossfade";
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:608 — ? "full-density-scalar"
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:654 — this.sceneSectionHelperSnapshotAllowedForTween?.(
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:658 — this.beginSceneSectionHelperTransitionSnapshot?.(now, duration, easing);
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:706 — const shouldCrossfadeDiscreteData =
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:716 — const shouldCrossfadeSceneSection =
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:728 — !shouldCrossfadeDiscreteData &&
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:729 — !shouldCrossfadeSceneSection &&
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:736 — const shouldCrossfadeScalarStyle =
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:742 — const transitionSnapshot =
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:743 — shouldCrossfadeDiscreteData ||
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:744 — shouldCrossfadeScalarStyle ||
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:745 — shouldCrossfadeSceneSection
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:746 — ? this.cloneLayerTransitionSnapshot(id, group)
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:748 — const transitionKind: LayerTransitionKind =
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:749 — shouldCrossfadeDiscreteData ||
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:750 — shouldCrossfadeScalarStyle ||
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:751 — shouldCrossfadeSceneSection
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:752 — ? "discrete-crossfade"
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:755 — ? "full-density-scalar"
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:786 — if (transitionSnapshot) {
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:787 — this.applyRenderOpacityToTree(transitionSnapshot, fromOpacity, 1);
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:789 — this.layerTweens.set(id, {
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:796 — this.layerTransitionSnapshots.set(id, {
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:798 — group: transitionSnapshot,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:826 — this.layerTweens.set(id, {
+- src\scene\transitions\transitionEntityPolicy.ts:30 — | "crossfade"
+- src\scene\transitions\transitionEntityPolicy.ts:39 — | "crossfade"
+- src\scene\transitions\transitionEntityPolicy.ts:64 — | "crossfade"
+- src\scene\transitions\transitionEntityPolicy.ts:218 — if (changedChannels.some((channel) => channel.capability === "crossfade")) {
+- src\scene\transitions\transitionEntityPolicy.ts:219 — return "crossfade";
+- src\scene\transitions\transitionEntityPolicy.ts:264 — case "crossfade":
+- src\scene\transitions\transitionEntityPolicy.ts:265 — return "crossfade";
+- src\scene\transitions\transitionEntityPolicy.ts:330 — assignment = "crossfade";
+- src\scene\transitions\transitionEntityPolicy.ts:333 — assignment = "crossfade";
+- src\scene\transitions\transitionStyles.ts:17 — import { UTAH_FORGE_DISCRETE_CROSSFADE_LAYER_IDS } from "../../projectModules/utahForge/crossfadeFields";
+- src\scene\transitions\transitionStyles.ts:87 — export interface LayerTransitionSnapshot extends LayerOpacityTween {
+- src\scene\transitions\transitionStyles.ts:135 — export type LayerTransitionKind =
+- src\scene\transitions\transitionStyles.ts:137 — | "discrete-crossfade"
+- src\scene\transitions\transitionStyles.ts:138 — | "full-density-scalar"
+- src\scene\transitions\transitionStyles.ts:155 — | "fade-opacity"
+- src\scene\transitions\transitionStyles.ts:157 — | "interpolate-full-density-scalar"
+- src\scene\transitions\transitionStyles.ts:158 — | "crossfade-discrete"
+- src\scene\transitions\transitionStyles.ts:168 — transitionKind: LayerTransitionKind;
+- src\scene\transitions\transitionStyles.ts:192 — layerKinds: Record<string, LayerTransitionKind>;
+- src\scene\transitions\transitionStyles.ts:647 — if (!UTAH_FORGE_DISCRETE_CROSSFADE_LAYER_IDS.has(layerId)) return false;
+- src\pages\effective.ts:349 — page.envSnapshot != null &&
+- src\pages\effective.ts:351 — if (isSubMaster) return applyPageSceneOverrides(page.envSnapshot!, page);
+- src\pages\effective.ts:355 — if (parent?.envSnapshot) {
+- src\pages\effective.ts:356 — return applyPageSceneOverrides(parent.envSnapshot, page);
+- src\pages\loadPages.ts:18 — // modify those files, import.meta.glob keeps returning the stale snapshot
+- src\pages\PageController.tsx:131 — policy: "crossfade-slide";
+- src\pages\PageController.tsx:181 — snapshotCount: number;
+- src\pages\PageController.tsx:183 — layerTweenCount: number;
+- src\pages\PageController.tsx:186 — sceneSectionHelperTransitionSnapshotActive: boolean;
+- src\pages\PageController.tsx:193 — layerTweenTick: NonNullable<SceneTransitionDebugState>["layerTweenTick"];
+- src\pages\PageController.tsx:467 — snapshotCount: sceneTransition?.snapshotCount ?? 0,
+- src\pages\PageController.tsx:469 — layerTweenCount: sceneTransition?.layerTweenCount ?? 0,
+- src\pages\PageController.tsx:474 — sceneSectionHelperTransitionSnapshotActive:
+- src\pages\PageController.tsx:475 — sceneTransition?.sceneSectionHelperTransitionSnapshotActive === true,
+- src\pages\PageController.tsx:482 — layerTweenTick: sceneTransition?.layerTweenTick ?? null,
+- src\pages\PageController.tsx:1059 — // own frozen envSnapshot as the base. A child of a Sub Master uses
+- src\pages\PageController.tsx:1060 — // the parent's envSnapshot. Global children (no parentMasterId, or
+- src\pages\PageController.tsx:1065 — page.envSnapshot != null &&
+- src\pages\PageController.tsx:1068 — resolvedBase = page.envSnapshot!;
+- src\pages\PageController.tsx:1073 — if (parent?.envSnapshot) {
+- src\pages\PageController.tsx:1074 — resolvedBase = parent.envSnapshot;
+- src\pages\PageController.tsx:1218 — policy: "crossfade-slide",
+- src\pages\PageController.tsx:1263 — const snapshotTransitionRun = useCallback(
+- src\pages\PageController.tsx:1287 — const snapshot: TransitionRunDebugState = {
+- src\pages\PageController.tsx:1301 — ...snapshot,
+- src\pages\PageController.tsx:1303 — ? transitionConsumerDebugState(snapshot)
+- src\pages\PageController.tsx:1622 — const activeRun = snapshotTransitionRun(transitionRunRef.current, timeMs);
+- src\pages\PageController.tsx:1623 — const run = activeRun ?? snapshotTransitionRun(lastTransitionRunRef.current);
+- src\pages\PageController.tsx:1722 — snapshotTransitionRun,
+- src\pages\PageController.tsx:1851 — const snapshot = snapshotTransitionRun(run, cancelledAtMs);
+- src\pages\PageController.tsx:1852 — if (!snapshot) return null;
+- src\pages\PageController.tsx:1854 — ...snapshot,
+- src\pages\PageController.tsx:1864 — [snapshotTransitionRun],
+- src\pages\PageController.tsx:1871 — const snapshot = snapshotTransitionRun(run, completedAtMs);
+- src\pages\PageController.tsx:1872 — if (!snapshot) return null;
+- src\pages\PageController.tsx:1874 — ...snapshot,
+- src\pages\PageController.tsx:1886 — [snapshotTransitionRun],
+- src\pages\PageController.tsx:2287 — // children, "resolved environment" is the Sub Master's frozen envSnapshot,
+- src\pages\PageController.tsx:2544 — sceneHandle.manager.transitionEffectiveLayersForPage(
+- src\pages\PageController.tsx:2959 — const transitionRun = snapshotTransitionRun(transitionRunRef.current);
+- src\pages\PageController.tsx:2975 — lastTransitionRun: snapshotTransitionRun(lastTransitionRunRef.current),
+- src\pages\PageController.tsx:2993 — snapshotTransitionRun,
+- src\pages\types.ts:1733 — // Master page (a page whose envSnapshot is present). DEC-079.
+- src\pages\types.ts:1735 — // Frozen environment snapshot at the moment this page became a Sub Master.
+- src\pages\types.ts:1737 — // or undefined when envSnapshot is present. DEC-079.
+- src\pages\types.ts:1738 — envSnapshot?: EnvironmentSetup;
+- src\pages\types.ts:1753 — // This is deliberately separate from envSnapshot, which remains Sub Master
+
+## Scene section masks, helpers, and no-bleed paths
+
+Pattern: `sceneSection|SceneSection|sceneSectionEnabled|sceneSectionFrameEnabled|sceneSectionHelperTransitionOpacity|rebuildSceneSectionHelpers|applySceneSectionPlanes|applySceneSectionHelperTransitionOpacity|groundTrace|frame outline|helper snapshot|active-to-inactive|target-active` 
+
+- src\scene\CLAUDE.md:17 — - `section/sceneSectionController.ts` — ~1,180 lines; largest extracted
+- src\scene\SceneManager.ts:95 — type SceneSectionStyleTween,
+- src\scene\SceneManager.ts:157 — applySceneSectionHelperTransitionOpacity as applySceneSectionHelperTransitionOpacityImpl,
+- src\scene\SceneManager.ts:158 — applySceneSectionMaterial as applySceneSectionMaterialImpl,
+- src\scene\SceneManager.ts:159 — applySceneSectionPlanes as applySceneSectionPlanesImpl,
+- src\scene\SceneManager.ts:160 — createSceneSectionLabel as createSceneSectionLabelImpl,
+- src\scene\SceneManager.ts:161 — createSceneSectionScaleLabel as createSceneSectionScaleLabelImpl,
+- src\scene\SceneManager.ts:162 — currentSceneSectionStyle as currentSceneSectionStyleImpl,
+- src\scene\SceneManager.ts:163 — ensureSceneSectionRuntime as ensureSceneSectionRuntimeImpl,
+- src\scene\SceneManager.ts:164 — getSceneSectionPlaneNormal as getSceneSectionPlaneNormalImpl,
+- src\scene\SceneManager.ts:165 — getSceneSectionPlanePosition as getSceneSectionPlanePositionImpl,
+- src\scene\SceneManager.ts:166 — getSceneSectionPlaneScalar as getSceneSectionPlaneScalarImpl,
+- src\scene\SceneManager.ts:167 — getSceneSectionWindowNormal as getSceneSectionWindowNormalImpl,
+- src\scene\SceneManager.ts:168 — getSceneSectionWindowValue as getSceneSectionWindowValueImpl,
+- src\scene\SceneManager.ts:169 — interpolatedSceneSectionStyle as interpolatedSceneSectionStyleImpl,
+- src\scene\SceneManager.ts:170 — listSceneSectionObjectTargets as listSceneSectionObjectTargetsImpl,
+- src\scene\SceneManager.ts:171 — listSceneSectionPlanePickables as listSceneSectionPlanePickablesImpl,
+- src\scene\SceneManager.ts:172 — previewSceneSectionPlane as previewSceneSectionPlaneImpl,
+- src\scene\SceneManager.ts:173 — previewSceneSectionWindow as previewSceneSectionWindowImpl,
+- src\scene\SceneManager.ts:174 — rebuildSceneSectionHelpers as rebuildSceneSectionHelpersImpl,
+- src\scene\SceneManager.ts:175 — reapplySceneSectionPlanes as reapplySceneSectionPlanesImpl,
+- src\scene\SceneManager.ts:176 — resolveSceneSectionFrames as resolveSceneSectionFramesImpl,
+- src\scene\SceneManager.ts:177 — resolveSceneSectionPlanes as resolveSceneSectionPlanesImpl,
+- src\scene\SceneManager.ts:178 — resolveSceneSectionWindow as resolveSceneSectionWindowImpl,
+- src\scene\SceneManager.ts:179 — sceneSectionActivePlanes as sceneSectionActivePlanesImpl,
+- src\scene\SceneManager.ts:180 — sceneSectionAxisAlongIndex as sceneSectionAxisAlongIndexImpl,
+- src\scene\SceneManager.ts:181 — sceneSectionBounds as sceneSectionBoundsImpl,
+- src\scene\SceneManager.ts:182 — sceneSectionClippingPlanes as sceneSectionClippingPlanesImpl,
+- src\scene\SceneManager.ts:183 — sceneSectionFrameClippingPlanes as sceneSectionFrameClippingPlanesImpl,
+- src\scene\SceneManager.ts:184 — sceneSectionFrameForObject as sceneSectionFrameForObjectImpl,
+- src\scene\SceneManager.ts:185 — sceneSectionHelperOpacityForTween as sceneSectionHelperOpacityForTweenImpl,
+- src\scene\SceneManager.ts:186 — sceneSectionHelperSnapshotAllowedForTween as sceneSectionHelperSnapshotAllowedForTweenImpl,
+- src\scene\SceneManager.ts:187 — sceneSectionMaskTransitionForTween as sceneSectionMaskTransitionForTweenImpl,
+- src\scene\SceneManager.ts:188 — sceneSectionLayerIds as sceneSectionLayerIdsImpl,
+- src\scene\SceneManager.ts:189 — sceneSectionObjectVisibilityForObject as sceneSectionObjectVisibilityForObjectImpl,
+- src\scene\SceneManager.ts:190 — sceneSectionObjectTargeted as sceneSectionObjectTargetedImpl,
+- src\scene\SceneManager.ts:191 — sceneSectionProductIds as sceneSectionProductIdsImpl,
+- src\scene\SceneManager.ts:192 — setSceneSectionUniforms as setSceneSectionUniformsImpl,
+- src\scene\SceneManager.ts:193 — updateSceneSectionPlanarTextFacing as updateSceneSectionPlanarTextFacingImpl,
+- src\scene\SceneManager.ts:194 — } from "./section/sceneSectionController";
+- src\scene\SceneManager.ts:350 — export type SceneSectionAxis = "x" | "y" | "z";
+- src\scene\SceneManager.ts:351 — export type SceneSectionWindowHandleKind =
+- src\scene\SceneManager.ts:382 — export interface ResolvedSceneSectionPlane {
+- src\scene\SceneManager.ts:385 — axis: SceneSectionAxis;
+- src\scene\SceneManager.ts:396 — export interface ResolvedSceneSectionWindow {
+- src\scene\SceneManager.ts:397 — axis: Exclude<SceneSectionAxis, "z">;
+- src\scene\SceneManager.ts:404 — export interface ResolvedSceneSectionFrame {
+- src\scene\SceneManager.ts:407 — axis: SceneSectionAxis;
+- src\scene\SceneManager.ts:427 — groundTraceVisible: boolean;
+- src\scene\SceneManager.ts:428 — groundTraceWidthM: number;
+- src\scene\SceneManager.ts:440 — export interface SceneSectionObjectTarget {
+- src\scene\SceneManager.ts:447 — axes: SceneSectionAxis[];
+- src\scene\SceneManager.ts:450 — export interface SceneSectionObjectVisibility {
+- src\scene\SceneManager.ts:452 — outsideOpacityByAxis: Record<SceneSectionAxis, number>;
+- src\scene\SceneManager.ts:458 — export interface SceneSectionMaskUniformState {
+- src\scene\SceneManager.ts:459 — planes: ResolvedSceneSectionPlane[];
+- src\scene\SceneManager.ts:460 — frames: ResolvedSceneSectionFrame[];
+- src\scene\SceneManager.ts:461 — visibility: SceneSectionObjectVisibility;
+- src\scene\SceneManager.ts:464 — export interface SceneSectionMaskTransition {
+- src\scene\SceneManager.ts:466 — source: SceneSectionMaskUniformState;
+- src\scene\SceneManager.ts:467 — target: SceneSectionMaskUniformState;
+- src\scene\SceneManager.ts:470 — export interface SceneSectionStyleMaskTransition {
+- src\scene\SceneManager.ts:476 — export interface SceneSectionApplyOptions {
+- src\scene\SceneManager.ts:478 — maskTransition?: SceneSectionStyleMaskTransition | null;
+- src\scene\SceneManager.ts:481 — export interface SceneSectionRuntime {
+- src\scene\SceneManager.ts:521 — interface SceneSectionApplyDebugState {
+- src\scene\SceneManager.ts:612 — sceneSectionMs: number;
+- src\scene\SceneManager.ts:613 — sceneSectionApply: SceneSectionApplyDebugState | null;
+- src\scene\SceneManager.ts:621 — sceneSectionApplyMode: "none" | "full" | "helper-opacity-only";
+- src\scene\SceneManager.ts:628 — sceneSectionStyleTweenActiveBefore: boolean;
+- src\scene\SceneManager.ts:645 — sceneSectionTextFacingMs: number;
+- src\scene\SceneManager.ts:665 — interface SceneSectionHelperDebugState {
+- src\scene\SceneManager.ts:666 — groundTracePolicy: "mirror-delayed-ground-trace-into-helper-snapshot";
+- src\scene\SceneManager.ts:667 — liveGroundTraceCount: number;
+- src\scene\SceneManager.ts:668 — snapshotGroundTraceCount: number;
+- src\scene\SceneManager.ts:695 — private sceneSectionRuntime: SceneSectionRuntime | null = null;
+- src\scene\SceneManager.ts:698 — private lastSceneSectionStyle: EditableStyle = {};
+- src\scene\SceneManager.ts:701 — private sceneSectionClippingActive = false;
+- src\scene\SceneManager.ts:752 — private sceneSectionHelperTransitionSnapshot: LayerTransitionSnapshot | null =
+- src\scene\SceneManager.ts:774 — sceneSectionStyleTween: SceneSectionStyleTween | null = null;
+- src\scene\SceneManager.ts:775 — sceneSectionHelperTransitionOpacity = 1;
+- src\scene\SceneManager.ts:787 — sceneSectionReapplySuspended = false;
+- src\scene\SceneManager.ts:806 — lastSceneSectionApplyDebug: SceneSectionApplyDebugState | null = null;
+- src\scene\SceneManager.ts:890 — if (this.sceneSectionRuntime) {
+- src\scene\SceneManager.ts:892 — typeof this.lastSceneSectionStyle.sceneSectionHelperVisible === "boolean"
+- src\scene\SceneManager.ts:893 — ? this.lastSceneSectionStyle.sceneSectionHelperVisible
+- src\scene\SceneManager.ts:895 — this.sceneSectionRuntime.group.visible =
+- src\scene\SceneManager.ts:896 — this.lastSceneSectionStyle.sceneSectionEnabled === true &&
+- src\scene\SceneManager.ts:1197 — this.reapplySceneSectionPlanes();
+- src\scene\SceneManager.ts:1668 — this.removeSceneSectionHelperTransitionSnapshot();
+- src\scene\SceneManager.ts:1671 — private removeSceneSectionHelperTransitionSnapshot(): void {
+- src\scene\SceneManager.ts:1672 — const snapshot = this.sceneSectionHelperTransitionSnapshot;
+- src\scene\SceneManager.ts:1674 — this.sceneSectionHelperTransitionSnapshot = null;
+- src\scene\SceneManager.ts:1679 — beginSceneSectionHelperTransitionSnapshot(
+- src\scene\SceneManager.ts:1684 — this.removeSceneSectionHelperTransitionSnapshot();
+- src\scene\SceneManager.ts:1685 — const runtime = this.sceneSectionRuntime;
+- src\scene\SceneManager.ts:1701 — sceneSectionHelperTransitionSnapshot: true,
+- src\scene\SceneManager.ts:1705 — this.sceneSectionHelperTransitionSnapshot = {
+- src\scene\SceneManager.ts:1778 — fromSceneSectionStyle: EditableStyle,
+- src\scene\SceneManager.ts:1779 — toSceneSectionStyle: EditableStyle,
+- src\scene\SceneManager.ts:1781 — const sourceActive = fromSceneSectionStyle.sceneSectionEnabled === true;
+- src\scene\SceneManager.ts:1782 — const targetActive = toSceneSectionStyle.sceneSectionEnabled === true;
+- src\scene\SceneManager.ts:1789 — fromSceneSectionStyle: EditableStyle,
+- src\scene\SceneManager.ts:1790 — toSceneSectionStyle: EditableStyle,
+- src\scene\SceneManager.ts:1799 — fromSceneSectionStyle,
+- src\scene\SceneManager.ts:1800 — toSceneSectionStyle,
+- src\scene\SceneManager.ts:1905 — addSceneSectionHelperObjectToTransitionSnapshot(
+- src\scene\SceneManager.ts:1908 — const snapshot = this.sceneSectionHelperTransitionSnapshot;
+- src\scene\SceneManager.ts:1923 — sceneSectionLateHelperSnapshotObject: true,
+- src\scene\SceneManager.ts:2082 — sceneSectionProductIds(style: EditableStyle): Set<string> {
+- src\scene\SceneManager.ts:2083 — return sceneSectionProductIdsImpl.call(this, style);
+- src\scene\SceneManager.ts:2086 — sceneSectionLayerIds(style: EditableStyle): Set<string> {
+- src\scene\SceneManager.ts:2087 — return sceneSectionLayerIdsImpl.call(this, style);
+- src\scene\SceneManager.ts:2090 — listSceneSectionObjectTargets(): SceneSectionObjectTarget[] {
+- src\scene\SceneManager.ts:2091 — return listSceneSectionObjectTargetsImpl.call(this);
+- src\scene\SceneManager.ts:2094 — resolveSceneSectionPlanes(
+- src\scene\SceneManager.ts:2096 — ): ResolvedSceneSectionPlane[] {
+- src\scene\SceneManager.ts:2097 — return resolveSceneSectionPlanesImpl.call(this, style);
+- src\scene\SceneManager.ts:2100 — sceneSectionActivePlanes(
+- src\scene\SceneManager.ts:2102 — ): ResolvedSceneSectionPlane[] {
+- src\scene\SceneManager.ts:2103 — return sceneSectionActivePlanesImpl.call(this, style);
+- src\scene\SceneManager.ts:2106 — sceneSectionObjectTargeted(
+- src\scene\SceneManager.ts:2113 — return sceneSectionObjectTargetedImpl.call(this, layerId, obj, style, layerTargets, productTargets);
+- src\scene\SceneManager.ts:2116 — sceneSectionObjectVisibilityForObject(
+- src\scene\SceneManager.ts:2122 — ): SceneSectionObjectVisibility {
+- src\scene\SceneManager.ts:2123 — return sceneSectionObjectVisibilityForObjectImpl.call(
+- src\scene\SceneManager.ts:2133 — sceneSectionClippingPlanes(
+- src\scene\SceneManager.ts:2134 — planes: ResolvedSceneSectionPlane[],
+- src\scene\SceneManager.ts:2136 — return sceneSectionClippingPlanesImpl.call(this, planes);
+- src\scene\SceneManager.ts:2139 — sceneSectionAxisAlongIndex(
+- src\scene\SceneManager.ts:2140 — axis: SceneSectionAxis,
+- src\scene\SceneManager.ts:2142 — return sceneSectionAxisAlongIndexImpl.call(this, axis);
+- src\scene\SceneManager.ts:2145 — resolveSceneSectionWindow(
+- src\scene\SceneManager.ts:2148 — ): ResolvedSceneSectionWindow | null {
+- src\scene\SceneManager.ts:2149 — return resolveSceneSectionWindowImpl.call(this, style, bounds);
+- src\scene\SceneManager.ts:2152 — resolveSceneSectionFrames(
+- src\scene\SceneManager.ts:2155 — ): ResolvedSceneSectionFrame[] {
+- src\scene\SceneManager.ts:2156 — return resolveSceneSectionFramesImpl.call(this, style, bounds);
+- src\scene\SceneManager.ts:2159 — sceneSectionFrameClippingPlanes(
+- src\scene\SceneManager.ts:2160 — frame: ResolvedSceneSectionFrame | null,
+- src\scene\SceneManager.ts:2162 — return sceneSectionFrameClippingPlanesImpl.call(this, frame);
+- src\scene\SceneManager.ts:2165 — sceneSectionFrameForObject(
+- src\scene\SceneManager.ts:2168 — frames: ResolvedSceneSectionFrame[],
+- src\scene\SceneManager.ts:2169 — ): ResolvedSceneSectionFrame | null {
+- src\scene\SceneManager.ts:2170 — return sceneSectionFrameForObjectImpl.call(this, layerId, obj, frames);
+- src\scene\SceneManager.ts:2173 — setSceneSectionUniforms(
+- src\scene\SceneManager.ts:2175 — planes: ResolvedSceneSectionPlane[],
+- src\scene\SceneManager.ts:2176 — visibility: SceneSectionObjectVisibility,
+- src\scene\SceneManager.ts:2177 — frames: ResolvedSceneSectionFrame[],
+- src\scene\SceneManager.ts:2178 — maskTransition?: SceneSectionMaskTransition | null,
+- src\scene\SceneManager.ts:2180 — return setSceneSectionUniformsImpl.call(this, material, planes, visibility, frames, maskTransition);
+- src\scene\SceneManager.ts:2183 — applySceneSectionMaterial(
+- src\scene\SceneManager.ts:2185 — planes: ResolvedSceneSectionPlane[],
+- src\scene\SceneManager.ts:2186 — visibility: SceneSectionObjectVisibility,
+- src\scene\SceneManager.ts:2188 — frames: ResolvedSceneSectionFrame[],
+- src\scene\SceneManager.ts:2190 — maskTransition?: SceneSectionMaskTransition | null,
+- src\scene\SceneManager.ts:2192 — return applySceneSectionMaterialImpl.call(this, material, planes, visibility, clippingPlanes, frames, frameClippingPlanes, maskTransition);
+- src\scene\SceneManager.ts:2195 — interpolatedSceneSectionStyle(
+- src\scene\SceneManager.ts:2200 — return interpolatedSceneSectionStyleImpl.call(this, fromStyle, toStyle, amount);
+- src\scene\SceneManager.ts:2203 — currentSceneSectionStyle(nowMs = performance.now()): EditableStyle {
+- src\scene\SceneManager.ts:2204 — return currentSceneSectionStyleImpl.call(this, nowMs);
+- src\scene\SceneManager.ts:2207 — sceneSectionHelperOpacityForTween(
+- src\scene\SceneManager.ts:2208 — tween: SceneSectionStyleTween,
+- src\scene\SceneManager.ts:2211 — return sceneSectionHelperOpacityForTweenImpl.call(this, tween, eased);
+- src\scene\SceneManager.ts:2214 — sceneSectionHelperSnapshotAllowedForTween(
+- src\scene\SceneManager.ts:2215 — tween: SceneSectionStyleTween,
+- src\scene\SceneManager.ts:2217 — return sceneSectionHelperSnapshotAllowedForTweenImpl.call(this, tween);
+- src\scene\SceneManager.ts:2220 — sceneSectionMaskTransitionForTween(
+- src\scene\SceneManager.ts:2221 — tween: SceneSectionStyleTween,
+- src\scene\SceneManager.ts:2223 — ): SceneSectionStyleMaskTransition {
+- src\scene\SceneManager.ts:2224 — return sceneSectionMaskTransitionForTweenImpl.call(this, tween, eased);
+- src\scene\SceneManager.ts:2227 — applySceneSectionHelperTransitionOpacity(): void {
+- src\scene\SceneManager.ts:2228 — return applySceneSectionHelperTransitionOpacityImpl.call(this);
+- src\scene\SceneManager.ts:2231 — sceneSectionBounds(
+- src\scene\SceneManager.ts:2236 — return sceneSectionBoundsImpl.call(this, style, layerTargets, productTargets);
+- src\scene\SceneManager.ts:2239 — ensureSceneSectionRuntime(): SceneSectionRuntime {
+- src\scene\SceneManager.ts:2240 — return ensureSceneSectionRuntimeImpl.call(this);
+- src\scene\SceneManager.ts:2243 — createSceneSectionLabel(text: string, color: string): THREE.Mesh {
+- src\scene\SceneManager.ts:2244 — return createSceneSectionLabelImpl.call(this, text, color);
+- src\scene\SceneManager.ts:2247 — createSceneSectionScaleLabel(
+- src\scene\SceneManager.ts:2252 — return createSceneSectionScaleLabelImpl.call(this, text, textScale, color);
+- src\scene\SceneManager.ts:2255 — rebuildSceneSectionHelpers(
+- src\scene\SceneManager.ts:2257 — planes: ResolvedSceneSectionPlane[],
+- src\scene\SceneManager.ts:2261 — return rebuildSceneSectionHelpersImpl.call(this, style, planes, layerTargets, productTargets);
+- src\scene\SceneManager.ts:2264 — applySceneSectionPlanes(
+- src\scene\SceneManager.ts:2266 — options?: SceneSectionApplyOptions,
+- src\scene\SceneManager.ts:2268 — return applySceneSectionPlanesImpl.call(this, style, options);
+- src\scene\SceneManager.ts:2271 — updateSceneSectionPlanarTextFacing(camera: THREE.Camera): void {
+- src\scene\SceneManager.ts:2272 — return updateSceneSectionPlanarTextFacingImpl.call(this, camera);
+- src\scene\SceneManager.ts:2275 — reapplySceneSectionPlanes(): void {
+- src\scene\SceneManager.ts:2276 — return reapplySceneSectionPlanesImpl.call(this);
+- src\scene\SceneManager.ts:2279 — listSceneSectionPlanePickables(): THREE.Object3D[] {
+- src\scene\SceneManager.ts:2280 — return listSceneSectionPlanePickablesImpl.call(this);
+- src\scene\SceneManager.ts:2283 — getSceneSectionPlanePosition(axis: SceneSectionAxis, frameId?: string): THREE.Vector3 | null {
+- src\scene\SceneManager.ts:2284 — return getSceneSectionPlanePositionImpl.call(this, axis, frameId);
+- src\scene\SceneManager.ts:2287 — getSceneSectionPlaneScalar(axis: SceneSectionAxis, frameId?: string): number | null {
+- src\scene\SceneManager.ts:2288 — return getSceneSectionPlaneScalarImpl.call(this, axis, frameId);
+- src\scene\SceneManager.ts:2291 — getSceneSectionPlaneNormal(axis: SceneSectionAxis, frameId?: string): THREE.Vector3 | null {
+- src\scene\SceneManager.ts:2292 — return getSceneSectionPlaneNormalImpl.call(this, axis, frameId);
+- src\scene\SceneManager.ts:2295 — getSceneSectionWindowValue(
+- src\scene\SceneManager.ts:2296 — axis: SceneSectionAxis,
+- src\scene\SceneManager.ts:2297 — kind: SceneSectionWindowHandleKind,
+- src\scene\SceneManager.ts:2300 — return getSceneSectionWindowValueImpl.call(this, axis, kind, frameId);
+- src\scene\SceneManager.ts:2303 — getSceneSectionWindowNormal(
+- src\scene\SceneManager.ts:2304 — axis: SceneSectionAxis,
+- src\scene\SceneManager.ts:2305 — kind: SceneSectionWindowHandleKind,
+- src\scene\SceneManager.ts:2308 — return getSceneSectionWindowNormalImpl.call(this, axis, kind, frameId);
+- src\scene\SceneManager.ts:2311 — previewSceneSectionPlane(axis: SceneSectionAxis, positionM: number, frameId?: string): void {
+- src\scene\SceneManager.ts:2312 — return previewSceneSectionPlaneImpl.call(this, axis, positionM, frameId);
+- src\scene\SceneManager.ts:2391 — this.sceneSectionClippingActive || this.publicSurfaceClippingActive;
+- src\scene\SceneManager.ts:2501 — previewSceneSectionWindow(
+- src\scene\SceneManager.ts:2502 — axis: SceneSectionAxis,
+- src\scene\SceneManager.ts:2503 — kind: SceneSectionWindowHandleKind,
+- src\scene\SceneManager.ts:2507 — return previewSceneSectionWindowImpl.call(this, axis, kind, valueM, frameId);
+- src\scene\SceneManager.ts:2693 — private countGroundTraceObjects(root: THREE.Object3D | null | undefined): number {
+- src\scene\SceneManager.ts:2697 — if (obj.userData?.sceneSectionGroundTrace === true) count += 1;
+- src\scene\SceneManager.ts:2702 — getSceneSectionHelperDebugState(): SceneSectionHelperDebugState {
+- src\scene\SceneManager.ts:2704 — groundTracePolicy: "mirror-delayed-ground-trace-into-helper-snapshot",
+- src\scene\SceneManager.ts:2705 — liveGroundTraceCount: this.countGroundTraceObjects(
+- src\scene\SceneManager.ts:2706 — this.sceneSectionRuntime?.group,
+- src\scene\SceneManager.ts:2708 — snapshotGroundTraceCount: this.countGroundTraceObjects(
+- src\scene\SceneManager.ts:2709 — this.sceneSectionHelperTransitionSnapshot?.group,
+- src\scene\SceneManager.ts:2711 — snapshotActive: this.sceneSectionHelperTransitionSnapshot !== null,
+- src\scene\SceneManager.ts:2712 — transitionOpacity: this.sceneSectionHelperTransitionOpacity,
+- src\scene\SceneManager.ts:2726 — sceneSectionStyleTweenActive: boolean;
+- src\scene\SceneManager.ts:2727 — sceneSectionHelperTransitionSnapshotActive: boolean;
+- src\scene\SceneManager.ts:2728 — sceneSectionHelperTransitionOpacity: number;
+- src\scene\SceneManager.ts:2732 — sceneSectionHelpers: SceneSectionHelperDebugState;
+- src\scene\SceneManager.ts:2763 — sceneSectionStyleTweenActive: this.sceneSectionStyleTween !== null,
+- src\scene\SceneManager.ts:2764 — sceneSectionHelperTransitionSnapshotActive:
+- src\scene\SceneManager.ts:2765 — this.sceneSectionHelperTransitionSnapshot !== null,
+- src\scene\SceneManager.ts:2766 — sceneSectionHelperTransitionOpacity: this.sceneSectionHelperTransitionOpacity,
+- src\scene\SceneManager.ts:2770 — sceneSectionHelpers: this.getSceneSectionHelperDebugState(),
+- src\scene\SceneManager.ts:3055 — this.sceneSectionReapplySuspended = true;
+- src\scene\SceneManager.ts:3073 — this.sceneSectionReapplySuspended = false;
+- src\scene\SceneManager.ts:3076 — if (this.sceneSectionStyleTween) {
+- src\scene\SceneManager.ts:3077 — this.sceneSectionHelperTransitionOpacity =
+- src\scene\SceneManager.ts:3078 — this.sceneSectionHelperOpacityForTween(
+- src\scene\SceneManager.ts:3079 — this.sceneSectionStyleTween,
+- src\scene\SceneManager.ts:3080 — this.transitionTweenEasedProgress(this.sceneSectionStyleTween, nowMs),
+- src\scene\SceneManager.ts:3083 — this.reapplySceneSectionPlanes();
+- src\scene\SceneManager.ts:3324 — buildMtVolumeCutMesh(mesh: THREE.Mesh, plane: ResolvedSceneSectionPlane, options: {
+- src\scene\SceneManager.ts:3331 — sectionFrame?: ResolvedSceneSectionFrame | null;
+- src\scene\SceneManager.ts:3377 — buildSeismicVolumeCutMesh(mesh: THREE.Mesh, plane: ResolvedSceneSectionPlane, options: {
+- src\scene\SceneManager.ts:3384 — sectionFrame?: ResolvedSceneSectionFrame | null;
+- src\scene\SceneManager.ts:4026 — this.sceneSectionStyleTween = null;
+- src\scene\SceneManager.ts:4027 — this.sceneSectionHelperTransitionOpacity = 1;
+- src\scene\SceneManager.ts:4036 — this.applySceneSectionPlanes(
+- src\scene\SceneManager.ts:4052 — this.sceneSectionStyleTween = null;
+- src\scene\SceneManager.ts:4053 — this.sceneSectionHelperTransitionOpacity = 1;
+- src\scene\SceneManager.ts:4384 — this.reapplySceneSectionPlanes();
+- src\scene\SceneManager.ts:4748 — this.updateSceneSectionPlanarTextFacing(camera);
+- src\scene\SceneManager.ts:4749 — const sceneSectionTextFacingMs = transitionDebugMs(
+- src\scene\SceneManager.ts:4789 — sceneSectionTextFacingMs,
+- src\scene\terrainMaterial.ts:22 — function sceneSectionVectorSlots(): THREE.Vector3[] {
+- src\scene\terrainMaterial.ts:29 — function sceneSectionVector4Slots(): THREE.Vector4[] {
+- src\scene\terrainMaterial.ts:36 — function sceneSectionNumberSlots(value: number): number[] {
+- src\scene\terrainMaterial.ts:547 — uSceneSectionTransitionEnabled: { value: 0 },
+- src\scene\terrainMaterial.ts:548 — uSceneSectionTransitionProgress: { value: 0 },
+- src\scene\terrainMaterial.ts:549 — uSceneSectionEnabled: { value: 0 },
+- src\scene\terrainMaterial.ts:550 — uSceneSectionMode: { value: 0 },
+- src\scene\terrainMaterial.ts:551 — uSceneSectionPlaneCount: { value: 0 },
+- src\scene\terrainMaterial.ts:552 — uSceneSectionNormals: { value: sceneSectionVectorSlots() },
+- src\scene\terrainMaterial.ts:553 — uSceneSectionPositions: { value: sceneSectionNumberSlots(0) },
+- src\scene\terrainMaterial.ts:554 — uSceneSectionThickness: { value: sceneSectionNumberSlots(1) },
+- src\scene\terrainMaterial.ts:555 — uSceneSectionInvert: { value: sceneSectionNumberSlots(0) },
+- src\scene\terrainMaterial.ts:556 — uSceneSectionPlaneOutsideOpacity: {
+- src\scene\terrainMaterial.ts:557 — value: sceneSectionNumberSlots(1),
+- src\scene\terrainMaterial.ts:559 — uSceneSectionFrameCount: { value: 0 },
+- src\scene\terrainMaterial.ts:560 — uSceneSectionFrameAxisA: { value: sceneSectionVectorSlots() },
+- src\scene\terrainMaterial.ts:561 — uSceneSectionFrameAxisB: { value: sceneSectionVectorSlots() },
+- src\scene\terrainMaterial.ts:562 — uSceneSectionFrameBounds: { value: sceneSectionVector4Slots() },
+- src\scene\terrainMaterial.ts:563 — uSceneSectionFrameOutsideOpacity: {
+- src\scene\terrainMaterial.ts:564 — value: sceneSectionNumberSlots(1),
+- src\scene\terrainMaterial.ts:566 — uSceneSectionTargetPlaneCount: { value: 0 },
+- src\scene\terrainMaterial.ts:567 — uSceneSectionTargetNormals: { value: sceneSectionVectorSlots() },
+- src\scene\terrainMaterial.ts:568 — uSceneSectionTargetPositions: { value: sceneSectionNumberSlots(0) },
+- src\scene\terrainMaterial.ts:569 — uSceneSectionTargetInvert: { value: sceneSectionNumberSlots(0) },
+- src\scene\terrainMaterial.ts:570 — uSceneSectionTargetPlaneOutsideOpacity: {
+- src\scene\terrainMaterial.ts:571 — value: sceneSectionNumberSlots(1),
+- src\scene\terrainMaterial.ts:573 — uSceneSectionTargetFrameCount: { value: 0 },
+- src\scene\terrainMaterial.ts:574 — uSceneSectionTargetFrameAxisA: { value: sceneSectionVectorSlots() },
+- src\scene\terrainMaterial.ts:575 — uSceneSectionTargetFrameAxisB: { value: sceneSectionVectorSlots() },
+- src\scene\terrainMaterial.ts:576 — uSceneSectionTargetFrameBounds: { value: sceneSectionVector4Slots() },
+- src\scene\terrainMaterial.ts:577 — uSceneSectionTargetFrameOutsideOpacity: {
+- src\scene\terrainMaterial.ts:578 — value: sceneSectionNumberSlots(1),
+- src\scene\terrainMaterial.ts:742 — uniform int uSceneSectionEnabled;
+- src\scene\terrainMaterial.ts:743 — uniform int uSceneSectionTransitionEnabled;
+- src\scene\terrainMaterial.ts:744 — uniform float uSceneSectionTransitionProgress;
+- src\scene\terrainMaterial.ts:745 — uniform int uSceneSectionMode;
+- src\scene\terrainMaterial.ts:746 — uniform int uSceneSectionPlaneCount;
+- src\scene\terrainMaterial.ts:747 — uniform vec3 uSceneSectionNormals[8];
+- src\scene\terrainMaterial.ts:748 — uniform float uSceneSectionPositions[8];
+- src\scene\terrainMaterial.ts:749 — uniform float uSceneSectionThickness[8];
+- src\scene\terrainMaterial.ts:750 — uniform int uSceneSectionInvert[8];
+- src\scene\terrainMaterial.ts:751 — uniform float uSceneSectionPlaneOutsideOpacity[8];
+- src\scene\terrainMaterial.ts:752 — uniform int uSceneSectionFrameCount;
+- src\scene\terrainMaterial.ts:753 — uniform vec3 uSceneSectionFrameAxisA[8];
+- src\scene\terrainMaterial.ts:754 — uniform vec3 uSceneSectionFrameAxisB[8];
+- src\scene\terrainMaterial.ts:755 — uniform vec4 uSceneSectionFrameBounds[8];
+- src\scene\terrainMaterial.ts:756 — uniform float uSceneSectionFrameOutsideOpacity[8];
+- src\scene\terrainMaterial.ts:757 — uniform int uSceneSectionTargetPlaneCount;
+- src\scene\terrainMaterial.ts:758 — uniform vec3 uSceneSectionTargetNormals[8];
+- src\scene\terrainMaterial.ts:759 — uniform float uSceneSectionTargetPositions[8];
+- src\scene\terrainMaterial.ts:760 — uniform int uSceneSectionTargetInvert[8];
+- src\scene\terrainMaterial.ts:761 — uniform float uSceneSectionTargetPlaneOutsideOpacity[8];
+- src\scene\terrainMaterial.ts:762 — uniform int uSceneSectionTargetFrameCount;
+- src\scene\terrainMaterial.ts:763 — uniform vec3 uSceneSectionTargetFrameAxisA[8];
+- src\scene\terrainMaterial.ts:764 — uniform vec3 uSceneSectionTargetFrameAxisB[8];
+- src\scene\terrainMaterial.ts:765 — uniform vec4 uSceneSectionTargetFrameBounds[8];
+- src\scene\terrainMaterial.ts:766 — uniform float uSceneSectionTargetFrameOutsideOpacity[8];
+- src\scene\terrainMaterial.ts:1075 — float sceneSectionTargetAlpha(vec3 position);
+- src\scene\terrainMaterial.ts:1077 — float sceneSectionAlpha(vec3 position) {
+- src\scene\terrainMaterial.ts:1078 — if (uSceneSectionEnabled == 0) return 1.0;
+- src\scene\terrainMaterial.ts:1081 — if (i >= uSceneSectionPlaneCount) break;
+- src\scene\terrainMaterial.ts:1082 — vec3 normal = normalize(uSceneSectionNormals[i]);
+- src\scene\terrainMaterial.ts:1083 — float distance = dot(position, normal) - uSceneSectionPositions[i];
+- src\scene\terrainMaterial.ts:1084 — if (uSceneSectionInvert[i] == 1) distance = -distance;
+- src\scene\terrainMaterial.ts:1086 — alpha = min(alpha, clamp(uSceneSectionPlaneOutsideOpacity[i], 0.0, 1.0));
+- src\scene\terrainMaterial.ts:1090 — if (i >= uSceneSectionFrameCount) break;
+- src\scene\terrainMaterial.ts:1091 — vec3 axisA = normalize(uSceneSectionFrameAxisA[i]);
+- src\scene\terrainMaterial.ts:1092 — vec3 axisB = normalize(uSceneSectionFrameAxisB[i]);
+- src\scene\terrainMaterial.ts:1095 — vec4 bounds = uSceneSectionFrameBounds[i];
+- src\scene\terrainMaterial.ts:1098 — alpha = min(alpha, clamp(uSceneSectionFrameOutsideOpacity[i], 0.0, 1.0));
+- src\scene\terrainMaterial.ts:1104 — float sceneSectionTargetAlpha(vec3 position) {
+- src\scene\terrainMaterial.ts:1107 — if (i >= uSceneSectionTargetPlaneCount) break;
+- src\scene\terrainMaterial.ts:1108 — vec3 normal = normalize(uSceneSectionTargetNormals[i]);
+- src\scene\terrainMaterial.ts:1109 — float distance = dot(position, normal) - uSceneSectionTargetPositions[i];
+- src\scene\terrainMaterial.ts:1110 — if (uSceneSectionTargetInvert[i] == 1) distance = -distance;
+- src\scene\terrainMaterial.ts:1112 — alpha = min(alpha, clamp(uSceneSectionTargetPlaneOutsideOpacity[i], 0.0, 1.0));
+- src\scene\terrainMaterial.ts:1116 — if (i >= uSceneSectionTargetFrameCount) break;
+- src\scene\terrainMaterial.ts:1117 — vec3 axisA = normalize(uSceneSectionTargetFrameAxisA[i]);
+- src\scene\terrainMaterial.ts:1118 — vec3 axisB = normalize(uSceneSectionTargetFrameAxisB[i]);
+- src\scene\terrainMaterial.ts:1121 — vec4 bounds = uSceneSectionTargetFrameBounds[i];
+- src\scene\terrainMaterial.ts:1124 — alpha = min(alpha, clamp(uSceneSectionTargetFrameOutsideOpacity[i], 0.0, 1.0));
+- src\scene\terrainMaterial.ts:1155 — float sectionAlpha = sceneSectionAlpha(vWorldPos);
+- src\scene\terrainMaterial.ts:1156 — if (uSceneSectionTransitionEnabled != 0) {
+- src\scene\terrainMaterial.ts:1157 — float sourceAlpha = sceneSectionAlpha(vWorldPos);
+- src\scene\terrainMaterial.ts:1158 — float targetAlpha = sceneSectionTargetAlpha(vWorldPos);
+- src\scene\terrainMaterial.ts:1159 — sectionAlpha = mix(sourceAlpha, targetAlpha, clamp(uSceneSectionTransitionProgress, 0.0, 1.0));
+- src\scene\isoOverlays\sectionIsoOverlay.ts:14 — type SceneSectionAxis = "x" | "y" | "z";
+- src\scene\isoOverlays\sectionIsoOverlay.ts:95 — skipSceneSectionClipping?: boolean;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:216 — axis: SceneSectionAxis,
+- src\scene\isoOverlays\sectionIsoOverlay.ts:229 — axis: SceneSectionAxis,
+- src\scene\isoOverlays\sectionIsoOverlay.ts:239 — axis: SceneSectionAxis,
+- src\scene\isoOverlays\sectionIsoOverlay.ts:252 — axis: SceneSectionAxis,
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1276 — if (options.skipSceneSectionClipping) {
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1277 — mesh.userData.sceneSectionHelper = true;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1279 — mesh.material.userData.sceneSectionHelper = true;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1328 — if (options.skipSceneSectionClipping) {
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1329 — root.userData.sceneSectionHelper = true;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1398 — if (options.skipSceneSectionClipping) {
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1399 — line.userData.sceneSectionHelper = true;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1400 — lineMaterial.userData.sceneSectionHelper = true;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:39 — ResolvedSceneSectionFrame,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:40 — ResolvedSceneSectionPlane,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:268 — plane: ResolvedSceneSectionPlane,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:271 — frame?: ResolvedSceneSectionFrame | null,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:359 — plane: ResolvedSceneSectionPlane,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:360 — frame?: ResolvedSceneSectionFrame | null,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:362 — if (plane.axis === "z" || frame?.groundTraceVisible !== true) return null;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:394 — planes: ResolvedSceneSectionPlane[],
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:395 — frames: ResolvedSceneSectionFrame[],
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:400 — (frame) => frame.frameId === plane.frameId && frame.groundTraceVisible,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:423 — return this.sceneSectionActivePlanes(this.lastSceneSectionStyle).map(
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:424 — (plane: ResolvedSceneSectionPlane) => ({
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:456 — return this.sceneSectionActivePlanes(this.lastSceneSectionStyle).map(
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:457 — (plane: ResolvedSceneSectionPlane) => ({
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:543 — return this.sceneSectionActivePlanes(this.lastSceneSectionStyle).map(
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:544 — (plane: ResolvedSceneSectionPlane) => ({
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:578 — group.userData.sceneSectionHelper = true;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:745 — export function buildMtVolumeCutMeshImpl(this: any, mesh: THREE.Mesh, plane: ResolvedSceneSectionPlane, options: {
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:752 — sectionFrame?: ResolvedSceneSectionFrame | null;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:905 — material.userData.sceneSectionHelper = true;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:911 — cut.userData.sceneSectionHelper = true;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:990 — const planes = this.sceneSectionActivePlanes(this.lastSceneSectionStyle);
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:998 — const sectionBounds = this.sceneSectionBounds(
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:999 — this.lastSceneSectionStyle,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1000 — this.sceneSectionLayerIds(this.lastSceneSectionStyle),
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1001 — this.sceneSectionProductIds(this.lastSceneSectionStyle),
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1003 — const sectionFrames = this.resolveSceneSectionFrames(
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1004 — this.lastSceneSectionStyle,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1113 — skipSceneSectionClipping: true,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1139 — (frame: ResolvedSceneSectionFrame) =>
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1202 — group.userData.sceneSectionHelper = true;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1229 — group.userData.sceneSectionHelper = true;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1251 — export function buildSeismicVolumeCutMeshImpl(this: any, mesh: THREE.Mesh, plane: ResolvedSceneSectionPlane, options: {
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1258 — sectionFrame?: ResolvedSceneSectionFrame | null;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1391 — material.userData.sceneSectionHelper = true;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1395 — cut.userData.sceneSectionHelper = true;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1546 — material.userData.sceneSectionHelper = true;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1550 — helper.userData.sceneSectionHelper = true;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1570 — const planes = this.sceneSectionActivePlanes(this.lastSceneSectionStyle);
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1572 — const sectionBounds = this.sceneSectionBounds(
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1573 — this.lastSceneSectionStyle,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1574 — this.sceneSectionLayerIds(this.lastSceneSectionStyle),
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1575 — this.sceneSectionProductIds(this.lastSceneSectionStyle),
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1577 — const sectionFrames = this.resolveSceneSectionFrames(
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1578 — this.lastSceneSectionStyle,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1669 — skipSceneSectionClipping: true,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1690 — (frame: ResolvedSceneSectionFrame) =>
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1835 — skipSceneSectionClipping: true,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1888 — const planes = this.sceneSectionActivePlanes(this.lastSceneSectionStyle);
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1890 — const sectionBounds = this.sceneSectionBounds(
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1891 — this.lastSceneSectionStyle,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1892 — this.sceneSectionLayerIds(this.lastSceneSectionStyle),
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1893 — this.sceneSectionProductIds(this.lastSceneSectionStyle),
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1895 — const sectionFrames = this.resolveSceneSectionFrames(
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1896 — this.lastSceneSectionStyle,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1956 — (frame: ResolvedSceneSectionFrame) =>
+- src\scene\section\sceneSectionController.ts:4 — SceneSectionAxisAlignment,
+- src\scene\section\sceneSectionController.ts:5 — SceneSectionAxisDatum,
+- src\scene\section\sceneSectionController.ts:27 — type SceneSectionStyleTween,
+- src\scene\section\sceneSectionController.ts:30 — ResolvedSceneSectionFrame,
+- src\scene\section\sceneSectionController.ts:31 — ResolvedSceneSectionPlane,
+- src\scene\section\sceneSectionController.ts:32 — ResolvedSceneSectionWindow,
+- src\scene\section\sceneSectionController.ts:33 — SceneSectionApplyOptions,
+- src\scene\section\sceneSectionController.ts:34 — SceneSectionAxis,
+- src\scene\section\sceneSectionController.ts:35 — SceneSectionMaskTransition,
+- src\scene\section\sceneSectionController.ts:36 — SceneSectionObjectTarget,
+- src\scene\section\sceneSectionController.ts:37 — SceneSectionObjectVisibility,
+- src\scene\section\sceneSectionController.ts:38 — SceneSectionRuntime,
+- src\scene\section\sceneSectionController.ts:39 — SceneSectionStyleMaskTransition,
+- src\scene\section\sceneSectionController.ts:40 — SceneSectionWindowHandleKind,
+- src\scene\section\sceneSectionController.ts:43 — applySceneSectionObjectVisibilityBuiltInMaterial,
+- src\scene\section\sceneSectionController.ts:44 — setSceneSectionObjectVisibilityUniforms,
+- src\scene\section\sceneSectionController.ts:45 — } from "../shaders/sceneSectionObjectVisibilityShader";
+- src\scene\section\sceneSectionController.ts:52 — type SceneSectionApplyTransitionFrameOptions = SceneSectionApplyOptions & {
+- src\scene\section\sceneSectionController.ts:67 — SceneSectionAxis,
+- src\scene\section\sceneSectionController.ts:163 — function makeSceneSectionIntersectionDashMaterial(): THREE.LineDashedMaterial {
+- src\scene\section\sceneSectionController.ts:176 — material.userData.sceneSectionHelper = true;
+- src\scene\section\sceneSectionController.ts:180 — function withSceneSectionHeightSampler(
+- src\scene\section\sceneSectionController.ts:191 — function makeSceneSectionTraceRibbonMaterial(): THREE.MeshBasicMaterial {
+- src\scene\section\sceneSectionController.ts:203 — material.userData.sceneSectionHelper = true;
+- src\scene\section\sceneSectionController.ts:207 — function appendSceneSectionTraceRibbonSegment(
+- src\scene\section\sceneSectionController.ts:233 — function buildSceneSectionDashedTraceRibbonGeometry(
+- src\scene\section\sceneSectionController.ts:260 — appendSceneSectionTraceRibbonSegment(
+- src\scene\section\sceneSectionController.ts:288 — function sceneSectionAxes(): SceneSectionAxis[] {
+- src\scene\section\sceneSectionController.ts:292 — function sceneSectionBuiltInFrameId(axis: SceneSectionAxis): string {
+- src\scene\section\sceneSectionController.ts:296 — function sceneSectionValidAxis(value: unknown): value is SceneSectionAxis {
+- src\scene\section\sceneSectionController.ts:300 — function sceneSectionDefaultFrameLabel(
+- src\scene\section\sceneSectionController.ts:302 — axis: SceneSectionAxis,
+- src\scene\section\sceneSectionController.ts:304 — if (id === sceneSectionBuiltInFrameId(axis)) {
+- src\scene\section\sceneSectionController.ts:347 — function sceneSectionVectorComponentIndex(
+- src\scene\section\sceneSectionController.ts:356 — function sceneSectionHorizontalComponentIndex(
+- src\scene\section\sceneSectionController.ts:362 — function sceneSectionRotateHorizontal(
+- src\scene\section\sceneSectionController.ts:372 — type SceneSectionGeoContext = {
+- src\scene\section\sceneSectionController.ts:378 — function sceneSectionSourceCrs(this: any): string | undefined {
+- src\scene\section\sceneSectionController.ts:391 — function sceneSectionGeoContext(this: any): SceneSectionGeoContext {
+- src\scene\section\sceneSectionController.ts:395 — const sourceCrs = sceneSectionSourceCrs.call(this);
+- src\scene\section\sceneSectionController.ts:403 — function sceneSectionWorldToUtm(
+- src\scene\section\sceneSectionController.ts:414 — function sceneSectionAxisTicks(
+- src\scene\section\sceneSectionController.ts:442 — function sceneSectionAxisValueLabel(
+- src\scene\section\sceneSectionController.ts:454 — function sceneSectionAxisHeading(componentIndex: 0 | 1 | 2): string {
+- src\scene\section\sceneSectionController.ts:460 — function sceneSectionDefaultAxisHeading(
+- src\scene\section\sceneSectionController.ts:461 — datum: SceneSectionAxisDatum,
+- src\scene\section\sceneSectionController.ts:464 — const component = sceneSectionVectorComponentIndex(vector);
+- src\scene\section\sceneSectionController.ts:468 — return sceneSectionHorizontalComponentIndex(vector) === 0
+- src\scene\section\sceneSectionController.ts:472 — return sceneSectionAxisHeading(component);
+- src\scene\section\sceneSectionController.ts:475 — function formatSceneSectionLonLat(value: number, positive: string, negative: string, decimals: number): string {
+- src\scene\section\sceneSectionController.ts:479 — function sceneSectionAxisValueLabelForPoint(
+- src\scene\section\sceneSectionController.ts:480 — frame: ResolvedSceneSectionFrame,
+- src\scene\section\sceneSectionController.ts:486 — const component = sceneSectionVectorComponentIndex(vector);
+- src\scene\section\sceneSectionController.ts:498 — const utm = sceneSectionWorldToUtm(point, origin);
+- src\scene\section\sceneSectionController.ts:501 — return sceneSectionHorizontalComponentIndex(vector) === 0
+- src\scene\section\sceneSectionController.ts:502 — ? formatSceneSectionLonLat(latLon.lon, "E", "W", decimals)
+- src\scene\section\sceneSectionController.ts:503 — : formatSceneSectionLonLat(latLon.lat, "N", "S", decimals);
+- src\scene\section\sceneSectionController.ts:505 — return sceneSectionAxisValueLabel(component, point.getComponent(component), origin);
+- src\scene\section\sceneSectionController.ts:508 — function sceneSectionAxisTickOffset(
+- src\scene\section\sceneSectionController.ts:509 — frame: ResolvedSceneSectionFrame,
+- src\scene\section\sceneSectionController.ts:513 — const component = sceneSectionVectorComponentIndex(vector);
+- src\scene\section\sceneSectionController.ts:528 — function sceneSectionOutlineWidthM(width: number, height: number): number {
+- src\scene\section\sceneSectionController.ts:542 — function buildSceneSectionOutlineGeometry(
+- src\scene\section\sceneSectionController.ts:627 — function makeSceneSectionOutlineMaterial(
+- src\scene\section\sceneSectionController.ts:648 — material.userData.sceneSectionHelper = true;
+- src\scene\section\sceneSectionController.ts:653 — function makeSceneSectionConeMaterial(
+- src\scene\section\sceneSectionController.ts:672 — material.userData.sceneSectionHelper = true;
+- src\scene\section\sceneSectionController.ts:678 — kind: SceneSectionWindowHandleKind,
+- src\scene\section\sceneSectionController.ts:687 — frames: ResolvedSceneSectionFrame[],
+- src\scene\section\sceneSectionController.ts:688 — axis: SceneSectionAxis,
+- src\scene\section\sceneSectionController.ts:689 — ): ResolvedSceneSectionFrame | null {
+- src\scene\section\sceneSectionController.ts:694 — frames: ResolvedSceneSectionFrame[],
+- src\scene\section\sceneSectionController.ts:695 — plane: ResolvedSceneSectionPlane,
+- src\scene\section\sceneSectionController.ts:696 — ): ResolvedSceneSectionFrame | null {
+- src\scene\section\sceneSectionController.ts:703 — export function sceneSectionProductIds(this: any, style: EditableStyle): Set<string> {
+- src\scene\section\sceneSectionController.ts:711 — if (style.sceneSectionTargetScope === "all-visible") {
+- src\scene\section\sceneSectionController.ts:719 — const configured = Array.isArray(style.sceneSectionTargetProductIds)
+- src\scene\section\sceneSectionController.ts:720 — ? style.sceneSectionTargetProductIds.filter(
+- src\scene\section\sceneSectionController.ts:724 — if (style.sceneSectionTargetScope === "active-selection") {
+- src\scene\section\sceneSectionController.ts:732 — export function sceneSectionLayerIds(this: any, style: EditableStyle): Set<string> {
+- src\scene\section\sceneSectionController.ts:733 — if (style.sceneSectionTargetScope === "all-visible") {
+- src\scene\section\sceneSectionController.ts:740 — const configured = Array.isArray(style.sceneSectionTargetLayerIds)
+- src\scene\section\sceneSectionController.ts:741 — ? style.sceneSectionTargetLayerIds.filter((id) => typeof id === "string")
+- src\scene\section\sceneSectionController.ts:743 — if (style.sceneSectionTargetScope === "active-selection") {
+- src\scene\section\sceneSectionController.ts:756 — const SCENE_SECTION_OBJECT_AXES: SceneSectionAxis[] = ["x", "y", "z"];
+- src\scene\section\sceneSectionController.ts:758 — function sceneSectionLayerObjectId(layerId: string): string {
+- src\scene\section\sceneSectionController.ts:762 — function sceneSectionProductObjectId(layerId: string, productId: string): string {
+- src\scene\section\sceneSectionController.ts:766 — function sceneSectionObjectIdForObject(
+- src\scene\section\sceneSectionController.ts:776 — return sceneSectionProductObjectId(layerId, productId);
+- src\scene\section\sceneSectionController.ts:778 — return sceneSectionLayerObjectId(layerId);
+- src\scene\section\sceneSectionController.ts:781 — function sceneSectionTargetLabel(this: any, layerId: string): string {
+- src\scene\section\sceneSectionController.ts:803 — export function listSceneSectionObjectTargets(this: any): SceneSectionObjectTarget[] {
+- src\scene\section\sceneSectionController.ts:804 — const targets = new Map<string, SceneSectionObjectTarget>();
+- src\scene\section\sceneSectionController.ts:807 — const objectId = sceneSectionLayerObjectId(layerId);
+- src\scene\section\sceneSectionController.ts:810 — label: sceneSectionTargetLabel.call(this, layerId),
+- src\scene\section\sceneSectionController.ts:848 — const objectId = sceneSectionProductObjectId(
+- src\scene\section\sceneSectionController.ts:865 — function sceneSectionLegacyObjectTargeted(
+- src\scene\section\sceneSectionController.ts:872 — if (obj.userData?.sceneSectionHelper === true) return false;
+- src\scene\section\sceneSectionController.ts:873 — if (style.sceneSectionTargetScope === "all-visible") return true;
+- src\scene\section\sceneSectionController.ts:884 — function sceneSectionAxisOutsideOpacity(
+- src\scene\section\sceneSectionController.ts:886 — axis: SceneSectionAxis,
+- src\scene\section\sceneSectionController.ts:890 — const entry = style.sceneSectionObjectVisibilityByAxis?.[axis]?.[objectId];
+- src\scene\section\sceneSectionController.ts:899 — type SceneSectionResolvedFrameEntry = {
+- src\scene\section\sceneSectionController.ts:905 — axis: SceneSectionAxis;
+- src\scene\section\sceneSectionController.ts:906 — plane: NonNullable<EditableStyle["sceneSectionPlanes"]>[SceneSectionAxis];
+- src\scene\section\sceneSectionController.ts:907 — frame: NonNullable<EditableStyle["sceneSectionFrameByAxis"]>[SceneSectionAxis];
+- src\scene\section\sceneSectionController.ts:910 — function sceneSectionResolvedFrameEntries(
+- src\scene\section\sceneSectionController.ts:912 — ): SceneSectionResolvedFrameEntry[] {
+- src\scene\section\sceneSectionController.ts:913 — const explicitEntries = Array.isArray(style.sceneSectionFrames)
+- src\scene\section\sceneSectionController.ts:914 — ? style.sceneSectionFrames
+- src\scene\section\sceneSectionController.ts:921 — const planes = style.sceneSectionPlanes ?? {};
+- src\scene\section\sceneSectionController.ts:922 — const frames = style.sceneSectionFrameByAxis ?? {};
+- src\scene\section\sceneSectionController.ts:923 — const resolved: SceneSectionResolvedFrameEntry[] = [];
+- src\scene\section\sceneSectionController.ts:924 — for (const axis of sceneSectionAxes()) {
+- src\scene\section\sceneSectionController.ts:925 — const id = sceneSectionBuiltInFrameId(axis);
+- src\scene\section\sceneSectionController.ts:936 — : typeof style.sceneSectionHelperVisible === "boolean"
+- src\scene\section\sceneSectionController.ts:937 — ? style.sceneSectionHelperVisible
+- src\scene\section\sceneSectionController.ts:944 — : sceneSectionDefaultFrameLabel(id, axis),
+- src\scene\section\sceneSectionController.ts:962 — !sceneSectionValidAxis(entry.axis)
+- src\scene\section\sceneSectionController.ts:971 — : sceneSectionDefaultFrameLabel(entry.id, entry.axis),
+- src\scene\section\sceneSectionController.ts:978 — : typeof style.sceneSectionHelperVisible === "boolean"
+- src\scene\section\sceneSectionController.ts:979 — ? style.sceneSectionHelperVisible
+- src\scene\section\sceneSectionController.ts:991 — function sceneSectionFrameListWithPatch(
+- src\scene\section\sceneSectionController.ts:994 — axis: SceneSectionAxis,
+- src\scene\section\sceneSectionController.ts:996 — plane?: NonNullable<EditableStyle["sceneSectionPlanes"]>[SceneSectionAxis];
+- src\scene\section\sceneSectionController.ts:997 — frame?: NonNullable<EditableStyle["sceneSectionFrameByAxis"]>[SceneSectionAxis];
+- src\scene\section\sceneSectionController.ts:999 — ): NonNullable<EditableStyle["sceneSectionFrames"]> {
+- src\scene\section\sceneSectionController.ts:1000 — const entries = sceneSectionResolvedFrameEntries(style);
+- src\scene\section\sceneSectionController.ts:1032 — const builtIn = frameId === sceneSectionBuiltInFrameId(axis);
+- src\scene\section\sceneSectionController.ts:1035 — label: sceneSectionDefaultFrameLabel(frameId, axis),
+- src\scene\section\sceneSectionController.ts:1045 — function sceneSectionFrameOutsideOpacity(
+- src\scene\section\sceneSectionController.ts:1048 — axis: SceneSectionAxis,
+- src\scene\section\sceneSectionController.ts:1053 — style.sceneSectionObjectVisibilityByFrameId?.[frameId]?.[objectId]
+- src\scene\section\sceneSectionController.ts:1058 — return sceneSectionAxisOutsideOpacity(style, axis, objectId, legacyTargeted);
+- src\scene\section\sceneSectionController.ts:1061 — type SceneSectionObjectVisibilityMap =
+- src\scene\section\sceneSectionController.ts:1064 — function sceneSectionVisibilityEntryOutsideOpacity(
+- src\scene\section\sceneSectionController.ts:1065 — entries: SceneSectionObjectVisibilityMap | undefined,
+- src\scene\section\sceneSectionController.ts:1075 — function interpolatedSceneSectionObjectVisibilityMap(
+- src\scene\section\sceneSectionController.ts:1076 — fromEntries: SceneSectionObjectVisibilityMap | undefined,
+- src\scene\section\sceneSectionController.ts:1077 — toEntries: SceneSectionObjectVisibilityMap | undefined,
+- src\scene\section\sceneSectionController.ts:1079 — ): SceneSectionObjectVisibilityMap | undefined {
+- src\scene\section\sceneSectionController.ts:1085 — const next: SceneSectionObjectVisibilityMap = {};
+- src\scene\section\sceneSectionController.ts:1087 — const fromOutsideOpacity = sceneSectionVisibilityEntryOutsideOpacity(
+- src\scene\section\sceneSectionController.ts:1092 — const toOutsideOpacity = sceneSectionVisibilityEntryOutsideOpacity(
+- src\scene\section\sceneSectionController.ts:1105 — function interpolatedSceneSectionObjectVisibilityByAxis(
+- src\scene\section\sceneSectionController.ts:1109 — ): EditableStyle["sceneSectionObjectVisibilityByAxis"] {
+- src\scene\section\sceneSectionController.ts:1110 — const next: NonNullable<EditableStyle["sceneSectionObjectVisibilityByAxis"]> =
+- src\scene\section\sceneSectionController.ts:1112 — for (const axis of sceneSectionAxes()) {
+- src\scene\section\sceneSectionController.ts:1113 — const entries = interpolatedSceneSectionObjectVisibilityMap(
+- src\scene\section\sceneSectionController.ts:1114 — fromStyle.sceneSectionObjectVisibilityByAxis?.[axis],
+- src\scene\section\sceneSectionController.ts:1115 — toStyle.sceneSectionObjectVisibilityByAxis?.[axis],
+- src\scene\section\sceneSectionController.ts:1123 — function interpolatedSceneSectionObjectVisibilityByFrameId(
+- src\scene\section\sceneSectionController.ts:1127 — ): EditableStyle["sceneSectionObjectVisibilityByFrameId"] {
+- src\scene\section\sceneSectionController.ts:1129 — ...Object.keys(fromStyle.sceneSectionObjectVisibilityByFrameId ?? {}),
+- src\scene\section\sceneSectionController.ts:1130 — ...Object.keys(toStyle.sceneSectionObjectVisibilityByFrameId ?? {}),
+- src\scene\section\sceneSectionController.ts:1133 — const next: NonNullable<EditableStyle["sceneSectionObjectVisibilityByFrameId"]> =
+- src\scene\section\sceneSectionController.ts:1136 — const entries = interpolatedSceneSectionObjectVisibilityMap(
+- src\scene\section\sceneSectionController.ts:1137 — fromStyle.sceneSectionObjectVisibilityByFrameId?.[frameId],
+- src\scene\section\sceneSectionController.ts:1138 — toStyle.sceneSectionObjectVisibilityByFrameId?.[frameId],
+- src\scene\section\sceneSectionController.ts:1146 — export function sceneSectionObjectVisibilityForObject(this: any,
+- src\scene\section\sceneSectionController.ts:1152 — ): SceneSectionObjectVisibility {
+- src\scene\section\sceneSectionController.ts:1153 — const objectId = sceneSectionObjectIdForObject(layerId, obj);
+- src\scene\section\sceneSectionController.ts:1154 — const legacyTargeted = sceneSectionLegacyObjectTargeted(
+- src\scene\section\sceneSectionController.ts:1162 — x: sceneSectionAxisOutsideOpacity(style, "x", objectId, legacyTargeted),
+- src\scene\section\sceneSectionController.ts:1163 — y: sceneSectionAxisOutsideOpacity(style, "y", objectId, legacyTargeted),
+- src\scene\section\sceneSectionController.ts:1164 — z: sceneSectionAxisOutsideOpacity(style, "z", objectId, legacyTargeted),
+- src\scene\section\sceneSectionController.ts:1167 — for (const entry of sceneSectionResolvedFrameEntries(style)) {
+- src\scene\section\sceneSectionController.ts:1168 — const value = sceneSectionFrameOutsideOpacity(
+- src\scene\section\sceneSectionController.ts:1200 — type SceneSectionFrameBasis = {
+- src\scene\section\sceneSectionController.ts:1210 — alignment: SceneSectionAxisAlignment;
+- src\scene\section\sceneSectionController.ts:1211 — datum: SceneSectionAxisDatum;
+- src\scene\section\sceneSectionController.ts:1218 — function sceneSectionAlignment(value: unknown): SceneSectionAxisAlignment {
+- src\scene\section\sceneSectionController.ts:1222 — function sceneSectionDatum(value: unknown): SceneSectionAxisDatum {
+- src\scene\section\sceneSectionController.ts:1226 — function sceneSectionBasisVectors(
+- src\scene\section\sceneSectionController.ts:1227 — axis: SceneSectionAxis,
+- src\scene\section\sceneSectionController.ts:1228 — alignment: SceneSectionAxisAlignment,
+- src\scene\section\sceneSectionController.ts:1237 — ? sceneSectionRotateHorizontal(axisComponentVector(0), convergenceRad)
+- src\scene\section\sceneSectionController.ts:1241 — ? sceneSectionRotateHorizontal(axisComponentVector(1), convergenceRad)
+- src\scene\section\sceneSectionController.ts:1253 — function sceneSectionFrameCenterFromRanges(
+- src\scene\section\sceneSectionController.ts:1254 — axis: SceneSectionAxis,
+- src\scene\section\sceneSectionController.ts:1269 — function sceneSectionResolvedFrameBasis(
+- src\scene\section\sceneSectionController.ts:1270 — axis: SceneSectionAxis,
+- src\scene\section\sceneSectionController.ts:1271 — frame: NonNullable<EditableStyle["sceneSectionFrameByAxis"]>[SceneSectionAxis] | undefined,
+- src\scene\section\sceneSectionController.ts:1277 — geo: SceneSectionGeoContext,
+- src\scene\section\sceneSectionController.ts:1278 — ): SceneSectionFrameBasis {
+- src\scene\section\sceneSectionController.ts:1279 — const alignment = sceneSectionAlignment(frame?.axisAlignment);
+- src\scene\section\sceneSectionController.ts:1280 — const datum = sceneSectionDatum(frame?.axisDatum);
+- src\scene\section\sceneSectionController.ts:1281 — const center = sceneSectionFrameCenterFromRanges(
+- src\scene\section\sceneSectionController.ts:1289 — const centerUtm = sceneSectionWorldToUtm(center, geo.origin);
+- src\scene\section\sceneSectionController.ts:1294 — const vectors = sceneSectionBasisVectors(axis, alignment, convergenceRad);
+- src\scene\section\sceneSectionController.ts:1323 — export function resolveSceneSectionPlanes(this: any,
+- src\scene\section\sceneSectionController.ts:1326 — ): ResolvedSceneSectionPlane[] {
+- src\scene\section\sceneSectionController.ts:1329 — this.sceneSectionBounds(
+- src\scene\section\sceneSectionController.ts:1331 — this.sceneSectionLayerIds(style),
+- src\scene\section\sceneSectionController.ts:1332 — this.sceneSectionProductIds(style),
+- src\scene\section\sceneSectionController.ts:1334 — const geo = sceneSectionGeoContext.call(this);
+- src\scene\section\sceneSectionController.ts:1335 — const frames = new Map<string, ResolvedSceneSectionFrame>(
+- src\scene\section\sceneSectionController.ts:1337 — .resolveSceneSectionFrames(style, resolvedBounds)
+- src\scene\section\sceneSectionController.ts:1338 — .map((frame: ResolvedSceneSectionFrame) => [frame.frameId, frame]),
+- src\scene\section\sceneSectionController.ts:1340 — return sceneSectionResolvedFrameEntries(style).map((entry) => {
+- src\scene\section\sceneSectionController.ts:1352 — const basis: SceneSectionFrameBasis | ResolvedSceneSectionFrame =
+- src\scene\section\sceneSectionController.ts:1367 — return sceneSectionResolvedFrameBasis(
+- src\scene\section\sceneSectionController.ts:1394 — export function sceneSectionActivePlanes(this: any,
+- src\scene\section\sceneSectionController.ts:1396 — ): ResolvedSceneSectionPlane[] {
+- src\scene\section\sceneSectionController.ts:1397 — if (style.sceneSectionEnabled !== true) return [];
+- src\scene\section\sceneSectionController.ts:1398 — return this.resolveSceneSectionPlanes(style).filter(
+- src\scene\section\sceneSectionController.ts:1399 — (plane: ResolvedSceneSectionPlane) => plane.enabled,
+- src\scene\section\sceneSectionController.ts:1403 — export function sceneSectionObjectTargeted(this: any,
+- src\scene\section\sceneSectionController.ts:1410 — return sceneSectionLegacyObjectTargeted(
+- src\scene\section\sceneSectionController.ts:1419 — export function sceneSectionClippingPlanes(this: any,
+- src\scene\section\sceneSectionController.ts:1420 — planes: ResolvedSceneSectionPlane[],
+- src\scene\section\sceneSectionController.ts:1434 — function sceneSectionLabelAnchorPosition(
+- src\scene\section\sceneSectionController.ts:1453 — function sceneSectionPointClippedByPlanes(
+- src\scene\section\sceneSectionController.ts:1462 — function updateSceneSectionLabelCullState(
+- src\scene\section\sceneSectionController.ts:1471 — sceneSectionLabelHidden?: boolean;
+- src\scene\section\sceneSectionController.ts:1472 — sceneSectionLabelHiddenBy?: string;
+- src\scene\section\sceneSectionController.ts:1481 — data.sceneSectionLabelHidden = false;
+- src\scene\section\sceneSectionController.ts:1482 — delete data.sceneSectionLabelHiddenBy;
+- src\scene\section\sceneSectionController.ts:1485 — sceneSectionLabelAnchorPosition(obj, anchorPoint);
+- src\scene\section\sceneSectionController.ts:1486 — const hidden = sceneSectionPointClippedByPlanes(anchorPoint, activePlanes);
+- src\scene\section\sceneSectionController.ts:1487 — data.sceneSectionLabelHidden = hidden;
+- src\scene\section\sceneSectionController.ts:1489 — data.sceneSectionLabelHiddenBy = "scene-section";
+- src\scene\section\sceneSectionController.ts:1491 — delete data.sceneSectionLabelHiddenBy;
+- src\scene\section\sceneSectionController.ts:1495 — type SceneSectionSurfaceTraceSegment = {
+- src\scene\section\sceneSectionController.ts:1503 — frame: ResolvedSceneSectionFrame,
+- src\scene\section\sceneSectionController.ts:1504 — ): SceneSectionSurfaceTraceSegment | null {
+- src\scene\section\sceneSectionController.ts:1541 — type SceneSectionFrameIntersectionTrace = SceneSectionSurfaceTraceSegment & {
+- src\scene\section\sceneSectionController.ts:1542 — axes: [SceneSectionAxis, SceneSectionAxis];
+- src\scene\section\sceneSectionController.ts:1548 — firstPlane: ResolvedSceneSectionPlane,
+- src\scene\section\sceneSectionController.ts:1549 — firstFrame: ResolvedSceneSectionFrame,
+- src\scene\section\sceneSectionController.ts:1550 — secondPlane: ResolvedSceneSectionPlane,
+- src\scene\section\sceneSectionController.ts:1551 — secondFrame: ResolvedSceneSectionFrame,
+- src\scene\section\sceneSectionController.ts:1552 — ): SceneSectionFrameIntersectionTrace | null {
+- src\scene\section\sceneSectionController.ts:1596 — freeAxisIndex: sceneSectionVectorComponentIndex(lineDir),
+- src\scene\section\sceneSectionController.ts:1599 — (firstFrame.groundTraceVisible || secondFrame.groundTraceVisible),
+- src\scene\section\sceneSectionController.ts:1604 — planes: ResolvedSceneSectionPlane[],
+- src\scene\section\sceneSectionController.ts:1605 — frames: ResolvedSceneSectionFrame[],
+- src\scene\section\sceneSectionController.ts:1606 — ): SceneSectionFrameIntersectionTrace[] {
+- src\scene\section\sceneSectionController.ts:1607 — const traces: SceneSectionFrameIntersectionTrace[] = [];
+- src\scene\section\sceneSectionController.ts:1632 — export function sceneSectionAxisAlongIndex(this: any,
+- src\scene\section\sceneSectionController.ts:1633 — axis: SceneSectionAxis,
+- src\scene\section\sceneSectionController.ts:1640 — export function resolveSceneSectionFrames(this: any,
+- src\scene\section\sceneSectionController.ts:1643 — ): ResolvedSceneSectionFrame[] {
+- src\scene\section\sceneSectionController.ts:1645 — style.sceneSectionFrameEnabled !== true &&
+- src\scene\section\sceneSectionController.ts:1646 — style.sceneSectionWindowEnabled !== true &&
+- src\scene\section\sceneSectionController.ts:1647 — !Array.isArray(style.sceneSectionFrames)
+- src\scene\section\sceneSectionController.ts:1651 — const windowByAxis = style.sceneSectionWindowByAxis ?? {};
+- src\scene\section\sceneSectionController.ts:1652 — const frames: ResolvedSceneSectionFrame[] = [];
+- src\scene\section\sceneSectionController.ts:1653 — const geo = sceneSectionGeoContext.call(this);
+- src\scene\section\sceneSectionController.ts:1654 — const explicitFrameEnabled = style.sceneSectionFrameEnabled === true;
+- src\scene\section\sceneSectionController.ts:1656 — explicitFrameEnabled || style.sceneSectionWindowEnabled === true;
+- src\scene\section\sceneSectionController.ts:1657 — for (const entry of sceneSectionResolvedFrameEntries(style)) {
+- src\scene\section\sceneSectionController.ts:1705 — const basis = sceneSectionResolvedFrameBasis(
+- src\scene\section\sceneSectionController.ts:1717 — finiteNumber(style.sceneSectionAxisIntervalM) ??
+- src\scene\section\sceneSectionController.ts:1724 — finiteNumber(style.sceneSectionAxisTextScale) ??
+- src\scene\section\sceneSectionController.ts:1747 — const groundTraceWidthM = clampRange(
+- src\scene\section\sceneSectionController.ts:1748 — finiteNumber(frame?.groundTraceWidthM) ??
+- src\scene\section\sceneSectionController.ts:1781 — groundTraceVisible:
+- src\scene\section\sceneSectionController.ts:1782 — typeof frame?.groundTraceVisible === "boolean"
+- src\scene\section\sceneSectionController.ts:1783 — ? frame.groundTraceVisible
+- src\scene\section\sceneSectionController.ts:1784 — : style.sceneSectionGroundTraceVisible === true,
+- src\scene\section\sceneSectionController.ts:1785 — groundTraceWidthM,
+- src\scene\section\sceneSectionController.ts:1789 — : style.sceneSectionAxesVisible === true,
+- src\scene\section\sceneSectionController.ts:1796 — : sceneSectionDefaultAxisHeading(basis.datum, basis.axisAVector),
+- src\scene\section\sceneSectionController.ts:1800 — : sceneSectionDefaultAxisHeading(basis.datum, basis.axisBVector),
+- src\scene\section\sceneSectionController.ts:1809 — export function resolveSceneSectionWindow(this: any,
+- src\scene\section\sceneSectionController.ts:1812 — ): ResolvedSceneSectionWindow | null {
+- src\scene\section\sceneSectionController.ts:1813 — const frames = this.resolveSceneSectionFrames(style, bounds).filter(
+- src\scene\section\sceneSectionController.ts:1814 — (frame: ResolvedSceneSectionFrame) =>
+- src\scene\section\sceneSectionController.ts:1819 — style.sceneSectionWindowActiveAxis === "x" ||
+- src\scene\section\sceneSectionController.ts:1820 — style.sceneSectionWindowActiveAxis === "y"
+- src\scene\section\sceneSectionController.ts:1821 — ? style.sceneSectionWindowActiveAxis
+- src\scene\section\sceneSectionController.ts:1822 — : style.sceneSectionActiveAxis === "x" ||
+- src\scene\section\sceneSectionController.ts:1823 — style.sceneSectionActiveAxis === "y"
+- src\scene\section\sceneSectionController.ts:1824 — ? style.sceneSectionActiveAxis
+- src\scene\section\sceneSectionController.ts:1829 — axis: frame.axis as Exclude<SceneSectionAxis, "z">,
+- src\scene\section\sceneSectionController.ts:1837 — export function sceneSectionFrameClippingPlanes(this: any,
+- src\scene\section\sceneSectionController.ts:1838 — frame: ResolvedSceneSectionFrame | null,
+- src\scene\section\sceneSectionController.ts:1849 — export function sceneSectionFrameForObject(this: any,
+- src\scene\section\sceneSectionController.ts:1852 — frames: ResolvedSceneSectionFrame[],
+- src\scene\section\sceneSectionController.ts:1853 — ): ResolvedSceneSectionFrame | null {
+- src\scene\section\sceneSectionController.ts:1866 — (frame: ResolvedSceneSectionFrame) => frame.frameId === overlayFrameId,
+- src\scene\section\sceneSectionController.ts:1872 — ? (obj.userData.sectionIsoPlaneAxis as SceneSectionAxis)
+- src\scene\section\sceneSectionController.ts:1900 — export function setSceneSectionUniforms(this: any,
+- src\scene\section\sceneSectionController.ts:1902 — planes: ResolvedSceneSectionPlane[],
+- src\scene\section\sceneSectionController.ts:1903 — visibility: SceneSectionObjectVisibility,
+- src\scene\section\sceneSectionController.ts:1904 — frames: ResolvedSceneSectionFrame[],
+- src\scene\section\sceneSectionController.ts:1905 — maskTransition?: SceneSectionMaskTransition | null,
+- src\scene\section\sceneSectionController.ts:1921 — ensure<number>("uSceneSectionTransitionEnabled", 0).value = maskTransition
+- src\scene\section\sceneSectionController.ts:1924 — ensure<number>("uSceneSectionTransitionProgress", 0).value = clamp01(
+- src\scene\section\sceneSectionController.ts:1927 — ensure<number>("uSceneSectionEnabled", 0).value =
+- src\scene\section\sceneSectionController.ts:1929 — ensure<number>("uSceneSectionMode", 0).value = 0;
+- src\scene\section\sceneSectionController.ts:1930 — ensure<number>("uSceneSectionPlaneCount", 0).value = targeted
+- src\scene\section\sceneSectionController.ts:1933 — const normalUniform = ensure<THREE.Vector3[]>("uSceneSectionNormals", [
+- src\scene\section\sceneSectionController.ts:1944 — "uSceneSectionPositions",
+- src\scene\section\sceneSectionController.ts:1948 — "uSceneSectionThickness",
+- src\scene\section\sceneSectionController.ts:1952 — "uSceneSectionInvert",
+- src\scene\section\sceneSectionController.ts:1968 — "uSceneSectionPlaneOutsideOpacity",
+- src\scene\section\sceneSectionController.ts:1981 — ensure<number>("uSceneSectionFrameCount", 0).value = activeFrames.length;
+- src\scene\section\sceneSectionController.ts:1983 — "uSceneSectionFrameAxisA",
+- src\scene\section\sceneSectionController.ts:1987 — "uSceneSectionFrameAxisB",
+- src\scene\section\sceneSectionController.ts:1991 — "uSceneSectionFrameBounds",
+- src\scene\section\sceneSectionController.ts:2024 — "uSceneSectionFrameOutsideOpacity",
+- src\scene\section\sceneSectionController.ts:2043 — ensure<number>("uSceneSectionTargetPlaneCount", 0).value =
+- src\scene\section\sceneSectionController.ts:2048 — "uSceneSectionTargetNormals",
+- src\scene\section\sceneSectionController.ts:2052 — "uSceneSectionTargetPositions",
+- src\scene\section\sceneSectionController.ts:2056 — "uSceneSectionTargetInvert",
+- src\scene\section\sceneSectionController.ts:2060 — "uSceneSectionTargetPlaneOutsideOpacity",
+- src\scene\section\sceneSectionController.ts:2079 — ensure<number>("uSceneSectionTargetFrameCount", 0).value =
+- src\scene\section\sceneSectionController.ts:2082 — "uSceneSectionTargetFrameAxisA",
+- src\scene\section\sceneSectionController.ts:2086 — "uSceneSectionTargetFrameAxisB",
+- src\scene\section\sceneSectionController.ts:2090 — "uSceneSectionTargetFrameBounds",
+- src\scene\section\sceneSectionController.ts:2094 — "uSceneSectionTargetFrameOutsideOpacity",
+- src\scene\section\sceneSectionController.ts:2131 — ensure<number>("uSceneSectionWindowEnabled", 0).value =
+- src\scene\section\sceneSectionController.ts:2133 — ensure<number>("uSceneSectionWindowAxis", 0).value =
+- src\scene\section\sceneSectionController.ts:2135 — ensure<number>("uSceneSectionWindowMinAlong", -250_000).value =
+- src\scene\section\sceneSectionController.ts:2137 — ensure<number>("uSceneSectionWindowMaxAlong", 250_000).value =
+- src\scene\section\sceneSectionController.ts:2139 — ensure<number>("uSceneSectionWindowBottomZ", -250_000).value =
+- src\scene\section\sceneSectionController.ts:2143 — export function applySceneSectionMaterial(this: any,
+- src\scene\section\sceneSectionController.ts:2145 — planes: ResolvedSceneSectionPlane[],
+- src\scene\section\sceneSectionController.ts:2146 — visibility: SceneSectionObjectVisibility,
+- src\scene\section\sceneSectionController.ts:2148 — frames: ResolvedSceneSectionFrame[],
+- src\scene\section\sceneSectionController.ts:2150 — maskTransition?: SceneSectionMaskTransition | null,
+- src\scene\section\sceneSectionController.ts:2152 — if (material.userData?.sceneSectionHelper === true) return;
+- src\scene\section\sceneSectionController.ts:2153 — const affectedAxes = new Set<SceneSectionAxis>([
+- src\scene\section\sceneSectionController.ts:2210 — this.setSceneSectionUniforms(material, planes, visibility, frames, maskTransition);
+- src\scene\section\sceneSectionController.ts:2212 — this.setSceneSectionUniforms(material, planes, visibility, frames);
+- src\scene\section\sceneSectionController.ts:2218 — this.setSceneSectionUniforms(material, planes, visibility, frames, maskTransition);
+- src\scene\section\sceneSectionController.ts:2219 — setSceneSectionObjectVisibilityUniforms(
+- src\scene\section\sceneSectionController.ts:2237 — applySceneSectionObjectVisibilityBuiltInMaterial(
+- src\scene\section\sceneSectionController.ts:2251 — if (material.userData?.sceneSectionObjectVisibilityPatched === true) {
+- src\scene\section\sceneSectionController.ts:2252 — applySceneSectionObjectVisibilityBuiltInMaterial(
+- src\scene\section\sceneSectionController.ts:2271 — export function interpolatedSceneSectionStyle(this: any,
+- src\scene\section\sceneSectionController.ts:2278 — const axes: SceneSectionAxis[] = ["x", "y", "z"];
+- src\scene\section\sceneSectionController.ts:2279 — const fromPlanes = fromStyle.sceneSectionPlanes ?? {};
+- src\scene\section\sceneSectionController.ts:2280 — const toPlanes = toStyle.sceneSectionPlanes ?? {};
+- src\scene\section\sceneSectionController.ts:2281 — const sceneSectionPlanes: NonNullable<EditableStyle["sceneSectionPlanes"]> =
+- src\scene\section\sceneSectionController.ts:2293 — sceneSectionPlanes[axis] = {
+- src\scene\section\sceneSectionController.ts:2300 — next.sceneSectionPlanes = sceneSectionPlanes;
+- src\scene\section\sceneSectionController.ts:2302 — const fromWindowByAxis = fromStyle.sceneSectionWindowByAxis ?? {};
+- src\scene\section\sceneSectionController.ts:2303 — const toWindowByAxis = toStyle.sceneSectionWindowByAxis ?? {};
+- src\scene\section\sceneSectionController.ts:2304 — const windowByAxis: NonNullable<EditableStyle["sceneSectionWindowByAxis"]> =
+- src\scene\section\sceneSectionController.ts:2329 — next.sceneSectionWindowByAxis = windowByAxis;
+- src\scene\section\sceneSectionController.ts:2331 — const fromFrameByAxis = fromStyle.sceneSectionFrameByAxis ?? {};
+- src\scene\section\sceneSectionController.ts:2332 — const toFrameByAxis = toStyle.sceneSectionFrameByAxis ?? {};
+- src\scene\section\sceneSectionController.ts:2333 — const frameByAxis: NonNullable<EditableStyle["sceneSectionFrameByAxis"]> =
+- src\scene\section\sceneSectionController.ts:2350 — "groundTraceWidthM",
+- src\scene\section\sceneSectionController.ts:2365 — next.sceneSectionFrameByAxis = frameByAxis;
+- src\scene\section\sceneSectionController.ts:2366 — if (Array.isArray(toStyle.sceneSectionFrames)) {
+- src\scene\section\sceneSectionController.ts:2368 — sceneSectionResolvedFrameEntries(fromStyle).map((entry) => [
+- src\scene\section\sceneSectionController.ts:2373 — next.sceneSectionFrames = toStyle.sceneSectionFrames.map((entry) => {
+- src\scene\section\sceneSectionController.ts:2397 — "groundTraceWidthM",
+- src\scene\section\sceneSectionController.ts:2417 — next.sceneSectionObjectVisibilityByAxis =
+- src\scene\section\sceneSectionController.ts:2418 — interpolatedSceneSectionObjectVisibilityByAxis(fromStyle, toStyle, t);
+- src\scene\section\sceneSectionController.ts:2419 — next.sceneSectionObjectVisibilityByFrameId =
+- src\scene\section\sceneSectionController.ts:2420 — interpolatedSceneSectionObjectVisibilityByFrameId(fromStyle, toStyle, t);
+- src\scene\section\sceneSectionController.ts:2424 — export function currentSceneSectionStyle(this: any, nowMs = performance.now()): EditableStyle {
+- src\scene\section\sceneSectionController.ts:2425 — const tween = this.sceneSectionStyleTween;
+- src\scene\section\sceneSectionController.ts:2430 — return this.interpolatedSceneSectionStyle(
+- src\scene\section\sceneSectionController.ts:2437 — function sceneSectionReferenceHelperVisible(
+- src\scene\section\sceneSectionController.ts:2442 — typeof style.sceneSectionHelperVisible === "boolean"
+- src\scene\section\sceneSectionController.ts:2443 — ? style.sceneSectionHelperVisible
+- src\scene\section\sceneSectionController.ts:2447 — style.sceneSectionGroundTraceVisible === true ||
+- src\scene\section\sceneSectionController.ts:2448 — style.sceneSectionAxesVisible === true ||
+- src\scene\section\sceneSectionController.ts:2449 — style.sceneSectionFrameEnabled === true ||
+- src\scene\section\sceneSectionController.ts:2450 — style.sceneSectionWindowEnabled === true ||
+- src\scene\section\sceneSectionController.ts:2455 — function sceneSectionHelperActiveForStyle(
+- src\scene\section\sceneSectionController.ts:2460 — style.sceneSectionEnabled === true &&
+- src\scene\section\sceneSectionController.ts:2461 — sceneSectionReferenceHelperVisible(style, editorMode)
+- src\scene\section\sceneSectionController.ts:2465 — export function sceneSectionHelperSnapshotAllowedForTween(
+- src\scene\section\sceneSectionController.ts:2467 — tween: SceneSectionStyleTween,
+- src\scene\section\sceneSectionController.ts:2469 — const sourceActive = sceneSectionHelperActiveForStyle(
+- src\scene\section\sceneSectionController.ts:2473 — const targetActive = sceneSectionHelperActiveForStyle(
+- src\scene\section\sceneSectionController.ts:2480 — export function sceneSectionHelperOpacityForTween(this: any,
+- src\scene\section\sceneSectionController.ts:2481 — tween: SceneSectionStyleTween,
+- src\scene\section\sceneSectionController.ts:2484 — const fromActive = sceneSectionHelperActiveForStyle(
+- src\scene\section\sceneSectionController.ts:2488 — const toActive = sceneSectionHelperActiveForStyle(
+- src\scene\section\sceneSectionController.ts:2498 — export function sceneSectionMaskTransitionForTween(
+- src\scene\section\sceneSectionController.ts:2500 — tween: SceneSectionStyleTween,
+- src\scene\section\sceneSectionController.ts:2502 — ): SceneSectionStyleMaskTransition {
+- src\scene\section\sceneSectionController.ts:2510 — export function applySceneSectionHelperTransitionOpacity(this: any): void {
+- src\scene\section\sceneSectionController.ts:2511 — const runtime = this.sceneSectionRuntime;
+- src\scene\section\sceneSectionController.ts:2513 — const opacity = clamp01(this.sceneSectionHelperTransitionOpacity);
+- src\scene\section\sceneSectionController.ts:2520 — if (material.userData?.sceneSectionHelper !== true) continue;
+- src\scene\section\sceneSectionController.ts:2537 — const sceneSectionTextWorldPosition = new THREE.Vector3();
+- src\scene\section\sceneSectionController.ts:2538 — const sceneSectionTextToCamera = new THREE.Vector3();
+- src\scene\section\sceneSectionController.ts:2540 — export function updateSceneSectionPlanarTextFacing(
+- src\scene\section\sceneSectionController.ts:2544 — const runtime = this.sceneSectionRuntime;
+- src\scene\section\sceneSectionController.ts:2547 — if (obj.userData?.sceneSectionPlanarText !== true) return;
+- src\scene\section\sceneSectionController.ts:2548 — const baseQuaternion = obj.userData.sceneSectionBaseQuaternion;
+- src\scene\section\sceneSectionController.ts:2549 — const planeNormal = obj.userData.sceneSectionPlaneNormal;
+- src\scene\section\sceneSectionController.ts:2557 — obj.getWorldPosition(sceneSectionTextWorldPosition);
+- src\scene\section\sceneSectionController.ts:2558 — sceneSectionTextToCamera
+- src\scene\section\sceneSectionController.ts:2560 — .sub(sceneSectionTextWorldPosition);
+- src\scene\section\sceneSectionController.ts:2561 — if (sceneSectionTextToCamera.dot(planeNormal) < 0) {
+- src\scene\section\sceneSectionController.ts:2567 — export function sceneSectionBounds(this: any,
+- src\scene\section\sceneSectionController.ts:2577 — if (!obj.visible || obj.userData?.sceneSectionHelper === true) return;
+- src\scene\section\sceneSectionController.ts:2579 — !this.sceneSectionObjectTargeted(
+- src\scene\section\sceneSectionController.ts:2621 — export function createSceneSectionLabel(this: any, text: string, color: string): THREE.Mesh {
+- src\scene\section\sceneSectionController.ts:2650 — material.userData.sceneSectionHelper = true;
+- src\scene\section\sceneSectionController.ts:2659 — mesh.userData.sceneSectionHelper = true;
+- src\scene\section\sceneSectionController.ts:2664 — export function createSceneSectionScaleLabel(this: any,
+- src\scene\section\sceneSectionController.ts:2702 — material.userData.sceneSectionHelper = true;
+- src\scene\section\sceneSectionController.ts:2707 — mesh.userData.sceneSectionHelper = true;
+- src\scene\section\sceneSectionController.ts:2708 — mesh.userData.sceneSectionScaleLabel = true;
+- src\scene\section\sceneSectionController.ts:2709 — mesh.userData.sceneSectionAxisTextScale = scale;
+- src\scene\section\sceneSectionController.ts:2710 — mesh.userData.sceneSectionLabelColor = color;
+- src\scene\section\sceneSectionController.ts:2715 — function makeSceneSectionPlanarTextCameraAware(
+- src\scene\section\sceneSectionController.ts:2721 — obj.userData.sceneSectionPlanarText = true;
+- src\scene\section\sceneSectionController.ts:2722 — obj.userData.sceneSectionBaseQuaternion = baseQuaternion.clone();
+- src\scene\section\sceneSectionController.ts:2723 — obj.userData.sceneSectionPlaneNormal = planeNormal.clone().normalize();
+- src\scene\section\sceneSectionController.ts:2726 — export function ensureSceneSectionRuntime(this: any): SceneSectionRuntime {
+- src\scene\section\sceneSectionController.ts:2727 — if (this.sceneSectionRuntime) return this.sceneSectionRuntime;
+- src\scene\section\sceneSectionController.ts:2731 — group.userData.sceneSectionHelper = true;
+- src\scene\section\sceneSectionController.ts:2733 — this.sceneSectionRuntime = {
+- src\scene\section\sceneSectionController.ts:2738 — return this.sceneSectionRuntime;
+- src\scene\section\sceneSectionController.ts:2741 — export function rebuildSceneSectionHelpers(this: any,
+- src\scene\section\sceneSectionController.ts:2743 — planes: ResolvedSceneSectionPlane[],
+- src\scene\section\sceneSectionController.ts:2747 — const runtime = this.ensureSceneSectionRuntime();
+- src\scene\section\sceneSectionController.ts:2757 — typeof style.sceneSectionHelperVisible === "boolean"
+- src\scene\section\sceneSectionController.ts:2758 — ? style.sceneSectionHelperVisible
+- src\scene\section\sceneSectionController.ts:2760 — const bounds = this.sceneSectionBounds(style, layerTargets, productTargets);
+- src\scene\section\sceneSectionController.ts:2763 — style.sceneSectionActiveAxis === "x" ||
+- src\scene\section\sceneSectionController.ts:2764 — style.sceneSectionActiveAxis === "y" ||
+- src\scene\section\sceneSectionController.ts:2765 — style.sceneSectionActiveAxis === "z"
+- src\scene\section\sceneSectionController.ts:2766 — ? style.sceneSectionActiveAxis
+- src\scene\section\sceneSectionController.ts:2769 — typeof style.sceneSectionActiveFrameId === "string" &&
+- src\scene\section\sceneSectionController.ts:2770 — style.sceneSectionActiveFrameId.trim()
+- src\scene\section\sceneSectionController.ts:2771 — ? style.sceneSectionActiveFrameId
+- src\scene\section\sceneSectionController.ts:2772 — : sceneSectionBuiltInFrameId(activeAxis);
+- src\scene\section\sceneSectionController.ts:2774 — planes.map((plane: ResolvedSceneSectionPlane) => plane.frameId),
+- src\scene\section\sceneSectionController.ts:2777 — .resolveSceneSectionFrames(style, bounds)
+- src\scene\section\sceneSectionController.ts:2778 — .filter((frame: ResolvedSceneSectionFrame) =>
+- src\scene\section\sceneSectionController.ts:2781 — const showGroundTrace = sectionFrames.some(
+- src\scene\section\sceneSectionController.ts:2782 — (frame: ResolvedSceneSectionFrame) => frame.groundTraceVisible,
+- src\scene\section\sceneSectionController.ts:2785 — (frame: ResolvedSceneSectionFrame) => frame.axesVisible,
+- src\scene\section\sceneSectionController.ts:2794 — style.sceneSectionEnabled === true &&
+- src\scene\section\sceneSectionController.ts:2795 — (helperVisible || showGroundTrace || showAxes || showFrameIntersections) &&
+- src\scene\section\sceneSectionController.ts:2799 — const referenceOutlineWidthM = sceneSectionOutlineWidthM(
+- src\scene\section\sceneSectionController.ts:2813 — traceGroup.userData.sceneSectionHelper = true;
+- src\scene\section\sceneSectionController.ts:2814 — traceGroup.userData.sceneSectionIsoIntersectionTrace = true;
+- src\scene\section\sceneSectionController.ts:2817 — trace: SceneSectionFrameIntersectionTrace,
+- src\scene\section\sceneSectionController.ts:2828 — const material = makeSceneSectionIntersectionDashMaterial();
+- src\scene\section\sceneSectionController.ts:2834 — line.userData.sceneSectionHelper = true;
+- src\scene\section\sceneSectionController.ts:2835 — line.userData.sceneSectionIsoIntersectionTrace = true;
+- src\scene\section\sceneSectionController.ts:2836 — line.userData.sceneSectionIntersectionAxes = trace.axes;
+- src\scene\section\sceneSectionController.ts:2837 — line.userData.sceneSectionFreeAxisIndex = trace.freeAxisIndex;
+- src\scene\section\sceneSectionController.ts:2844 — withSceneSectionHeightSampler((sampleHeight) => {
+- src\scene\section\sceneSectionController.ts:2881 — (candidate: ResolvedSceneSectionFrame) =>
+- src\scene\section\sceneSectionController.ts:2935 — style.sceneSectionFrameEnabled === true;
+- src\scene\section\sceneSectionController.ts:2942 — controlGroup.userData.sceneSectionHelper = true;
+- src\scene\section\sceneSectionController.ts:2946 — const outlineGeometry = buildSceneSectionOutlineGeometry(
+- src\scene\section\sceneSectionController.ts:2960 — const outlineMaterial = makeSceneSectionOutlineMaterial(
+- src\scene\section\sceneSectionController.ts:2971 — outline.userData.sceneSectionHelper = true;
+- src\scene\section\sceneSectionController.ts:2972 — outline.userData.sceneSectionOutline = true;
+- src\scene\section\sceneSectionController.ts:2973 — outline.userData.sceneSectionFrameOutline = frame !== null;
+- src\scene\section\sceneSectionController.ts:2974 — outline.userData.sceneSectionAxis = plane.axis;
+- src\scene\section\sceneSectionController.ts:2975 — outline.userData.sceneSectionFrameId = plane.frameId;
+- src\scene\section\sceneSectionController.ts:2976 — outline.userData.sceneSectionPlaneCoordinateIndex = spec.positionIndex;
+- src\scene\section\sceneSectionController.ts:2977 — outline.userData.sceneSectionPlanePositionM = plane.positionM;
+- src\scene\section\sceneSectionController.ts:2978 — outline.userData.sceneSectionPlaneSignedDistanceM = plane.signedDistanceM;
+- src\scene\section\sceneSectionController.ts:2979 — outline.userData.sceneSectionFrameColor = color;
+- src\scene\section\sceneSectionController.ts:2980 — outline.userData.sceneSectionFrameLineWidthM = outlineWidthM;
+- src\scene\section\sceneSectionController.ts:2981 — outline.userData.sceneSectionFrameBounds = frame
+- src\scene\section\sceneSectionController.ts:3017 — kind: "push-pull" | SceneSectionWindowHandleKind,
+- src\scene\section\sceneSectionController.ts:3030 — group.userData.sceneSectionHelper = true;
+- src\scene\section\sceneSectionController.ts:3031 — group.userData.sceneSectionPlaneHandle = true;
+- src\scene\section\sceneSectionController.ts:3032 — group.userData.sceneSectionAxis = plane.axis;
+- src\scene\section\sceneSectionController.ts:3033 — group.userData.sceneSectionFrameId = plane.frameId;
+- src\scene\section\sceneSectionController.ts:3034 — group.userData.sceneSectionPlaneHandleKind = kind;
+- src\scene\section\sceneSectionController.ts:3035 — group.userData.sceneSectionHandleVisual = "double-arrow";
+- src\scene\section\sceneSectionController.ts:3036 — group.userData.sceneSectionHandleScale =
+- src\scene\section\sceneSectionController.ts:3040 — const material = makeSceneSectionConeMaterial(color, outlineOpacity);
+- src\scene\section\sceneSectionController.ts:3054 — topCone.userData.sceneSectionHelper = true;
+- src\scene\section\sceneSectionController.ts:3061 — bottomCone.userData.sceneSectionHelper = true;
+- src\scene\section\sceneSectionController.ts:3074 — pickMaterial.userData.sceneSectionHelper = true;
+- src\scene\section\sceneSectionController.ts:3080 — pickProxy.userData.sceneSectionHelper = true;
+- src\scene\section\sceneSectionController.ts:3081 — pickProxy.userData.sceneSectionPlaneHandle = true;
+- src\scene\section\sceneSectionController.ts:3082 — pickProxy.userData.sceneSectionAxis = plane.axis;
+- src\scene\section\sceneSectionController.ts:3083 — pickProxy.userData.sceneSectionFrameId = plane.frameId;
+- src\scene\section\sceneSectionController.ts:3084 — pickProxy.userData.sceneSectionPlaneHandleKind = kind;
+- src\scene\section\sceneSectionController.ts:3085 — pickProxy.userData.sceneSectionHandleVisual = "double-arrow";
+- src\scene\section\sceneSectionController.ts:3086 — pickProxy.userData.sceneSectionHandleScale =
+- src\scene\section\sceneSectionController.ts:3088 — pickProxy.userData.sceneSectionPickProxy = true;
+- src\scene\section\sceneSectionController.ts:3089 — pickProxy.userData.sceneSectionPickRadius = pickSize * 0.5;
+- src\scene\section\sceneSectionController.ts:3091 — pickProxy.userData.sceneSectionPlaneHandleDirection = direction;
+- src\scene\section\sceneSectionController.ts:3146 — const label = this.createSceneSectionLabel(
+- src\scene\section\sceneSectionController.ts:3173 — const axisATicks = sceneSectionAxisTicks(
+- src\scene\section\sceneSectionController.ts:3177 — sceneSectionAxisTickOffset(frame, tangentA, origin),
+- src\scene\section\sceneSectionController.ts:3179 — const axisBTicks = sceneSectionAxisTicks(
+- src\scene\section\sceneSectionController.ts:3183 — sceneSectionAxisTickOffset(frame, tangentB, origin),
+- src\scene\section\sceneSectionController.ts:3241 — axisMaterial.userData.sceneSectionHelper = true;
+- src\scene\section\sceneSectionController.ts:3247 — axisLine.userData.sceneSectionHelper = true;
+- src\scene\section\sceneSectionController.ts:3248 — axisLine.userData.sceneSectionScaleAxes = true;
+- src\scene\section\sceneSectionController.ts:3249 — axisLine.userData.sceneSectionAxisIntervalM = frame.axisIntervalM;
+- src\scene\section\sceneSectionController.ts:3250 — axisLine.userData.sceneSectionAxisTextScale = frame.axisTextScale;
+- src\scene\section\sceneSectionController.ts:3262 — const axisAHeading = this.createSceneSectionScaleLabel(
+- src\scene\section\sceneSectionController.ts:3272 — makeSceneSectionPlanarTextCameraAware(
+- src\scene\section\sceneSectionController.ts:3279 — const axisBHeading = this.createSceneSectionScaleLabel(
+- src\scene\section\sceneSectionController.ts:3289 — makeSceneSectionPlanarTextCameraAware(
+- src\scene\section\sceneSectionController.ts:3301 — const labelMesh = this.createSceneSectionScaleLabel(
+- src\scene\section\sceneSectionController.ts:3302 — sceneSectionAxisValueLabelForPoint(
+- src\scene\section\sceneSectionController.ts:3312 — makeSceneSectionPlanarTextCameraAware(
+- src\scene\section\sceneSectionController.ts:3324 — const labelMesh = this.createSceneSectionScaleLabel(
+- src\scene\section\sceneSectionController.ts:3325 — sceneSectionAxisValueLabelForPoint(
+- src\scene\section\sceneSectionController.ts:3335 — makeSceneSectionPlanarTextCameraAware(
+- src\scene\section\sceneSectionController.ts:3344 — if (frame && frame.groundTraceVisible && plane.axis !== "z") {
+- src\scene\section\sceneSectionController.ts:3347 — traceGroup.userData.sceneSectionHelper = true;
+- src\scene\section\sceneSectionController.ts:3352 — withSceneSectionHeightSampler((sampleHeight) => {
+- src\scene\section\sceneSectionController.ts:3354 — this.sceneSectionHelperTransitionSnapshot !== null;
+- src\scene\section\sceneSectionController.ts:3373 — const geometry = buildSceneSectionDashedTraceRibbonGeometry(
+- src\scene\section\sceneSectionController.ts:3375 — frame.groundTraceWidthM,
+- src\scene\section\sceneSectionController.ts:3381 — makeSceneSectionTraceRibbonMaterial(),
+- src\scene\section\sceneSectionController.ts:3384 — mesh.userData.sceneSectionHelper = true;
+- src\scene\section\sceneSectionController.ts:3385 — mesh.userData.sceneSectionGroundTrace = true;
+- src\scene\section\sceneSectionController.ts:3386 — mesh.userData.sceneSectionGroundTraceWidthM = frame.groundTraceWidthM;
+- src\scene\section\sceneSectionController.ts:3393 — this.addSceneSectionHelperObjectToTransitionSnapshot?.(mesh) === true;
+- src\scene\section\sceneSectionController.ts:3402 — function resolveSceneSectionMaskContext(this: any, style: EditableStyle) {
+- src\scene\section\sceneSectionController.ts:3403 — const planes = this.sceneSectionActivePlanes(style);
+- src\scene\section\sceneSectionController.ts:3404 — const layerTargets = this.sceneSectionLayerIds(style);
+- src\scene\section\sceneSectionController.ts:3405 — const productTargets = this.sceneSectionProductIds(style);
+- src\scene\section\sceneSectionController.ts:3406 — const bounds = this.sceneSectionBounds(style, layerTargets, productTargets);
+- src\scene\section\sceneSectionController.ts:3408 — planes.map((plane: ResolvedSceneSectionPlane) => plane.frameId),
+- src\scene\section\sceneSectionController.ts:3411 — .resolveSceneSectionFrames(style, bounds)
+- src\scene\section\sceneSectionController.ts:3412 — .filter((frame: ResolvedSceneSectionFrame) =>
+- src\scene\section\sceneSectionController.ts:3424 — export function applySceneSectionPlanes(
+- src\scene\section\sceneSectionController.ts:3427 — options?: SceneSectionApplyTransitionFrameOptions,
+- src\scene\section\sceneSectionController.ts:3431 — this.lastSceneSectionStyle = style;
+- src\scene\section\sceneSectionController.ts:3432 — const planes = this.sceneSectionActivePlanes(style);
+- src\scene\section\sceneSectionController.ts:3433 — const clippingPlanes = this.sceneSectionClippingPlanes(planes);
+- src\scene\section\sceneSectionController.ts:3434 — const layerTargets = this.sceneSectionLayerIds(style);
+- src\scene\section\sceneSectionController.ts:3435 — const productTargets = this.sceneSectionProductIds(style);
+- src\scene\section\sceneSectionController.ts:3436 — const bounds = this.sceneSectionBounds(style, layerTargets, productTargets);
+- src\scene\section\sceneSectionController.ts:3440 — planes.map((plane: ResolvedSceneSectionPlane) => plane.frameId),
+- src\scene\section\sceneSectionController.ts:3443 — .resolveSceneSectionFrames(style, bounds)
+- src\scene\section\sceneSectionController.ts:3444 — .filter((frame: ResolvedSceneSectionFrame) =>
+- src\scene\section\sceneSectionController.ts:3447 — this.sceneSectionClippingActive =
+- src\scene\section\sceneSectionController.ts:3455 — (frame: ResolvedSceneSectionFrame) =>
+- src\scene\section\sceneSectionController.ts:3456 — this.sceneSectionFrameClippingPlanes(frame),
+- src\scene\section\sceneSectionController.ts:3459 — ? resolveSceneSectionMaskContext.call(this, options.maskTransition.fromStyle)
+- src\scene\section\sceneSectionController.ts:3462 — ? resolveSceneSectionMaskContext.call(this, options.maskTransition.toStyle)
+- src\scene\section\sceneSectionController.ts:3469 — const visibility = this.sceneSectionObjectVisibilityForObject(
+- src\scene\section\sceneSectionController.ts:3480 — (plane: ResolvedSceneSectionPlane) =>
+- src\scene\section\sceneSectionController.ts:3485 — const hardPlaneClippingPlanes = this.sceneSectionClippingPlanes(hardPlanes);
+- src\scene\section\sceneSectionController.ts:3488 — (frame: ResolvedSceneSectionFrame) =>
+- src\scene\section\sceneSectionController.ts:3493 — .flatMap((frame: ResolvedSceneSectionFrame) =>
+- src\scene\section\sceneSectionController.ts:3494 — this.sceneSectionFrameClippingPlanes(frame),
+- src\scene\section\sceneSectionController.ts:3503 — visibility: this.sceneSectionObjectVisibilityForObject(
+- src\scene\section\sceneSectionController.ts:3514 — visibility: this.sceneSectionObjectVisibilityForObject(
+- src\scene\section\sceneSectionController.ts:3522 — } satisfies SceneSectionMaskTransition
+- src\scene\section\sceneSectionController.ts:3524 — updateSceneSectionLabelCullState(
+- src\scene\section\sceneSectionController.ts:3538 — this.applySceneSectionMaterial(
+- src\scene\section\sceneSectionController.ts:3553 — this.rebuildSceneSectionHelpers(
+- src\scene\section\sceneSectionController.ts:3562 — this.applySceneSectionHelperTransitionOpacity();
+- src\scene\section\sceneSectionController.ts:3582 — this.sceneSectionRuntime?.group.traverse(() => {
+- src\scene\section\sceneSectionController.ts:3585 — this.lastSceneSectionApplyDebug = {
+- src\scene\section\sceneSectionController.ts:3601 — export function reapplySceneSectionPlanes(this: any): void {
+- src\scene\section\sceneSectionController.ts:3602 — if (this.sceneSectionReapplySuspended) return;
+- src\scene\section\sceneSectionController.ts:3603 — this.applySceneSectionPlanes(this.currentSceneSectionStyle());
+- src\scene\section\sceneSectionController.ts:3606 — export function listSceneSectionPlanePickables(this: any): THREE.Object3D[] {
+- src\scene\section\sceneSectionController.ts:3607 — const runtime = this.sceneSectionRuntime;
+- src\scene\section\sceneSectionController.ts:3611 — export function getSceneSectionPlanePosition(this: any, axis: SceneSectionAxis, frameId?: string): THREE.Vector3 | null {
+- src\scene\section\sceneSectionController.ts:3612 — const targetFrameId = frameId ?? sceneSectionBuiltInFrameId(axis);
+- src\scene\section\sceneSectionController.ts:3614 — this.sceneSectionRuntime?.planes.get(targetFrameId) ??
+- src\scene\section\sceneSectionController.ts:3615 — this.sceneSectionRuntime?.planes.get(axis);
+- src\scene\section\sceneSectionController.ts:3619 — export function getSceneSectionPlaneScalar(this: any, axis: SceneSectionAxis, frameId?: string): number | null {
+- src\scene\section\sceneSectionController.ts:3620 — const targetFrameId = frameId ?? sceneSectionBuiltInFrameId(axis);
+- src\scene\section\sceneSectionController.ts:3621 — const plane = this.resolveSceneSectionPlanes(
+- src\scene\section\sceneSectionController.ts:3622 — this.lastSceneSectionStyle,
+- src\scene\section\sceneSectionController.ts:3624 — (candidate: ResolvedSceneSectionPlane) =>
+- src\scene\section\sceneSectionController.ts:3630 — export function getSceneSectionPlaneNormal(this: any, axis: SceneSectionAxis, frameId?: string): THREE.Vector3 | null {
+- src\scene\section\sceneSectionController.ts:3631 — const targetFrameId = frameId ?? sceneSectionBuiltInFrameId(axis);
+- src\scene\section\sceneSectionController.ts:3632 — const plane = this.resolveSceneSectionPlanes(
+- src\scene\section\sceneSectionController.ts:3633 — this.lastSceneSectionStyle,
+- src\scene\section\sceneSectionController.ts:3635 — (candidate: ResolvedSceneSectionPlane) =>
+- src\scene\section\sceneSectionController.ts:3641 — export function getSceneSectionWindowValue(this: any,
+- src\scene\section\sceneSectionController.ts:3642 — axis: SceneSectionAxis,
+- src\scene\section\sceneSectionController.ts:3643 — kind: SceneSectionWindowHandleKind,
+- src\scene\section\sceneSectionController.ts:3646 — const bounds = this.sceneSectionBounds(
+- src\scene\section\sceneSectionController.ts:3647 — this.lastSceneSectionStyle,
+- src\scene\section\sceneSectionController.ts:3648 — this.sceneSectionLayerIds(this.lastSceneSectionStyle),
+- src\scene\section\sceneSectionController.ts:3649 — this.sceneSectionProductIds(this.lastSceneSectionStyle),
+- src\scene\section\sceneSectionController.ts:3651 — const targetFrameId = frameId ?? sceneSectionBuiltInFrameId(axis);
+- src\scene\section\sceneSectionController.ts:3653 — .resolveSceneSectionFrames(
+- src\scene\section\sceneSectionController.ts:3655 — ...this.lastSceneSectionStyle,
+- src\scene\section\sceneSectionController.ts:3656 — sceneSectionActiveAxis: axis,
+- src\scene\section\sceneSectionController.ts:3657 — sceneSectionActiveFrameId: targetFrameId,
+- src\scene\section\sceneSectionController.ts:3658 — sceneSectionFrameEnabled: true,
+- src\scene\section\sceneSectionController.ts:3663 — (candidate: ResolvedSceneSectionFrame) =>
+- src\scene\section\sceneSectionController.ts:3674 — export function getSceneSectionWindowNormal(this: any,
+- src\scene\section\sceneSectionController.ts:3675 — axis: SceneSectionAxis,
+- src\scene\section\sceneSectionController.ts:3676 — kind: SceneSectionWindowHandleKind,
+- src\scene\section\sceneSectionController.ts:3679 — const bounds = this.sceneSectionBounds(
+- src\scene\section\sceneSectionController.ts:3680 — this.lastSceneSectionStyle,
+- src\scene\section\sceneSectionController.ts:3681 — this.sceneSectionLayerIds(this.lastSceneSectionStyle),
+- src\scene\section\sceneSectionController.ts:3682 — this.sceneSectionProductIds(this.lastSceneSectionStyle),
+- src\scene\section\sceneSectionController.ts:3684 — const targetFrameId = frameId ?? sceneSectionBuiltInFrameId(axis);
+- src\scene\section\sceneSectionController.ts:3686 — .resolveSceneSectionFrames(
+- src\scene\section\sceneSectionController.ts:3688 — ...this.lastSceneSectionStyle,
+- src\scene\section\sceneSectionController.ts:3689 — sceneSectionActiveAxis: axis,
+- src\scene\section\sceneSectionController.ts:3690 — sceneSectionActiveFrameId: targetFrameId,
+- src\scene\section\sceneSectionController.ts:3691 — sceneSectionFrameEnabled: true,
+- src\scene\section\sceneSectionController.ts:3696 — (candidate: ResolvedSceneSectionFrame) =>
+- src\scene\section\sceneSectionController.ts:3706 — export function previewSceneSectionPlane(this: any, axis: SceneSectionAxis, positionM: number, frameId?: string): void {
+- src\scene\section\sceneSectionController.ts:3707 — const style = this.lastSceneSectionStyle;
+- src\scene\section\sceneSectionController.ts:3708 — const planes = style.sceneSectionPlanes ?? {};
+- src\scene\section\sceneSectionController.ts:3709 — const targetFrameId = frameId ?? sceneSectionBuiltInFrameId(axis);
+- src\scene\section\sceneSectionController.ts:3710 — const isBuiltIn = targetFrameId === sceneSectionBuiltInFrameId(axis);
+- src\scene\section\sceneSectionController.ts:3711 — const frameList = sceneSectionFrameListWithPatch(style, targetFrameId, axis, {
+- src\scene\section\sceneSectionController.ts:3717 — this.applySceneSectionPlanes({
+- src\scene\section\sceneSectionController.ts:3719 — sceneSectionEnabled: true,
+- src\scene\section\sceneSectionController.ts:3720 — sceneSectionActiveAxis: axis,
+- src\scene\section\sceneSectionController.ts:3721 — sceneSectionActiveFrameId: targetFrameId,
+- src\scene\section\sceneSectionController.ts:3722 — sceneSectionFrames: frameList,
+- src\scene\section\sceneSectionController.ts:3723 — sceneSectionPlanes: isBuiltIn
+- src\scene\section\sceneSectionController.ts:3736 — export function previewSceneSectionWindow(this: any,
+- src\scene\section\sceneSectionController.ts:3737 — axis: SceneSectionAxis,
+- src\scene\section\sceneSectionController.ts:3738 — kind: SceneSectionWindowHandleKind,
+- src\scene\section\sceneSectionController.ts:3742 — const style = this.lastSceneSectionStyle;
+- src\scene\section\sceneSectionController.ts:3743 — const frameByAxis = style.sceneSectionFrameByAxis ?? {};
+- src\scene\section\sceneSectionController.ts:3744 — const targetFrameId = frameId ?? sceneSectionBuiltInFrameId(axis);
+- src\scene\section\sceneSectionController.ts:3745 — const currentEntry = sceneSectionResolvedFrameEntries(style).find(
+- src\scene\section\sceneSectionController.ts:3752 — const legacyByAxis = style.sceneSectionWindowByAxis ?? {};
+- src\scene\section\sceneSectionController.ts:3766 — const frameList = sceneSectionFrameListWithPatch(style, targetFrameId, axis, {
+- src\scene\section\sceneSectionController.ts:3769 — const isBuiltIn = targetFrameId === sceneSectionBuiltInFrameId(axis);
+- src\scene\section\sceneSectionController.ts:3773 — sceneSectionWindowEnabled: true,
+- src\scene\section\sceneSectionController.ts:3774 — sceneSectionWindowActiveAxis: axis,
+- src\scene\section\sceneSectionController.ts:3775 — sceneSectionWindowByAxis: {
+- src\scene\section\sceneSectionController.ts:3787 — this.applySceneSectionPlanes({
+- src\scene\section\sceneSectionController.ts:3789 — sceneSectionEnabled: true,
+- src\scene\section\sceneSectionController.ts:3790 — sceneSectionActiveAxis: axis,
+- src\scene\section\sceneSectionController.ts:3791 — sceneSectionActiveFrameId: targetFrameId,
+- src\scene\section\sceneSectionController.ts:3792 — sceneSectionFrameEnabled: true,
+- src\scene\section\sceneSectionController.ts:3793 — sceneSectionFrames: frameList,
+- src\scene\section\sceneSectionController.ts:3794 — sceneSectionFrameByAxis: isBuiltIn
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:3 — ResolvedSceneSectionFrame,
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:4 — ResolvedSceneSectionPlane,
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:5 — SceneSectionMaskTransition,
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:6 — SceneSectionObjectVisibility,
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:11 — interface SceneSectionObjectVisibilityShader {
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:21 — export function setSceneSectionObjectVisibilityUniforms(
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:24 — planes: ResolvedSceneSectionPlane[],
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:25 — frames: ResolvedSceneSectionFrame[],
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:26 — visibility: SceneSectionObjectVisibility,
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:27 — maskTransition?: SceneSectionMaskTransition | null,
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:40 — ensure<number>("uSceneSectionTransitionEnabled", 0).value = maskTransition
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:43 — ensure<number>("uSceneSectionTransitionProgress", 0).value = clamp01(
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:46 — ensure<number>("uSceneSectionObjectVisibilityEnabled", 0).value = enabled
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:49 — ensure<number>("uSceneSectionObjectVisibilityPlaneCount", 0).value = sourceEnabled
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:53 — "uSceneSectionObjectVisibilityNormals",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:60 — "uSceneSectionObjectVisibilityPositions",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:64 — "uSceneSectionObjectVisibilityInvert",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:68 — "uSceneSectionObjectVisibilityPlaneOpacity",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:89 — ensure<number>("uSceneSectionObjectVisibilityFrameCount", 0).value =
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:92 — "uSceneSectionObjectVisibilityFrameAxisA",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:99 — "uSceneSectionObjectVisibilityFrameAxisB",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:106 — "uSceneSectionObjectVisibilityFrameBounds",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:113 — "uSceneSectionObjectVisibilityFrameOpacity",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:154 — ensure<number>("uSceneSectionObjectVisibilityTargetPlaneCount", 0).value =
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:159 — "uSceneSectionObjectVisibilityTargetNormals",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:166 — "uSceneSectionObjectVisibilityTargetPositions",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:170 — "uSceneSectionObjectVisibilityTargetInvert",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:174 — "uSceneSectionObjectVisibilityTargetPlaneOpacity",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:193 — ensure<number>("uSceneSectionObjectVisibilityTargetFrameCount", 0).value =
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:196 — "uSceneSectionObjectVisibilityTargetFrameAxisA",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:203 — "uSceneSectionObjectVisibilityTargetFrameAxisB",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:210 — "uSceneSectionObjectVisibilityTargetFrameBounds",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:217 — "uSceneSectionObjectVisibilityTargetFrameOpacity",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:253 — export function applySceneSectionObjectVisibilityBuiltInMaterial(
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:256 — planes: ResolvedSceneSectionPlane[],
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:257 — frames: ResolvedSceneSectionFrame[],
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:258 — visibility: SceneSectionObjectVisibility,
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:259 — maskTransition?: SceneSectionMaskTransition | null,
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:261 — material.userData.sceneSectionObjectVisibilityEnabled = enabled;
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:262 — material.userData.sceneSectionObjectVisibilityPlanes = planes;
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:263 — material.userData.sceneSectionObjectVisibilityFrames = frames;
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:264 — material.userData.sceneSectionObjectVisibility = visibility;
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:265 — material.userData.sceneSectionObjectVisibilityMaskTransition =
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:268 — if (material.userData.sceneSectionObjectVisibilityPatched !== true) {
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:273 — const patchedShader = shader as SceneSectionObjectVisibilityShader;
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:274 — setSceneSectionObjectVisibilityUniforms(
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:276 — material.userData.sceneSectionObjectVisibilityEnabled === true,
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:277 — (material.userData.sceneSectionObjectVisibilityPlanes ??
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:278 — []) as ResolvedSceneSectionPlane[],
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:279 — (material.userData.sceneSectionObjectVisibilityFrames ??
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:280 — []) as ResolvedSceneSectionFrame[],
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:282 — .sceneSectionObjectVisibility as SceneSectionObjectVisibility) ?? {
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:289 — .sceneSectionObjectVisibilityMaskTransition as SceneSectionMaskTransition | null) ??
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:299 — "varying vec3 vSceneSectionObjectVisibilityWorldPosition;",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:301 — "  vSceneSectionObjectVisibilityWorldPosition = (modelMatrix * vec4(position, 1.0)).xyz;",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:307 — "uniform int uSceneSectionObjectVisibilityEnabled;",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:308 — "uniform int uSceneSectionTransitionEnabled;",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:309 — "uniform float uSceneSectionTransitionProgress;",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:310 — "uniform int uSceneSectionObjectVisibilityPlaneCount;",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:311 — "uniform vec3 uSceneSectionObjectVisibilityNormals[8];",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:312 — "uniform float uSceneSectionObjectVisibilityPositions[8];",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:313 — "uniform int uSceneSectionObjectVisibilityInvert[8];",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:314 — "uniform float uSceneSectionObjectVisibilityPlaneOpacity[8];",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:315 — "uniform int uSceneSectionObjectVisibilityFrameCount;",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:316 — "uniform vec3 uSceneSectionObjectVisibilityFrameAxisA[8];",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:317 — "uniform vec3 uSceneSectionObjectVisibilityFrameAxisB[8];",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:318 — "uniform vec4 uSceneSectionObjectVisibilityFrameBounds[8];",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:319 — "uniform float uSceneSectionObjectVisibilityFrameOpacity[8];",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:320 — "uniform int uSceneSectionObjectVisibilityTargetPlaneCount;",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:321 — "uniform vec3 uSceneSectionObjectVisibilityTargetNormals[8];",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:322 — "uniform float uSceneSectionObjectVisibilityTargetPositions[8];",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:323 — "uniform int uSceneSectionObjectVisibilityTargetInvert[8];",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:324 — "uniform float uSceneSectionObjectVisibilityTargetPlaneOpacity[8];",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:325 — "uniform int uSceneSectionObjectVisibilityTargetFrameCount;",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:326 — "uniform vec3 uSceneSectionObjectVisibilityTargetFrameAxisA[8];",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:327 — "uniform vec3 uSceneSectionObjectVisibilityTargetFrameAxisB[8];",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:328 — "uniform vec4 uSceneSectionObjectVisibilityTargetFrameBounds[8];",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:329 — "uniform float uSceneSectionObjectVisibilityTargetFrameOpacity[8];",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:330 — "varying vec3 vSceneSectionObjectVisibilityWorldPosition;",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:331 — "float sceneSectionObjectVisibilityTargetAlpha(vec3 position) {",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:334 — "    if (i >= uSceneSectionObjectVisibilityTargetPlaneCount) break;",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:335 — "    vec3 normal = normalize(uSceneSectionObjectVisibilityTargetNormals[i]);",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:336 — "    float distance = dot(position, normal) - uSceneSectionObjectVisibilityTargetPositions[i];",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:337 — "    if (uSceneSectionObjectVisibilityTargetInvert[i] == 1) distance = -distance;",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:338 — "    if (distance > 0.0) alpha = min(alpha, clamp(uSceneSectionObjectVisibilityTargetPlaneOpacity[i], 0.0, 1.0));",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:341 — "    if (i >= uSceneSectionObjectVisibilityTargetFrameCount) break;",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:342 — "    vec3 axisA = normalize(uSceneSectionObjectVisibilityTargetFrameAxisA[i]);",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:343 — "    vec3 axisB = normalize(uSceneSectionObjectVisibilityTargetFrameAxisB[i]);",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:344 — "    vec4 bounds = uSceneSectionObjectVisibilityTargetFrameBounds[i];",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:348 — "    if (!inside) alpha = min(alpha, clamp(uSceneSectionObjectVisibilityTargetFrameOpacity[i], 0.0, 1.0));",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:352 — "float sceneSectionObjectVisibilityAlpha(vec3 position) {",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:354 — "  if (uSceneSectionObjectVisibilityEnabled != 0) {",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:356 — "      if (i >= uSceneSectionObjectVisibilityPlaneCount) break;",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:357 — "      vec3 normal = normalize(uSceneSectionObjectVisibilityNormals[i]);",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:358 — "      float distance = dot(position, normal) - uSceneSectionObjectVisibilityPositions[i];",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:359 — "      if (uSceneSectionObjectVisibilityInvert[i] == 1) distance = -distance;",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:360 — "      if (distance > 0.0) alpha = min(alpha, clamp(uSceneSectionObjectVisibilityPlaneOpacity[i], 0.0, 1.0));",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:363 — "      if (i >= uSceneSectionObjectVisibilityFrameCount) break;",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:364 — "      vec3 axisA = normalize(uSceneSectionObjectVisibilityFrameAxisA[i]);",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:365 — "      vec3 axisB = normalize(uSceneSectionObjectVisibilityFrameAxisB[i]);",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:366 — "      vec4 bounds = uSceneSectionObjectVisibilityFrameBounds[i];",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:370 — "      if (!inside) alpha = min(alpha, clamp(uSceneSectionObjectVisibilityFrameOpacity[i], 0.0, 1.0));",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:374 — "  if (uSceneSectionTransitionEnabled == 0) return sourceAlpha;",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:375 — "  float targetAlpha = sceneSectionObjectVisibilityTargetAlpha(position);",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:376 — "  return mix(sourceAlpha, targetAlpha, clamp(uSceneSectionTransitionProgress, 0.0, 1.0));",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:382 — "float sceneSectionObjectVisibilityLayerAlpha = sceneSectionObjectVisibilityAlpha(vSceneSectionObjectVisibilityWorldPosition);",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:383 — "diffuseColor.a *= sceneSectionObjectVisibilityLayerAlpha;",
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:400 — material.userData.sceneSectionObjectVisibilityShader = patchedShader;
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:404 — material.userData.sceneSectionObjectVisibilityPatched = true;
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:408 — const shader = material.userData.sceneSectionObjectVisibilityShader as
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:409 — | SceneSectionObjectVisibilityShader
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:412 — setSceneSectionObjectVisibilityUniforms(
+- src\scene\styles\applyLayerStyle.ts:190 — this.sceneSectionStyleTween = null;
+- src\scene\styles\applyLayerStyle.ts:191 — this.sceneSectionHelperTransitionOpacity = 1;
+- src\scene\styles\applyLayerStyle.ts:192 — this.applySceneSectionPlanes(style);
+- src\scene\styles\applyLayerStyle.ts:194 — this.reapplySceneSectionPlanes();
+- src\scene\styles\seismicBrowserStyle.ts:355 — skipSceneSectionClipping: true,
+- src\scene\transitions\layerTweenRuntime.ts:126 — const sceneSectionStyleTweenActiveBefore = !!this.sceneSectionStyleTween;
+- src\scene\transitions\layerTweenRuntime.ts:128 — !!this.sceneSectionHelperTransitionSnapshot;
+- src\scene\transitions\layerTweenRuntime.ts:134 — !this.sceneSectionStyleTween &&
+- src\scene\transitions\layerTweenRuntime.ts:135 — !this.sceneSectionHelperTransitionSnapshot &&
+- src\scene\transitions\layerTweenRuntime.ts:142 — sceneSectionMs: 0,
+- src\scene\transitions\layerTweenRuntime.ts:143 — sceneSectionApply: null,
+- src\scene\transitions\layerTweenRuntime.ts:151 — sceneSectionApplyMode: "none",
+- src\scene\transitions\layerTweenRuntime.ts:158 — sceneSectionStyleTweenActiveBefore: false,
+- src\scene\transitions\layerTweenRuntime.ts:165 — let sceneSectionApplyMode:
+- src\scene\transitions\layerTweenRuntime.ts:170 — let sceneSectionApplyDebug = null;
+- src\scene\transitions\layerTweenRuntime.ts:171 — if (this.sceneSectionStyleTween) {
+- src\scene\transitions\layerTweenRuntime.ts:172 — const tween = this.sceneSectionStyleTween;
+- src\scene\transitions\layerTweenRuntime.ts:181 — : this.interpolatedSceneSectionStyle(
+- src\scene\transitions\layerTweenRuntime.ts:188 — ? this.sceneSectionMaskTransitionForTween(tween, eased)
+- src\scene\transitions\layerTweenRuntime.ts:190 — this.sceneSectionHelperTransitionOpacity = done
+- src\scene\transitions\layerTweenRuntime.ts:192 — : this.sceneSectionHelperOpacityForTween(tween, eased);
+- src\scene\transitions\layerTweenRuntime.ts:195 — this.applySceneSectionPlanes(style, {
+- src\scene\transitions\layerTweenRuntime.ts:199 — sceneSectionApplyDebug = this.lastSceneSectionApplyDebug ?? null;
+- src\scene\transitions\layerTweenRuntime.ts:200 — sceneSectionApplyMode = "transition-frame";
+- src\scene\transitions\layerTweenRuntime.ts:204 — this.applySceneSectionPlanes(style);
+- src\scene\transitions\layerTweenRuntime.ts:205 — sceneSectionApplyDebug = this.lastSceneSectionApplyDebug ?? null;
+- src\scene\transitions\layerTweenRuntime.ts:206 — sceneSectionApplyMode = "full";
+- src\scene\transitions\layerTweenRuntime.ts:210 — this.sceneSectionStyleTween = null;
+- src\scene\transitions\layerTweenRuntime.ts:211 — this.sceneSectionHelperTransitionOpacity = 1;
+- src\scene\transitions\layerTweenRuntime.ts:214 — const sceneSectionMs = transitionDebugMs(performance.now() - stageStart);
+- src\scene\transitions\layerTweenRuntime.ts:290 — if (this.sceneSectionHelperTransitionSnapshot) {
+- src\scene\transitions\layerTweenRuntime.ts:291 — const snapshot = this.sceneSectionHelperTransitionSnapshot;
+- src\scene\transitions\layerTweenRuntime.ts:303 — if (done) this.removeSceneSectionHelperTransitionSnapshot();
+- src\scene\transitions\layerTweenRuntime.ts:315 — sceneSectionMs,
+- src\scene\transitions\layerTweenRuntime.ts:316 — sceneSectionApply: sceneSectionApplyDebug,
+- src\scene\transitions\layerTweenRuntime.ts:324 — sceneSectionApplyMode,
+- src\scene\transitions\layerTweenRuntime.ts:331 — sceneSectionStyleTweenActiveBefore,
+- src\scene\transitions\layerTweenRuntime.ts:340 — !this.sceneSectionStyleTween &&
+- src\scene\transitions\layerTweenRuntime.ts:341 — !this.sceneSectionHelperTransitionSnapshot &&
+- src\scene\transitions\productFamilyRegistry.ts:242 — export function sceneSectionHelperDecision(input: {
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:10 — sceneSectionHelperDecision,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:23 — sceneSectionDiscreteStyleChanged,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:24 — sceneSectionTransitionStyleChanged,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:83 — "sceneSectionEnabled",
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:84 — "sceneSectionMode",
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:85 — "sceneSectionTargetScope",
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:86 — "sceneSectionActiveAxis",
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:87 — "sceneSectionWindowEnabled",
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:88 — "sceneSectionWindowActiveAxis",
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:89 — "sceneSectionFrameEnabled",
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:90 — "sceneSectionActiveFrameId",
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:91 — "sceneSectionGroundTraceVisible",
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:92 — "sceneSectionAxesVisible",
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:101 — "sceneSectionPlanes",
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:102 — "sceneSectionWindowByAxis",
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:103 — "sceneSectionFrames",
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:104 — "sceneSectionFrameByAxis",
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:105 — "sceneSectionObjectVisibilityByAxis",
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:106 — "sceneSectionObjectVisibilityByFrameId",
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:177 — function sceneSectionTransitionActiveForStyle(
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:180 — return style.sceneSectionEnabled === true;
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:183 — function sceneSectionBuiltInFrameEntry(
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:187 — return Array.isArray(style.sceneSectionFrames)
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:188 — ? style.sceneSectionFrames.find((entry) => entry?.id === `axis:${axis}`)
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:192 — function sceneSectionFrameState(
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:196 — const entry = sceneSectionBuiltInFrameEntry(style, axis);
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:198 — ...(style.sceneSectionFrameByAxis?.[axis] ?? {}),
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:203 — function sceneSectionPlaneShown(
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:207 — const entry = sceneSectionBuiltInFrameEntry(style, axis);
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:210 — ...(style.sceneSectionPlanes?.[axis] ?? {}),
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:215 — function sceneSectionAnyFrameBoolean(
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:217 — key: "groundTraceVisible" | "axesVisible",
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:221 — if (!sceneSectionPlaneShown(style, axis)) return false;
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:222 — const frame = sceneSectionFrameState(style, axis);
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:228 — function sceneSectionDerivedEntities(input: {
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:237 — const sectionEnabled = input.style.sceneSectionEnabled === true;
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:239 — sectionEnabled && input.style.sceneSectionFrameEnabled === true;
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:240 — const groundTraceVisible =
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:242 — sceneSectionAnyFrameBoolean(
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:244 — "groundTraceVisible",
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:245 — input.style.sceneSectionGroundTraceVisible !== false,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:249 — sceneSectionAnyFrameBoolean(
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:252 — input.style.sceneSectionAxesVisible !== false,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:303 — presenceState: derivedPresence(groundTraceVisible),
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:380 — this.sceneSectionStyleTween = null;
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:381 — this.sceneSectionHelperTransitionOpacity = 1;
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:461 — derivedEntities: sceneSectionDerivedEntities({
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:508 — derivedEntities: sceneSectionDerivedEntities({
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:614 — const fromSceneSectionStyle = effectiveStyle(
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:619 — const targetSceneSectionStyle = effectiveStyle(
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:624 — const sceneSectionStyleChanged = sceneSectionTransitionStyleChanged(
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:625 — fromSceneSectionStyle,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:626 — targetSceneSectionStyle,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:628 — const sceneSectionDiscreteChanged =
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:629 — sceneSectionStyleChanged &&
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:630 — sceneSectionDiscreteStyleChanged(
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:631 — fromSceneSectionStyle,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:632 — targetSceneSectionStyle,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:634 — const targetSceneSectionTransitionActive =
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:635 — sceneSectionTransitionActiveForStyle(targetSceneSectionStyle);
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:637 — sceneSectionStyleChanged &&
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:639 — targetSceneSectionTransitionActive
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:641 — this.sceneSectionStyleTween = {
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:642 — fromStyle: fromSceneSectionStyle,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:643 — toStyle: targetSceneSectionStyle,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:647 — discreteChanged: sceneSectionDiscreteChanged,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:648 — maskMode: sceneSectionDiscreteChanged ? "dual-mask" : "interpolated",
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:650 — this.sceneSectionHelperTransitionOpacity =
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:651 — this.sceneSectionHelperOpacityForTween(this.sceneSectionStyleTween, 0);
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:653 — sceneSectionDiscreteChanged &&
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:654 — this.sceneSectionHelperSnapshotAllowedForTween?.(
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:655 — this.sceneSectionStyleTween,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:658 — this.beginSceneSectionHelperTransitionSnapshot?.(now, duration, easing);
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:660 — } else if (sceneSectionStyleChanged && !targetSceneSectionTransitionActive) {
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:661 — this.sceneSectionStyleTween = null;
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:662 — this.sceneSectionHelperTransitionOpacity = 0;
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:663 — this.applySceneSectionPlanes(targetSceneSectionStyle);
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:665 — if (sceneSectionStyleChanged) {
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:667 — sceneSectionHelperDecision({
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:669 — sourceVisible: fromSceneSectionStyle.sceneSectionEnabled === true,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:670 — targetVisible: targetSceneSectionStyle.sceneSectionEnabled === true,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:671 — sourceOpacity: fromSceneSectionStyle.sceneSectionEnabled === true ? 1 : 0,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:673 — targetSceneSectionStyle.sceneSectionEnabled === true ? 1 : 0,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:678 — fromSceneSectionStyle,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:679 — targetSceneSectionStyle,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:685 — this.sceneSectionReapplySuspended = true;
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:716 — const shouldCrossfadeSceneSection =
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:719 — sceneSectionDiscreteChanged &&
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:720 — targetSceneSectionTransitionActive &&
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:729 — !shouldCrossfadeSceneSection &&
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:745 — shouldCrossfadeSceneSection
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:751 — shouldCrossfadeSceneSection
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:866 — this.sceneSectionReapplySuspended = false;
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:868 — if (this.sceneSectionStyleTween?.maskMode === "dual-mask") {
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:869 — this.applySceneSectionPlanes(this.sceneSectionStyleTween.toStyle, {
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:870 — maskTransition: this.sceneSectionMaskTransitionForTween(
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:871 — this.sceneSectionStyleTween,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:876 — this.reapplySceneSectionPlanes();
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:878 — if (this.sceneSectionStyleTween?.discreteChanged) {
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:879 — this.sceneSectionStyleTween.appliedDiscreteTarget = true;
+- src\scene\transitions\transitionStyles.ts:6 — SceneSectionFrameState,
+- src\scene\transitions\transitionStyles.ts:204 — export interface SceneSectionStyleTween {
+- src\scene\transitions\transitionStyles.ts:380 — "sceneSectionEnabled",
+- src\scene\transitions\transitionStyles.ts:381 — "sceneSectionMode",
+- src\scene\transitions\transitionStyles.ts:382 — "sceneSectionTargetScope",
+- src\scene\transitions\transitionStyles.ts:383 — "sceneSectionActiveAxis",
+- src\scene\transitions\transitionStyles.ts:384 — "sceneSectionPlanes",
+- src\scene\transitions\transitionStyles.ts:385 — "sceneSectionWindowEnabled",
+- src\scene\transitions\transitionStyles.ts:386 — "sceneSectionWindowActiveAxis",
+- src\scene\transitions\transitionStyles.ts:387 — "sceneSectionWindowByAxis",
+- src\scene\transitions\transitionStyles.ts:388 — "sceneSectionFrameEnabled",
+- src\scene\transitions\transitionStyles.ts:389 — "sceneSectionActiveFrameId",
+- src\scene\transitions\transitionStyles.ts:390 — "sceneSectionFrames",
+- src\scene\transitions\transitionStyles.ts:391 — "sceneSectionFrameByAxis",
+- src\scene\transitions\transitionStyles.ts:392 — "sceneSectionObjectVisibilityByAxis",
+- src\scene\transitions\transitionStyles.ts:393 — "sceneSectionObjectVisibilityByFrameId",
+- src\scene\transitions\transitionStyles.ts:394 — "sceneSectionTargetLayerIds",
+- src\scene\transitions\transitionStyles.ts:395 — "sceneSectionTargetProductIds",
+- src\scene\transitions\transitionStyles.ts:396 — "sceneSectionHelperVisible",
+- src\scene\transitions\transitionStyles.ts:397 — "sceneSectionGroundTraceVisible",
+- src\scene\transitions\transitionStyles.ts:398 — "sceneSectionAxesVisible",
+- src\scene\transitions\transitionStyles.ts:399 — "sceneSectionAxisIntervalM",
+- src\scene\transitions\transitionStyles.ts:400 — "sceneSectionAxisTextScale",
+- src\scene\transitions\transitionStyles.ts:412 — function sceneSectionFrameAlignmentSignature(
+- src\scene\transitions\transitionStyles.ts:413 — frame: Partial<SceneSectionFrameState>,
+- src\scene\transitions\transitionStyles.ts:418 — function sceneSectionFrameDatumSignature(
+- src\scene\transitions\transitionStyles.ts:419 — frame: Partial<SceneSectionFrameState>,
+- src\scene\transitions\transitionStyles.ts:426 — function finiteSceneSectionFrameNumber(value: unknown): number | null {
+- src\scene\transitions\transitionStyles.ts:430 — function sceneSectionFrameDiscreteSignature(style: EditableStyle): Array<{
+- src\scene\transitions\transitionStyles.ts:437 — groundTraceVisible: boolean | null;
+- src\scene\transitions\transitionStyles.ts:447 — const planes = style.sceneSectionPlanes ?? {};
+- src\scene\transitions\transitionStyles.ts:448 — const frames = style.sceneSectionFrameByAxis ?? {};
+- src\scene\transitions\transitionStyles.ts:449 — const explicit = Array.isArray(style.sceneSectionFrames)
+- src\scene\transitions\transitionStyles.ts:450 — ? style.sceneSectionFrames
+- src\scene\transitions\transitionStyles.ts:464 — groundTraceVisible: boolean | null;
+- src\scene\transitions\transitionStyles.ts:479 — const axisDatum = sceneSectionFrameDatumSignature(frame);
+- src\scene\transitions\transitionStyles.ts:491 — groundTraceVisible:
+- src\scene\transitions\transitionStyles.ts:492 — typeof frame.groundTraceVisible === "boolean"
+- src\scene\transitions\transitionStyles.ts:493 — ? frame.groundTraceVisible
+- src\scene\transitions\transitionStyles.ts:503 — axisAlignment: sceneSectionFrameAlignmentSignature(frame),
+- src\scene\transitions\transitionStyles.ts:507 — ? finiteSceneSectionFrameNumber(frame.axisDatumOriginEastingM)
+- src\scene\transitions\transitionStyles.ts:511 — ? finiteSceneSectionFrameNumber(frame.axisDatumOriginNorthingM)
+- src\scene\transitions\transitionStyles.ts:515 — ? finiteSceneSectionFrameNumber(frame.axisDatumLatLonDecimals) ?? 3
+- src\scene\transitions\transitionStyles.ts:530 — const axisDatum = sceneSectionFrameDatumSignature(frame);
+- src\scene\transitions\transitionStyles.ts:545 — groundTraceVisible:
+- src\scene\transitions\transitionStyles.ts:546 — typeof frame.groundTraceVisible === "boolean"
+- src\scene\transitions\transitionStyles.ts:547 — ? frame.groundTraceVisible
+- src\scene\transitions\transitionStyles.ts:557 — axisAlignment: sceneSectionFrameAlignmentSignature(frame),
+- src\scene\transitions\transitionStyles.ts:561 — ? finiteSceneSectionFrameNumber(frame.axisDatumOriginEastingM)
+- src\scene\transitions\transitionStyles.ts:565 — ? finiteSceneSectionFrameNumber(frame.axisDatumOriginNorthingM)
+- src\scene\transitions\transitionStyles.ts:569 — ? finiteSceneSectionFrameNumber(frame.axisDatumLatLonDecimals) ?? 3
+- src\scene\transitions\transitionStyles.ts:576 — export function sceneSectionDiscreteSignature(style: EditableStyle): string {
+- src\scene\transitions\transitionStyles.ts:578 — enabled: style.sceneSectionEnabled === true,
+- src\scene\transitions\transitionStyles.ts:579 — mode: style.sceneSectionMode ?? null,
+- src\scene\transitions\transitionStyles.ts:580 — targetScope: style.sceneSectionTargetScope ?? null,
+- src\scene\transitions\transitionStyles.ts:581 — windowEnabled: style.sceneSectionWindowEnabled === true,
+- src\scene\transitions\transitionStyles.ts:582 — windowActiveAxis: style.sceneSectionWindowActiveAxis ?? null,
+- src\scene\transitions\transitionStyles.ts:583 — frameEnabled: style.sceneSectionFrameEnabled === true,
+- src\scene\transitions\transitionStyles.ts:584 — frames: sceneSectionFrameDiscreteSignature(style),
+- src\scene\transitions\transitionStyles.ts:585 — targetLayerIds: style.sceneSectionTargetLayerIds ?? [],
+- src\scene\transitions\transitionStyles.ts:586 — targetProductIds: style.sceneSectionTargetProductIds ?? [],
+- src\scene\transitions\transitionStyles.ts:587 — groundTraceVisible: style.sceneSectionGroundTraceVisible === true,
+- src\scene\transitions\transitionStyles.ts:591 — export function sceneSectionTransitionStyleChanged(
+- src\scene\transitions\transitionStyles.ts:602 — export function sceneSectionDiscreteStyleChanged(
+- src\scene\transitions\transitionStyles.ts:607 — sceneSectionDiscreteSignature(fromStyle) !==
+- src\scene\transitions\transitionStyles.ts:608 — sceneSectionDiscreteSignature(toStyle)
+- src\ui\SceneLabels.tsx:399 — sceneSectionLabelHidden?: boolean;
+- src\ui\SceneLabels.tsx:406 — if (data.sceneSectionLabelHidden === true) return;
+- src\ui\SceneSectionLegend.tsx:22 — SceneSectionFrameEntry,
+- src\ui\SceneSectionLegend.tsx:23 — SceneSectionFrameState,
+- src\ui\SceneSectionLegend.tsx:24 — SceneSectionPlaneState,
+- src\ui\SceneSectionLegend.tsx:36 — type SceneSectionLegendAxis = (typeof SCENE_SECTION_AXES)[number];
+- src\ui\SceneSectionLegend.tsx:37 — type LegendToggleKind = "flip" | "controls" | "groundTrace" | "axes";
+- src\ui\SceneSectionLegend.tsx:78 — frame: SceneSectionFrameState,
+- src\ui\SceneSectionLegend.tsx:79 — key: keyof SceneSectionFrameState,
+- src\ui\SceneSectionLegend.tsx:88 — axis: SceneSectionLegendAxis,
+- src\ui\SceneSectionLegend.tsx:145 — if (kind === "groundTrace") {
+- src\ui\SceneSectionLegend.tsx:181 — function builtInFrameId(axis: SceneSectionLegendAxis): string {
+- src\ui\SceneSectionLegend.tsx:185 — function builtInFrameLabel(axis: SceneSectionLegendAxis): string {
+- src\ui\SceneSectionLegend.tsx:191 — axis: SceneSectionLegendAxis,
+- src\ui\SceneSectionLegend.tsx:192 — planePatch: Partial<SceneSectionPlaneState> = {},
+- src\ui\SceneSectionLegend.tsx:193 — framePatch: Partial<SceneSectionFrameState> = {},
+- src\ui\SceneSectionLegend.tsx:194 — ): SceneSectionFrameEntry[] {
+- src\ui\SceneSectionLegend.tsx:195 — const explicit = Array.isArray(style.sceneSectionFrames)
+- src\ui\SceneSectionLegend.tsx:196 — ? style.sceneSectionFrames
+- src\ui\SceneSectionLegend.tsx:208 — ...(style.sceneSectionPlanes?.[entryAxis] ?? {}),
+- src\ui\SceneSectionLegend.tsx:212 — ...(style.sceneSectionFrameByAxis?.[entryAxis] ?? {}),
+- src\ui\SceneSectionLegend.tsx:237 — function axisModel(style: EditableStyle, axis: SceneSectionLegendAxis) {
+- src\ui\SceneSectionLegend.tsx:238 — const entry = Array.isArray(style.sceneSectionFrames)
+- src\ui\SceneSectionLegend.tsx:239 — ? style.sceneSectionFrames.find((candidate) => candidate?.id === builtInFrameId(axis))
+- src\ui\SceneSectionLegend.tsx:243 — ...(style.sceneSectionPlanes?.[axis] ?? {}),
+- src\ui\SceneSectionLegend.tsx:246 — ...(style.sceneSectionFrameByAxis?.[axis] ?? {}),
+- src\ui\SceneSectionLegend.tsx:254 — : styleBoolean(style, "sceneSectionHelperVisible", true);
+- src\ui\SceneSectionLegend.tsx:265 — groundTraceVisible: frameBoolean(
+- src\ui\SceneSectionLegend.tsx:267 — "groundTraceVisible",
+- src\ui\SceneSectionLegend.tsx:268 — styleBoolean(style, "sceneSectionGroundTraceVisible", true),
+- src\ui\SceneSectionLegend.tsx:273 — styleBoolean(style, "sceneSectionAxesVisible", true),
+- src\ui\SceneSectionLegend.tsx:278 — export function SceneSectionLegend({
+- src\ui\SceneSectionLegend.tsx:325 — if (style.sceneSectionEnabled !== true) return null;
+- src\ui\SceneSectionLegend.tsx:326 — if (!styleBoolean(style, "sceneSectionLegendVisible", true)) return null;
+- src\ui\SceneSectionLegend.tsx:342 — axis: SceneSectionLegendAxis,
+- src\ui\SceneSectionLegend.tsx:343 — planePatch: Partial<SceneSectionPlaneState>,
+- src\ui\SceneSectionLegend.tsx:346 — ...(style.sceneSectionPlanes?.[axis] ?? {}),
+- src\ui\SceneSectionLegend.tsx:350 — sceneSectionEnabled: true,
+- src\ui\SceneSectionLegend.tsx:351 — sceneSectionMode: "cutaway",
+- src\ui\SceneSectionLegend.tsx:352 — sceneSectionActiveAxis: axis,
+- src\ui\SceneSectionLegend.tsx:353 — sceneSectionActiveFrameId: builtInFrameId(axis),
+- src\ui\SceneSectionLegend.tsx:354 — sceneSectionPlanes: {
+- src\ui\SceneSectionLegend.tsx:355 — ...(style.sceneSectionPlanes ?? {}),
+- src\ui\SceneSectionLegend.tsx:358 — sceneSectionFrames: builtInFrameEntries(style, axis, planePatch),
+- src\ui\SceneSectionLegend.tsx:362 — axis: SceneSectionLegendAxis,
+- src\ui\SceneSectionLegend.tsx:363 — framePatch: Partial<SceneSectionFrameState>,
+- src\ui\SceneSectionLegend.tsx:366 — ...(style.sceneSectionFrameByAxis?.[axis] ?? {}),
+- src\ui\SceneSectionLegend.tsx:370 — sceneSectionEnabled: true,
+- src\ui\SceneSectionLegend.tsx:371 — sceneSectionMode: "cutaway",
+- src\ui\SceneSectionLegend.tsx:372 — sceneSectionActiveAxis: axis,
+- src\ui\SceneSectionLegend.tsx:373 — sceneSectionActiveFrameId: builtInFrameId(axis),
+- src\ui\SceneSectionLegend.tsx:374 — sceneSectionFrameEnabled: true,
+- src\ui\SceneSectionLegend.tsx:375 — sceneSectionFrameByAxis: {
+- src\ui\SceneSectionLegend.tsx:376 — ...(style.sceneSectionFrameByAxis ?? {}),
+- src\ui\SceneSectionLegend.tsx:379 — sceneSectionFrames: builtInFrameEntries(style, axis, {}, framePatch),
+- src\ui\SceneSectionLegend.tsx:465 — aria-pressed={model.groundTraceVisible}
+- src\ui\SceneSectionLegend.tsx:471 — groundTraceVisible: !model.groundTraceVisible,
+- src\ui\SceneSectionLegend.tsx:476 — <LegendToggleIcon kind="groundTrace" />
+- src\editor\EditorChrome.tsx:22 — import { SceneSectionLegend } from "../ui/SceneSectionLegend";
+- src\editor\EditorChrome.tsx:160 — const sceneSectionStyle = styleFor(UTAH_FORGE_SCENE_SECTION_LAYER_ID);
+- src\editor\EditorChrome.tsx:183 — sceneSectionStyle.sceneSectionEnabled === true &&
+- src\editor\EditorChrome.tsx:184 — styleBoolean(sceneSectionStyle, "sceneSectionLegendVisible", true),
+- src\editor\EditorChrome.tsx:269 — <SceneSectionLegend />
+- src\editor\EditorChrome.tsx:515 — return <SceneSectionLegend stacked pageOverride={pageOverride} />;
+- src\editor\EditorContext.tsx:2980 — sceneHandle.setSceneSectionPlaneCommitHandler((axis, positionM, frameId) => {
+- src\editor\EditorContext.tsx:2994 — const currentPlanes = currentStyle.sceneSectionPlanes ?? {};
+- src\editor\EditorContext.tsx:2997 — const currentFrames = Array.isArray(currentStyle.sceneSectionFrames)
+- src\editor\EditorContext.tsx:2998 — ? currentStyle.sceneSectionFrames
+- src\editor\EditorContext.tsx:3003 — plane: currentStyle.sceneSectionPlanes?.[entryAxis] ?? {},
+- src\editor\EditorContext.tsx:3004 — frame: currentStyle.sceneSectionFrameByAxis?.[entryAxis] ?? {},
+- src\editor\EditorContext.tsx:3020 — sceneSectionEnabled: true,
+- src\editor\EditorContext.tsx:3021 — sceneSectionActiveAxis: axis,
+- src\editor\EditorContext.tsx:3022 — sceneSectionActiveFrameId: targetFrameId,
+- src\editor\EditorContext.tsx:3023 — sceneSectionFrames: nextFrames,
+- src\editor\EditorContext.tsx:3024 — sceneSectionPlanes: isBuiltIn
+- src\editor\EditorContext.tsx:3059 — return () => sceneHandle.setSceneSectionPlaneCommitHandler(null);
+- src\editor\EditorContext.tsx:3063 — sceneHandle.setSceneSectionWindowCommitHandler((axis, kind, valueM, frameId) => {
+- src\editor\EditorContext.tsx:3077 — const currentByAxis = currentStyle.sceneSectionWindowByAxis ?? {};
+- src\editor\EditorContext.tsx:3078 — const currentFrameByAxis = currentStyle.sceneSectionFrameByAxis ?? {};
+- src\editor\EditorContext.tsx:3081 — const currentFrames = Array.isArray(currentStyle.sceneSectionFrames)
+- src\editor\EditorContext.tsx:3082 — ? currentStyle.sceneSectionFrames
+- src\editor\EditorContext.tsx:3087 — plane: currentStyle.sceneSectionPlanes?.[entryAxis] ?? {},
+- src\editor\EditorContext.tsx:3088 — frame: currentStyle.sceneSectionFrameByAxis?.[entryAxis] ?? {},
+- src\editor\EditorContext.tsx:3126 — sceneSectionWindowEnabled: true,
+- src\editor\EditorContext.tsx:3127 — sceneSectionWindowActiveAxis: axis,
+- src\editor\EditorContext.tsx:3128 — sceneSectionWindowByAxis: {
+- src\editor\EditorContext.tsx:3141 — sceneSectionEnabled: true,
+- src\editor\EditorContext.tsx:3142 — sceneSectionActiveAxis: axis,
+- src\editor\EditorContext.tsx:3143 — sceneSectionActiveFrameId: targetFrameId,
+- src\editor\EditorContext.tsx:3144 — sceneSectionFrameEnabled: true,
+- src\editor\EditorContext.tsx:3145 — sceneSectionFrames: nextFrames,
+- src\editor\EditorContext.tsx:3146 — sceneSectionFrameByAxis: isBuiltIn
+- src\editor\EditorContext.tsx:3180 — return () => sceneHandle.setSceneSectionWindowCommitHandler(null);
+- src\editor\EditorRoot.tsx:843 — return style.sceneSectionEnabled === true;
+- src\editor\EditorRoot.tsx:1029 — if (sectionStyle?.sceneSectionTargetScope === "active-selection") {
+- src\editor\EditorRoot.tsx:1031 — sceneSectionTargetProductIds: [detail.productId],
+- src\editor\LayerPanel.tsx:454 — const effectiveSceneSectionStyle = currentPage
+- src\editor\LayerPanel.tsx:2099 — sceneSectionStyle={effectiveSceneSectionStyle}
+- src\editor\LayerPanel.tsx:2174 — sceneSectionStyle={effectiveSceneSectionStyle}
+- src\editor\LayerPanelGroups.tsx:28 — import { SceneSectionPlanesContainer, SeismicCapabilityLayerContainers } from "./layerControls/seismic/SeismicControls";
+- src\editor\LayerPanelGroups.tsx:270 — const sceneSectionStyle =
+- src\editor\LayerPanelGroups.tsx:284 — const sceneSectionDisabled =
+- src\editor\LayerPanelGroups.tsx:356 — const sceneSectionOpenSignal =
+- src\editor\LayerPanelGroups.tsx:359 — sceneSectionStyle.sceneSectionEnabled === true
+- src\editor\LayerPanelGroups.tsx:395 — sceneSectionOpenSignal &&
+- src\editor\LayerPanelGroups.tsx:398 — ? `${sceneSectionOpenSignal}:${revealTargetId}`
+- src\editor\LayerPanelGroups.tsx:399 — : (sceneSectionOpenSignal ??
+- src\editor\LayerPanelGroups.tsx:405 — <SceneSectionPlanesContainer
+- src\editor\LayerPanelGroups.tsx:408 — style={sceneSectionStyle}
+- src\editor\LayerPanelGroups.tsx:409 — disabled={sceneSectionDisabled}
+- src\editor\layerControls\mt\IsobandControls.tsx:40 — sceneSectionStyle,
+- src\editor\layerControls\mt\IsobandControls.tsx:53 — sceneSectionStyle?: EditableStyle;
+- src\editor\layerControls\mt\IsobandControls.tsx:109 — const sceneStyle = sceneSectionStyle ?? {};
+- src\editor\layerControls\mt\IsobandControls.tsx:110 — const scenePlanes = sceneStyle.sceneSectionPlanes ?? {};
+- src\editor\layerControls\mt\IsobandControls.tsx:112 — sceneStyle.sceneSectionActiveAxis === "x" ||
+- src\editor\layerControls\mt\IsobandControls.tsx:113 — sceneStyle.sceneSectionActiveAxis === "y" ||
+- src\editor\layerControls\mt\IsobandControls.tsx:114 — sceneStyle.sceneSectionActiveAxis === "z"
+- src\editor\layerControls\mt\IsobandControls.tsx:115 — ? sceneStyle.sceneSectionActiveAxis
+- src\editor\layerControls\mt\IsobandControls.tsx:170 — Array.isArray(sceneStyle.sceneSectionTargetLayerIds)
+- src\editor\layerControls\mt\IsobandControls.tsx:171 — ? sceneStyle.sceneSectionTargetLayerIds
+- src\editor\layerControls\mt\IsobandControls.tsx:176 — sceneSectionEnabled: true,
+- src\editor\layerControls\mt\IsobandControls.tsx:177 — sceneSectionMode: "cutaway",
+- src\editor\layerControls\mt\IsobandControls.tsx:178 — sceneSectionActiveAxis: axis,
+- src\editor\layerControls\mt\IsobandControls.tsx:179 — sceneSectionTargetScope: "selected-targets",
+- src\editor\layerControls\mt\IsobandControls.tsx:180 — sceneSectionTargetLayerIds: Array.from(targetLayerIds),
+- src\editor\layerControls\mt\IsobandControls.tsx:181 — sceneSectionHelperVisible: true,
+- src\editor\layerControls\mt\IsobandControls.tsx:182 — sceneSectionLegendVisible: true,
+- src\editor\layerControls\mt\IsobandControls.tsx:183 — sceneSectionPlanes: {
+- src\editor\layerControls\mt\IsobandControls.tsx:269 — sceneSectionEnabled: true,
+- src\editor\layerControls\mt\IsobandControls.tsx:270 — sceneSectionActiveAxis: activeAxis,
+- src\editor\layerControls\mt\IsobandControls.tsx:271 — sceneSectionPlanes: {
+- src\editor\layerControls\mt\MtVolumeControls.tsx:76 — sceneSectionStyle,
+- src\editor\layerControls\mt\MtVolumeControls.tsx:88 — sceneSectionStyle: EditableStyle;
+- src\editor\layerControls\mt\MtVolumeControls.tsx:355 — sceneSectionStyle={sceneSectionStyle}
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:20 — SceneSectionAxisAlignment,
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:21 — SceneSectionAxisDatum,
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:22 — SceneSectionFrameEntry,
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:23 — SceneSectionFrameState,
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:24 — SceneSectionPlaneState,
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:41 — const sceneSectionAxisColors = {
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:47 — const sceneSectionDefaultPositions = {
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:54 — const sceneSectionAxes = ["x", "y", "z"] as const;
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:56 — const builtInFrameId = (axis: SceneSectionAxis) => `axis:${axis}`;
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:58 — type SceneSectionFrameUiEntry = {
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:63 — axis: SceneSectionAxis;
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:65 — plane: SceneSectionPlaneState;
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:66 — frame: SceneSectionFrameState;
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:133 — type SceneSectionAxis = "x" | "y" | "z";
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:135 — type SceneSectionObjectTarget = {
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:142 — axes: SceneSectionAxis[];
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:227 — function sceneSectionGeneratedHeading(
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:228 — axis: SceneSectionAxis,
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:230 — datum: SceneSectionAxisDatum,
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:247 — function sceneSectionKnownGeneratedHeadings(
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:248 — axis: SceneSectionAxis,
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:253 — sceneSectionGeneratedHeading(axis, slot, datum),
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:259 — axis: SceneSectionAxis,
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:260 — current: SceneSectionFrameState,
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:261 — patch: Partial<SceneSectionFrameState>,
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:262 — ): Partial<SceneSectionFrameState> {
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:264 — const nextPatch: Partial<SceneSectionFrameState> = { ...patch };
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:268 — const known = sceneSectionKnownGeneratedHeadings(axis, slot);
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:274 — nextPatch[key] = sceneSectionGeneratedHeading(axis, slot, nextDatum);
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:300 — target: SceneSectionObjectTarget;
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:314 — axis: SceneSectionAxis,
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:316 — target: SceneSectionObjectTarget,
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:322 — style.sceneSectionObjectVisibilityByFrameId?.[frameId]?.[target.objectId]
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:328 — style.sceneSectionObjectVisibilityByAxis?.[axis]?.[target.objectId]
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:340 — function frameDefaultLabel(id: string, axis: SceneSectionAxis): string {
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:346 — function normalizeSceneSectionFrameEntries(
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:348 — ): SceneSectionFrameUiEntry[] {
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:349 — const explicit = Array.isArray(style.sceneSectionFrames)
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:350 — ? style.sceneSectionFrames
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:357 — const planes = style.sceneSectionPlanes ?? {};
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:358 — const frameByAxis = style.sceneSectionFrameByAxis ?? {};
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:359 — const builtIns: SceneSectionFrameUiEntry[] = sceneSectionAxes.map((axis) => {
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:371 — : styleBoolean(style, "sceneSectionHelperVisible", true);
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:389 — const custom: SceneSectionFrameUiEntry[] = [];
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:411 — : styleBoolean(style, "sceneSectionHelperVisible", true),
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:423 — entries: SceneSectionFrameUiEntry[],
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:424 — ): SceneSectionFrameEntry[] {
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:440 — export function SceneSectionPlanesContainer({
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:466 — const enabled = styleBoolean(style, "sceneSectionEnabled", false);
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:468 — style.sceneSectionTargetScope === "all-visible" ||
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:469 — style.sceneSectionTargetScope === "active-selection"
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:470 — ? style.sceneSectionTargetScope
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:473 — style.sceneSectionActiveAxis === "x" ||
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:474 — style.sceneSectionActiveAxis === "y" ||
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:475 — style.sceneSectionActiveAxis === "z"
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:476 — ? style.sceneSectionActiveAxis
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:479 — Array.isArray(style.sceneSectionTargetLayerIds)
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:480 — ? style.sceneSectionTargetLayerIds
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:488 — Array.isArray(style.sceneSectionTargetProductIds)
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:489 — ? style.sceneSectionTargetProductIds
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:494 — const legendVisible = styleBoolean(style, "sceneSectionLegendVisible", true);
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:497 — "sceneSectionFrameEnabled",
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:498 — styleBoolean(style, "sceneSectionWindowEnabled", false),
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:500 — const defaultGroundTraceVisible = styleBoolean(
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:502 — "sceneSectionGroundTraceVisible",
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:505 — const defaultAxesVisible = styleBoolean(style, "sceneSectionAxesVisible", true);
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:507 — style.sceneSectionAxisIntervalM,
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:513 — style.sceneSectionAxisTextScale,
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:518 — const windowByAxis = style.sceneSectionWindowByAxis ?? {};
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:519 — const frameEntries = normalizeSceneSectionFrameEntries(style);
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:521 — typeof style.sceneSectionActiveFrameId === "string" &&
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:522 — style.sceneSectionActiveFrameId.trim()
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:523 — ? style.sceneSectionActiveFrameId
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:525 — const fallbackObjectTargets: SceneSectionObjectTarget[] = [
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:536 — axes: ["x", "y", "z"] as SceneSectionAxis[],
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:562 — axes: ["x", "y", "z"] as SceneSectionAxis[],
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:566 — const objectTargetMap = new Map<string, SceneSectionObjectTarget>();
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:568 — for (const target of sceneHandle.manager.listSceneSectionObjectTargets()) {
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:572 — axes: target.axes as SceneSectionAxis[],
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:607 — sceneSectionTargetScope: "selected-targets",
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:608 — sceneSectionTargetProductIds: Array.from(next),
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:612 — entries: SceneSectionFrameUiEntry[],
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:616 — sceneSectionFrames: serializeFrameEntries(entries),
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:623 — axis?: SceneSectionAxis;
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:624 — plane?: Partial<SceneSectionPlaneState>;
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:625 — frame?: Partial<SceneSectionFrameState>;
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:630 — const currentEntries = normalizeSceneSectionFrameEntries(liveStyleRef.current);
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:664 — sceneSectionActiveAxis: nextAxis,
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:665 — sceneSectionPlanes: {
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:666 — ...(liveStyleRef.current.sceneSectionPlanes ?? {}),
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:669 — sceneSectionFrameByAxis: {
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:670 — ...(liveStyleRef.current.sceneSectionFrameByAxis ?? {}),
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:675 — sceneSectionActiveAxis: nextAxis,
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:682 — sceneSectionWindowEnabled: true,
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:683 — sceneSectionWindowActiveAxis: nextAxis,
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:684 — sceneSectionWindowByAxis: {
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:685 — ...(liveStyleRef.current.sceneSectionWindowByAxis ?? {}),
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:687 — ...(liveStyleRef.current.sceneSectionWindowByAxis?.[nextAxis] ??
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:691 — liveStyleRef.current.sceneSectionWindowByAxis?.[nextAxis]
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:695 — liveStyleRef.current.sceneSectionWindowByAxis?.[nextAxis]
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:699 — liveStyleRef.current.sceneSectionWindowByAxis?.[nextAxis]
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:710 — sceneSectionEnabled: nextSectionEnabled,
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:711 — sceneSectionMode: "cutaway",
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:715 — sceneSectionActiveFrameId: id,
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:716 — sceneSectionFrameEnabled: true,
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:724 — patch: Partial<SceneSectionFrameState>,
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:727 — entry: SceneSectionFrameUiEntry,
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:728 — patch: Partial<SceneSectionFrameState>,
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:737 — patch: Partial<SceneSectionPlaneState>,
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:740 — const currentEntries = normalizeSceneSectionFrameEntries(liveStyleRef.current);
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:756 — const nextEntry: SceneSectionFrameUiEntry = {
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:773 — sceneSectionEnabled: true,
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:774 — sceneSectionFrameEnabled: true,
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:775 — sceneSectionActiveAxis: source.axis,
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:776 — sceneSectionActiveFrameId: id,
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:780 — axis: SceneSectionAxis,
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:787 — liveStyleRef.current.sceneSectionObjectVisibilityByFrameId ?? {};
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:789 — sceneSectionActiveAxis: axis,
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:790 — sceneSectionActiveFrameId: frameId,
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:791 — sceneSectionObjectVisibilityByFrameId: {
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:828 — const setGroundTraceWidthM = (frameId: string, rawM: number) => {
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:831 — groundTraceWidthM: clampNumber(rawM, 30, 2000),
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:930 — sceneSectionEnabled: e.target.checked,
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:931 — sceneSectionMode: "cutaway",
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:944 — commit({ sceneSectionLegendVisible: e.target.checked })
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:996 — : sceneSectionDefaultPositions[axis];
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:1048 — const axisGroundTraceVisible =
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:1049 — typeof axisFrame.groundTraceVisible === "boolean"
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:1050 — ? axisFrame.groundTraceVisible
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:1051 — : defaultGroundTraceVisible;
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:1052 — const axisGroundTraceWidthM = finiteStyleNumber(
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:1053 — axisFrame.groundTraceWidthM,
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:1077 — const axisAlignment: SceneSectionAxisAlignment =
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:1079 — const axisDatum: SceneSectionAxisDatum =
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:1094 — : sceneSectionGeneratedHeading(axis, "a", axisDatum);
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:1099 — : sceneSectionGeneratedHeading(axis, "b", axisDatum);
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:1114 — sceneSectionAxisColors[axis],
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:1161 — color: sceneSectionAxisColors[axis],
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:1178 — color: sceneSectionAxisColors[axis],
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:1252 — sceneSectionActiveAxis: axis,
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:1253 — sceneSectionActiveFrameId: frame.id,
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:1259 — ? sceneSectionAxisColors[axis]
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:1291 — : sceneSectionDefaultPositions[nextAxis];
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:1351 — checked={axisGroundTraceVisible}
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:1354 — groundTraceVisible: e.target.checked,
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:1370 — !axisGroundTraceVisible
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:1372 — value={axisGroundTraceWidthM}
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:1374 — setGroundTraceWidthM(
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:1391 — !axisGroundTraceVisible
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:1393 — value={Math.round(axisGroundTraceWidthM)}
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:1395 — setGroundTraceWidthM(
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:1442 — ? sceneSectionAxisColors[axis]
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:1446 — ? sceneSectionAxisColors[axis]
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:1483 — ? sceneSectionAxisColors[axis]
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:1487 — ? sceneSectionAxisColors[axis]
+- src\editor\layerControls\seismic\SeismicBrowserControls.tsx:45 — sceneSectionStyle,
+- src\editor\layerControls\seismic\SeismicBrowserControls.tsx:58 — sceneSectionStyle: EditableStyle;
+- src\editor\layerControls\seismic\SeismicBrowserControls.tsx:701 — sceneSectionStyle={sceneSectionStyle}
+- src\editor\layerControls\seismic\SeismicControls.tsx:1 — export { SceneSectionPlanesContainer } from "./SceneSectionPlanesContainer";
+- src\editor\layerControls\seismic\SeismicDisplayTuningControls.tsx:25 — sceneSectionStyle,
+- src\editor\layerControls\seismic\SeismicDisplayTuningControls.tsx:49 — sceneSectionStyle: EditableStyle;
+- src\editor\layerControls\seismic\SeismicDisplayTuningControls.tsx:80 — sceneSectionStyle={sceneSectionStyle}
+
+## Section ISO / cut ISO derived roots
+
+Pattern: `sectionIso|SectionIso|section-iso|isoOverlay|volumeCutIso|targetRoots|sourceRoots|transitionOwned|heightSampler|root|dispose|attach|clear|rebuild|line|band|isobar|isoline` 
+
+- src\scene\captureCameraPathOverlayLine.ts:2 — import { Line2 } from "three/examples/jsm/lines/Line2.js";
+- src\scene\captureCameraPathOverlayLine.ts:3 — import { LineGeometry } from "three/examples/jsm/lines/LineGeometry.js";
+- src\scene\captureCameraPathOverlayLine.ts:4 — import { LineMaterial } from "three/examples/jsm/lines/LineMaterial.js";
+- src\scene\captureCameraPathOverlayLine.ts:6 — export interface CaptureCameraPathLineOptions {
+- src\scene\captureCameraPathOverlayLine.ts:9 — linewidth: number;
+- src\scene\captureCameraPathOverlayLine.ts:19 — export function createCaptureCameraPathLine({
+- src\scene\captureCameraPathOverlayLine.ts:22 — linewidth,
+- src\scene\captureCameraPathOverlayLine.ts:27 — }: CaptureCameraPathLineOptions): Line2 {
+- src\scene\captureCameraPathOverlayLine.ts:28 — const geometry = new LineGeometry();
+- src\scene\captureCameraPathOverlayLine.ts:30 — const material = new LineMaterial({
+- src\scene\captureCameraPathOverlayLine.ts:32 — linewidth,
+- src\scene\captureCameraPathOverlayLine.ts:40 — const line = new Line2(geometry, material);
+- src\scene\captureCameraPathOverlayLine.ts:41 — line.computeLineDistances();
+- src\scene\captureCameraPathOverlayLine.ts:42 — line.renderOrder = renderOrder;
+- src\scene\captureCameraPathOverlayLine.ts:43 — line.userData.geoseePickIgnore = true;
+- src\scene\captureCameraPathOverlayLine.ts:44 — line.userData.captureCameraPathOverlay = true;
+- src\scene\captureCameraPathOverlayLine.ts:46 — Object.assign(line.userData, userData);
+- src\scene\captureCameraPathOverlayLine.ts:48 — line.userData.captureCameraPathEquationOverlay = true;
+- src\scene\captureCameraPathOverlayLine.ts:49 — line.userData.captureCameraPathEquationKind =
+- src\scene\captureCameraPathOverlayLine.ts:51 — line.userData.captureCameraPathEquationLabel =
+- src\scene\captureCameraPathOverlayLine.ts:56 — return line;
+- src\scene\captureCameraPathOverlayLine.ts:59 — export function setCaptureCameraPathLineResolution(
+- src\scene\captureCameraPathOverlayLine.ts:60 — root: THREE.Object3D,
+- src\scene\captureCameraPathOverlayLine.ts:64 — root.traverse((node) => {
+- src\scene\captureCameraPathOverlayLine.ts:69 — if (item instanceof LineMaterial) {
+- src\scene\captureCameraPathOverlayLine.ts:76 — export function disposeCaptureCameraPathOverlayObject(node: THREE.Object3D): void {
+- src\scene\captureCameraPathOverlayLine.ts:79 — geometry.dispose();
+- src\scene\captureCameraPathOverlayLine.ts:86 — spriteMap.dispose();
+- src\scene\captureCameraPathOverlayLine.ts:88 — item.dispose();
+- src\scene\CLAUDE.md:8 — Large — prefer `Grep` and read by line range:
+- src\scene\CLAUDE.md:10 — - `SceneManager.ts` — ~2,550 lines (down from ~12,000; target met).
+- src\scene\CLAUDE.md:12 — - `terrainMaterial.ts` — ~1,550 lines. Terrain shader material, draping,
+- src\scene\CLAUDE.md:17 — - `section/sceneSectionController.ts` — ~1,180 lines; largest extracted
+- src\scene\CLAUDE.md:18 — scene helper and still below the 1,200-line cap.
+- src\scene\CLAUDE.md:19 — - `handles/sceneHandleControllers.ts`, `isoOverlays/volumeCutIsoOverlays.ts`,
+- src\scene\CLAUDE.md:22 — - `heightSampler.ts` — terrain height lookup.
+- src\scene\CLAUDE.md:24 — - `disposeObjectTree.ts` — Three.js cleanup helper.
+- src\scene\CLAUDE.md:30 — ## Editing Discipline
+- src\scene\CLAUDE.md:38 — - Three.js disposal: route through `disposeObjectTree.ts`; do not invent
+- src\scene\CLAUDE.md:39 — ad-hoc dispose loops.
+- src\scene\CLAUDE.md:41 — kind goes there, not inline in `SceneManager.ts`.
+- src\scene\disposeObjectTree.ts:3 — export function disposeObjectTree(root: THREE.Object3D): void {
+- src\scene\disposeObjectTree.ts:4 — root.traverse((obj) => {
+- src\scene\disposeObjectTree.ts:9 — disposable.geometry?.dispose?.();
+- src\scene\disposeObjectTree.ts:19 — withMap.map?.dispose?.();
+- src\scene\disposeObjectTree.ts:20 — material.dispose?.();
+- src\scene\heightSampler.ts:5 — //   - HeightSampler: terrain GeoTIFF -> bilinear height query. Used by
+- src\scene\heightSampler.ts:6 — //     hydrography stream draping + ring outline draping for targets.
+- src\scene\heightSampler.ts:15 — export type HeightSampler = (utmX: number, utmY: number) => number;
+- src\scene\heightSampler.ts:23 — // ---- HeightSampler --------------------------------------------------------
+- src\scene\heightSampler.ts:25 — let currentSampler: HeightSampler | null = null;
+- src\scene\heightSampler.ts:26 — let samplerWaiters: Array<(s: HeightSampler) => void> = [];
+- src\scene\heightSampler.ts:28 — export function setHeightSampler(s: HeightSampler): void {
+- src\scene\heightSampler.ts:35 — export function getHeightSampler(): Promise<HeightSampler> {
+- src\scene\heightSampler.ts:37 — return new Promise<HeightSampler>((resolve) => samplerWaiters.push(resolve));
+- src\scene\heightSampler.ts:40 — export function peekHeightSampler(): HeightSampler | null {
+- src\scene\layerLoaders.ts:2 — import { LineSegments2 } from "three/examples/jsm/lines/LineSegments2.js";
+- src\scene\layerLoaders.ts:3 — import { LineSegmentsGeometry } from "three/examples/jsm/lines/LineSegmentsGeometry.js";
+- src\scene\layerLoaders.ts:4 — import { LineMaterial } from "three/examples/jsm/lines/LineMaterial.js";
+- src\scene\layerLoaders.ts:18 — import { loadIpSurveyLines } from "../loaders/loadIpSurveyLines";
+- src\scene\layerLoaders.ts:19 — import { loadLineStrings } from "../loaders/loadLineStrings";
+- src\scene\layerLoaders.ts:25 — import { loadPowerLines } from "../loaders/loadPowerLines";
+- src\scene\layerLoaders.ts:55 — findLocalAtmosphereVolumeRoot,
+- src\scene\layerLoaders.ts:197 — function applyWorkingAreaTopLinePolicy(
+- src\scene\layerLoaders.ts:198 — root: THREE.Object3D,
+- src\scene\layerLoaders.ts:203 — root.name = label;
+- src\scene\layerLoaders.ts:204 — root.renderOrder = 4580;
+- src\scene\layerLoaders.ts:205 — root.userData = {
+- src\scene\layerLoaders.ts:206 — ...root.userData,
+- src\scene\layerLoaders.ts:209 — siteContainerOutline: true,
+- src\scene\layerLoaders.ts:213 — root.traverse((obj) => {
+- src\scene\layerLoaders.ts:215 — const line = obj as THREE.Line;
+- src\scene\layerLoaders.ts:216 — const material = line.material as THREE.Material | THREE.Material[] | undefined;
+- src\scene\layerLoaders.ts:220 — const lineMaterial = m as THREE.Material & { fog?: boolean };
+- src\scene\layerLoaders.ts:224 — lineMaterial.fog = false;
+- src\scene\layerLoaders.ts:226 — m.userData.lakeOutlineMaterial = true;
+- src\scene\layerLoaders.ts:227 — if (m instanceof LineMaterial) {
+- src\scene\layerLoaders.ts:228 — m.linewidth = 2.4;
+- src\scene\layerLoaders.ts:236 — siteContainerOutline: true,
+- src\scene\layerLoaders.ts:237 — terrainDrapedSiteGuideLine: true,
+- src\scene\layerLoaders.ts:242 — return root;
+- src\scene\layerLoaders.ts:246 — root: THREE.Object3D,
+- src\scene\layerLoaders.ts:250 — root.name = label;
+- src\scene\layerLoaders.ts:251 — root.renderOrder = 4590;
+- src\scene\layerLoaders.ts:252 — root.userData = {
+- src\scene\layerLoaders.ts:253 — ...root.userData,
+- src\scene\layerLoaders.ts:258 — root.traverse((obj) => {
+- src\scene\layerLoaders.ts:260 — const line = obj as THREE.Line;
+- src\scene\layerLoaders.ts:261 — const material = line.material as THREE.Material | THREE.Material[] | undefined;
+- src\scene\layerLoaders.ts:265 — const lineMaterial = m as THREE.Material & {
+- src\scene\layerLoaders.ts:270 — lineMaterial.color?.set("#ffd84a");
+- src\scene\layerLoaders.ts:274 — lineMaterial.opacity = 1;
+- src\scene\layerLoaders.ts:275 — lineMaterial.fog = false;
+- src\scene\layerLoaders.ts:277 — m.userData.lakeOutlineMaterial = true;
+- src\scene\layerLoaders.ts:278 — if (m instanceof LineMaterial) {
+- src\scene\layerLoaders.ts:279 — m.linewidth = 3.2;
+- src\scene\layerLoaders.ts:287 — terrainDrapedSiteGuideLine: true,
+- src\scene\layerLoaders.ts:291 — return root;
+- src\scene\layerLoaders.ts:299 — const geometry = new LineSegmentsGeometry();
+- src\scene\layerLoaders.ts:302 — const material = new LineMaterial({
+- src\scene\layerLoaders.ts:304 — linewidth: 2.4,
+- src\scene\layerLoaders.ts:319 — const outline = new LineSegments2(geometry, material);
+- src\scene\layerLoaders.ts:320 — outline.name = `${label} white outline`;
+- src\scene\layerLoaders.ts:321 — outline.renderOrder = 4580;
+- src\scene\layerLoaders.ts:322 — outline.userData = {
+- src\scene\layerLoaders.ts:336 — group.add(outline);
+- src\scene\layerLoaders.ts:352 — loadLineStrings(layerDataPath(context, geojson)).then((group) =>
+- src\scene\layerLoaders.ts:353 — applyWorkingAreaTopLinePolicy(
+- src\scene\layerLoaders.ts:376 — loadLineStrings(layerDataPath(context, geojson)).then((group) =>
+- src\scene\layerLoaders.ts:449 — if (findLocalAtmosphereVolumeRoot(context.group)) return;
+- src\scene\layerLoaders.ts:537 — spec.id === "shahbazi-tie-point-support-isolines" &&
+- src\scene\layerLoaders.ts:544 — loadLineStrings(layerDataPath(context, context.files.geojson)),
+- src\scene\layerLoaders.ts:546 — .then(([mesh, lines]) => {
+- src\scene\layerLoaders.ts:548 — combined.name = "Shahbazi tie-point support isolines";
+- src\scene\layerLoaders.ts:549 — combined.userData.displayName = "Shahbazi tie-point support isolines";
+- src\scene\layerLoaders.ts:550 — combined.add(mesh, lines);
+- src\scene\layerLoaders.ts:572 — loadLineStrings(layerDataPath(context, file)),
+- src\scene\layerLoaders.ts:575 — .then((lineGroups) => {
+- src\scene\layerLoaders.ts:579 — combined.add(...lineGroups);
+- src\scene\layerLoaders.ts:583 — console.error(`loadLineStrings (${context.spec.id}) failed:`, error),
+- src\scene\layerLoaders.ts:669 — spec.id === "assay-samples" || spec.id === "area-outlines",
+- src\scene\layerLoaders.ts:706 — id: "ip-survey-lines-2024",
+- src\scene\layerLoaders.ts:708 — spec.id === "ip-survey-lines-2024" && !!layerFiles(spec).geojson,
+- src\scene\layerLoaders.ts:712 — `loadIpSurveyLines (${context.spec.id})`,
+- src\scene\layerLoaders.ts:713 — loadIpSurveyLines(layerDataPath(context, context.files.geojson)),
+- src\scene\layerLoaders.ts:861 — id: "power-lines",
+- src\scene\layerLoaders.ts:862 — matches: (spec) => spec.id === "power-lines",
+- src\scene\layerLoaders.ts:866 — "loadPowerLines",
+- src\scene\layerLoaders.ts:867 — loadPowerLines(
+- src\scene\layerLoaders.ts:873 — "/data/power_lines.geojson",
+- src\scene\postprocessing.ts:17 — //   TiltShiftPass     -- optional band-masked directional blur
+- src\scene\postprocessing.ts:41 — bandSize: { value: 0.28 },
+- src\scene\postprocessing.ts:51 — uniform float bandSize;
+- src\scene\postprocessing.ts:69 — float distanceToBand = abs(dot(vUv - center, normal));
+- src\scene\postprocessing.ts:70 — float mask = smoothstep(bandSize, bandSize + max(feather, 0.0001), distanceToBand);
+- src\scene\postprocessing.ts:132 — guideLineThickness: { value: 0.25 },
+- src\scene\postprocessing.ts:178 — uniform float guideLineThickness;
+- src\scene\postprocessing.ts:255 — float guideLine(float value, float target, float width) {
+- src\scene\postprocessing.ts:260 — float left = guideLine(uv.x, inset.x, width);
+- src\scene\postprocessing.ts:261 — float right = guideLine(uv.x, 1.0 - inset.x, width);
+- src\scene\postprocessing.ts:262 — float top = guideLine(uv.y, inset.y, width);
+- src\scene\postprocessing.ts:263 — float bottom = guideLine(uv.y, 1.0 - inset.y, width);
+- src\scene\postprocessing.ts:271 — float width = max(guideLineThickness / max(resolution.x, resolution.y), 0.0003);
+- src\scene\postprocessing.ts:274 — mask = max(mask, guideLine(uv.x, 1.0 / 3.0, width));
+- src\scene\postprocessing.ts:275 — mask = max(mask, guideLine(uv.x, 2.0 / 3.0, width));
+- src\scene\postprocessing.ts:276 — mask = max(mask, guideLine(uv.y, 1.0 / 3.0, width));
+- src\scene\postprocessing.ts:277 — mask = max(mask, guideLine(uv.y, 2.0 / 3.0, width));
+- src\scene\postprocessing.ts:280 — float crossX = guideLine(uv.x, 0.5, width) * step(abs(uv.y - 0.5), 0.07);
+- src\scene\postprocessing.ts:281 — float crossY = guideLine(uv.y, 0.5, width) * step(abs(uv.x - 0.5), 0.07);
+- src\scene\scalarFocus.ts:115 — export interface ScalarBand {
+- src\scene\scalarFocus.ts:120 — // Iso-band windows, derived with the SAME level math the section uses
+- src\scene\scalarFocus.ts:121 — // (sectionIsoLevels): `levelCount` interior levels split [isoMin, isoMax] into
+- src\scene\scalarFocus.ts:122 — // `levelCount + 1` bands. Band index b (0-based) spans [edge_b, edge_{b+1}].
+- src\scene\scalarFocus.ts:123 — // Returning only the selected band ranges keeps 2D section bands and the 3D
+- src\scene\scalarFocus.ts:125 — export function scalarBandRanges(
+- src\scene\scalarFocus.ts:130 — ): ScalarBand[] {
+- src\scene\scalarFocus.ts:141 — const bandCount = edges.length - 1; // safeCount + 1
+- src\scene\scalarFocus.ts:143 — const ranges: ScalarBand[] = [];
+- src\scene\scalarFocus.ts:144 — for (let b = 0; b < bandCount; b += 1) {
+- src\scene\scalarFocus.ts:150 — export function scalarValueInBands(
+- src\scene\scalarFocus.ts:152 — bands: ReadonlyArray<ScalarBand>,
+- src\scene\scalarFocus.ts:155 — for (let b = 0; b < bands.length; b += 1) {
+- src\scene\scalarFocus.ts:156 — if (value >= bands[b].min && value <= bands[b].max) return true;
+- src\scene\SceneManager.ts:4 — AreaOutlineDef,
+- src\scene\SceneManager.ts:21 — import { LineMaterial } from "three/examples/jsm/lines/LineMaterial.js";
+- src\scene\SceneManager.ts:25 — setDistanceAttenuatedLineWidth,
+- src\scene\SceneManager.ts:26 — } from "../loaders/topoLineMaterial";
+- src\scene\SceneManager.ts:33 — import { disposeObjectTree } from "./disposeObjectTree";
+- src\scene\SceneManager.ts:66 — } from "./isoOverlays/sectionIsoOverlay";
+- src\scene\SceneManager.ts:70 — clearMtVolumeCutIsoOverlaysImpl,
+- src\scene\SceneManager.ts:71 — clearSeismicResistivityIsoOverlaysImpl,
+- src\scene\SceneManager.ts:72 — clearSeismicVolumeCutIsoOverlaysImpl,
+- src\scene\SceneManager.ts:73 — listMtVolumeCutIsoTargetsImpl,
+- src\scene\SceneManager.ts:74 — listSeismicResistivitySectionIsoTargetsImpl,
+- src\scene\SceneManager.ts:75 — listSeismicResistivityVolumeCutIsoTargetsImpl,
+- src\scene\SceneManager.ts:76 — listSeismicVolumeCutIsoTargetsImpl,
+- src\scene\SceneManager.ts:78 — scalarVolumeIsoOverlayGroupImpl,
+- src\scene\SceneManager.ts:79 — seismicResistivityIsoOverlayGroupImpl,
+- src\scene\SceneManager.ts:80 — seismicVolumeIsoOverlayGroupImpl,
+- src\scene\SceneManager.ts:81 — updateMtVolumeCutIsoOverlaysImpl,
+- src\scene\SceneManager.ts:82 — updateSeismicResistivityIsoOverlaysImpl,
+- src\scene\SceneManager.ts:83 — updateSeismicVolumeCutIsoOverlaysImpl,
+- src\scene\SceneManager.ts:84 — type SectionIsoOverlayUpdateOptions,
+- src\scene\SceneManager.ts:85 — } from "./isoOverlays/volumeCutIsoOverlays";
+- src\scene\SceneManager.ts:93 — type SectionIsoOverlayTransition,
+- src\scene\SceneManager.ts:94 — type SectionIsoOverlayTransitionRootKind,
+- src\scene\SceneManager.ts:108 — AreaOutlineController,
+- src\scene\SceneManager.ts:109 — type AreaOutlinePreview,
+- src\scene\SceneManager.ts:110 — } from "./outlines/AreaOutlineController";
+- src\scene\SceneManager.ts:129 — findLocalAtmosphereVolumeRoot,
+- src\scene\SceneManager.ts:174 — rebuildSceneSectionHelpers as rebuildSceneSectionHelpersImpl,
+- src\scene\SceneManager.ts:202 — rebuildWorkingAreaFocusHelperImpl,
+- src\scene\SceneManager.ts:223 — import { peekHeightSampler } from "./heightSampler";
+- src\scene\SceneManager.ts:243 — resampleSiteGuideLineImpl,
+- src\scene\SceneManager.ts:247 — sourceSiteGuideLinesImpl,
+- src\scene\SceneManager.ts:280 — clearLightingStudioSourcesImpl,
+- src\scene\SceneManager.ts:297 — updatePageCameraMarkerLineImpl,
+- src\scene\SceneManager.ts:312 — AreaOutlineHandleMode,
+- src\scene\SceneManager.ts:313 — AreaOutlinePreview,
+- src\scene\SceneManager.ts:314 — } from "./outlines/AreaOutlineController";
+- src\scene\SceneManager.ts:321 — const DEFAULT_CONTOUR_FAR_LINE_SCALE = 0.28;
+- src\scene\SceneManager.ts:331 — // no gradient backdrop, no edges. Renderer clear color and FogExp2 share
+- src\scene\SceneManager.ts:341 — return lower.includes("contour") || lower.includes("isoline");
+- src\scene\SceneManager.ts:359 — export type SectionIsoTargetGroup =
+- src\scene\SceneManager.ts:367 — export interface ScalarSectionIsoTarget {
+- src\scene\SceneManager.ts:373 — group: SectionIsoTargetGroup;
+- src\scene\SceneManager.ts:526 — helperRebuildMs: number;
+- src\scene\SceneManager.ts:529 — mtCutIsoUpdate: MtVolumeCutIsoUpdateDebugState | null;
+- src\scene\SceneManager.ts:536 — interface MtVolumeCutIsoUpdateDebugState {
+- src\scene\SceneManager.ts:537 — policy: "full-rebuild";
+- src\scene\SceneManager.ts:539 — clearMs: number;
+- src\scene\SceneManager.ts:553 — overlayDebug: ScalarSectionIsoOverlayUpdateDebugState;
+- src\scene\SceneManager.ts:554 — attachMs: number;
+- src\scene\SceneManager.ts:555 — disposeMs: number;
+- src\scene\SceneManager.ts:559 — overlayRootCount: number;
+- src\scene\SceneManager.ts:564 — interface ScalarSectionIsoOverlayUpdateDebugState {
+- src\scene\SceneManager.ts:566 — disposeMs: number;
+- src\scene\SceneManager.ts:567 — rootCreateMs: number;
+- src\scene\SceneManager.ts:568 — bandMeshMs: number;
+- src\scene\SceneManager.ts:569 — lineGeometryMs: number;
+- src\scene\SceneManager.ts:570 — lineMaterialMs: number;
+- src\scene\SceneManager.ts:571 — attachMs: number;
+- src\scene\SceneManager.ts:572 — lineGeometryDebug: ScalarSectionIsoLineGeometryDebugState;
+- src\scene\SceneManager.ts:573 — bandMeshCount: number;
+- src\scene\SceneManager.ts:574 — lineMeshCount: number;
+- src\scene\SceneManager.ts:575 — lineSourceSegmentCount: number;
+- src\scene\SceneManager.ts:576 — lineTinySegmentCount: number;
+- src\scene\SceneManager.ts:577 — linePolylineCount: number;
+- src\scene\SceneManager.ts:578 — lineSimplifiedPointCount: number;
+- src\scene\SceneManager.ts:579 — lineRibbonSegmentCount: number;
+- src\scene\SceneManager.ts:580 — lineSnapToleranceM: number;
+- src\scene\SceneManager.ts:584 — interface ScalarSectionIsoLineGeometryDebugState {
+- src\scene\SceneManager.ts:598 — polylineSimplifyMs: number;
+- src\scene\SceneManager.ts:646 — sectionIsoThresholdOcclusionMs: number;
+- src\scene\SceneManager.ts:653 — interface SectionIsoOverlayDebugState {
+- src\scene\SceneManager.ts:654 — opacityPolicy: "split-section-iso-overlay-opacity-from-layer-opacity";
+- src\scene\SceneManager.ts:740 — private readonly sectionIsoThresholdRaycaster = new THREE.Raycaster();
+- src\scene\SceneManager.ts:741 — private readonly sectionIsoThresholdRayOrigin = new THREE.Vector3();
+- src\scene\SceneManager.ts:742 — private readonly sectionIsoThresholdRayTarget = new THREE.Vector3();
+- src\scene\SceneManager.ts:743 — private readonly sectionIsoThresholdRayDirection = new THREE.Vector3();
+- src\scene\SceneManager.ts:744 — private readonly sectionIsoThresholdSurfaces: THREE.Object3D[] = [];
+- src\scene\SceneManager.ts:745 — private readonly sectionIsoThresholdLineOverlays: THREE.Mesh[] = [];
+- src\scene\SceneManager.ts:746 — private readonly sectionIsoThresholdSeenSurfaceIds = new Set<string>();
+- src\scene\SceneManager.ts:747 — private readonly sectionIsoThresholdSamplePoints = [
+- src\scene\SceneManager.ts:771 — private sectionIsoOverlayTransition: SectionIsoOverlayTransition | null =
+- src\scene\SceneManager.ts:791 — private readonly areaOutlineController = new AreaOutlineController(
+- src\scene\SceneManager.ts:797 — // mask rebuild, and the editor's sub-layer panel can read the
+- src\scene\SceneManager.ts:807 — lastMtVolumeCutIsoUpdateDebug: MtVolumeCutIsoUpdateDebugState | null = null;
+- src\scene\SceneManager.ts:907 — this.updateAreaOutlineHandleVisibility();
+- src\scene\SceneManager.ts:978 — clearLightingStudioSources(): void {
+- src\scene\SceneManager.ts:979 — return clearLightingStudioSourcesImpl.call(this);
+- src\scene\SceneManager.ts:1031 — updatePageCameraMarkerLine(marker: PageCameraMarkerRuntime): void {
+- src\scene\SceneManager.ts:1032 — return updatePageCameraMarkerLineImpl.call(this, marker);
+- src\scene\SceneManager.ts:1057 — disposeObjectTree(this.orbitCenterHandle.group);
+- src\scene\SceneManager.ts:1174 — disposeObjectTree(group);
+- src\scene\SceneManager.ts:1257 — const mat = (obj as THREE.Mesh | THREE.Line).material as
+- src\scene\SceneManager.ts:1269 — root: THREE.Object3D,
+- src\scene\SceneManager.ts:1272 — if (!root.visible) return 0;
+- src\scene\SceneManager.ts:1274 — root.traverse((obj) => {
+- src\scene\SceneManager.ts:1284 — const isSectionIsoOverlay =
+- src\scene\SceneManager.ts:1285 — obj.userData?.scalarSectionIsoOverlay === true ||
+- src\scene\SceneManager.ts:1286 — material.userData?.scalarSectionIsoOverlay === true;
+- src\scene\SceneManager.ts:1287 — if (isSectionIsoOverlay) continue;
+- src\scene\SceneManager.ts:1314 — private sectionIsoAuthoredOpacity(material: THREE.Material): number {
+- src\scene\SceneManager.ts:1315 — const authored = material.userData?.sectionIsoBaseOpacity;
+- src\scene\SceneManager.ts:1324 — material.userData.sectionIsoBaseOpacity = value;
+- src\scene\SceneManager.ts:1331 — material.userData.sectionIsoBaseOpacity = value;
+- src\scene\SceneManager.ts:1335 — private applySectionIsoOverlayMaterialOpacity(
+- src\scene\SceneManager.ts:1345 — material.userData?.sectionIsoOpacityPolicy ===
+- src\scene\SceneManager.ts:1353 — : typeof material.userData?.sectionIsoLayerRenderOpacity === "number" &&
+- src\scene\SceneManager.ts:1354 — Number.isFinite(material.userData.sectionIsoLayerRenderOpacity)
+- src\scene\SceneManager.ts:1355 — ? clamp01(material.userData.sectionIsoLayerRenderOpacity)
+- src\scene\SceneManager.ts:1357 — const authoredOpacity = this.sectionIsoAuthoredOpacity(material);
+- src\scene\SceneManager.ts:1359 — typeof material.userData?.sectionIsoThresholdOcclusionAttenuation ===
+- src\scene\SceneManager.ts:1361 — Number.isFinite(material.userData.sectionIsoThresholdOcclusionAttenuation)
+- src\scene\SceneManager.ts:1362 — ? clamp01(material.userData.sectionIsoThresholdOcclusionAttenuation)
+- src\scene\SceneManager.ts:1365 — material.userData.sectionIsoTransitionOpacity = transitionOpacity;
+- src\scene\SceneManager.ts:1366 — material.userData.sectionIsoLayerRenderOpacity = parentLayerOpacity;
+- src\scene\SceneManager.ts:1367 — material.userData.sectionIsoOpacityPolicy =
+- src\scene\SceneManager.ts:1373 — material.userData.sectionIsoComposedOpacity = nextOpacity;
+- src\scene\SceneManager.ts:1420 — root: THREE.Object3D,
+- src\scene\SceneManager.ts:1422 — sectionIsoTransitionOpacity?: number,
+- src\scene\SceneManager.ts:1425 — const sectionIsoEnvelope =
+- src\scene\SceneManager.ts:1426 — typeof sectionIsoTransitionOpacity === "number" &&
+- src\scene\SceneManager.ts:1427 — Number.isFinite(sectionIsoTransitionOpacity)
+- src\scene\SceneManager.ts:1428 — ? clamp01(sectionIsoTransitionOpacity)
+- src\scene\SceneManager.ts:1430 — root.visible = next > 0.001 || (sectionIsoEnvelope ?? 0) > 0.001;
+- src\scene\SceneManager.ts:1431 — root.traverse((obj) => {
+- src\scene\SceneManager.ts:1432 — const mat = (obj as THREE.Mesh | THREE.Line).material as
+- src\scene\SceneManager.ts:1439 — const isSectionIsoOverlay =
+- src\scene\SceneManager.ts:1440 — obj.userData?.scalarSectionIsoOverlay === true ||
+- src\scene\SceneManager.ts:1441 — m.userData?.scalarSectionIsoOverlay === true;
+- src\scene\SceneManager.ts:1442 — if (m.userData?.ignoreLayerStyle === true && !isSectionIsoOverlay) {
+- src\scene\SceneManager.ts:1445 — if (isSectionIsoOverlay) {
+- src\scene\SceneManager.ts:1446 — this.applySectionIsoOverlayMaterialOpacity(
+- src\scene\SceneManager.ts:1448 — sectionIsoEnvelope ?? (next <= 0.001 ? 0 : 1),
+- src\scene\SceneManager.ts:1450 — sectionIsoEnvelope === null
+- src\scene\SceneManager.ts:1661 — disposeObjectTree(snapshot.group);
+- src\scene\SceneManager.ts:1664 — private clearLayerTransitionSnapshots(): void {
+- src\scene\SceneManager.ts:1676 — disposeObjectTree(snapshot.group);
+- src\scene\SceneManager.ts:1716 — private sectionIsoOverlayGroupsForTransition(): Array<{
+- src\scene\SceneManager.ts:1717 — kind: SectionIsoOverlayTransitionRootKind;
+- src\scene\SceneManager.ts:1722 — kind: SectionIsoOverlayTransitionRootKind;
+- src\scene\SceneManager.ts:1727 — const mtGroup = mtLayer?.userData.mtVolumeSectionIsoOverlayGroup as
+- src\scene\SceneManager.ts:1739 — .seismicVolumeSectionIsoOverlayGroup as THREE.Group | undefined;
+- src\scene\SceneManager.ts:1748 — .seismicResistivitySectionIsoOverlayGroup as THREE.Group | undefined;
+- src\scene\SceneManager.ts:1759 — discardSectionIsoOverlayTransition(): void {
+- src\scene\SceneManager.ts:1760 — const transition = this.sectionIsoOverlayTransition;
+- src\scene\SceneManager.ts:1762 — for (const root of transition.targetRoots) {
+- src\scene\SceneManager.ts:1763 — root.group.parent?.remove(root.group);
+- src\scene\SceneManager.ts:1764 — disposeObjectTree(root.group);
+- src\scene\SceneManager.ts:1766 — for (const root of transition.sourceRoots) {
+- src\scene\SceneManager.ts:1767 — root.group.parent?.remove(root.group);
+- src\scene\SceneManager.ts:1768 — disposeObjectTree(root.group);
+- src\scene\SceneManager.ts:1770 — this.sectionIsoOverlayTransition = null;
+- src\scene\SceneManager.ts:1773 — clearSectionIsoOverlayTransition(): void {
+- src\scene\SceneManager.ts:1774 — this.discardSectionIsoOverlayTransition();
+- src\scene\SceneManager.ts:1777 — private sectionIsoOverlayTransitionShouldStart(
+- src\scene\SceneManager.ts:1788 — beginSectionIsoOverlayTransition(
+- src\scene\SceneManager.ts:1795 — this.discardSectionIsoOverlayTransition();
+- src\scene\SceneManager.ts:1798 — !this.sectionIsoOverlayTransitionShouldStart(
+- src\scene\SceneManager.ts:1805 — const sourceRoots = this.sectionIsoOverlayGroupsForTransition().map(
+- src\scene\SceneManager.ts:1811 — snapshot.name = `${group.name || "section-iso-overlay"}-transition-source`;
+- src\scene\SceneManager.ts:1814 — sectionIsoOverlayTransitionRoot: true,
+- src\scene\SceneManager.ts:1815 — sectionIsoOverlayTransitionRole: "source",
+- src\scene\SceneManager.ts:1828 — this.sectionIsoOverlayTransition = {
+- src\scene\SceneManager.ts:1829 — sourceRoots,
+- src\scene\SceneManager.ts:1830 — targetRoots: [],
+- src\scene\SceneManager.ts:1838 — currentSectionIsoOverlayTransitionOpacity(): number {
+- src\scene\SceneManager.ts:1839 — return this.sectionIsoOverlayTransition?.targetOpacity ?? 1;
+- src\scene\SceneManager.ts:1842 — registerSectionIsoOverlayTransitionTargetRoot(
+- src\scene\SceneManager.ts:1843 — kind: SectionIsoOverlayTransitionRootKind,
+- src\scene\SceneManager.ts:1847 — const transition = this.sectionIsoOverlayTransition;
+- src\scene\SceneManager.ts:1849 — if (transition.targetRoots.some((root) => root.group === group)) {
+- src\scene\SceneManager.ts:1853 — group.userData.sectionIsoOverlayTransitionRoot = true;
+- src\scene\SceneManager.ts:1854 — group.userData.sectionIsoOverlayTransitionRole = "target";
+- src\scene\SceneManager.ts:1855 — transition.targetRoots.push({
+- src\scene\SceneManager.ts:1864 — tickSectionIsoOverlayTransition(nowMs: number, eased?: number): boolean {
+- src\scene\SceneManager.ts:1865 — const transition = this.sectionIsoOverlayTransition;
+- src\scene\SceneManager.ts:1879 — for (const root of transition.sourceRoots) {
+- src\scene\SceneManager.ts:1880 — this.applyRenderOpacityToTree(root.group, 1, sourceOpacity);
+- src\scene\SceneManager.ts:1882 — for (const root of transition.targetRoots) {
+- src\scene\SceneManager.ts:1883 — this.applyRenderOpacityToTree(root.group, 1, targetOpacity);
+- src\scene\SceneManager.ts:1888 — commitSectionIsoOverlayTransition(): void {
+- src\scene\SceneManager.ts:1889 — const transition = this.sectionIsoOverlayTransition;
+- src\scene\SceneManager.ts:1891 — this.tickSectionIsoOverlayTransition(
+- src\scene\SceneManager.ts:1895 — for (const root of transition.targetRoots) {
+- src\scene\SceneManager.ts:1896 — this.applyRenderOpacityToTree(root.group, 1, 1);
+- src\scene\SceneManager.ts:1898 — for (const root of transition.sourceRoots) {
+- src\scene\SceneManager.ts:1899 — root.group.parent?.remove(root.group);
+- src\scene\SceneManager.ts:1900 — disposeObjectTree(root.group);
+- src\scene\SceneManager.ts:1902 — this.sectionIsoOverlayTransition = null;
+- src\scene\SceneManager.ts:1958 — const sampleHeight = peekHeightSampler();
+- src\scene\SceneManager.ts:1978 — const sampleHeight = peekHeightSampler();
+- src\scene\SceneManager.ts:2025 — sourceSiteGuideLines(group: THREE.Object3D): Vec3[][] {
+- src\scene\SceneManager.ts:2026 — return sourceSiteGuideLinesImpl.call(this, group);
+- src\scene\SceneManager.ts:2029 — resampleSiteGuideLine(line: Vec3[], stepM: number): Vec3[] {
+- src\scene\SceneManager.ts:2030 — return resampleSiteGuideLineImpl.call(this, line, stepM);
+- src\scene\SceneManager.ts:2041 — siteGuideRing(lines: Vec3[][]): Vec3[] | null {
+- src\scene\SceneManager.ts:2042 — return siteGuideRingImpl.call(this, lines);
+- src\scene\SceneManager.ts:2255 — rebuildSceneSectionHelpers(
+- src\scene\SceneManager.ts:2261 — return rebuildSceneSectionHelpersImpl.call(this, style, planes, layerTargets, productTargets);
+- src\scene\SceneManager.ts:2425 — rebuildWorkingAreaFocusHelper(state: WorkingAreaFocusState): void {
+- src\scene\SceneManager.ts:2426 — return rebuildWorkingAreaFocusHelperImpl.call(this, state);
+- src\scene\SceneManager.ts:2526 — private updateAreaOutlineHandleVisibility(): void {
+- src\scene\SceneManager.ts:2527 — this.areaOutlineController.updateHandleVisibility();
+- src\scene\SceneManager.ts:2530 — listAreaOutlinePickables(): THREE.Object3D[] {
+- src\scene\SceneManager.ts:2531 — return this.areaOutlineController.listPickables();
+- src\scene\SceneManager.ts:2534 — previewAreaOutlineMove(id: string, sceneCenter: THREE.Vector3): void {
+- src\scene\SceneManager.ts:2535 — this.areaOutlineController.previewAreaOutlineMove(id, sceneCenter);
+- src\scene\SceneManager.ts:2538 — getAreaOutlineWorldCenter(id: string): THREE.Vector3 | null {
+- src\scene\SceneManager.ts:2539 — return this.areaOutlineController.getAreaOutlineWorldCenter(id);
+- src\scene\SceneManager.ts:2542 — previewAreaOutlineScaleFromWorld(
+- src\scene\SceneManager.ts:2547 — this.areaOutlineController.previewAreaOutlineScaleFromWorld(
+- src\scene\SceneManager.ts:2554 — getAreaOutlinePreview(id: string): AreaOutlinePreview | null {
+- src\scene\SceneManager.ts:2555 — return this.areaOutlineController.getAreaOutlinePreview(id);
+- src\scene\SceneManager.ts:2558 — rebuildAreaOutlines(outlines: AreaOutlineDef[] = []): void {
+- src\scene\SceneManager.ts:2559 — this.areaOutlineController.rebuild(outlines);
+- src\scene\SceneManager.ts:2566 — private localAtmosphereRoot(layerId: string): THREE.Group | null {
+- src\scene\SceneManager.ts:2568 — return layer ? findLocalAtmosphereVolumeRoot(layer) : null;
+- src\scene\SceneManager.ts:2572 — const root = this.localAtmosphereRoot(layerId);
+- src\scene\SceneManager.ts:2573 — return root ? getLocalAtmosphereWorldCenter(root) : null;
+- src\scene\SceneManager.ts:2580 — const root = this.localAtmosphereRoot(layerId);
+- src\scene\SceneManager.ts:2581 — if (root) previewLocalAtmosphereMove(root, sceneCenter);
+- src\scene\SceneManager.ts:2589 — const root = this.localAtmosphereRoot(layerId);
+- src\scene\SceneManager.ts:2590 — if (root) previewLocalAtmosphereSizeFromWorld(root, mode, worldPoint);
+- src\scene\SceneManager.ts:2594 — const root = this.localAtmosphereRoot(layerId);
+- src\scene\SceneManager.ts:2595 — return root ? getLocalAtmospherePreview(root) : null;
+- src\scene\SceneManager.ts:2610 — getSectionIsoOverlayDebugState(): SectionIsoOverlayDebugState {
+- src\scene\SceneManager.ts:2636 — const mat = (obj as THREE.Mesh | THREE.Line).material as
+- src\scene\SceneManager.ts:2643 — const isSectionIsoOverlay =
+- src\scene\SceneManager.ts:2644 — obj.userData?.scalarSectionIsoOverlay === true ||
+- src\scene\SceneManager.ts:2645 — material.userData?.scalarSectionIsoOverlay === true;
+- src\scene\SceneManager.ts:2646 — if (!isSectionIsoOverlay) continue;
+- src\scene\SceneManager.ts:2649 — material.userData?.sectionIsoOpacityPolicy ===
+- src\scene\SceneManager.ts:2655 — material.userData?.sectionIsoOpacityPolicy ===
+- src\scene\SceneManager.ts:2661 — material.userData?.sectionIsoOpacityPolicy ===
+- src\scene\SceneManager.ts:2667 — material.userData?.sectionIsoLayerRenderOpacity,
+- src\scene\SceneManager.ts:2672 — material.userData?.sectionIsoTransitionOpacity,
+- src\scene\SceneManager.ts:2681 — opacityPolicy: "split-section-iso-overlay-opacity-from-layer-opacity",
+- src\scene\SceneManager.ts:2693 — private countGroundTraceObjects(root: THREE.Object3D | null | undefined): number {
+- src\scene\SceneManager.ts:2694 — if (!root) return 0;
+- src\scene\SceneManager.ts:2696 — root.traverse((obj) => {
+- src\scene\SceneManager.ts:2731 — sectionIsoOverlays: SectionIsoOverlayDebugState;
+- src\scene\SceneManager.ts:2769 — sectionIsoOverlays: this.getSectionIsoOverlayDebugState(),
+- src\scene\SceneManager.ts:3105 — private listAuthoredScalarSectionIsoTargets(
+- src\scene\SceneManager.ts:3107 — ): ScalarSectionIsoTarget[] {
+- src\scene\SceneManager.ts:3108 — const targets: ScalarSectionIsoTarget[] = [];
+- src\scene\SceneManager.ts:3137 — private listSeismicSectionIsoTargets(
+- src\scene\SceneManager.ts:3139 — ): ScalarSectionIsoTarget[] {
+- src\scene\SceneManager.ts:3143 — const targets: ScalarSectionIsoTarget[] = [];
+- src\scene\SceneManager.ts:3223 — listMtVolumeCutIsoTargets(layerId?: string): ScalarSectionIsoTarget[] {
+- src\scene\SceneManager.ts:3224 — return listMtVolumeCutIsoTargetsImpl.call(this, layerId);
+- src\scene\SceneManager.ts:3227 — listSeismicVolumeCutIsoTargets(layerId?: string): ScalarSectionIsoTarget[] {
+- src\scene\SceneManager.ts:3228 — return listSeismicVolumeCutIsoTargetsImpl.call(this, layerId);
+- src\scene\SceneManager.ts:3231 — listSeismicResistivitySectionIsoTargets(
+- src\scene\SceneManager.ts:3233 — ): ScalarSectionIsoTarget[] {
+- src\scene\SceneManager.ts:3234 — return listSeismicResistivitySectionIsoTargetsImpl.call(this, layerId);
+- src\scene\SceneManager.ts:3237 — listSeismicResistivityVolumeCutIsoTargets(
+- src\scene\SceneManager.ts:3239 — ): ScalarSectionIsoTarget[] {
+- src\scene\SceneManager.ts:3240 — return listSeismicResistivityVolumeCutIsoTargetsImpl.call(this, layerId);
+- src\scene\SceneManager.ts:3243 — listSectionIsoTargets(layerId?: string): ScalarSectionIsoTarget[] {
+- src\scene\SceneManager.ts:3245 — ...this.listAuthoredScalarSectionIsoTargets(layerId),
+- src\scene\SceneManager.ts:3246 — ...this.listMtVolumeCutIsoTargets(layerId),
+- src\scene\SceneManager.ts:3247 — ...this.listSeismicSectionIsoTargets(layerId),
+- src\scene\SceneManager.ts:3248 — ...this.listSeismicVolumeCutIsoTargets(layerId),
+- src\scene\SceneManager.ts:3249 — ...this.listSeismicResistivitySectionIsoTargets(layerId),
+- src\scene\SceneManager.ts:3250 — ...this.listSeismicResistivityVolumeCutIsoTargets(layerId),
+- src\scene\SceneManager.ts:3252 — const groupOrder: Record<SectionIsoTargetGroup, number> = {
+- src\scene\SceneManager.ts:3269 — listScalarSectionIsoTargets(layerId?: string): ScalarSectionIsoTarget[] {
+- src\scene\SceneManager.ts:3270 — return this.listAuthoredScalarSectionIsoTargets(layerId).sort((a, b) => {
+- src\scene\SceneManager.ts:3312 — scalarVolumeIsoOverlayGroup(volumeLayer: THREE.Group): THREE.Group {
+- src\scene\SceneManager.ts:3313 — return scalarVolumeIsoOverlayGroupImpl.call(this, volumeLayer);
+- src\scene\SceneManager.ts:3316 — clearMtVolumeCutIsoOverlays(volumeLayer?: THREE.Group): void {
+- src\scene\SceneManager.ts:3317 — return clearMtVolumeCutIsoOverlaysImpl.call(this, volumeLayer);
+- src\scene\SceneManager.ts:3354 — updateMtVolumeCutIsoOverlays(
+- src\scene\SceneManager.ts:3356 — options?: SectionIsoOverlayUpdateOptions,
+- src\scene\SceneManager.ts:3358 — return updateMtVolumeCutIsoOverlaysImpl.call(this, style, options);
+- src\scene\SceneManager.ts:3361 — seismicVolumeIsoOverlayGroup(seismicLayer: THREE.Group): THREE.Group {
+- src\scene\SceneManager.ts:3362 — return seismicVolumeIsoOverlayGroupImpl.call(this, seismicLayer);
+- src\scene\SceneManager.ts:3365 — seismicResistivityIsoOverlayGroup(seismicLayer: THREE.Group): THREE.Group {
+- src\scene\SceneManager.ts:3366 — return seismicResistivityIsoOverlayGroupImpl.call(this, seismicLayer);
+- src\scene\SceneManager.ts:3369 — clearSeismicVolumeCutIsoOverlays(seismicLayer?: THREE.Group): void {
+- src\scene\SceneManager.ts:3370 — return clearSeismicVolumeCutIsoOverlaysImpl.call(this, seismicLayer);
+- src\scene\SceneManager.ts:3373 — clearSeismicResistivityIsoOverlays(seismicLayer?: THREE.Group): void {
+- src\scene\SceneManager.ts:3374 — return clearSeismicResistivityIsoOverlaysImpl.call(this, seismicLayer);
+- src\scene\SceneManager.ts:3394 — updateSeismicVolumeCutIsoOverlays(
+- src\scene\SceneManager.ts:3396 — options?: SectionIsoOverlayUpdateOptions,
+- src\scene\SceneManager.ts:3398 — return updateSeismicVolumeCutIsoOverlaysImpl.call(this, style, options);
+- src\scene\SceneManager.ts:3401 — updateSeismicResistivityIsoOverlays(
+- src\scene\SceneManager.ts:3403 — options?: SectionIsoOverlayUpdateOptions,
+- src\scene\SceneManager.ts:3405 — return updateSeismicResistivityIsoOverlaysImpl.call(this, style, options);
+- src\scene\SceneManager.ts:3512 — private clearLiveMtSurfaceBoundaries(group: THREE.Group): void {
+- src\scene\SceneManager.ts:3518 — disposeObjectTree(child);
+- src\scene\SceneManager.ts:3529 — this.clearLiveMtSurfaceBoundaries(group);
+- src\scene\SceneManager.ts:3536 — this.clearLiveMtSurfaceBoundaries(group);
+- src\scene\SceneManager.ts:3556 — this.clearLiveMtSurfaceBoundaries(group);
+- src\scene\SceneManager.ts:3566 — disposeObjectTree(child);
+- src\scene\SceneManager.ts:3584 — disposeObjectTree(child);
+- src\scene\SceneManager.ts:3638 — private seismicBrowserRoot(group: THREE.Group): THREE.Object3D | null {
+- src\scene\SceneManager.ts:3640 — let root: THREE.Object3D | null = null;
+- src\scene\SceneManager.ts:3642 — if (!root && obj.userData?.seismicBrowser === true) root = obj;
+- src\scene\SceneManager.ts:3644 — return root;
+- src\scene\SceneManager.ts:3648 — root: THREE.Object3D;
+- src\scene\SceneManager.ts:3661 — const root = this.seismicBrowserRoot(group);
+- src\scene\SceneManager.ts:3662 — if (!root) return null;
+- src\scene\SceneManager.ts:3666 — if (cached && cached.root === root) return cached;
+- src\scene\SceneManager.ts:3668 — const rawSummaries = Array.isArray(root.userData.seismicProducts)
+- src\scene\SceneManager.ts:3669 — ? (root.userData.seismicProducts as Array<{
+- src\scene\SceneManager.ts:3728 — root.traverse((obj) => {
+- src\scene\SceneManager.ts:3786 — root,
+- src\scene\SceneManager.ts:3825 — const root = this.seismicBrowserRoot(group);
+- src\scene\SceneManager.ts:3826 — if (!root) continue;
+- src\scene\SceneManager.ts:3827 — root.userData.seismicTransitionActive = seismicTransitionActive;
+- src\scene\SceneManager.ts:3828 — root.userData.seismicCameraMoving = seismicCameraMoving;
+- src\scene\SceneManager.ts:3829 — root.userData.seismicCameraMovingUntilMs = this.seismicCameraMovingUntilMs;
+- src\scene\SceneManager.ts:3830 — root.userData.seismicTransientLodReason = seismicTransientLodReason;
+- src\scene\SceneManager.ts:3832 — root.userData.seismicFrameRequestedLodTier = null;
+- src\scene\SceneManager.ts:3833 — root.userData.seismicFrameRequestedProductKey = "";
+- src\scene\SceneManager.ts:3838 — root.userData.seismicVisibleProductIds,
+- src\scene\SceneManager.ts:3841 — ? (root.userData.seismicVisibleProductIds as unknown[]).filter(
+- src\scene\SceneManager.ts:3846 — typeof root.userData.seismicSelectedProductId === "string"
+- src\scene\SceneManager.ts:3847 — ? root.userData.seismicSelectedProductId
+- src\scene\SceneManager.ts:3848 — : typeof root.userData.seismicDefaultProductId === "string"
+- src\scene\SceneManager.ts:3849 — ? root.userData.seismicDefaultProductId
+- src\scene\SceneManager.ts:3860 — root.userData.seismicFrameRequestedLodTier === requestedTier &&
+- src\scene\SceneManager.ts:3861 — root.userData.seismicFrameRequestedProductKey === productKey
+- src\scene\SceneManager.ts:3865 — root.userData.seismicFrameRequestedLodTier = requestedTier;
+- src\scene\SceneManager.ts:3866 — root.userData.seismicFrameRequestedProductKey = productKey;
+- src\scene\SceneManager.ts:3867 — const ensureProductsLoaded = root.userData.seismicEnsureProductsLoaded as
+- src\scene\SceneManager.ts:3905 — "contourFarLineScale",
+- src\scene\SceneManager.ts:3906 — DEFAULT_CONTOUR_FAR_LINE_SCALE,
+- src\scene\SceneManager.ts:3924 — const lineColor =
+- src\scene\SceneManager.ts:3930 — const lineOpacity =
+- src\scene\SceneManager.ts:3936 — const lineWidth =
+- src\scene\SceneManager.ts:3937 — typeof style.contourPresetLineWidth === "number"
+- src\scene\SceneManager.ts:3938 — ? style.contourPresetLineWidth
+- src\scene\SceneManager.ts:3939 — : typeof style.lineWidth === "number"
+- src\scene\SceneManager.ts:3940 — ? style.lineWidth
+- src\scene\SceneManager.ts:3944 — if (obj.userData?.contourLine === true) {
+- src\scene\SceneManager.ts:3952 — if (!(m instanceof LineMaterial)) continue;
+- src\scene\SceneManager.ts:3953 — const preserveLineColor =
+- src\scene\SceneManager.ts:3955 — obj.userData?.naipTileDiagnosticOutline === true ||
+- src\scene\SceneManager.ts:3957 — if (lineColor && !preserveLineColor) m.color.set(lineColor);
+- src\scene\SceneManager.ts:3958 — if (lineOpacity !== null) {
+- src\scene\SceneManager.ts:3959 — m.opacity = lineOpacity;
+- src\scene\SceneManager.ts:3960 — m.transparent = lineOpacity < 1;
+- src\scene\SceneManager.ts:3962 — if (lineWidth !== null) {
+- src\scene\SceneManager.ts:3963 — const worldLineWidthScale =
+- src\scene\SceneManager.ts:3964 — typeof m.userData?.worldLineWidthScale === "number"
+- src\scene\SceneManager.ts:3965 — ? m.userData.worldLineWidthScale
+- src\scene\SceneManager.ts:3967 — const minLineWidth =
+- src\scene\SceneManager.ts:3968 — typeof m.userData?.worldLineWidthMin === "number"
+- src\scene\SceneManager.ts:3969 — ? m.userData.worldLineWidthMin
+- src\scene\SceneManager.ts:3971 — const maxLineWidth =
+- src\scene\SceneManager.ts:3972 — typeof m.userData?.worldLineWidthMax === "number"
+- src\scene\SceneManager.ts:3973 — ? m.userData.worldLineWidthMax
+- src\scene\SceneManager.ts:3975 — m.linewidth = clampRange(
+- src\scene\SceneManager.ts:3976 — lineWidth * worldLineWidthScale,
+- src\scene\SceneManager.ts:3977 — minLineWidth,
+- src\scene\SceneManager.ts:3978 — maxLineWidth,
+- src\scene\SceneManager.ts:3981 — if (m.userData?.contourDistanceAttenuatedLineWidth === true) {
+- src\scene\SceneManager.ts:3982 — setDistanceAttenuatedLineWidth(m, {
+- src\scene\SceneManager.ts:4003 — // The full-density MT cloud isolates to the iso-bands selected on the volume
+- src\scene\SceneManager.ts:4005 — // one layer, so refresh the cloud when the volume changes — otherwise band
+- src\scene\SceneManager.ts:4023 — this.layerTweens.clear();
+- src\scene\SceneManager.ts:4024 — this.scalarStyleTweens.clear();
+- src\scene\SceneManager.ts:4028 — this.clearSectionIsoOverlayTransition();
+- src\scene\SceneManager.ts:4029 — this.clearLayerTransitionSnapshots();
+- src\scene\SceneManager.ts:4049 — this.layerTweens.clear();
+- src\scene\SceneManager.ts:4050 — this.scalarStyleTweens.clear();
+- src\scene\SceneManager.ts:4054 — this.clearSectionIsoOverlayTransition();
+- src\scene\SceneManager.ts:4055 — this.clearLayerTransitionSnapshots();
+- src\scene\SceneManager.ts:4086 — * terrain handle's per-slot uniforms. The ring outlines for the
+- src\scene\SceneManager.ts:4087 — * targets remain as Line2 polylines in the layer groups and follow
+- src\scene\SceneManager.ts:4102 — // rebuild reflects authored overrides.
+- src\scene\SceneManager.ts:4227 — const mat = (obj as THREE.Mesh | THREE.Line).material as
+- src\scene\SceneManager.ts:4247 — this.renderer.setClearColor(backgroundColor);
+- src\scene\SceneManager.ts:4508 — private collectMtThresholdSurfacesFromRoot(root: THREE.Object3D): void {
+- src\scene\SceneManager.ts:4509 — if (!this.objectTreeVisible(root)) return;
+- src\scene\SceneManager.ts:4510 — root.traverse((obj) => {
+- src\scene\SceneManager.ts:4516 — this.sectionIsoThresholdSurfaces.push(obj);
+- src\scene\SceneManager.ts:4521 — this.sectionIsoThresholdSurfaces.length = 0;
+- src\scene\SceneManager.ts:4523 — if (group) this.collectMtThresholdSurfacesFromRoot(group);
+- src\scene\SceneManager.ts:4527 — if (snapshot) this.collectMtThresholdSurfacesFromRoot(snapshot.group);
+- src\scene\SceneManager.ts:4528 — return this.sectionIsoThresholdSurfaces;
+- src\scene\SceneManager.ts:4531 — private collectSectionIsoLineOverlaysFromRoot(root: THREE.Object3D): void {
+- src\scene\SceneManager.ts:4532 — if (!this.objectTreeVisible(root)) return;
+- src\scene\SceneManager.ts:4533 — root.traverse((obj) => {
+- src\scene\SceneManager.ts:4536 — obj.userData?.sectionIsoLineOverlay !== true &&
+- src\scene\SceneManager.ts:4537 — obj.name !== "scalar-section-iso-line-overlay"
+- src\scene\SceneManager.ts:4543 — this.sectionIsoThresholdLineOverlays.push(obj);
+- src\scene\SceneManager.ts:4547 — private collectSectionIsoLineOverlays(): THREE.Mesh[] {
+- src\scene\SceneManager.ts:4548 — this.sectionIsoThresholdLineOverlays.length = 0;
+- src\scene\SceneManager.ts:4550 — this.collectSectionIsoLineOverlaysFromRoot(group);
+- src\scene\SceneManager.ts:4553 — this.collectSectionIsoLineOverlaysFromRoot(snapshot.group);
+- src\scene\SceneManager.ts:4555 — return this.sectionIsoThresholdLineOverlays;
+- src\scene\SceneManager.ts:4558 — private sectionIsoThresholdSurfaceId(obj: THREE.Object3D): string {
+- src\scene\SceneManager.ts:4570 — private setSectionIsoLineThresholdOcclusion(
+- src\scene\SceneManager.ts:4571 — line: THREE.Mesh,
+- src\scene\SceneManager.ts:4575 — const material = line.material;
+- src\scene\SceneManager.ts:4579 — typeof m.userData?.sectionIsoBaseOpacity === "number"
+- src\scene\SceneManager.ts:4580 — ? m.userData.sectionIsoBaseOpacity
+- src\scene\SceneManager.ts:4582 — m.userData.sectionIsoBaseOpacity = baseOpacity;
+- src\scene\SceneManager.ts:4583 — m.userData.sectionIsoThresholdOcclusionCount = occlusionCount;
+- src\scene\SceneManager.ts:4584 — m.userData.sectionIsoThresholdOcclusionAttenuation = attenuation;
+- src\scene\SceneManager.ts:4586 — typeof m.userData?.sectionIsoTransitionOpacity === "number"
+- src\scene\SceneManager.ts:4587 — ? m.userData.sectionIsoTransitionOpacity
+- src\scene\SceneManager.ts:4589 — this.applySectionIsoOverlayMaterialOpacity(m, transitionOpacity);
+- src\scene\SceneManager.ts:4591 — line.userData.sectionIsoThresholdOcclusionCount = occlusionCount;
+- src\scene\SceneManager.ts:4592 — line.userData.sectionIsoThresholdOcclusionAttenuation = attenuation;
+- src\scene\SceneManager.ts:4595 — private stableSectionIsoThresholdOcclusionCount(
+- src\scene\SceneManager.ts:4596 — line: THREE.Mesh,
+- src\scene\SceneManager.ts:4600 — typeof line.userData.sectionIsoThresholdOcclusionCount === "number"
+- src\scene\SceneManager.ts:4601 — ? line.userData.sectionIsoThresholdOcclusionCount
+- src\scene\SceneManager.ts:4604 — typeof line.userData.sectionIsoThresholdRawOcclusionCount === "number"
+- src\scene\SceneManager.ts:4605 — ? line.userData.sectionIsoThresholdRawOcclusionCount
+- src\scene\SceneManager.ts:4611 — line.userData.sectionIsoThresholdRawOcclusionCount = rawCount;
+- src\scene\SceneManager.ts:4612 — line.userData.sectionIsoThresholdStableOcclusionCount = stable;
+- src\scene\SceneManager.ts:4616 — private sectionIsoLineSamplePoints(line: THREE.Mesh): THREE.Vector3[] {
+- src\scene\SceneManager.ts:4617 — const geometry = line.geometry;
+- src\scene\SceneManager.ts:4620 — if (!box) return this.sectionIsoThresholdSamplePoints.slice(0, 1);
+- src\scene\SceneManager.ts:4621 — const size = box.getSize(this.sectionIsoThresholdSamplePoints[0]);
+- src\scene\SceneManager.ts:4626 — const center = box.getCenter(this.sectionIsoThresholdSamplePoints[0]);
+- src\scene\SceneManager.ts:4627 — this.sectionIsoThresholdSamplePoints[1].copy(center);
+- src\scene\SceneManager.ts:4628 — this.sectionIsoThresholdSamplePoints[1].setComponent(
+- src\scene\SceneManager.ts:4632 — this.sectionIsoThresholdSamplePoints[2].copy(center);
+- src\scene\SceneManager.ts:4633 — this.sectionIsoThresholdSamplePoints[2].setComponent(
+- src\scene\SceneManager.ts:4637 — for (const point of this.sectionIsoThresholdSamplePoints) {
+- src\scene\SceneManager.ts:4638 — point.applyMatrix4(line.matrixWorld);
+- src\scene\SceneManager.ts:4640 — return this.sectionIsoThresholdSamplePoints;
+- src\scene\SceneManager.ts:4643 — private updateSectionIsoThresholdOcclusion(camera: THREE.Camera): void {
+- src\scene\SceneManager.ts:4644 — const lines = this.collectSectionIsoLineOverlays();
+- src\scene\SceneManager.ts:4645 — if (lines.length === 0) return;
+- src\scene\SceneManager.ts:4649 — for (const line of lines) {
+- src\scene\SceneManager.ts:4650 — this.setSectionIsoLineThresholdOcclusion(line, 1, 0);
+- src\scene\SceneManager.ts:4655 — camera.getWorldPosition(this.sectionIsoThresholdRayOrigin);
+- src\scene\SceneManager.ts:4656 — for (const line of lines) {
+- src\scene\SceneManager.ts:4657 — this.sectionIsoThresholdSeenSurfaceIds.clear();
+- src\scene\SceneManager.ts:4658 — const samplePoints = this.sectionIsoLineSamplePoints(line);
+- src\scene\SceneManager.ts:4660 — this.sectionIsoThresholdRayTarget.copy(samplePoint);
+- src\scene\SceneManager.ts:4661 — this.sectionIsoThresholdRayDirection
+- src\scene\SceneManager.ts:4662 — .copy(this.sectionIsoThresholdRayTarget)
+- src\scene\SceneManager.ts:4663 — .sub(this.sectionIsoThresholdRayOrigin);
+- src\scene\SceneManager.ts:4664 — const distance = this.sectionIsoThresholdRayDirection.length();
+- src\scene\SceneManager.ts:4666 — this.sectionIsoThresholdRayDirection.multiplyScalar(1 / distance);
+- src\scene\SceneManager.ts:4667 — this.sectionIsoThresholdRaycaster.set(
+- src\scene\SceneManager.ts:4668 — this.sectionIsoThresholdRayOrigin,
+- src\scene\SceneManager.ts:4669 — this.sectionIsoThresholdRayDirection,
+- src\scene\SceneManager.ts:4671 — this.sectionIsoThresholdRaycaster.near = 0;
+- src\scene\SceneManager.ts:4672 — this.sectionIsoThresholdRaycaster.far = Math.max(0, distance - 1);
+- src\scene\SceneManager.ts:4674 — this.sectionIsoThresholdRaycaster.intersectObjects(surfaces, false);
+- src\scene\SceneManager.ts:4676 — this.sectionIsoThresholdSeenSurfaceIds.add(
+- src\scene\SceneManager.ts:4677 — this.sectionIsoThresholdSurfaceId(hit.object),
+- src\scene\SceneManager.ts:4681 — const occlusionCount = this.stableSectionIsoThresholdOcclusionCount(
+- src\scene\SceneManager.ts:4682 — line,
+- src\scene\SceneManager.ts:4683 — this.sectionIsoThresholdSeenSurfaceIds.size,
+- src\scene\SceneManager.ts:4685 — this.setSectionIsoLineThresholdOcclusion(
+- src\scene\SceneManager.ts:4686 — line,
+- src\scene\SceneManager.ts:4754 — this.updateSectionIsoThresholdOcclusion(camera);
+- src\scene\SceneManager.ts:4755 — const sectionIsoThresholdOcclusionMs = transitionDebugMs(
+- src\scene\SceneManager.ts:4790 — sectionIsoThresholdOcclusionMs,
+- src\scene\SceneManager.ts:4816 — disposeTerrainOrthoPhotoTexture(): void {
+- src\scene\SceneManager.ts:4817 — this.topoRuntime.disposeOrthoPhotoTexture();
+- src\scene\SceneManager.ts:4822 — * Awaits the heightSampler internally (via the loader) so the
+- src\scene\SceneManager.ts:4833 — async rebuildSceneOverlayBounds(
+- src\scene\SceneManager.ts:4837 — return this.sceneOverlayController.rebuildSceneOverlayBounds(id, newBounds);
+- src\scene\SceneManager.ts:4892 — if (m instanceof LineMaterial) {
+- src\scene\SceneManager.ts:4897 — const tm = (group.userData as { traceMaterial?: LineMaterial })
+- src\scene\SceneManager.ts:4903 — const focusMaterial = this.workingAreaFocusRuntime?.line.material;
+- src\scene\SceneManager.ts:4904 — if (focusMaterial instanceof LineMaterial) {
+- src\scene\terrainMaterial.ts:43 — // ramp doesn't band visibly at the breakpoints.
+- src\scene\terrainMaterial.ts:84 — edgeOutlineEnabled?: boolean;
+- src\scene\terrainMaterial.ts:85 — edgeOutlineOffsetM?: number;
+- src\scene\terrainMaterial.ts:86 — edgeOutlineThicknessM?: number;
+- src\scene\terrainMaterial.ts:87 — edgeOutlineColor?: string;
+- src\scene\terrainMaterial.ts:88 — edgeOutlineOpacity?: number;
+- src\scene\terrainMaterial.ts:118 — gridLineWidthM?: number;
+- src\scene\terrainMaterial.ts:214 — setForestOutlineColor(color: string): void;
+- src\scene\terrainMaterial.ts:216 — setForestOutlineOpacity(opacity: number): void;
+- src\scene\terrainMaterial.ts:382 — uEdgeOutlineEnabled: { value: initial.edgeOutlineEnabled ? 1 : 0 },
+- src\scene\terrainMaterial.ts:383 — uEdgeOutlineOffset: { value: Math.max(0, initial.edgeOutlineOffsetM ?? 0) },
+- src\scene\terrainMaterial.ts:384 — uEdgeOutlineThickness: {
+- src\scene\terrainMaterial.ts:385 — value: Math.max(0, initial.edgeOutlineThicknessM ?? 2500),
+- src\scene\terrainMaterial.ts:387 — uEdgeOutlineColor: {
+- src\scene\terrainMaterial.ts:388 — value: new THREE.Color(initial.edgeOutlineColor ?? "#f8ead0"),
+- src\scene\terrainMaterial.ts:390 — uEdgeOutlineOpacity: {
+- src\scene\terrainMaterial.ts:391 — value: THREE.MathUtils.clamp(initial.edgeOutlineOpacity ?? 0, 0, 1),
+- src\scene\terrainMaterial.ts:483 — uGridLineWidth: { value: initial.gridLineWidthM ?? 18 },
+- src\scene\terrainMaterial.ts:535 — uForestOutlineColor: { value: new THREE.Color("#143a20") },
+- src\scene\terrainMaterial.ts:537 — uForestOutlineOpacity: { value: 0 },
+- src\scene\terrainMaterial.ts:644 — uniform float uEdgeOutlineEnabled;
+- src\scene\terrainMaterial.ts:645 — uniform float uEdgeOutlineOffset;
+- src\scene\terrainMaterial.ts:646 — uniform float uEdgeOutlineThickness;
+- src\scene\terrainMaterial.ts:647 — uniform vec3 uEdgeOutlineColor;
+- src\scene\terrainMaterial.ts:648 — uniform float uEdgeOutlineOpacity;
+- src\scene\terrainMaterial.ts:690 — uniform float uGridLineWidth;
+- src\scene\terrainMaterial.ts:730 — uniform vec3 uForestOutlineColor;
+- src\scene\terrainMaterial.ts:732 — uniform float uForestOutlineOpacity;
+- src\scene\terrainMaterial.ts:785 — float gridMask(vec2 worldXY, float spacing, float lineWidth) {
+- src\scene\terrainMaterial.ts:787 — float halfWidth = max(lineWidth * 0.5, 0.01);
+- src\scene\terrainMaterial.ts:790 — float distToLine = min(cell.x, cell.y);
+- src\scene\terrainMaterial.ts:791 — float aa = max(fwidth(distToLine), 1.0);
+- src\scene\terrainMaterial.ts:792 — return 1.0 - smoothstep(halfWidth, halfWidth + aa, distToLine);
+- src\scene\terrainMaterial.ts:1353 — // Glow comes exclusively from the emissive ring outline +
+- src\scene\terrainMaterial.ts:1354 — // bloom on its own line geometry.
+- src\scene\terrainMaterial.ts:1480 — if (uForestFillOpacity > 0.001 || uForestOutlineOpacity > 0.001) {
+- src\scene\terrainMaterial.ts:1495 — float forestOpacity = max(uForestFillOpacity, uForestOutlineOpacity);
+- src\scene\terrainMaterial.ts:1506 — float edgeBandWidth = max(max(uEdgeFadeDistance, uEdgeOutlineThickness), 1.0);
+- src\scene\terrainMaterial.ts:1507 — float edgeBand = 1.0 - smoothstep(0.0, edgeBandWidth, insideDist);
+- src\scene\terrainMaterial.ts:1508 — if (uEdgeOutlineEnabled > 0.5 && uEdgeOutlineOpacity > 0.001) {
+- src\scene\terrainMaterial.ts:1509 — float lineDistance = abs(insideDist - max(uEdgeOutlineOffset, 0.0));
+- src\scene\terrainMaterial.ts:1510 — float lineWidth = max(uEdgeOutlineThickness, 1.0);
+- src\scene\terrainMaterial.ts:1511 — float lineAlpha = 1.0 - smoothstep(lineWidth * 0.5, lineWidth, lineDistance);
+- src\scene\terrainMaterial.ts:1514 — uEdgeOutlineColor,
+- src\scene\terrainMaterial.ts:1515 — clamp(lineAlpha * uEdgeOutlineOpacity, 0.0, 1.0)
+- src\scene\terrainMaterial.ts:1525 — float topShine = edgeBand * clamp(N.z, 0.0, 1.0) * viewFacing *
+- src\scene\terrainMaterial.ts:1527 — float cornerShine = edgeBand * terrainEdgeCornerWeight(vWorldPos.xy) *
+- src\scene\terrainMaterial.ts:1529 — float bottomShine = edgeBand * (1.0 - clamp(N.z, 0.0, 1.0)) *
+- src\scene\terrainMaterial.ts:1532 — surface += uEdgeOutlineColor * shine * 0.45;
+- src\scene\terrainMaterial.ts:1643 — if (typeof p.edgeOutlineEnabled === "boolean")
+- src\scene\terrainMaterial.ts:1644 — uniforms.uEdgeOutlineEnabled.value = p.edgeOutlineEnabled ? 1 : 0;
+- src\scene\terrainMaterial.ts:1645 — if (typeof p.edgeOutlineOffsetM === "number")
+- src\scene\terrainMaterial.ts:1646 — uniforms.uEdgeOutlineOffset.value = Math.max(0, p.edgeOutlineOffsetM);
+- src\scene\terrainMaterial.ts:1647 — if (typeof p.edgeOutlineThicknessM === "number")
+- src\scene\terrainMaterial.ts:1648 — uniforms.uEdgeOutlineThickness.value = Math.max(
+- src\scene\terrainMaterial.ts:1650 — p.edgeOutlineThicknessM,
+- src\scene\terrainMaterial.ts:1652 — if (p.edgeOutlineColor) uniforms.uEdgeOutlineColor.value.set(p.edgeOutlineColor);
+- src\scene\terrainMaterial.ts:1653 — if (typeof p.edgeOutlineOpacity === "number")
+- src\scene\terrainMaterial.ts:1654 — uniforms.uEdgeOutlineOpacity.value = THREE.MathUtils.clamp(
+- src\scene\terrainMaterial.ts:1655 — p.edgeOutlineOpacity,
+- src\scene\terrainMaterial.ts:1778 — if (typeof p.gridLineWidthM === "number")
+- src\scene\terrainMaterial.ts:1779 — uniforms.uGridLineWidth.value = p.gridLineWidthM;
+- src\scene\terrainMaterial.ts:1945 — setForestOutlineColor(color) {
+- src\scene\terrainMaterial.ts:1946 — uniforms.uForestOutlineColor.value.set(color);
+- src\scene\terrainMaterial.ts:1951 — setForestOutlineOpacity(opacity) {
+- src\scene\terrainMaterial.ts:1952 — uniforms.uForestOutlineOpacity.value = opacity;
+- src\scene\atmosphere\localAtmosphereVolume.ts:3 — import { disposeObjectTree } from "../disposeObjectTree";
+- src\scene\atmosphere\localAtmosphereVolume.ts:136 — function disposeChildren(group: THREE.Group): void {
+- src\scene\atmosphere\localAtmosphereVolume.ts:138 — disposeObjectTree(child);
+- src\scene\atmosphere\localAtmosphereVolume.ts:158 — function helperLineMaterial(): THREE.LineBasicMaterial {
+- src\scene\atmosphere\localAtmosphereVolume.ts:159 — const material = new THREE.LineBasicMaterial({
+- src\scene\atmosphere\localAtmosphereVolume.ts:188 — (child) => child.userData?.localAtmosphereEditorRoot === true,
+- src\scene\atmosphere\localAtmosphereVolume.ts:192 — disposeObjectTree(existing);
+- src\scene\atmosphere\localAtmosphereVolume.ts:207 — const outline = helper.children.find(
+- src\scene\atmosphere\localAtmosphereVolume.ts:208 — (child) => child.userData?.localAtmosphereBoundsOutline === true,
+- src\scene\atmosphere\localAtmosphereVolume.ts:210 — if (outline) {
+- src\scene\atmosphere\localAtmosphereVolume.ts:211 — outline.position.set(center[0], center[1], center[2]);
+- src\scene\atmosphere\localAtmosphereVolume.ts:212 — outline.scale.set(size[0], size[1], size[2]);
+- src\scene\atmosphere\localAtmosphereVolume.ts:243 — helper.userData.localAtmosphereEditorRoot = true;
+- src\scene\atmosphere\localAtmosphereVolume.ts:245 — const outlineGeometry =
+- src\scene\atmosphere\localAtmosphereVolume.ts:249 — const outline = new THREE.LineSegments(outlineGeometry, helperLineMaterial());
+- src\scene\atmosphere\localAtmosphereVolume.ts:250 — outline.name = `${spec.id}-bounds-outline`;
+- src\scene\atmosphere\localAtmosphereVolume.ts:251 — outline.userData.localAtmosphereBoundsOutline = true;
+- src\scene\atmosphere\localAtmosphereVolume.ts:252 — outline.renderOrder = 4575;
+- src\scene\atmosphere\localAtmosphereVolume.ts:253 — helper.add(outline);
+- src\scene\atmosphere\localAtmosphereVolume.ts:308 — rebuildLocalAtmosphereVolume(group, spec, {});
+- src\scene\atmosphere\localAtmosphereVolume.ts:316 — export function findLocalAtmosphereVolumeRoot(layerGroup: THREE.Object3D): THREE.Group | null {
+- src\scene\atmosphere\localAtmosphereVolume.ts:330 — export function rebuildLocalAtmosphereVolume(
+- src\scene\atmosphere\localAtmosphereVolume.ts:342 — disposeChildren(group);
+- src\scene\atmosphere\localAtmosphereVolume.ts:420 — return rebuildLocalAtmosphereVolume(group, spec, style);
+- src\scene\atmosphere\localAtmosphereVolume.ts:475 — (child) => child.userData?.localAtmosphereEditorRoot === true,
+- src\scene\atmosphere\localAtmosphereVolume.ts:488 — const group = findLocalAtmosphereVolumeRoot(layer);
+- src\scene\atmosphere\localAtmosphereVolume.ts:612 — const group = findLocalAtmosphereVolumeRoot(layer);
+- src\scene\environment\applyEnvironment.ts:15 — import { disposeObjectTree } from "../disposeObjectTree";
+- src\scene\environment\applyEnvironment.ts:24 — linear: THREE.LinearToneMapping,
+- src\scene\environment\applyEnvironment.ts:296 — existing.geometry.dispose();
+- src\scene\environment\applyEnvironment.ts:298 — if (Array.isArray(material)) material.forEach((mat) => mat.dispose());
+- src\scene\environment\applyEnvironment.ts:299 — else material.dispose();
+- src\scene\environment\applyEnvironment.ts:435 — tiltUniforms.bandSize.value = clampRange(tilt.bandSize ?? 0.28, 0.02, 0.9);
+- src\scene\environment\applyEnvironment.ts:519 — gp.guideLineThickness.value = clampRange(guides.lineThickness ?? 0.25, 0.1, 2);
+- src\scene\environment\applyEnvironment.ts:554 — this.rebuildAreaOutlines(sp.areaOutlines ?? []);
+- src\scene\environment\applyEnvironment.ts:563 — // Renderer clear color and fog tint are independently authored. Existing
+- src\scene\environment\applyEnvironment.ts:570 — this.renderer.setClearColor(bgColor);
+- src\scene\environment\applyEnvironment.ts:608 — (light as { dispose?: () => void }).dispose?.();
+- src\scene\environment\applyEnvironment.ts:614 — this.clearLightingStudioSources();
+- src\scene\environment\applyEnvironment.ts:733 — disposeObjectTree(helperGroup);
+- src\scene\environment\applyEnvironment.ts:810 — this.topoRuntime.rebuildBranding(sp);
+- src\scene\environment\sunVisual.ts:3 — import { disposeObjectTree } from "../disposeObjectTree";
+- src\scene\environment\sunVisual.ts:92 — ctx.clearRect(0, 0, size, size);
+- src\scene\environment\sunVisual.ts:96 — ctx.lineWidth = 9;
+- src\scene\environment\sunVisual.ts:100 — ctx.lineWidth = 6;
+- src\scene\environment\sunVisual.ts:103 — ctx.lineTo(center - 34, center);
+- src\scene\environment\sunVisual.ts:105 — ctx.lineTo(center + 96, center);
+- src\scene\environment\sunVisual.ts:107 — ctx.lineTo(center, center - 34);
+- src\scene\environment\sunVisual.ts:109 — ctx.lineTo(center, center + 96);
+- src\scene\environment\sunVisual.ts:190 — function disposeRuntime(scene: THREE.Scene, runtime: EnvironmentSunVisualRuntime) {
+- src\scene\environment\sunVisual.ts:192 — disposeObjectTree(runtime.group);
+- src\scene\environment\sunVisual.ts:269 — if (runtime) disposeRuntime(scene, runtime);
+- src\scene\environment\sunVisual.ts:276 — if (nextRuntime) disposeRuntime(scene, nextRuntime);
+- src\scene\handles\sceneHandleControllers.ts:5 — import { disposeObjectTree } from "../disposeObjectTree";
+- src\scene\handles\sceneHandleControllers.ts:39 — line: THREE.Line;
+- src\scene\handles\sceneHandleControllers.ts:94 — ctx.lineTo(x + width - r, y);
+- src\scene\handles\sceneHandleControllers.ts:96 — ctx.lineTo(x + width, y + height - r);
+- src\scene\handles\sceneHandleControllers.ts:98 — ctx.lineTo(x + r, y + height);
+- src\scene\handles\sceneHandleControllers.ts:100 — ctx.lineTo(x, y + r);
+- src\scene\handles\sceneHandleControllers.ts:135 — export function clearLightingStudioSourcesImpl(this: any): void {
+- src\scene\handles\sceneHandleControllers.ts:138 — (light as { dispose?: () => void }).dispose?.();
+- src\scene\handles\sceneHandleControllers.ts:145 — this.envLightRuntimes.clear();
+- src\scene\handles\sceneHandleControllers.ts:146 — this.envLightHandles.clear();
+- src\scene\handles\sceneHandleControllers.ts:150 — disposeObjectTree(this.envLightHelperGroup);
+- src\scene\handles\sceneHandleControllers.ts:245 — ctx.clearRect(0, 0, canvas.width, canvas.height);
+- src\scene\handles\sceneHandleControllers.ts:250 — ctx.lineWidth = 7;
+- src\scene\handles\sceneHandleControllers.ts:262 — ctx.textBaseline = "middle";
+- src\scene\handles\sceneHandleControllers.ts:311 — const lineMaterial = new THREE.LineDashedMaterial({
+- src\scene\handles\sceneHandleControllers.ts:322 — hardenStudioHelperMaterial(lineMaterial);
+- src\scene\handles\sceneHandleControllers.ts:323 — const line = new THREE.Line(new THREE.BufferGeometry(), lineMaterial);
+- src\scene\handles\sceneHandleControllers.ts:324 — line.name = "page-camera-to-target-line";
+- src\scene\handles\sceneHandleControllers.ts:325 — line.renderOrder = 4538;
+- src\scene\handles\sceneHandleControllers.ts:326 — group.add(line);
+- src\scene\handles\sceneHandleControllers.ts:332 — line,
+- src\scene\handles\sceneHandleControllers.ts:343 — export function updatePageCameraMarkerLineImpl(this: any, marker: PageCameraMarkerRuntime): void {
+- src\scene\handles\sceneHandleControllers.ts:346 — const positionAttribute = marker.line.geometry.getAttribute("position");
+- src\scene\handles\sceneHandleControllers.ts:354 — marker.line.geometry.computeBoundingSphere();
+- src\scene\handles\sceneHandleControllers.ts:356 — marker.line.geometry.dispose();
+- src\scene\handles\sceneHandleControllers.ts:357 — marker.line.geometry = new THREE.BufferGeometry().setFromPoints([
+- src\scene\handles\sceneHandleControllers.ts:362 — marker.line.computeLineDistances();
+- src\scene\handles\sceneHandleControllers.ts:371 — this.updatePageCameraMarkerLine(marker);
+- src\scene\handles\sceneHandleControllers.ts:487 — disposeObjectTree(this.pageCameraMarker.group);
+- src\scene\handles\sceneHandleControllers.ts:509 — disposeObjectTree(marker.group);
+- src\scene\handles\sceneHandleControllers.ts:511 — this.globalPageCameraMarkers.clear();
+- src\scene\handles\sceneHandleControllers.ts:734 — this.updatePageCameraMarkerLine(marker);
+- src\scene\isoOverlays\sectionIsoOverlay.ts:3 — import { disposeObjectTree } from "../disposeObjectTree";
+- src\scene\isoOverlays\sectionIsoOverlay.ts:6 — scalarValueInBands,
+- src\scene\isoOverlays\sectionIsoOverlay.ts:9 — type ScalarBand,
+- src\scene\isoOverlays\sectionIsoOverlay.ts:11 — import { geometryOriginalIndex, sequentialIndex } from "../styles/scalarEdgeLines";
+- src\scene\isoOverlays\sectionIsoOverlay.ts:17 — const SECTION_ISO_LINE_RENDER_ORDER = SECTION_ISO_RENDER_ORDER + 0.05;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:19 — const SECTION_ISO_LINE_WIDTH_M_PER_PX =
+- src\scene\isoOverlays\sectionIsoOverlay.ts:20 — SECTION_ISO_OVERLAY_POLICY.lineWidthMPerPx;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:31 — function sectionIsoDebugMs(value: number): number {
+- src\scene\isoOverlays\sectionIsoOverlay.ts:35 — export interface ScalarSectionIsoLineGeometryDebugState {
+- src\scene\isoOverlays\sectionIsoOverlay.ts:49 — polylineSimplifyMs: number;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:60 — export interface ScalarSectionIsoOverlayUpdateDebugState {
+- src\scene\isoOverlays\sectionIsoOverlay.ts:62 — disposeMs: number;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:63 — rootCreateMs: number;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:64 — bandMeshMs: number;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:65 — lineGeometryMs: number;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:66 — lineMaterialMs: number;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:67 — attachMs: number;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:68 — lineGeometryDebug: ScalarSectionIsoLineGeometryDebugState;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:69 — bandMeshCount: number;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:70 — lineMeshCount: number;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:71 — lineSourceSegmentCount: number;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:72 — lineTinySegmentCount: number;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:73 — linePolylineCount: number;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:74 — lineSimplifiedPointCount: number;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:75 — lineRibbonSegmentCount: number;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:76 — lineSnapToleranceM: number;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:80 — export interface ScalarSectionIsoOptions {
+- src\scene\isoOverlays\sectionIsoOverlay.ts:83 — linesVisible: boolean;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:84 — bandsVisible: boolean;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:99 — lineWidth: number;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:100 — lineStyle: "solid" | "dashed";
+- src\scene\isoOverlays\sectionIsoOverlay.ts:101 — bandOpacity: number;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:110 — debug?: ScalarSectionIsoOverlayUpdateDebugState;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:262 — if (obj.userData?.scalarSectionIsoOverlay === true) return false;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:277 — if (obj.userData?.scalarSectionIsoOverlay === true) return false;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:286 — function sectionIsoAlphaAt(
+- src\scene\isoOverlays\sectionIsoOverlay.ts:295 — function sectionIsoTriangleMasked(
+- src\scene\isoOverlays\sectionIsoOverlay.ts:303 — sectionIsoAlphaAt(alphaValues, ia) <= 0.01 ||
+- src\scene\isoOverlays\sectionIsoOverlay.ts:304 — sectionIsoAlphaAt(alphaValues, ib) <= 0.01 ||
+- src\scene\isoOverlays\sectionIsoOverlay.ts:305 — sectionIsoAlphaAt(alphaValues, ic) <= 0.01
+- src\scene\isoOverlays\sectionIsoOverlay.ts:309 — function sectionIsoVisibleTriangleIndices(
+- src\scene\isoOverlays\sectionIsoOverlay.ts:325 — if (sectionIsoTriangleMasked(alphaValues, ia, ib, ic)) continue;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:331 — export function sectionIsoAttributeValues(
+- src\scene\isoOverlays\sectionIsoOverlay.ts:345 — export function disposeScalarSectionIsoOverlay(obj: THREE.Mesh): void {
+- src\scene\isoOverlays\sectionIsoOverlay.ts:346 — const root = obj.userData.scalarSectionIsoOverlayRoot as
+- src\scene\isoOverlays\sectionIsoOverlay.ts:349 — if (!root) return;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:350 — root.removeFromParent();
+- src\scene\isoOverlays\sectionIsoOverlay.ts:351 — disposeObjectTree(root);
+- src\scene\isoOverlays\sectionIsoOverlay.ts:352 — delete obj.userData.scalarSectionIsoOverlayRoot;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:355 — function sectionIsoLevels(min: number, max: number, count: number): number[] {
+- src\scene\isoOverlays\sectionIsoOverlay.ts:365 — function sectionIsoColorAt(
+- src\scene\isoOverlays\sectionIsoOverlay.ts:367 — options: ScalarSectionIsoOptions,
+- src\scene\isoOverlays\sectionIsoOverlay.ts:431 — function sectionIsoTriangleIntersections(
+- src\scene\isoOverlays\sectionIsoOverlay.ts:486 — type SectionIsoContourSegment = {
+- src\scene\isoOverlays\sectionIsoOverlay.ts:493 — type SectionIsoContourNode = {
+- src\scene\isoOverlays\sectionIsoOverlay.ts:503 — type SectionIsoPolyline = {
+- src\scene\isoOverlays\sectionIsoOverlay.ts:509 — function sectionIsoSnapTolerance(
+- src\scene\isoOverlays\sectionIsoOverlay.ts:523 — function sectionIsoPointHash(qx: number, qy: number, qz: number): number {
+- src\scene\isoOverlays\sectionIsoOverlay.ts:531 — function sectionIsoPolylineLength(points: THREE.Vector3[]): number {
+- src\scene\isoOverlays\sectionIsoOverlay.ts:539 — function sectionIsoPointLineDistance(
+- src\scene\isoOverlays\sectionIsoOverlay.ts:551 — function simplifySectionIsoPolyline(
+- src\scene\isoOverlays\sectionIsoOverlay.ts:565 — const distance = sectionIsoPointLineDistance(
+- src\scene\isoOverlays\sectionIsoOverlay.ts:583 — function stitchSectionIsoSegments(
+- src\scene\isoOverlays\sectionIsoOverlay.ts:584 — segments: SectionIsoContourSegment[],
+- src\scene\isoOverlays\sectionIsoOverlay.ts:586 — minPolylineLengthM: number,
+- src\scene\isoOverlays\sectionIsoOverlay.ts:587 — debug?: ScalarSectionIsoLineGeometryDebugState,
+- src\scene\isoOverlays\sectionIsoOverlay.ts:588 — ): SectionIsoPolyline[] {
+- src\scene\isoOverlays\sectionIsoOverlay.ts:596 — const nodeBuckets = new Map<number, SectionIsoContourNode[]>();
+- src\scene\isoOverlays\sectionIsoOverlay.ts:597 — const nodes: SectionIsoContourNode[] = [];
+- src\scene\isoOverlays\sectionIsoOverlay.ts:598 — const nodeFor = (point: THREE.Vector3): SectionIsoContourNode => {
+- src\scene\isoOverlays\sectionIsoOverlay.ts:602 — const hash = sectionIsoPointHash(qx, qy, qz);
+- src\scene\isoOverlays\sectionIsoOverlay.ts:646 — debug.stitchNodeBuildMs += sectionIsoDebugMs(
+- src\scene\isoOverlays\sectionIsoOverlay.ts:659 — const extendPolyline = (
+- src\scene\isoOverlays\sectionIsoOverlay.ts:681 — const polylines: SectionIsoPolyline[] = [];
+- src\scene\isoOverlays\sectionIsoOverlay.ts:693 — extendPolyline(appendPoints, usedSegmentIds, record.bNodeId);
+- src\scene\isoOverlays\sectionIsoOverlay.ts:694 — extendPolyline(prependPoints, usedSegmentIds, record.aNodeId);
+- src\scene\isoOverlays\sectionIsoOverlay.ts:696 — debug.stitchTraversalMs += sectionIsoDebugMs(
+- src\scene\isoOverlays\sectionIsoOverlay.ts:708 — debug.stitchPointAssemblyMs += sectionIsoDebugMs(
+- src\scene\isoOverlays\sectionIsoOverlay.ts:713 — const polylineLength =
+- src\scene\isoOverlays\sectionIsoOverlay.ts:714 — points.length < 2 ? 0 : sectionIsoPolylineLength(points);
+- src\scene\isoOverlays\sectionIsoOverlay.ts:716 — debug.stitchLengthFilterMs += sectionIsoDebugMs(
+- src\scene\isoOverlays\sectionIsoOverlay.ts:720 — if (points.length < 2 || polylineLength < minPolylineLengthM) {
+- src\scene\isoOverlays\sectionIsoOverlay.ts:729 — debug.stitchNormalMs += sectionIsoDebugMs(
+- src\scene\isoOverlays\sectionIsoOverlay.ts:733 — polylines.push({
+- src\scene\isoOverlays\sectionIsoOverlay.ts:739 — return polylines;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:742 — function appendSectionIsoRibbonSegment(
+- src\scene\isoOverlays\sectionIsoOverlay.ts:787 — function appendSectionIsoPolylineRibbon(
+- src\scene\isoOverlays\sectionIsoOverlay.ts:800 — appendSectionIsoRibbonSegment(
+- src\scene\isoOverlays\sectionIsoOverlay.ts:832 — appendSectionIsoRibbonSegment(
+- src\scene\isoOverlays\sectionIsoOverlay.ts:850 — function buildSectionIsoLineGeometry(
+- src\scene\isoOverlays\sectionIsoOverlay.ts:853 — options: ScalarSectionIsoOptions,
+- src\scene\isoOverlays\sectionIsoOverlay.ts:855 — const debug = options.debug?.lineGeometryDebug;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:863 — let polylineSimplifyMs = 0;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:869 — debug.totalMs += sectionIsoDebugMs(performance.now() - startedAt);
+- src\scene\isoOverlays\sectionIsoOverlay.ts:870 — debug.setupMs += sectionIsoDebugMs(setupMs);
+- src\scene\isoOverlays\sectionIsoOverlay.ts:871 — debug.contourPassMs += sectionIsoDebugMs(contourPassMs);
+- src\scene\isoOverlays\sectionIsoOverlay.ts:872 — debug.triangleScanMs += sectionIsoDebugMs(triangleScanMs);
+- src\scene\isoOverlays\sectionIsoOverlay.ts:873 — debug.triangleIntersectionMs += sectionIsoDebugMs(
+- src\scene\isoOverlays\sectionIsoOverlay.ts:876 — debug.segmentRecordMs += sectionIsoDebugMs(segmentRecordMs);
+- src\scene\isoOverlays\sectionIsoOverlay.ts:877 — debug.segmentStitchMs += sectionIsoDebugMs(segmentStitchMs);
+- src\scene\isoOverlays\sectionIsoOverlay.ts:878 — debug.polylineSimplifyMs += sectionIsoDebugMs(polylineSimplifyMs);
+- src\scene\isoOverlays\sectionIsoOverlay.ts:879 — debug.ribbonExtrudeMs += sectionIsoDebugMs(ribbonExtrudeMs);
+- src\scene\isoOverlays\sectionIsoOverlay.ts:880 — debug.geometryCreateMs += sectionIsoDebugMs(geometryCreateMs);
+- src\scene\isoOverlays\sectionIsoOverlay.ts:896 — const levels = sectionIsoLevels(
+- src\scene\isoOverlays\sectionIsoOverlay.ts:903 — options.lineWidth * SECTION_ISO_LINE_WIDTH_M_PER_PX * 0.5,
+- src\scene\isoOverlays\sectionIsoOverlay.ts:908 — const segmentsByLevel = new Map<number, SectionIsoContourSegment[]>();
+- src\scene\isoOverlays\sectionIsoOverlay.ts:915 — const dashed = options.lineStyle === "dashed";
+- src\scene\isoOverlays\sectionIsoOverlay.ts:916 — const snapToleranceM = sectionIsoSnapTolerance(position);
+- src\scene\isoOverlays\sectionIsoOverlay.ts:918 — const minPolylineLengthM = Math.max(halfWidthM * 0.5, snapToleranceM * 2);
+- src\scene\isoOverlays\sectionIsoOverlay.ts:931 — if (sectionIsoTriangleMasked(options.hardMaskValues, ia, ib, ic)) {
+- src\scene\isoOverlays\sectionIsoOverlay.ts:969 — sectionIsoTriangleIntersections(
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1005 — let polylineCount = 0;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1007 — polylineLoop: for (const [level, segments] of segmentsByLevel) {
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1009 — const polylines = stitchSectionIsoSegments(
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1012 — minPolylineLengthM,
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1018 — for (const polyline of polylines) {
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1020 — const simplified = simplifySectionIsoPolyline(
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1021 — polyline.points,
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1024 — const simplifiedLength = sectionIsoPolylineLength(simplified);
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1026 — polylineSimplifyMs += performance.now() - stageStart;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1030 — simplifiedLength < minPolylineLengthM
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1034 — sectionIsoColorAt(level, options, color);
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1035 — polylineCount += 1;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1038 — appendSectionIsoPolylineRibbon(
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1043 — polyline.normal,
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1052 — break polylineLoop;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1066 — geometry.userData.sectionIsoRenderPolicy = SECTION_ISO_OVERLAY_POLICY.name;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1067 — geometry.userData.sectionIsoSourceSegmentCount = sourceSegmentCount;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1068 — geometry.userData.sectionIsoTinySegmentCount = tinySegmentCount;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1069 — geometry.userData.sectionIsoPolylineCount = polylineCount;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1070 — geometry.userData.sectionIsoSimplifiedPointCount = simplifiedPointCount;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1071 — geometry.userData.sectionIsoRibbonSegmentCount = positions.length / 12;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1072 — geometry.userData.sectionIsoSnapToleranceM = snapToleranceM;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1080 — function makeSectionIsoBandMaterial(
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1081 — options: ScalarSectionIsoOptions,
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1084 — const authoredOpacity = clampRange(options.bandOpacity, 0, 0.85);
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1087 — depthTest: SECTION_ISO_OVERLAY_POLICY.material.bandDepthTest,
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1127 — attribute float sectionIsoScalar;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1128 — attribute float sectionIsoAlpha;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1130 — varying float vSectionIsoScalar;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1131 — varying float vSectionIsoAlpha;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1133 — vSectionIsoScalar = sectionIsoScalar;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1134 — vSectionIsoAlpha = sectionIsoAlpha;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1142 — varying float vSectionIsoScalar;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1143 — varying float vSectionIsoAlpha;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1208 — if (vSectionIsoAlpha <= 0.01) discard;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1209 — if (vSectionIsoScalar < uIsoMin || vSectionIsoScalar > uIsoMax) discard;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1212 — float bandCount = isoLevelCount + 1.0;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1213 — float band = min(
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1214 — floor(saturate((vSectionIsoScalar - uIsoMin) / range) * bandCount),
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1215 — bandCount - 1.0
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1217 — float value = uIsoMin + ((band + 0.5) / bandCount) * range;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1223 — gl_FragColor = vec4(color, uOpacity * saturate(vSectionIsoAlpha));
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1228 — material.userData.scalarSectionIsoOverlay = true;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1229 — material.userData.sectionIsoBaseOpacity = authoredOpacity;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1234 — function buildSectionIsoBandMesh(
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1237 — options: ScalarSectionIsoOptions,
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1253 — const visibleIndices = sectionIsoVisibleTriangleIndices(
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1262 — "sectionIsoScalar",
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1266 — "sectionIsoAlpha",
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1270 — const mesh = new THREE.Mesh(geometry, makeSectionIsoBandMaterial(options));
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1271 — mesh.name = "scalar-section-iso-band-overlay";
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1274 — mesh.userData.scalarSectionIsoOverlay = true;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1285 — export function updateScalarSectionIsoOverlay(
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1288 — options: ScalarSectionIsoOptions,
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1295 — debug.totalMs = sectionIsoDebugMs(performance.now() - startedAt);
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1304 — (options.linesVisible || options.bandsVisible);
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1306 — const disposeStartedAt = performance.now();
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1307 — disposeScalarSectionIsoOverlay(obj);
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1309 — debug.disposeMs += sectionIsoDebugMs(
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1310 — performance.now() - disposeStartedAt,
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1318 — disposeScalarSectionIsoOverlay(obj);
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1320 — debug.disposeMs += sectionIsoDebugMs(performance.now() - stageStart);
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1323 — const root = new THREE.Group();
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1324 — root.name = "scalar-section-iso-overlay";
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1325 — root.userData.ignoreLayerStyle = true;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1326 — root.userData.scalarSectionIsoOverlay = true;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1327 — root.userData.sectionIsoTargetKey = targetKey;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1329 — root.userData.sceneSectionHelper = true;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1331 — root.renderOrder = SECTION_ISO_RENDER_ORDER;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1333 — debug.rootCreateMs += sectionIsoDebugMs(performance.now() - stageStart);
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1336 — if (options.bandsVisible && options.bandOpacity > 0.001) {
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1338 — const band = buildSectionIsoBandMesh(obj, values, options);
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1340 — debug.bandMeshMs += sectionIsoDebugMs(performance.now() - stageStart);
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1342 — if (band) {
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1344 — root.add(band);
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1346 — debug.bandMeshCount += 1;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1347 — debug.attachMs += sectionIsoDebugMs(performance.now() - stageStart);
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1352 — if (options.linesVisible && options.lineWidth > 0.01) {
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1354 — const lineGeometry = buildSectionIsoLineGeometry(obj, values, options);
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1356 — debug.lineGeometryMs += sectionIsoDebugMs(
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1359 — if (lineGeometry) {
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1360 — debug.lineSourceSegmentCount +=
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1361 — lineGeometry.userData.sectionIsoSourceSegmentCount ?? 0;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1362 — debug.lineTinySegmentCount +=
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1363 — lineGeometry.userData.sectionIsoTinySegmentCount ?? 0;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1364 — debug.linePolylineCount +=
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1365 — lineGeometry.userData.sectionIsoPolylineCount ?? 0;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1366 — debug.lineSimplifiedPointCount +=
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1367 — lineGeometry.userData.sectionIsoSimplifiedPointCount ?? 0;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1368 — debug.lineRibbonSegmentCount +=
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1369 — lineGeometry.userData.sectionIsoRibbonSegmentCount ?? 0;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1370 — debug.lineSnapToleranceM =
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1371 — lineGeometry.userData.sectionIsoSnapToleranceM ?? 0;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1374 — if (lineGeometry) {
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1376 — const lineMaterial = new THREE.MeshBasicMaterial({
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1380 — depthTest: SECTION_ISO_OVERLAY_POLICY.material.lineDepthTest,
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1386 — lineMaterial.userData.ignoreLayerStyle = true;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1387 — lineMaterial.userData.scalarSectionIsoOverlay = true;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1388 — lineMaterial.userData.sectionIsoBaseOpacity = 0.96;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1389 — lineMaterial.userData.surfaceRenderPolicy =
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1391 — const line = new THREE.Mesh(lineGeometry, lineMaterial);
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1392 — line.name = "scalar-section-iso-line-overlay";
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1393 — line.renderOrder = SECTION_ISO_LINE_RENDER_ORDER;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1394 — line.userData.ignoreLayerStyle = true;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1395 — line.userData.scalarSectionIsoOverlay = true;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1396 — line.userData.sectionIsoLineOverlay = true;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1397 — line.userData.surfaceRenderPolicy = SECTION_ISO_OVERLAY_POLICY.name;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1399 — line.userData.sceneSectionHelper = true;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1400 — lineMaterial.userData.sceneSectionHelper = true;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1403 — debug.lineMaterialMs += sectionIsoDebugMs(
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1408 — root.add(line);
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1410 — debug.lineMeshCount += 1;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1411 — debug.attachMs += sectionIsoDebugMs(performance.now() - stageStart);
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1416 — if (root.children.length === 0) {
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1418 — disposeObjectTree(root);
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1420 — debug.disposeMs += sectionIsoDebugMs(performance.now() - stageStart);
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1422 — finishDebug("empty-overlay-root");
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1426 — obj.userData.scalarSectionIsoOverlayRoot = root;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1427 — obj.add(root);
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1429 — debug.attachMs += sectionIsoDebugMs(performance.now() - stageStart);
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1444 — bands: ReadonlyArray<ScalarBand> = [],
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1450 — // Selected iso-bands isolate the cloud to the points in those windows. This
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1451 — // is the 3D form of "selective isobands" and overrides the single focus
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1453 — const bandSelect = bands.length > 0;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1456 — if (!filterActive && !bandSelect) {
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1470 — const passesWindow = bandSelect
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1471 — ? scalarValueInBands(values[i], bands)
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:7 — import { disposeObjectTree } from "../disposeObjectTree";
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:9 — getHeightSampler,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:10 — peekHeightSampler,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:11 — type HeightSampler,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:12 — } from "../heightSampler";
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:28 — updateScalarSectionIsoOverlay,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:29 — type ScalarSectionIsoLineGeometryDebugState,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:30 — type ScalarSectionIsoOverlayUpdateDebugState,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:31 — type ScalarSectionIsoOptions,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:32 — } from "./sectionIsoOverlay";
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:34 — export interface SectionIsoOverlayUpdateOptions {
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:41 — ScalarSectionIsoTarget,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:70 — sampleHeight: HeightSampler;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:74 — type MtVolumeCutIsoUpdateDebugState = {
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:75 — policy: "full-rebuild";
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:77 — clearMs: number;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:91 — overlayDebug: ScalarSectionIsoOverlayUpdateDebugState;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:92 — attachMs: number;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:93 — disposeMs: number;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:97 — overlayRootCount: number;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:133 — target: MtVolumeCutIsoUpdateDebugState,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:152 — function emptyScalarSectionIsoLineGeometryDebug(): ScalarSectionIsoLineGeometryDebugState {
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:167 — polylineSimplifyMs: 0,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:179 — function emptyScalarSectionIsoOverlayDebug(): ScalarSectionIsoOverlayUpdateDebugState {
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:182 — disposeMs: 0,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:183 — rootCreateMs: 0,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:184 — bandMeshMs: 0,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:185 — lineGeometryMs: 0,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:186 — lineMaterialMs: 0,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:187 — attachMs: 0,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:188 — lineGeometryDebug: emptyScalarSectionIsoLineGeometryDebug(),
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:189 — bandMeshCount: 0,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:190 — lineMeshCount: 0,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:191 — lineSourceSegmentCount: 0,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:192 — lineTinySegmentCount: 0,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:193 — linePolylineCount: 0,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:194 — lineSimplifiedPointCount: 0,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:195 — lineRibbonSegmentCount: 0,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:196 — lineSnapToleranceM: 0,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:201 — function addScalarSectionIsoOverlayDebug(
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:202 — target: ScalarSectionIsoOverlayUpdateDebugState,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:203 — source: ScalarSectionIsoOverlayUpdateDebugState,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:206 — target.disposeMs += source.disposeMs;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:207 — target.rootCreateMs += source.rootCreateMs;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:208 — target.bandMeshMs += source.bandMeshMs;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:209 — target.lineGeometryMs += source.lineGeometryMs;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:210 — target.lineMaterialMs += source.lineMaterialMs;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:211 — target.attachMs += source.attachMs;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:212 — target.lineGeometryDebug.totalMs += source.lineGeometryDebug.totalMs;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:213 — target.lineGeometryDebug.timingMode = source.lineGeometryDebug.timingMode;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:214 — target.lineGeometryDebug.setupMs += source.lineGeometryDebug.setupMs;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:215 — target.lineGeometryDebug.contourPassMs +=
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:216 — source.lineGeometryDebug.contourPassMs;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:217 — target.lineGeometryDebug.triangleScanMs +=
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:218 — source.lineGeometryDebug.triangleScanMs;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:219 — target.lineGeometryDebug.triangleIntersectionMs +=
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:220 — source.lineGeometryDebug.triangleIntersectionMs;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:221 — target.lineGeometryDebug.segmentRecordMs +=
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:222 — source.lineGeometryDebug.segmentRecordMs;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:223 — target.lineGeometryDebug.segmentStitchMs +=
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:224 — source.lineGeometryDebug.segmentStitchMs;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:225 — target.lineGeometryDebug.stitchNodeBuildMs +=
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:226 — source.lineGeometryDebug.stitchNodeBuildMs;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:227 — target.lineGeometryDebug.stitchTraversalMs +=
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:228 — source.lineGeometryDebug.stitchTraversalMs;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:229 — target.lineGeometryDebug.stitchPointAssemblyMs +=
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:230 — source.lineGeometryDebug.stitchPointAssemblyMs;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:231 — target.lineGeometryDebug.stitchLengthFilterMs +=
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:232 — source.lineGeometryDebug.stitchLengthFilterMs;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:233 — target.lineGeometryDebug.stitchNormalMs +=
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:234 — source.lineGeometryDebug.stitchNormalMs;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:235 — target.lineGeometryDebug.polylineSimplifyMs +=
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:236 — source.lineGeometryDebug.polylineSimplifyMs;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:237 — target.lineGeometryDebug.ribbonExtrudeMs +=
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:238 — source.lineGeometryDebug.ribbonExtrudeMs;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:239 — target.lineGeometryDebug.geometryCreateMs +=
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:240 — source.lineGeometryDebug.geometryCreateMs;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:241 — target.lineGeometryDebug.triangleCount +=
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:242 — source.lineGeometryDebug.triangleCount;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:243 — target.lineGeometryDebug.maskedTriangleCount +=
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:244 — source.lineGeometryDebug.maskedTriangleCount;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:245 — target.lineGeometryDebug.invalidTriangleCount +=
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:246 — source.lineGeometryDebug.invalidTriangleCount;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:247 — target.lineGeometryDebug.degenerateTriangleCount +=
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:248 — source.lineGeometryDebug.degenerateTriangleCount;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:249 — target.lineGeometryDebug.levelCandidateCount +=
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:250 — source.lineGeometryDebug.levelCandidateCount;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:251 — target.lineGeometryDebug.intersectionAttemptCount +=
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:252 — source.lineGeometryDebug.intersectionAttemptCount;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:253 — target.bandMeshCount += source.bandMeshCount;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:254 — target.lineMeshCount += source.lineMeshCount;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:255 — target.lineSourceSegmentCount += source.lineSourceSegmentCount;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:256 — target.lineTinySegmentCount += source.lineTinySegmentCount;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:257 — target.linePolylineCount += source.linePolylineCount;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:258 — target.lineSimplifiedPointCount += source.lineSimplifiedPointCount;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:259 — target.lineRibbonSegmentCount += source.lineRibbonSegmentCount;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:260 — target.lineSnapToleranceM = Math.max(
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:261 — target.lineSnapToleranceM,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:262 — source.lineSnapToleranceM,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:363 — const sampleHeight = peekHeightSampler();
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:405 — export function listMtVolumeCutIsoTargetsImpl(this: any, layerId?: string): ScalarSectionIsoTarget[] {
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:444 — export function listSeismicVolumeCutIsoTargetsImpl(this: any, layerId?: string): ScalarSectionIsoTarget[] {
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:483 — export function listSeismicResistivitySectionIsoTargetsImpl(this: any, layerId?: string): ScalarSectionIsoTarget[] {
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:489 — const targets: ScalarSectionIsoTarget[] = [];
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:529 — export function listSeismicResistivityVolumeCutIsoTargetsImpl(this: any, layerId?: string): ScalarSectionIsoTarget[] {
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:570 — export function scalarVolumeIsoOverlayGroupImpl(this: any, volumeLayer: THREE.Group): THREE.Group {
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:571 — const existing = volumeLayer.userData.mtVolumeSectionIsoOverlayGroup as
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:576 — group.name = "mt-volume-section-iso-overlays";
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:579 — group.userData.mtVolumeSectionIsoOverlayGroup = true;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:580 — volumeLayer.userData.mtVolumeSectionIsoOverlayGroup = group;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:585 — export function clearMtVolumeCutIsoOverlaysImpl(this: any, volumeLayer?: THREE.Group): void {
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:588 — )?.userData.mtVolumeSectionIsoOverlayGroup as THREE.Group | undefined;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:592 — disposeObjectTree(group);
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:593 — if (volumeLayer) delete volumeLayer.userData.mtVolumeSectionIsoOverlayGroup;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:727 — function annotateResistivityIsoRoot(
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:731 — const root = mesh.userData.scalarSectionIsoOverlayRoot as
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:734 — if (!root) return;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:735 — root.userData.sectionIsoSource = "mt-resistivity";
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:736 — root.userData.sectionIsoSourceLayerId =
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:738 — root.userData.sectionIsoTargetGroup = group;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:739 — mesh.userData.sectionIsoSource = "mt-resistivity";
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:740 — mesh.userData.sectionIsoSourceLayerId =
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:742 — mesh.userData.sectionIsoTargetGroup = group;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:912 — cut.userData.sectionIsoTargetKey = options.targetKey;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:913 — cut.userData.sectionIsoPlaneAxis = plane.axis;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:914 — cut.userData.sectionIsoFrameId = plane.frameId;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:915 — cut.userData.sectionIsoFrameLabel = plane.label;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:916 — cut.userData.sectionIsoPlanePositionM = plane.positionM;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:924 — export function updateMtVolumeCutIsoOverlaysImpl(
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:927 — options?: SectionIsoOverlayUpdateOptions,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:930 — const debug: MtVolumeCutIsoUpdateDebugState = {
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:931 — policy: "full-rebuild",
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:933 — clearMs: 0,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:947 — overlayDebug: emptyScalarSectionIsoOverlayDebug(),
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:948 — attachMs: 0,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:949 — disposeMs: 0,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:953 — overlayRootCount: 0,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:960 — this.lastMtVolumeCutIsoUpdateDebug = debug;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:973 — this.clearMtVolumeCutIsoOverlays(volumeLayer);
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:975 — debug.clearMs += cutIsoDebugMs(performance.now() - stageStart);
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:977 — if (style.sectionIsoEnabled !== true) {
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:978 — finish("section-iso-disabled");
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1009 — !peekHeightSampler()
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1011 — void getHeightSampler().then(() => {
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1012 — this.updateMtVolumeCutIsoOverlays(
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1017 — this.currentSectionIsoOverlayTransitionOpacity?.() ?? 0,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1028 — typeof style.sectionIsoTargetIds === "object" &&
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1029 — style.sectionIsoTargetIds !== null
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1030 — ? (style.sectionIsoTargetIds as Record<string, boolean>)
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1075 — styleNumber(style, "sectionIsoMin", thresholdMin, sourceMin, sourceMax),
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1081 — styleNumber(style, "sectionIsoMax", thresholdMax, sourceMin, sourceMax),
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1090 — linesVisible: style.sectionIsoLinesVisible !== false,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1091 — bandsVisible: style.sectionIsoBandsVisible !== false,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1096 — styleNumber(style, "sectionIsoLevelCount", 5, 2, 32),
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1098 — lineWidth: styleNumber(style, "sectionIsoLineWidth", 2.6, 0, 12),
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1099 — lineStyle: style.sectionIsoLineStyle === "dashed" ? "dashed" : "solid",
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1100 — bandOpacity: styleNumber(style, "sectionIsoBandOpacity", 0.32, 0, 0.85),
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1101 — fillOffset: styleNumber(style, "sectionIsoFillOffset", 0, -1, 1),
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1114 — } satisfies Omit<ScalarSectionIsoOptions, "targetKey" | "alphaValues">;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1118 — const overlayGroup = this.scalarVolumeIsoOverlayGroup(volumeLayer);
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1119 — debug.attachMs += cutIsoDebugMs(performance.now() - stageStart);
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1147 — const overlayDebug = emptyScalarSectionIsoOverlayDebug();
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1149 — updateScalarSectionIsoOverlay(cut.mesh, cut.values, {
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1156 — addScalarSectionIsoOverlayDebug(debug.overlayDebug, overlayDebug);
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1159 — if (cut.mesh.userData.scalarSectionIsoOverlayRoot) {
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1161 — debug.overlayRootCount += 1;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1163 — const disposeStartedAt = performance.now();
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1164 — disposeObjectTree(cut.mesh);
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1165 — debug.disposeMs += cutIsoDebugMs(
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1166 — performance.now() - disposeStartedAt,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1169 — debug.attachMs += cutIsoDebugMs(performance.now() - stageStart);
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1174 — this.clearMtVolumeCutIsoOverlays(volumeLayer);
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1176 — debug.disposeMs += cutIsoDebugMs(performance.now() - stageStart);
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1180 — this.registerSectionIsoOverlayTransitionTargetRoot?.(
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1189 — this.currentSectionIsoOverlayTransitionOpacity?.() ??
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1195 — export function seismicVolumeIsoOverlayGroupImpl(this: any, seismicLayer: THREE.Group): THREE.Group {
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1197 — .seismicVolumeSectionIsoOverlayGroup as THREE.Group | undefined;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1200 — group.name = "seismic-volume-section-iso-overlays";
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1203 — group.userData.seismicVolumeSectionIsoOverlayGroup = true;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1204 — seismicLayer.userData.seismicVolumeSectionIsoOverlayGroup = group;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1209 — export function clearSeismicVolumeCutIsoOverlaysImpl(this: any, seismicLayer?: THREE.Group): void {
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1212 — )?.userData.seismicVolumeSectionIsoOverlayGroup as THREE.Group | undefined;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1216 — disposeObjectTree(group);
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1218 — delete seismicLayer.userData.seismicVolumeSectionIsoOverlayGroup;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1222 — export function seismicResistivityIsoOverlayGroupImpl(this: any, seismicLayer: THREE.Group): THREE.Group {
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1224 — .seismicResistivitySectionIsoOverlayGroup as THREE.Group | undefined;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1230 — group.userData.seismicResistivitySectionIsoOverlayGroup = true;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1231 — seismicLayer.userData.seismicResistivitySectionIsoOverlayGroup = group;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1236 — export function clearSeismicResistivityIsoOverlaysImpl(this: any, seismicLayer?: THREE.Group): void {
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1239 — )?.userData.seismicResistivitySectionIsoOverlayGroup as
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1245 — disposeObjectTree(group);
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1247 — delete seismicLayer.userData.seismicResistivitySectionIsoOverlayGroup;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1396 — cut.userData.sectionIsoTargetKey = options.targetKey;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1397 — cut.userData.sectionIsoPlaneAxis = plane.axis;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1398 — cut.userData.sectionIsoFrameId = plane.frameId;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1399 — cut.userData.sectionIsoFrameLabel = plane.label;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1400 — cut.userData.sectionIsoPlanePositionM = plane.positionM;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1551 — helper.userData.sectionIsoTargetKey = options.targetKey;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1552 — helper.userData.sectionIsoSourceSectionId = seismicSectionIdForIso(section);
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1556 — export function updateSeismicVolumeCutIsoOverlaysImpl(
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1559 — options?: SectionIsoOverlayUpdateOptions,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1564 — this.clearSeismicVolumeCutIsoOverlays(seismicLayer);
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1567 — if (style.sectionIsoEnabled !== true || !seismicLayer.visible) return;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1583 — !peekHeightSampler()
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1585 — void getHeightSampler().then(() => {
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1586 — this.updateSeismicVolumeCutIsoOverlays(
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1591 — this.currentSectionIsoOverlayTransitionOpacity?.() ?? 0,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1602 — typeof style.sectionIsoTargetIds === "object" &&
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1603 — style.sectionIsoTargetIds !== null
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1604 — ? (style.sectionIsoTargetIds as Record<string, boolean>)
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1626 — const rawIsoMin = styleNumber(style, "sectionIsoMin", amplitudeMin, 0, 1);
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1628 — const rawIsoMax = styleNumber(style, "sectionIsoMax", amplitudeMax, 0, 1);
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1648 — linesVisible: style.sectionIsoLinesVisible !== false,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1649 — bandsVisible: style.sectionIsoBandsVisible !== false,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1654 — styleNumber(style, "sectionIsoLevelCount", 5, 2, 32),
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1656 — lineWidth: styleNumber(style, "sectionIsoLineWidth", 2.6, 0, 12),
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1657 — lineStyle: style.sectionIsoLineStyle === "dashed" ? "dashed" : "solid",
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1658 — bandOpacity: styleNumber(style, "sectionIsoBandOpacity", 0.32, 0, 0.85),
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1659 — fillOffset: styleNumber(style, "sectionIsoFillOffset", 0, -1, 1),
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1670 — } satisfies Omit<ScalarSectionIsoOptions, "targetKey" | "alphaValues">;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1672 — const overlayGroup = this.seismicVolumeIsoOverlayGroup(seismicLayer);
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1695 — updateScalarSectionIsoOverlay(cut.mesh, cut.values, {
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1701 — if (cut.mesh.userData.scalarSectionIsoOverlayRoot) {
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1702 — const root = cut.mesh.userData.scalarSectionIsoOverlayRoot as
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1705 — if (root) {
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1706 — root.userData.sectionIsoSource = "seismic-amplitude";
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1707 — root.userData.sectionIsoSourceLayerId =
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1709 — root.userData.sectionIsoTargetGroup = "seismic-volume-cuts";
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1713 — disposeObjectTree(cut.mesh);
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1718 — this.clearSeismicVolumeCutIsoOverlays(seismicLayer);
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1722 — this.registerSectionIsoOverlayTransitionTargetRoot?.(
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1731 — this.currentSectionIsoOverlayTransitionOpacity?.() ??
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1736 — export function updateSeismicResistivityIsoOverlaysImpl(
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1739 — options?: SectionIsoOverlayUpdateOptions,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1744 — this.clearSeismicResistivityIsoOverlays(seismicLayer);
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1747 — if (style.sectionIsoEnabled !== true || !seismicLayer.visible) return;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1792 — styleNumber(style, "sectionIsoMin", thresholdMin, sourceMin, sourceMax),
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1798 — styleNumber(style, "sectionIsoMax", thresholdMax, sourceMin, sourceMax),
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1805 — typeof style.sectionIsoTargetIds === "object" &&
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1806 — style.sectionIsoTargetIds !== null
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1807 — ? (style.sectionIsoTargetIds as Record<string, boolean>)
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1812 — linesVisible: style.sectionIsoLinesVisible !== false,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1813 — bandsVisible: style.sectionIsoBandsVisible !== false,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1818 — styleNumber(style, "sectionIsoLevelCount", 5, 2, 32),
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1820 — lineWidth: styleNumber(style, "sectionIsoLineWidth", 2.6, 0, 12),
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1821 — lineStyle: style.sectionIsoLineStyle === "dashed" ? "dashed" : "solid",
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1822 — bandOpacity: styleNumber(style, "sectionIsoBandOpacity", 0.32, 0, 0.85),
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1823 — fillOffset: styleNumber(style, "sectionIsoFillOffset", 0, -1, 1),
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1836 — } satisfies Omit<ScalarSectionIsoOptions, "targetKey" | "alphaValues">;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1844 — const overlayGroup = this.seismicResistivityIsoOverlayGroup(seismicLayer);
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1870 — updateScalarSectionIsoOverlay(helper.mesh, helper.values, {
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1876 — if (helper.mesh.userData.scalarSectionIsoOverlayRoot) {
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1877 — annotateResistivityIsoRoot(
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1883 — disposeObjectTree(helper.mesh);
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1901 — !peekHeightSampler()
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1903 — void getHeightSampler().then(() => {
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1904 — this.updateSeismicResistivityIsoOverlays(
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1909 — this.currentSectionIsoOverlayTransitionOpacity?.() ?? 0,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1963 — disposeObjectTree(cut.mesh);
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1978 — updateScalarSectionIsoOverlay(cut.mesh, cut.values, {
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1984 — if (cut.mesh.userData.scalarSectionIsoOverlayRoot) {
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1985 — annotateResistivityIsoRoot(
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1991 — disposeObjectTree(cut.mesh);
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1998 — this.clearSeismicResistivityIsoOverlays(seismicLayer);
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:2002 — this.registerSectionIsoOverlayTransitionTargetRoot?.(
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:2011 — this.currentSectionIsoOverlayTransitionOpacity?.() ??
+- src\scene\outlines\AreaOutlineController.ts:2 — import type { AreaOutlineDef } from "../../pages/types";
+- src\scene\outlines\AreaOutlineController.ts:4 — import { disposeObjectTree } from "../disposeObjectTree";
+- src\scene\outlines\AreaOutlineController.ts:5 — import { getHeightSampler } from "../heightSampler";
+- src\scene\outlines\AreaOutlineController.ts:7 — export type AreaOutlineHandleMode = "move" | "scaleX" | "scaleY";
+- src\scene\outlines\AreaOutlineController.ts:9 — export interface AreaOutlinePreview {
+- src\scene\outlines\AreaOutlineController.ts:15 — const AREA_OUTLINE_RENDER_ORDER = 6.35;
+- src\scene\outlines\AreaOutlineController.ts:16 — const AREA_OUTLINE_DEFAULT_LIFT_M = 18;
+- src\scene\outlines\AreaOutlineController.ts:17 — const AREA_OUTLINE_SEGMENTS = 144;
+- src\scene\outlines\AreaOutlineController.ts:23 — function hardenAreaOutlineHelperMaterial(material: THREE.Material): void {
+- src\scene\outlines\AreaOutlineController.ts:33 — export class AreaOutlineController {
+- src\scene\outlines\AreaOutlineController.ts:43 — const layer = this.layers.get("area-outlines");
+- src\scene\outlines\AreaOutlineController.ts:46 — if (obj.userData?.areaOutlineEditorHandle === true) {
+- src\scene\outlines\AreaOutlineController.ts:56 — private getRoot(id: string): THREE.Group | null {
+- src\scene\outlines\AreaOutlineController.ts:57 — const layer = this.layers.get("area-outlines");
+- src\scene\outlines\AreaOutlineController.ts:59 — const root = layer.children.find(
+- src\scene\outlines\AreaOutlineController.ts:60 — (child) => child.userData?.areaOutlineId === id,
+- src\scene\outlines\AreaOutlineController.ts:62 — return root instanceof THREE.Group ? root : null;
+- src\scene\outlines\AreaOutlineController.ts:65 — previewAreaOutlineMove(id: string, sceneCenter: THREE.Vector3): void {
+- src\scene\outlines\AreaOutlineController.ts:66 — const root = this.getRoot(id);
+- src\scene\outlines\AreaOutlineController.ts:67 — if (!root) return;
+- src\scene\outlines\AreaOutlineController.ts:68 — root.position.x = sceneCenter.x;
+- src\scene\outlines\AreaOutlineController.ts:69 — root.position.y = sceneCenter.y;
+- src\scene\outlines\AreaOutlineController.ts:70 — root.userData.previewCenter = [
+- src\scene\outlines\AreaOutlineController.ts:76 — getAreaOutlineWorldCenter(id: string): THREE.Vector3 | null {
+- src\scene\outlines\AreaOutlineController.ts:77 — const root = this.getRoot(id);
+- src\scene\outlines\AreaOutlineController.ts:78 — return root ? root.position.clone() : null;
+- src\scene\outlines\AreaOutlineController.ts:81 — previewAreaOutlineScaleFromWorld(
+- src\scene\outlines\AreaOutlineController.ts:86 — const root = this.getRoot(id);
+- src\scene\outlines\AreaOutlineController.ts:87 — if (!root) return;
+- src\scene\outlines\AreaOutlineController.ts:88 — const local = root.worldToLocal(worldPoint.clone());
+- src\scene\outlines\AreaOutlineController.ts:89 — const baseRadiusX = Number(root.userData.baseRadiusX ?? 1);
+- src\scene\outlines\AreaOutlineController.ts:90 — const baseRadiusY = Number(root.userData.baseRadiusY ?? 1);
+- src\scene\outlines\AreaOutlineController.ts:93 — root.scale.x = radius / Math.max(1, baseRadiusX);
+- src\scene\outlines\AreaOutlineController.ts:94 — root.userData.previewRadiusX = radius;
+- src\scene\outlines\AreaOutlineController.ts:97 — root.scale.y = radius / Math.max(1, baseRadiusY);
+- src\scene\outlines\AreaOutlineController.ts:98 — root.userData.previewRadiusY = radius;
+- src\scene\outlines\AreaOutlineController.ts:102 — getAreaOutlinePreview(id: string): AreaOutlinePreview | null {
+- src\scene\outlines\AreaOutlineController.ts:103 — const root = this.getRoot(id);
+- src\scene\outlines\AreaOutlineController.ts:104 — if (!root) return null;
+- src\scene\outlines\AreaOutlineController.ts:105 — const baseRadiusX = Number(root.userData.baseRadiusX ?? 1);
+- src\scene\outlines\AreaOutlineController.ts:106 — const baseRadiusY = Number(root.userData.baseRadiusY ?? 1);
+- src\scene\outlines\AreaOutlineController.ts:108 — Array.isArray(root.userData.previewCenter) &&
+- src\scene\outlines\AreaOutlineController.ts:109 — typeof root.userData.previewCenter[0] === "number" &&
+- src\scene\outlines\AreaOutlineController.ts:110 — typeof root.userData.previewCenter[1] === "number"
+- src\scene\outlines\AreaOutlineController.ts:111 — ? ([root.userData.previewCenter[0], root.userData.previewCenter[1]] as [
+- src\scene\outlines\AreaOutlineController.ts:116 — root.position.x + SCENE_ORIGIN.easting,
+- src\scene\outlines\AreaOutlineController.ts:117 — root.position.y + SCENE_ORIGIN.northing,
+- src\scene\outlines\AreaOutlineController.ts:122 — typeof root.userData.previewRadiusX === "number"
+- src\scene\outlines\AreaOutlineController.ts:123 — ? root.userData.previewRadiusX
+- src\scene\outlines\AreaOutlineController.ts:124 — : baseRadiusX * root.scale.x,
+- src\scene\outlines\AreaOutlineController.ts:126 — typeof root.userData.previewRadiusY === "number"
+- src\scene\outlines\AreaOutlineController.ts:127 — ? root.userData.previewRadiusY
+- src\scene\outlines\AreaOutlineController.ts:128 — : baseRadiusY * root.scale.y,
+- src\scene\outlines\AreaOutlineController.ts:135 — mode: AreaOutlineHandleMode,
+- src\scene\outlines\AreaOutlineController.ts:137 — obj.userData.areaOutlineEditorHandle = true;
+- src\scene\outlines\AreaOutlineController.ts:138 — obj.userData.areaOutlineId = id;
+- src\scene\outlines\AreaOutlineController.ts:139 — obj.userData.areaOutlineHandleMode = mode;
+- src\scene\outlines\AreaOutlineController.ts:146 — root: THREE.Group,
+- src\scene\outlines\AreaOutlineController.ts:147 — outline: AreaOutlineDef,
+- src\scene\outlines\AreaOutlineController.ts:152 — color: outline.outlineColor ?? outline.fillColor ?? "#ff8a3d",
+- src\scene\outlines\AreaOutlineController.ts:160 — hardenAreaOutlineHelperMaterial(mat);
+- src\scene\outlines\AreaOutlineController.ts:166 — this.markPickable(center, outline.id, "move");
+- src\scene\outlines\AreaOutlineController.ts:167 — root.add(center);
+- src\scene\outlines\AreaOutlineController.ts:174 — this.markPickable(xHandle, outline.id, "scaleX");
+- src\scene\outlines\AreaOutlineController.ts:175 — root.add(xHandle);
+- src\scene\outlines\AreaOutlineController.ts:182 — this.markPickable(yHandle, outline.id, "scaleY");
+- src\scene\outlines\AreaOutlineController.ts:183 — root.add(yHandle);
+- src\scene\outlines\AreaOutlineController.ts:186 — rebuild(outlines: AreaOutlineDef[] = []): void {
+- src\scene\outlines\AreaOutlineController.ts:187 — const layer = this.layers.get("area-outlines");
+- src\scene\outlines\AreaOutlineController.ts:193 — disposeObjectTree(child);
+- src\scene\outlines\AreaOutlineController.ts:195 — if (outlines.length === 0) return;
+- src\scene\outlines\AreaOutlineController.ts:196 — getHeightSampler()
+- src\scene\outlines\AreaOutlineController.ts:199 — for (const outline of outlines) {
+- src\scene\outlines\AreaOutlineController.ts:200 — layer.add(this.makeObject(outline, sampleHeight));
+- src\scene\outlines\AreaOutlineController.ts:204 — .catch((e) => console.warn("area outline rebuild failed:", e));
+- src\scene\outlines\AreaOutlineController.ts:208 — outline: AreaOutlineDef,
+- src\scene\outlines\AreaOutlineController.ts:211 — const centerE = Number(outline.center?.[0] ?? 612000);
+- src\scene\outlines\AreaOutlineController.ts:212 — const centerN = Number(outline.center?.[1] ?? 5790000);
+- src\scene\outlines\AreaOutlineController.ts:213 — const rx = clampRange(Number(outline.radiusX ?? 600), 10, 20000);
+- src\scene\outlines\AreaOutlineController.ts:214 — const ry = clampRange(Number(outline.radiusY ?? 360), 10, 20000);
+- src\scene\outlines\AreaOutlineController.ts:215 — const rotation = THREE.MathUtils.degToRad(outline.rotationDeg ?? 0);
+- src\scene\outlines\AreaOutlineController.ts:216 — const lift = outline.liftMeters ?? AREA_OUTLINE_DEFAULT_LIFT_M;
+- src\scene\outlines\AreaOutlineController.ts:219 — const root = new THREE.Group();
+- src\scene\outlines\AreaOutlineController.ts:220 — root.name = outline.id;
+- src\scene\outlines\AreaOutlineController.ts:221 — root.position.set(cx, cy, cz);
+- src\scene\outlines\AreaOutlineController.ts:222 — root.rotation.z = rotation;
+- src\scene\outlines\AreaOutlineController.ts:223 — root.userData = {
+- src\scene\outlines\AreaOutlineController.ts:224 — areaOutline: true,
+- src\scene\outlines\AreaOutlineController.ts:225 — areaOutlineId: outline.id,
+- src\scene\outlines\AreaOutlineController.ts:228 — displayName: outline.label,
+- src\scene\outlines\AreaOutlineController.ts:229 — labelKind: outline.labelKind ?? "area",
+- src\scene\outlines\AreaOutlineController.ts:232 — if (outline.fillVisible !== false) {
+- src\scene\outlines\AreaOutlineController.ts:244 — color: new THREE.Color(outline.fillColor ?? "#ff8a3d"),
+- src\scene\outlines\AreaOutlineController.ts:246 — opacity: clampRange(outline.fillOpacity ?? 0.2, 0, 1),
+- src\scene\outlines\AreaOutlineController.ts:258 — fill.renderOrder = AREA_OUTLINE_RENDER_ORDER - 0.05;
+- src\scene\outlines\AreaOutlineController.ts:260 — areaOutline: true,
+- src\scene\outlines\AreaOutlineController.ts:261 — areaOutlineId: outline.id,
+- src\scene\outlines\AreaOutlineController.ts:262 — areaOutlinePart: "fill",
+- src\scene\outlines\AreaOutlineController.ts:263 — displayName: outline.label,
+- src\scene\outlines\AreaOutlineController.ts:264 — labelKind: outline.labelKind ?? "area",
+- src\scene\outlines\AreaOutlineController.ts:266 — root.add(fill);
+- src\scene\outlines\AreaOutlineController.ts:269 — if (outline.outlineVisible !== false) {
+- src\scene\outlines\AreaOutlineController.ts:271 — root,
+- src\scene\outlines\AreaOutlineController.ts:272 — outline,
+- src\scene\outlines\AreaOutlineController.ts:283 — this.addEditorHandles(root, outline, rx, ry);
+- src\scene\outlines\AreaOutlineController.ts:284 — return root;
+- src\scene\outlines\AreaOutlineController.ts:299 — const segments = AREA_OUTLINE_SEGMENTS;
+- src\scene\outlines\AreaOutlineController.ts:341 — root: THREE.Group,
+- src\scene\outlines\AreaOutlineController.ts:342 — outline: AreaOutlineDef,
+- src\scene\outlines\AreaOutlineController.ts:352 — const color = new THREE.Color(outline.outlineColor ?? "#ff8a3d");
+- src\scene\outlines\AreaOutlineController.ts:353 — const opacity = clampRange(outline.outlineOpacity ?? 0.95, 0, 1);
+- src\scene\outlines\AreaOutlineController.ts:354 — const width = clampRange(outline.outlineWidthM ?? 14, 1, 300);
+- src\scene\outlines\AreaOutlineController.ts:355 — const dashed = outline.dashed !== false;
+- src\scene\outlines\AreaOutlineController.ts:356 — const flat2d = outline.outlineMode === "flat2d";
+- src\scene\outlines\AreaOutlineController.ts:357 — const dashLength = clampRange(outline.dashLengthM ?? 170, 5, 2000);
+- src\scene\outlines\AreaOutlineController.ts:358 — const dashGap = clampRange(outline.dashGapM ?? 90, 0, 2000);
+- src\scene\outlines\AreaOutlineController.ts:423 — dash.renderOrder = AREA_OUTLINE_RENDER_ORDER;
+- src\scene\outlines\AreaOutlineController.ts:425 — areaOutline: true,
+- src\scene\outlines\AreaOutlineController.ts:426 — areaOutlineId: outline.id,
+- src\scene\outlines\AreaOutlineController.ts:427 — areaOutlinePart: "outline",
+- src\scene\outlines\AreaOutlineController.ts:428 — displayName: outline.label,
+- src\scene\outlines\AreaOutlineController.ts:429 — labelKind: outline.labelKind ?? "area",
+- src\scene\outlines\AreaOutlineController.ts:431 — root.add(dash);
+- src\scene\outlines\AreaOutlineController.ts:438 — cap.renderOrder = AREA_OUTLINE_RENDER_ORDER;
+- src\scene\outlines\AreaOutlineController.ts:440 — areaOutline: true,
+- src\scene\outlines\AreaOutlineController.ts:441 — areaOutlineId: outline.id,
+- src\scene\outlines\AreaOutlineController.ts:442 — areaOutlinePart: "outline-cap",
+- src\scene\outlines\AreaOutlineController.ts:443 — displayName: outline.label,
+- src\scene\outlines\AreaOutlineController.ts:444 — labelKind: outline.labelKind ?? "area",
+- src\scene\outlines\AreaOutlineController.ts:446 — root.add(cap);
+- src\scene\overlays\SceneOverlaysController.ts:5 — disposeSceneOverlay,
+- src\scene\overlays\SceneOverlaysController.ts:8 — rebuildSceneOverlayGeometry,
+- src\scene\overlays\SceneOverlaysController.ts:14 — import { getHeightSampler } from "../heightSampler";
+- src\scene\overlays\SceneOverlaysController.ts:31 — policy: "fixed-duration-linear-fade";
+- src\scene\overlays\SceneOverlaysController.ts:35 — activeOutlineTweenCount: number;
+- src\scene\overlays\SceneOverlaysController.ts:45 — outlineOpacity: number;
+- src\scene\overlays\SceneOverlaysController.ts:46 — outlineTargetOpacity: number;
+- src\scene\overlays\SceneOverlaysController.ts:47 — outlineTweenActive: boolean;
+- src\scene\overlays\SceneOverlaysController.ts:79 — handle.outlineMaterial.resolution.set(width, height);
+- src\scene\overlays\SceneOverlaysController.ts:88 — this.sceneOverlayGroup!.add(handle.outlineMesh);
+- src\scene\overlays\SceneOverlaysController.ts:129 — this.sceneOverlayGroup!.add(handle.outlineMesh);
+- src\scene\overlays\SceneOverlaysController.ts:140 — handle.outlineMesh.parent?.remove(handle.outlineMesh);
+- src\scene\overlays\SceneOverlaysController.ts:141 — disposeSceneOverlay(handle);
+- src\scene\overlays\SceneOverlaysController.ts:145 — async rebuildSceneOverlayBounds(
+- src\scene\overlays\SceneOverlaysController.ts:151 — const sample = await getHeightSampler();
+- src\scene\overlays\SceneOverlaysController.ts:152 — rebuildSceneOverlayGeometry(handle, newBounds, sample);
+- src\scene\overlays\SceneOverlaysController.ts:164 — if (prev && !prev.outlineTween) {
+- src\scene\overlays\SceneOverlaysController.ts:165 — prev.outlineMaterial.opacity = prev.outlineTarget;
+- src\scene\overlays\SceneOverlaysController.ts:170 — if (handle && handle.outlineTarget > 0) {
+- src\scene\overlays\SceneOverlaysController.ts:171 — handle.outlineMaterial.opacity = Math.min(
+- src\scene\overlays\SceneOverlaysController.ts:173 — handle.outlineTarget + 0.3,
+- src\scene\overlays\SceneOverlaysController.ts:189 — outlineOpacity: handle.outlineMaterial.opacity,
+- src\scene\overlays\SceneOverlaysController.ts:190 — outlineTargetOpacity: handle.outlineTarget,
+- src\scene\overlays\SceneOverlaysController.ts:191 — outlineTweenActive: handle.outlineTween !== null,
+- src\scene\overlays\SceneOverlaysController.ts:194 — policy: "fixed-duration-linear-fade",
+- src\scene\overlays\SceneOverlaysController.ts:198 — activeOutlineTweenCount: handles.filter((handle) => handle.outlineTweenActive)
+- src\scene\section\sceneSectionController.ts:8 — getHeightSampler,
+- src\scene\section\sceneSectionController.ts:9 — peekHeightSampler,
+- src\scene\section\sceneSectionController.ts:10 — type HeightSampler,
+- src\scene\section\sceneSectionController.ts:11 — } from "../heightSampler";
+- src\scene\section\sceneSectionController.ts:12 — import { disposeObjectTree } from "../disposeObjectTree";
+- src\scene\section\sceneSectionController.ts:116 — const SCENE_SECTION_OUTLINE_WIDTH_SCALE = 0.018;
+- src\scene\section\sceneSectionController.ts:117 — const SCENE_SECTION_OUTLINE_MIN_WIDTH_M = 240;
+- src\scene\section\sceneSectionController.ts:118 — const SCENE_SECTION_OUTLINE_MAX_WIDTH_M = 600;
+- src\scene\section\sceneSectionController.ts:163 — function makeSceneSectionIntersectionDashMaterial(): THREE.LineDashedMaterial {
+- src\scene\section\sceneSectionController.ts:164 — const material = new THREE.LineDashedMaterial({
+- src\scene\section\sceneSectionController.ts:180 — function withSceneSectionHeightSampler(
+- src\scene\section\sceneSectionController.ts:181 — callback: (sampleHeight: HeightSampler) => void,
+- src\scene\section\sceneSectionController.ts:183 — const cached = peekHeightSampler();
+- src\scene\section\sceneSectionController.ts:188 — void getHeightSampler().then(callback);
+- src\scene\section\sceneSectionController.ts:528 — function sceneSectionOutlineWidthM(width: number, height: number): number {
+- src\scene\section\sceneSectionController.ts:532 — Math.min(SCENE_SECTION_OUTLINE_MAX_WIDTH_M, span * 0.18),
+- src\scene\section\sceneSectionController.ts:534 — const minWidth = Math.min(SCENE_SECTION_OUTLINE_MIN_WIDTH_M, maxWidth);
+- src\scene\section\sceneSectionController.ts:536 — span * SCENE_SECTION_OUTLINE_WIDTH_SCALE,
+- src\scene\section\sceneSectionController.ts:542 — function buildSceneSectionOutlineGeometry(
+- src\scene\section\sceneSectionController.ts:627 — function makeSceneSectionOutlineMaterial(
+- src\scene\section\sceneSectionController.ts:1564 — const lineDir = direction.normalize();
+- src\scene\section\sceneSectionController.ts:1572 — const start = point.clone().addScaledVector(lineDir, -span * 2);
+- src\scene\section\sceneSectionController.ts:1573 — const end = point.clone().addScaledVector(lineDir, span * 2);
+- src\scene\section\sceneSectionController.ts:1596 — freeAxisIndex: sceneSectionVectorComponentIndex(lineDir),
+- src\scene\section\sceneSectionController.ts:1598 — Math.abs(lineDir.z) > 0.82 &&
+- src\scene\section\sceneSectionController.ts:1860 — typeof obj.userData?.sectionIsoFrameId === "string"
+- src\scene\section\sceneSectionController.ts:1861 — ? obj.userData.sectionIsoFrameId
+- src\scene\section\sceneSectionController.ts:1871 — typeof obj.userData?.sectionIsoPlaneAxis === "string"
+- src\scene\section\sceneSectionController.ts:1872 — ? (obj.userData.sectionIsoPlaneAxis as SceneSectionAxis)
+- src\scene\section\sceneSectionController.ts:1875 — obj.userData?.scalarSectionIsoOverlay === true &&
+- src\scene\section\sceneSectionController.ts:1886 — const sectionLine = (
+- src\scene\section\sceneSectionController.ts:1888 — | { sectionLine?: { orientation?: unknown } }
+- src\scene\section\sceneSectionController.ts:1890 — )?.sectionLine;
+- src\scene\section\sceneSectionController.ts:1892 — sectionLine?.orientation === "east-west"
+- src\scene\section\sceneSectionController.ts:1894 — : sectionLine?.orientation === "north-south"
+- src\scene\section\sceneSectionController.ts:2451 — style.sectionIsoEnabled === true
+- src\scene\section\sceneSectionController.ts:2592 — isLine?: boolean;
+- src\scene\section\sceneSectionController.ts:2598 — candidate.isLine !== true &&
+- src\scene\section\sceneSectionController.ts:2627 — ctx.clearRect(0, 0, canvas.width, canvas.height);
+- src\scene\section\sceneSectionController.ts:2630 — ctx.textBaseline = "middle";
+- src\scene\section\sceneSectionController.ts:2631 — ctx.lineWidth = 12;
+- src\scene\section\sceneSectionController.ts:2679 — ctx.clearRect(0, 0, canvas.width, canvas.height);
+- src\scene\section\sceneSectionController.ts:2682 — ctx.textBaseline = "middle";
+- src\scene\section\sceneSectionController.ts:2683 — ctx.lineWidth = 10;
+- src\scene\section\sceneSectionController.ts:2741 — export function rebuildSceneSectionHelpers(this: any,
+- src\scene\section\sceneSectionController.ts:2751 — disposeObjectTree(child);
+- src\scene\section\sceneSectionController.ts:2754 — runtime.planes.clear();
+- src\scene\section\sceneSectionController.ts:2792 — style.sectionIsoEnabled === true && frameIntersectionTraces.length > 0;
+- src\scene\section\sceneSectionController.ts:2799 — const referenceOutlineWidthM = sceneSectionOutlineWidthM(
+- src\scene\section\sceneSectionController.ts:2814 — traceGroup.userData.sceneSectionIsoIntersectionTrace = true;
+- src\scene\section\sceneSectionController.ts:2816 — const addTraceLine = (
+- src\scene\section\sceneSectionController.ts:2829 — const line = new THREE.Line(
+- src\scene\section\sceneSectionController.ts:2833 — line.name = `${trace.axes[0].toUpperCase()}/${trace.axes[1].toUpperCase()} dashed section ISO intersection`;
+- src\scene\section\sceneSectionController.ts:2834 — line.userData.sceneSectionHelper = true;
+- src\scene\section\sceneSectionController.ts:2835 — line.userData.sceneSectionIsoIntersectionTrace = true;
+- src\scene\section\sceneSectionController.ts:2836 — line.userData.sceneSectionIntersectionAxes = trace.axes;
+- src\scene\section\sceneSectionController.ts:2837 — line.userData.sceneSectionFreeAxisIndex = trace.freeAxisIndex;
+- src\scene\section\sceneSectionController.ts:2838 — line.renderOrder = SCENE_SECTION_RENDER_ORDER + 2;
+- src\scene\section\sceneSectionController.ts:2839 — line.computeLineDistances();
+- src\scene\section\sceneSectionController.ts:2840 — traceGroup.add(line);
+- src\scene\section\sceneSectionController.ts:2844 — withSceneSectionHeightSampler((sampleHeight) => {
+- src\scene\section\sceneSectionController.ts:2864 — addTraceLine(
+- src\scene\section\sceneSectionController.ts:2871 — addTraceLine(trace, trace.start, trace.end);
+- src\scene\section\sceneSectionController.ts:2932 — const frameOutlineVisible =
+- src\scene\section\sceneSectionController.ts:2937 — if (frameOutlineVisible || controlHandlesVisible) {
+- src\scene\section\sceneSectionController.ts:2945 — const outlineWidthM = referenceOutlineWidthM;
+- src\scene\section\sceneSectionController.ts:2946 — const outlineGeometry = buildSceneSectionOutlineGeometry(
+- src\scene\section\sceneSectionController.ts:2951 — outlineWidthM,
+- src\scene\section\sceneSectionController.ts:2953 — const outlineOpacity = frame
+- src\scene\section\sceneSectionController.ts:2960 — const outlineMaterial = makeSceneSectionOutlineMaterial(
+- src\scene\section\sceneSectionController.ts:2962 — outlineOpacity,
+- src\scene\section\sceneSectionController.ts:2964 — if (frameOutlineVisible) {
+- src\scene\section\sceneSectionController.ts:2965 — const outline = new THREE.Mesh(outlineGeometry, outlineMaterial);
+- src\scene\section\sceneSectionController.ts:2966 — outline.name = frame
+- src\scene\section\sceneSectionController.ts:2968 — : `${plane.label} outline`;
+- src\scene\section\sceneSectionController.ts:2969 — outline.castShadow = false;
+- src\scene\section\sceneSectionController.ts:2970 — outline.receiveShadow = false;
+- src\scene\section\sceneSectionController.ts:2971 — outline.userData.sceneSectionHelper = true;
+- src\scene\section\sceneSectionController.ts:2972 — outline.userData.sceneSectionOutline = true;
+- src\scene\section\sceneSectionController.ts:2973 — outline.userData.sceneSectionFrameOutline = frame !== null;
+- src\scene\section\sceneSectionController.ts:2974 — outline.userData.sceneSectionAxis = plane.axis;
+- src\scene\section\sceneSectionController.ts:2975 — outline.userData.sceneSectionFrameId = plane.frameId;
+- src\scene\section\sceneSectionController.ts:2976 — outline.userData.sceneSectionPlaneCoordinateIndex = spec.positionIndex;
+- src\scene\section\sceneSectionController.ts:2977 — outline.userData.sceneSectionPlanePositionM = plane.positionM;
+- src\scene\section\sceneSectionController.ts:2978 — outline.userData.sceneSectionPlaneSignedDistanceM = plane.signedDistanceM;
+- src\scene\section\sceneSectionController.ts:2979 — outline.userData.sceneSectionFrameColor = color;
+- src\scene\section\sceneSectionController.ts:2980 — outline.userData.sceneSectionFrameLineWidthM = outlineWidthM;
+- src\scene\section\sceneSectionController.ts:2981 — outline.userData.sceneSectionFrameBounds = frame
+- src\scene\section\sceneSectionController.ts:2993 — outline.renderOrder = SCENE_SECTION_CONTROL_OVERLAY_RENDER_ORDER;
+- src\scene\section\sceneSectionController.ts:2994 — controlGroup.add(outline);
+- src\scene\section\sceneSectionController.ts:3040 — const material = makeSceneSectionConeMaterial(color, outlineOpacity);
+- src\scene\section\sceneSectionController.ts:3185 — const tickLength = Math.max(referenceOutlineWidthM * 1.25, 260);
+- src\scene\section\sceneSectionController.ts:3231 — const axisMaterial = new THREE.LineBasicMaterial({
+- src\scene\section\sceneSectionController.ts:3242 — const axisLine = new THREE.LineSegments(
+- src\scene\section\sceneSectionController.ts:3246 — axisLine.name = `${plane.axis.toUpperCase()} section scale axes`;
+- src\scene\section\sceneSectionController.ts:3247 — axisLine.userData.sceneSectionHelper = true;
+- src\scene\section\sceneSectionController.ts:3248 — axisLine.userData.sceneSectionScaleAxes = true;
+- src\scene\section\sceneSectionController.ts:3249 — axisLine.userData.sceneSectionAxisIntervalM = frame.axisIntervalM;
+- src\scene\section\sceneSectionController.ts:3250 — axisLine.userData.sceneSectionAxisTextScale = frame.axisTextScale;
+- src\scene\section\sceneSectionController.ts:3251 — axisLine.renderOrder = SCENE_SECTION_RENDER_ORDER + 1;
+- src\scene\section\sceneSectionController.ts:3252 — runtime.group.add(axisLine);
+- src\scene\section\sceneSectionController.ts:3352 — withSceneSectionHeightSampler((sampleHeight) => {
+- src\scene\section\sceneSectionController.ts:3395 — disposeObjectTree(mesh);
+- src\scene\section\sceneSectionController.ts:3553 — this.rebuildSceneSectionHelpers(
+- src\scene\section\sceneSectionController.ts:3560 — const helperRebuildMs = transitionDebugMs(performance.now() - stageStart);
+- src\scene\section\sceneSectionController.ts:3566 — this.updateMtVolumeCutIsoOverlays(
+- src\scene\section\sceneSectionController.ts:3572 — : this.lastMtVolumeCutIsoUpdateDebug ?? null;
+- src\scene\section\sceneSectionController.ts:3576 — this.updateSeismicVolumeCutIsoOverlays(
+- src\scene\section\sceneSectionController.ts:3590 — helperRebuildMs,
+- src\scene\styles\applyLayerStyle.ts:2 — import { LineMaterial } from "three/examples/jsm/lines/LineMaterial.js";
+- src\scene\styles\applyLayerStyle.ts:5 — import { setTerrainShadowInfluence } from "../../loaders/topoLineMaterial";
+- src\scene\styles\applyLayerStyle.ts:33 — const mat = (obj as THREE.Mesh | THREE.Line).material as
+- src\scene\styles\applyLayerStyle.ts:56 — obj.userData?.naipTileDiagnosticOutline === true ||
+- src\scene\styles\applyLayerStyle.ts:61 — m.userData?.lakeOutlineMaterial === true &&
+- src\scene\styles\applyLayerStyle.ts:62 — typeof style.outlineColor === "string"
+- src\scene\styles\applyLayerStyle.ts:63 — ? style.outlineColor
+- src\scene\styles\applyLayerStyle.ts:80 — m instanceof LineMaterial &&
+- src\scene\styles\applyLayerStyle.ts:81 — typeof style.lineWidth === "number" &&
+- src\scene\styles\applyLayerStyle.ts:84 — const worldLineWidthScale =
+- src\scene\styles\applyLayerStyle.ts:85 — typeof m.userData?.worldLineWidthScale === "number"
+- src\scene\styles\applyLayerStyle.ts:86 — ? m.userData.worldLineWidthScale
+- src\scene\styles\applyLayerStyle.ts:88 — const minLineWidth =
+- src\scene\styles\applyLayerStyle.ts:89 — typeof m.userData?.worldLineWidthMin === "number"
+- src\scene\styles\applyLayerStyle.ts:90 — ? m.userData.worldLineWidthMin
+- src\scene\styles\applyLayerStyle.ts:92 — const maxLineWidth =
+- src\scene\styles\applyLayerStyle.ts:93 — typeof m.userData?.worldLineWidthMax === "number"
+- src\scene\styles\applyLayerStyle.ts:94 — ? m.userData.worldLineWidthMax
+- src\scene\styles\applyLayerStyle.ts:96 — m.linewidth = clampRange(
+- src\scene\styles\applyLayerStyle.ts:97 — style.lineWidth * worldLineWidthScale,
+- src\scene\styles\applyLayerStyle.ts:98 — minLineWidth,
+- src\scene\styles\applyLayerStyle.ts:99 — maxLineWidth,
+- src\scene\styles\applyLayerStyle.ts:116 — m instanceof LineMaterial &&
+- src\scene\styles\atmosphereVolumeStyle.ts:4 — applyLocalAtmosphereVolumeStyle as applyLocalAtmosphereVolumeRootStyle,
+- src\scene\styles\atmosphereVolumeStyle.ts:6 — findLocalAtmosphereVolumeRoot,
+- src\scene\styles\atmosphereVolumeStyle.ts:32 — let root = findLocalAtmosphereVolumeRoot(layerGroup);
+- src\scene\styles\atmosphereVolumeStyle.ts:34 — if (!root && layerSpec && isLocalAtmosphereLayerSpec(layerSpec)) {
+- src\scene\styles\atmosphereVolumeStyle.ts:35 — root = createLocalAtmosphereVolume(layerSpec);
+- src\scene\styles\atmosphereVolumeStyle.ts:36 — layerGroup.add(root);
+- src\scene\styles\atmosphereVolumeStyle.ts:38 — if (!root) return false;
+- src\scene\styles\atmosphereVolumeStyle.ts:41 — (root.userData.layerSpec as ProjectLayerSpec | undefined) ??
+- src\scene\styles\atmosphereVolumeStyle.ts:44 — applyLocalAtmosphereVolumeRootStyle(root, spec, style);
+- src\scene\styles\atmosphereVolumeStyle.ts:45 — layerGroup.userData.localAtmosphereDebug = root.userData.localAtmosphereDebug;
+- src\scene\styles\atmosphereVolumeStyle.ts:47 — root.userData.localAtmosphereStyleState;
+- src\scene\styles\drillingAndTopoDisplay.ts:2 — import { LineMaterial } from "three/examples/jsm/lines/LineMaterial.js";
+- src\scene\styles\drillingAndTopoDisplay.ts:5 — import { setDistanceAttenuatedLineWidth } from "../../loaders/topoLineMaterial";
+- src\scene\styles\drillingAndTopoDisplay.ts:7 — const TOPO_DISTANCE_LINE_LAYER_IDS = [
+- src\scene\styles\drillingAndTopoDisplay.ts:10 — "power-lines",
+- src\scene\styles\drillingAndTopoDisplay.ts:29 — const showBoreLine = assays.showBoreLine ?? true;
+- src\scene\styles\drillingAndTopoDisplay.ts:30 — const boreLineColor = assays.boreLineColor ?? "#e7dcc4";
+- src\scene\styles\drillingAndTopoDisplay.ts:31 — const boreWidth = clampRange(assays.boreLineWidthPx ?? 3.25, 0.5, 12);
+- src\scene\styles\drillingAndTopoDisplay.ts:32 — const boreLineOpacity = clampRange(assays.boreLineOpacity ?? 0.72, 0, 1);
+- src\scene\styles\drillingAndTopoDisplay.ts:33 — const boreLineRenderOrder = clampRange(
+- src\scene\styles\drillingAndTopoDisplay.ts:34 — assays.boreLineRenderOrder ?? 6.8,
+- src\scene\styles\drillingAndTopoDisplay.ts:190 — if (!(m instanceof LineMaterial)) {
+- src\scene\styles\drillingAndTopoDisplay.ts:230 — m.color.set(boreLineColor);
+- src\scene\styles\drillingAndTopoDisplay.ts:231 — m.linewidth = boreWidth;
+- src\scene\styles\drillingAndTopoDisplay.ts:232 — m.opacity = boreLineOpacity;
+- src\scene\styles\drillingAndTopoDisplay.ts:234 — (obj as THREE.Object3D).visible = showBoreLine;
+- src\scene\styles\drillingAndTopoDisplay.ts:235 — obj.renderOrder = boreLineRenderOrder;
+- src\scene\styles\drillingAndTopoDisplay.ts:237 — m.linewidth = assayWidth;
+- src\scene\styles\drillingAndTopoDisplay.ts:239 — m.linewidth = lithologyWidth;
+- src\scene\styles\drillingAndTopoDisplay.ts:252 — // Assay bands are data colour first. Additive blending made distant
+- src\scene\styles\drillingAndTopoDisplay.ts:271 — const minScale = clampRange(topo.farLineScale ?? 0.67, 0.01, 1);
+- src\scene\styles\drillingAndTopoDisplay.ts:274 — for (const id of TOPO_DISTANCE_LINE_LAYER_IDS) {
+- src\scene\styles\drillingAndTopoDisplay.ts:283 — if (!(m instanceof LineMaterial)) continue;
+- src\scene\styles\drillingAndTopoDisplay.ts:284 — if (m.userData.distanceAttenuatedLineWidth !== true) continue;
+- src\scene\styles\drillingAndTopoDisplay.ts:285 — setDistanceAttenuatedLineWidth(m, {
+- src\scene\styles\mtResistivityStyles.ts:11 — import { getHeightSampler } from "../heightSampler";
+- src\scene\styles\mtResistivityStyles.ts:55 — void getHeightSampler().then((sampleHeight) => {
+- src\scene\styles\mtResistivityStyles.ts:160 — const clearanceM = terrainSurfaceZ - world.z;
+- src\scene\styles\mtResistivityStyles.ts:161 — if (clearanceM <= options.depthM) {
+- src\scene\styles\mtResistivityStyles.ts:166 — const t = clamp01((clearanceM - options.depthM) / feather);
+- src\scene\styles\mtResistivityStyles.ts:316 — const liftedRoots = group.children.length > 0 ? group.children : [group];
+- src\scene\styles\mtResistivityStyles.ts:317 — for (const child of liftedRoots) {
+- src\scene\styles\scalarEdgeLines.ts:5 — const SCALAR_EDGE_LINE_XY_BIN_M = 2600;
+- src\scene\styles\scalarEdgeLines.ts:6 — const SCALAR_EDGE_LINE_Z_BIN_M = 1300;
+- src\scene\styles\scalarEdgeLines.ts:7 — const SCALAR_EDGE_LINE_MIN_CELL_POINTS = 2;
+- src\scene\styles\scalarEdgeLines.ts:54 — export interface ScalarEdgeLineOptions {
+- src\scene\styles\scalarEdgeLines.ts:61 — edgeLineWidth: number;
+- src\scene\styles\scalarEdgeLines.ts:64 — edgeLineStyle: "solid" | "dashed";
+- src\scene\styles\scalarEdgeLines.ts:100 — function scalarEdgeBandHalfWidth(
+- src\scene\styles\scalarEdgeLines.ts:264 — const minRoot = Math.sqrt(minCount);
+- src\scene\styles\scalarEdgeLines.ts:265 — const maxRoot = Math.sqrt(maxCount);
+- src\scene\styles\scalarEdgeLines.ts:267 — (Math.sqrt(Math.max(0, point.count)) - minRoot) /
+- src\scene\styles\scalarEdgeLines.ts:268 — Math.max(0.0001, maxRoot - minRoot),
+- src\scene\styles\scalarEdgeLines.ts:275 — export function disposeScalarEdgeLine(obj: THREE.Points): void {
+- src\scene\styles\scalarEdgeLines.ts:276 — const line = obj.userData.scalarEdgeLineOverlay as THREE.Mesh | undefined;
+- src\scene\styles\scalarEdgeLines.ts:277 — if (!line) return;
+- src\scene\styles\scalarEdgeLines.ts:278 — line.removeFromParent();
+- src\scene\styles\scalarEdgeLines.ts:279 — line.geometry.dispose();
+- src\scene\styles\scalarEdgeLines.ts:280 — const material = line.material;
+- src\scene\styles\scalarEdgeLines.ts:282 — for (const item of material) item.dispose();
+- src\scene\styles\scalarEdgeLines.ts:284 — material.dispose();
+- src\scene\styles\scalarEdgeLines.ts:286 — delete obj.userData.scalarEdgeLineOverlay;
+- src\scene\styles\scalarEdgeLines.ts:289 — export function updateScalarEdgeLineOverlay(
+- src\scene\styles\scalarEdgeLines.ts:292 — options: ScalarEdgeLineOptions,
+- src\scene\styles\scalarEdgeLines.ts:294 — if (options.edgeLineWidth <= 0.001) {
+- src\scene\styles\scalarEdgeLines.ts:295 — disposeScalarEdgeLine(obj);
+- src\scene\styles\scalarEdgeLines.ts:301 — disposeScalarEdgeLine(obj);
+- src\scene\styles\scalarEdgeLines.ts:312 — halfWidth: scalarEdgeBandHalfWidth(
+- src\scene\styles\scalarEdgeLines.ts:326 — halfWidth: scalarEdgeBandHalfWidth(
+- src\scene\styles\scalarEdgeLines.ts:364 — let inEdgeBand = false;
+- src\scene\styles\scalarEdgeLines.ts:367 — inEdgeBand = true;
+- src\scene\styles\scalarEdgeLines.ts:371 — if (!inEdgeBand) continue;
+- src\scene\styles\scalarEdgeLines.ts:376 — const ix = Math.floor(x / SCALAR_EDGE_LINE_XY_BIN_M);
+- src\scene\styles\scalarEdgeLines.ts:377 — const iy = Math.floor(y / SCALAR_EDGE_LINE_XY_BIN_M);
+- src\scene\styles\scalarEdgeLines.ts:378 — const iz = Math.floor(z / SCALAR_EDGE_LINE_Z_BIN_M);
+- src\scene\styles\scalarEdgeLines.ts:418 — if (cell.count < SCALAR_EDGE_LINE_MIN_CELL_POINTS) {
+- src\scene\styles\scalarEdgeLines.ts:448 — disposeScalarEdgeLine(obj);
+- src\scene\styles\scalarEdgeLines.ts:462 — const baseHalfWidthM = options.edgeLineWidth * 45;
+- src\scene\styles\scalarEdgeLines.ts:463 — const dashed = options.edgeLineStyle === "dashed";
+- src\scene\styles\scalarEdgeLines.ts:465 — SCALAR_EDGE_LINE_XY_BIN_M * 1.1,
+- src\scene\styles\scalarEdgeLines.ts:532 — disposeScalarEdgeLine(obj);
+- src\scene\styles\scalarEdgeLines.ts:536 — let line = obj.userData.scalarEdgeLineOverlay as THREE.Mesh | undefined;
+- src\scene\styles\scalarEdgeLines.ts:537 — if (!line) {
+- src\scene\styles\scalarEdgeLines.ts:548 — const lineGeometry = new THREE.BufferGeometry();
+- src\scene\styles\scalarEdgeLines.ts:549 — line = new THREE.Mesh(lineGeometry, material);
+- src\scene\styles\scalarEdgeLines.ts:550 — line.name = "mt-scalar-edge-line-overlay";
+- src\scene\styles\scalarEdgeLines.ts:551 — line.renderOrder = 6.8;
+- src\scene\styles\scalarEdgeLines.ts:552 — line.userData.ignoreLayerStyle = true;
+- src\scene\styles\scalarEdgeLines.ts:553 — obj.userData.scalarEdgeLineOverlay = line;
+- src\scene\styles\scalarEdgeLines.ts:554 — obj.add(line);
+- src\scene\styles\scalarEdgeLines.ts:557 — const lineGeometry = new THREE.BufferGeometry();
+- src\scene\styles\scalarEdgeLines.ts:558 — lineGeometry.setAttribute(
+- src\scene\styles\scalarEdgeLines.ts:562 — lineGeometry.setAttribute(
+- src\scene\styles\scalarEdgeLines.ts:566 — lineGeometry.setIndex(indices);
+- src\scene\styles\scalarEdgeLines.ts:567 — lineGeometry.computeBoundingSphere();
+- src\scene\styles\scalarEdgeLines.ts:568 — line.geometry.dispose();
+- src\scene\styles\scalarEdgeLines.ts:569 — line.geometry = lineGeometry;
+- src\scene\styles\scalarEdgeLines.ts:570 — const material = line.material as THREE.MeshBasicMaterial;
+- src\scene\styles\scalarEdgeLines.ts:571 — material.opacity = clampRange(0.4 + options.edgeLineWidth / 10, 0.4, 0.96);
+- src\scene\styles\scalarEdgeLines.ts:573 — line.visible = true;
+- src\scene\styles\scalarPreviewStyle.ts:12 — import { scalarBandRanges, scalarVisibilityWeight } from "../scalarFocus";
+- src\scene\styles\scalarPreviewStyle.ts:19 — updateScalarEdgeLineOverlay,
+- src\scene\styles\scalarPreviewStyle.ts:20 — } from "./scalarEdgeLines";
+- src\scene\styles\scalarPreviewStyle.ts:23 — disposeScalarSectionIsoOverlay,
+- src\scene\styles\scalarPreviewStyle.ts:25 — updateScalarSectionIsoOverlay,
+- src\scene\styles\scalarPreviewStyle.ts:26 — } from "../isoOverlays/sectionIsoOverlay";
+- src\scene\styles\scalarPreviewStyle.ts:31 — // The MT section's iso-band config (the source of truth) lives on the volume
+- src\scene\styles\scalarPreviewStyle.ts:32 — // layer; clouds on other layers read it through here so band selection
+- src\scene\styles\scalarPreviewStyle.ts:60 — const edgeLineWidth = scalarLegendVisible
+- src\scene\styles\scalarPreviewStyle.ts:63 — "scalarEdgeLineWidth",
+- src\scene\styles\scalarPreviewStyle.ts:71 — const edgeLineStyle =
+- src\scene\styles\scalarPreviewStyle.ts:72 — style.scalarEdgeLineStyle === "dashed" ? "dashed" : "solid";
+- src\scene\styles\scalarPreviewStyle.ts:73 — const sectionIsoSelectedTargets =
+- src\scene\styles\scalarPreviewStyle.ts:74 — typeof style.sectionIsoTargetIds === "object" &&
+- src\scene\styles\scalarPreviewStyle.ts:75 — style.sectionIsoTargetIds !== null
+- src\scene\styles\scalarPreviewStyle.ts:76 — ? (style.sectionIsoTargetIds as Record<string, boolean>)
+- src\scene\styles\scalarPreviewStyle.ts:78 — const sectionIsoEnabled = style.sectionIsoEnabled === true;
+- src\scene\styles\scalarPreviewStyle.ts:79 — const sectionIsoLinesVisible = style.sectionIsoLinesVisible !== false;
+- src\scene\styles\scalarPreviewStyle.ts:80 — const sectionIsoBandsVisible = style.sectionIsoBandsVisible !== false;
+- src\scene\styles\scalarPreviewStyle.ts:81 — const sectionIsoLevelCount = Math.round(
+- src\scene\styles\scalarPreviewStyle.ts:82 — styleNumber(style, "sectionIsoLevelCount", 5, 2, 32),
+- src\scene\styles\scalarPreviewStyle.ts:84 — const sectionIsoSourceOpacity = sectionIsoEnabled
+- src\scene\styles\scalarPreviewStyle.ts:85 — ? styleNumber(style, "sectionIsoSourceOpacity", 0, 0, 1)
+- src\scene\styles\scalarPreviewStyle.ts:88 — const sectionIsoLineWidth = styleNumber(
+- src\scene\styles\scalarPreviewStyle.ts:90 — "sectionIsoLineWidth",
+- src\scene\styles\scalarPreviewStyle.ts:95 — const sectionIsoLineStyle =
+- src\scene\styles\scalarPreviewStyle.ts:96 — style.sectionIsoLineStyle === "dashed" ? "dashed" : "solid";
+- src\scene\styles\scalarPreviewStyle.ts:97 — const sectionIsoBandOpacity = styleNumber(
+- src\scene\styles\scalarPreviewStyle.ts:99 — "sectionIsoBandOpacity",
+- src\scene\styles\scalarPreviewStyle.ts:104 — const sectionIsoFillOffset = styleNumber(
+- src\scene\styles\scalarPreviewStyle.ts:106 — "sectionIsoFillOffset",
+- src\scene\styles\scalarPreviewStyle.ts:117 — if (obj.userData?.scalarSectionIsoOverlay === true) return;
+- src\scene\styles\scalarPreviewStyle.ts:240 — edgeLineWidth > 0)
+- src\scene\styles\scalarPreviewStyle.ts:244 — // Selective isobands in 3D: isolate the cloud to the cells inside the
+- src\scene\styles\scalarPreviewStyle.ts:245 — // selected band windows, derived from the SAME section iso levels (one
+- src\scene\styles\scalarPreviewStyle.ts:247 — const ownBandSelection = Array.isArray(style.sectionIsoBandSelection)
+- src\scene\styles\scalarPreviewStyle.ts:248 — ? (style.sectionIsoBandSelection as number[])
+- src\scene\styles\scalarPreviewStyle.ts:251 — ownBandSelection.length > 0
+- src\scene\styles\scalarPreviewStyle.ts:257 — const bandSelection = Array.isArray(isoSourceStyle.sectionIsoBandSelection)
+- src\scene\styles\scalarPreviewStyle.ts:258 — ? (isoSourceStyle.sectionIsoBandSelection as number[])
+- src\scene\styles\scalarPreviewStyle.ts:260 — const bandLevelCount = Math.round(
+- src\scene\styles\scalarPreviewStyle.ts:261 — styleNumber(isoSourceStyle, "sectionIsoLevelCount", 5, 2, 32),
+- src\scene\styles\scalarPreviewStyle.ts:263 — const bandIsoMin = clampRange(
+- src\scene\styles\scalarPreviewStyle.ts:264 — styleNumber(isoSourceStyle, "sectionIsoMin", colorMin, sourceRange.min, sourceRange.max),
+- src\scene\styles\scalarPreviewStyle.ts:268 — const bandIsoMax = clampRange(
+- src\scene\styles\scalarPreviewStyle.ts:270 — styleNumber(isoSourceStyle, "sectionIsoMax", colorMax, sourceRange.min, sourceRange.max),
+- src\scene\styles\scalarPreviewStyle.ts:271 — bandIsoMin + 0.000001,
+- src\scene\styles\scalarPreviewStyle.ts:273 — bandIsoMin + 0.000001,
+- src\scene\styles\scalarPreviewStyle.ts:276 — const selectedBandRanges =
+- src\scene\styles\scalarPreviewStyle.ts:277 — obj instanceof THREE.Points && bandSelection.length > 0
+- src\scene\styles\scalarPreviewStyle.ts:278 — ? scalarBandRanges(bandIsoMin, bandIsoMax, bandLevelCount, bandSelection)
+- src\scene\styles\scalarPreviewStyle.ts:326 — selectedBandRanges,
+- src\scene\styles\scalarPreviewStyle.ts:329 — updateScalarEdgeLineOverlay(obj, values, {
+- src\scene\styles\scalarPreviewStyle.ts:336 — edgeLineWidth,
+- src\scene\styles\scalarPreviewStyle.ts:339 — edgeLineStyle,
+- src\scene\styles\scalarPreviewStyle.ts:353 — "sectionIsoMin",
+- src\scene\styles\scalarPreviewStyle.ts:361 — "sectionIsoMax",
+- src\scene\styles\scalarPreviewStyle.ts:371 — updateScalarSectionIsoOverlay(obj, values, {
+- src\scene\styles\scalarPreviewStyle.ts:373 — enabled: sectionIsoEnabled,
+- src\scene\styles\scalarPreviewStyle.ts:374 — linesVisible: sectionIsoLinesVisible,
+- src\scene\styles\scalarPreviewStyle.ts:375 — bandsVisible: sectionIsoBandsVisible,
+- src\scene\styles\scalarPreviewStyle.ts:376 — selectedTargetIds: sectionIsoSelectedTargets,
+- src\scene\styles\scalarPreviewStyle.ts:379 — levelCount: sectionIsoLevelCount,
+- src\scene\styles\scalarPreviewStyle.ts:380 — lineWidth: sectionIsoLineWidth,
+- src\scene\styles\scalarPreviewStyle.ts:381 — lineStyle: sectionIsoLineStyle,
+- src\scene\styles\scalarPreviewStyle.ts:382 — bandOpacity: sectionIsoBandOpacity,
+- src\scene\styles\scalarPreviewStyle.ts:383 — fillOffset: sectionIsoFillOffset,
+- src\scene\styles\scalarPreviewStyle.ts:393 — disposeScalarSectionIsoOverlay(obj);
+- src\scene\styles\scalarPreviewStyle.ts:401 — layerOpacity * sectionIsoSourceOpacity;
+- src\scene\styles\scalarPreviewStyle.ts:404 — layerOpacity * sectionIsoSourceOpacity < 1;
+- src\scene\styles\scalarVolumeStyle.ts:66 — style.sectionIsoEnabled === true
+- src\scene\styles\scalarVolumeStyle.ts:67 — ? styleNumber(style, "sectionIsoSourceOpacity", 0, 0, 1)
+- src\scene\styles\scalarVolumeStyle.ts:156 — sectionIsoSourceOpacity: isoSourceOpacity,
+- src\scene\styles\scalarVolumeStyle.ts:165 — this.updateMtVolumeCutIsoOverlays(style);
+- src\scene\styles\seismicBrowserStyle.ts:11 — disposeScalarSectionIsoOverlay,
+- src\scene\styles\seismicBrowserStyle.ts:13 — updateScalarSectionIsoOverlay,
+- src\scene\styles\seismicBrowserStyle.ts:14 — type ScalarSectionIsoOptions,
+- src\scene\styles\seismicBrowserStyle.ts:15 — } from "../isoOverlays/sectionIsoOverlay";
+- src\scene\styles\seismicBrowserStyle.ts:17 — disposeSeismicFigureAnnotations,
+- src\scene\styles\seismicBrowserStyle.ts:24 — root: THREE.Object3D;
+- src\scene\styles\seismicBrowserStyle.ts:43 — updateSeismicVolumeCutIsoOverlays(style: EditableStyle): void;
+- src\scene\styles\seismicBrowserStyle.ts:44 — updateSeismicResistivityIsoOverlays(style: EditableStyle): void;
+- src\scene\styles\seismicBrowserStyle.ts:97 — root: THREE.Object3D,
+- src\scene\styles\seismicBrowserStyle.ts:102 — root.userData.seismicPendingLodByProduct,
+- src\scene\styles\seismicBrowserStyle.ts:106 — root.userData.seismicActiveLodByProduct,
+- src\scene\styles\seismicBrowserStyle.ts:114 — root.userData.seismicTransitionActive === true;
+- src\scene\styles\seismicBrowserStyle.ts:116 — root.userData.seismicCameraMoving === true ||
+- src\scene\styles\seismicBrowserStyle.ts:117 — (typeof root.userData.seismicCameraMovingUntilMs === "number" &&
+- src\scene\styles\seismicBrowserStyle.ts:118 — root.userData.seismicCameraMovingUntilMs > nowMs);
+- src\scene\styles\seismicBrowserStyle.ts:130 — root.userData.seismicTargetLodTier = tier;
+- src\scene\styles\seismicBrowserStyle.ts:131 — root.userData.seismicTargetLodReason = reason;
+- src\scene\styles\seismicBrowserStyle.ts:149 — typeof index.root.userData.seismicDefaultProductId === "string"
+- src\scene\styles\seismicBrowserStyle.ts:150 — ? index.root.userData.seismicDefaultProductId
+- src\scene\styles\seismicBrowserStyle.ts:243 — effectiveStyle.seismicSliceAxis === "crossline" ||
+- src\scene\styles\seismicBrowserStyle.ts:245 — effectiveStyle.seismicSliceAxis === "line"
+- src\scene\styles\seismicBrowserStyle.ts:247 — : "inline";
+- src\scene\styles\seismicBrowserStyle.ts:290 — const sectionIsoEnabled = effectiveStyle.sectionIsoEnabled === true;
+- src\scene\styles\seismicBrowserStyle.ts:291 — const sectionIsoSourceOpacity = sectionIsoEnabled
+- src\scene\styles\seismicBrowserStyle.ts:292 — ? styleNumber(effectiveStyle, "sectionIsoSourceOpacity", 0, 0, 1)
+- src\scene\styles\seismicBrowserStyle.ts:295 — const volumeSourceOpacity = opacity * sectionIsoSourceOpacity;
+- src\scene\styles\seismicBrowserStyle.ts:301 — typeof effectiveStyle.sectionIsoTargetIds === "object" &&
+- src\scene\styles\seismicBrowserStyle.ts:302 — effectiveStyle.sectionIsoTargetIds !== null
+- src\scene\styles\seismicBrowserStyle.ts:303 — ? effectiveStyle.sectionIsoTargetIds
+- src\scene\styles\seismicBrowserStyle.ts:305 — const sectionIsoMin = clampRange(
+- src\scene\styles\seismicBrowserStyle.ts:306 — styleNumber(effectiveStyle, "sectionIsoMin", amplitudeMin, 0, 1),
+- src\scene\styles\seismicBrowserStyle.ts:310 — const sectionIsoMax = clampRange(
+- src\scene\styles\seismicBrowserStyle.ts:312 — styleNumber(effectiveStyle, "sectionIsoMax", amplitudeMax, 0, 1),
+- src\scene\styles\seismicBrowserStyle.ts:313 — sectionIsoMin + 0.000001,
+- src\scene\styles\seismicBrowserStyle.ts:315 — sectionIsoMin + 0.000001,
+- src\scene\styles\seismicBrowserStyle.ts:318 — const sectionIsoColorMode =
+- src\scene\styles\seismicBrowserStyle.ts:324 — const sectionIsoBaseOptions = {
+- src\scene\styles\seismicBrowserStyle.ts:327 — linesVisible: effectiveStyle.sectionIsoLinesVisible !== false,
+- src\scene\styles\seismicBrowserStyle.ts:328 — bandsVisible: effectiveStyle.sectionIsoBandsVisible !== false,
+- src\scene\styles\seismicBrowserStyle.ts:330 — isoMin: sectionIsoMin,
+- src\scene\styles\seismicBrowserStyle.ts:331 — isoMax: sectionIsoMax,
+- src\scene\styles\seismicBrowserStyle.ts:333 — styleNumber(effectiveStyle, "sectionIsoLevelCount", 5, 2, 32),
+- src\scene\styles\seismicBrowserStyle.ts:335 — lineWidth: styleNumber(effectiveStyle, "sectionIsoLineWidth", 2.6, 0, 12),
+- src\scene\styles\seismicBrowserStyle.ts:336 — lineStyle:
+- src\scene\styles\seismicBrowserStyle.ts:337 — effectiveStyle.sectionIsoLineStyle === "dashed" ? "dashed" : "solid",
+- src\scene\styles\seismicBrowserStyle.ts:338 — bandOpacity: styleNumber(
+- src\scene\styles\seismicBrowserStyle.ts:340 — "sectionIsoBandOpacity",
+- src\scene\styles\seismicBrowserStyle.ts:345 — fillOffset: styleNumber(effectiveStyle, "sectionIsoFillOffset", 0, -1, 1),
+- src\scene\styles\seismicBrowserStyle.ts:346 — colorMode: sectionIsoColorMode,
+- src\scene\styles\seismicBrowserStyle.ts:356 — } satisfies Omit<ScalarSectionIsoOptions, "targetKey" | "alphaValues">;
+- src\scene\styles\seismicBrowserStyle.ts:380 — role: "sources" | "receivers" | "lines",
+- src\scene\styles\seismicBrowserStyle.ts:385 — navigationRoleVisible("lines");
+- src\scene\styles\seismicBrowserStyle.ts:388 — typeof index.root.userData.seismicSelectedProductId === "string"
+- src\scene\styles\seismicBrowserStyle.ts:389 — ? index.root.userData.seismicSelectedProductId
+- src\scene\styles\seismicBrowserStyle.ts:411 — index.root.userData.seismicPreviousProductId = previousProductId;
+- src\scene\styles\seismicBrowserStyle.ts:413 — const retainProducts = index.root.userData.seismicRetainProducts;
+- src\scene\styles\seismicBrowserStyle.ts:417 — const ensureProductsLoaded = index.root.userData.seismicEnsureProductsLoaded;
+- src\scene\styles\seismicBrowserStyle.ts:424 — index.root,
+- src\scene\styles\seismicBrowserStyle.ts:442 — const lineSections = sections.filter(
+- src\scene\styles\seismicBrowserStyle.ts:443 — (section) => section.userData?.seismicSectionAxis === "line",
+- src\scene\styles\seismicBrowserStyle.ts:447 — lineSections.length > 0 ? lineSections : sections;
+- src\scene\styles\seismicBrowserStyle.ts:451 — const sliceAxis = requestedAxis === "line" ? "inline" : requestedAxis;
+- src\scene\styles\seismicBrowserStyle.ts:457 — (section) => section.userData?.seismicSectionAxis === "inline",
+- src\scene\styles\seismicBrowserStyle.ts:484 — group.userData.seismicTargetLodTier = index.root.userData.seismicTargetLodTier;
+- src\scene\styles\seismicBrowserStyle.ts:486 — index.root.userData.seismicTargetLodReason;
+- src\scene\styles\seismicBrowserStyle.ts:501 — lines: navigationRoleVisible("lines"),
+- src\scene\styles\seismicBrowserStyle.ts:503 — index.root.userData.seismicSelectedProductId = productId;
+- src\scene\styles\seismicBrowserStyle.ts:504 — index.root.userData.seismicSelectedProductKind =
+- src\scene\styles\seismicBrowserStyle.ts:506 — index.root.userData.seismicSelectedProductStats =
+- src\scene\styles\seismicBrowserStyle.ts:508 — index.root.userData.seismicAppliedRenderMode = renderMode;
+- src\scene\styles\seismicBrowserStyle.ts:509 — index.root.userData.seismicVisibleProductIds =
+- src\scene\styles\seismicBrowserStyle.ts:511 — index.root.userData.seismicCapabilityPresetId =
+- src\scene\styles\seismicBrowserStyle.ts:513 — index.root.userData.seismicComparisonMode = comparisonMode;
+- src\scene\styles\seismicBrowserStyle.ts:514 — index.root.userData.seismicComparisonSpacingM = comparisonSpacingM;
+- src\scene\styles\seismicBrowserStyle.ts:515 — index.root.userData.seismicSliceThroughVolume = sliceThroughVolume;
+- src\scene\styles\seismicBrowserStyle.ts:516 — index.root.userData.seismicRemoveBackground = removeBackground;
+- src\scene\styles\seismicBrowserStyle.ts:517 — index.root.userData.seismicAmplitudeGamma = amplitudeGamma;
+- src\scene\styles\seismicBrowserStyle.ts:518 — index.root.userData.seismicBackgroundCutoff = backgroundCutoff;
+- src\scene\styles\seismicBrowserStyle.ts:519 — index.root.userData.seismicVolumeSampleSteps = volumeSampleSteps;
+- src\scene\styles\seismicBrowserStyle.ts:520 — index.root.userData.seismicNavigationRoleVisibility =
+- src\scene\styles\seismicBrowserStyle.ts:533 — : role === "lines"
+- src\scene\styles\seismicBrowserStyle.ts:534 — ? navigationRoleVisible("lines")
+- src\scene\styles\seismicBrowserStyle.ts:746 — const sectionIsoAmplitudeValues =
+- src\scene\styles\seismicBrowserStyle.ts:749 — sectionIsoEnabled &&
+- src\scene\styles\seismicBrowserStyle.ts:752 — sectionIsoAmplitudeValues &&
+- src\scene\styles\seismicBrowserStyle.ts:753 — sectionIsoAmplitudeValues.length === position.count
+- src\scene\styles\seismicBrowserStyle.ts:761 — const amplitude = sectionIsoAmplitudeValues[i] ?? 0;
+- src\scene\styles\seismicBrowserStyle.ts:768 — updateScalarSectionIsoOverlay(obj, sectionIsoAmplitudeValues, {
+- src\scene\styles\seismicBrowserStyle.ts:769 — ...sectionIsoBaseOptions,
+- src\scene\styles\seismicBrowserStyle.ts:773 — const root = obj.userData.scalarSectionIsoOverlayRoot as
+- src\scene\styles\seismicBrowserStyle.ts:776 — if (root) {
+- src\scene\styles\seismicBrowserStyle.ts:777 — root.userData.sectionIsoSource = "seismic-amplitude";
+- src\scene\styles\seismicBrowserStyle.ts:778 — root.userData.sectionIsoSourceLayerId =
+- src\scene\styles\seismicBrowserStyle.ts:780 — root.userData.sectionIsoTargetGroup = "seismic-sections";
+- src\scene\styles\seismicBrowserStyle.ts:782 — obj.userData.seismicSectionIsoDisabledReason = null;
+- src\scene\styles\seismicBrowserStyle.ts:784 — obj.userData.seismicSectionIsoDisabledReason =
+- src\scene\styles\seismicBrowserStyle.ts:787 — : "section-iso-disabled";
+- src\scene\styles\seismicBrowserStyle.ts:788 — disposeScalarSectionIsoOverlay(obj);
+- src\scene\styles\seismicBrowserStyle.ts:793 — disposeSeismicFigureAnnotations(obj);
+- src\scene\styles\seismicBrowserStyle.ts:797 — host.updateSeismicVolumeCutIsoOverlays(effectiveStyle);
+- src\scene\styles\seismicBrowserStyle.ts:798 — host.updateSeismicResistivityIsoOverlays(effectiveStyle);
+- src\scene\styles\seismicFigureAnnotations.ts:47 — function disposeObjectTree(root: THREE.Object3D): void {
+- src\scene\styles\seismicFigureAnnotations.ts:48 — root.traverse((obj) => {
+- src\scene\styles\seismicFigureAnnotations.ts:50 — mesh.geometry?.dispose?.();
+- src\scene\styles\seismicFigureAnnotations.ts:60 — mapped.map?.dispose();
+- src\scene\styles\seismicFigureAnnotations.ts:61 — material.dispose();
+- src\scene\styles\seismicFigureAnnotations.ts:66 — export function disposeSeismicFigureAnnotations(target: THREE.Object3D): void {
+- src\scene\styles\seismicFigureAnnotations.ts:67 — const root = target.userData.seismicFigureAnnotationRoot as
+- src\scene\styles\seismicFigureAnnotations.ts:70 — if (!root) return;
+- src\scene\styles\seismicFigureAnnotations.ts:71 — root.parent?.remove(root);
+- src\scene\styles\seismicFigureAnnotations.ts:72 — disposeObjectTree(root);
+- src\scene\styles\seismicFigureAnnotations.ts:73 — delete target.userData.seismicFigureAnnotationRoot;
+- src\scene\styles\seismicFigureAnnotations.ts:76 — function makeLine(
+- src\scene\styles\seismicFigureAnnotations.ts:81 — ): THREE.Line {
+- src\scene\styles\seismicFigureAnnotations.ts:83 — const material = new THREE.LineBasicMaterial({
+- src\scene\styles\seismicFigureAnnotations.ts:92 — const line = new THREE.Line(geometry, material);
+- src\scene\styles\seismicFigureAnnotations.ts:93 — line.name = name;
+- src\scene\styles\seismicFigureAnnotations.ts:94 — line.renderOrder = FIGURE_RENDER_ORDER;
+- src\scene\styles\seismicFigureAnnotations.ts:95 — line.userData.seismicFigureAnnotation = true;
+- src\scene\styles\seismicFigureAnnotations.ts:96 — return line;
+- src\scene\styles\seismicFigureAnnotations.ts:146 — const lines: string[] = [];
+- src\scene\styles\seismicFigureAnnotations.ts:153 — lines.push(current);
+- src\scene\styles\seismicFigureAnnotations.ts:157 — if (current) lines.push(current);
+- src\scene\styles\seismicFigureAnnotations.ts:158 — return lines.length ? lines : [text];
+- src\scene\styles\seismicFigureAnnotations.ts:164 — multiline?: boolean;
+- src\scene\styles\seismicFigureAnnotations.ts:170 — canvas.width = options.multiline ? 1024 : 768;
+- src\scene\styles\seismicFigureAnnotations.ts:171 — canvas.height = options.multiline ? 256 : 128;
+- src\scene\styles\seismicFigureAnnotations.ts:174 — ctx.clearRect(0, 0, canvas.width, canvas.height);
+- src\scene\styles\seismicFigureAnnotations.ts:180 — ctx.textBaseline = "middle";
+- src\scene\styles\seismicFigureAnnotations.ts:181 — const lines = options.multiline
+- src\scene\styles\seismicFigureAnnotations.ts:184 — const lineHeight = fontPx * 1.18;
+- src\scene\styles\seismicFigureAnnotations.ts:185 — const startY = canvas.height / 2 - ((lines.length - 1) * lineHeight) / 2;
+- src\scene\styles\seismicFigureAnnotations.ts:186 — lines.forEach((line, index) => {
+- src\scene\styles\seismicFigureAnnotations.ts:187 — ctx.fillText(line, canvas.width / 2, startY + index * lineHeight);
+- src\scene\styles\seismicFigureAnnotations.ts:204 — multiline?: boolean;
+- src\scene\styles\seismicFigureAnnotations.ts:321 — disposeSeismicFigureAnnotations(mesh);
+- src\scene\styles\seismicFigureAnnotations.ts:326 — disposeSeismicFigureAnnotations(mesh);
+- src\scene\styles\seismicFigureAnnotations.ts:331 — disposeSeismicFigureAnnotations(mesh);
+- src\scene\styles\seismicFigureAnnotations.ts:335 — disposeSeismicFigureAnnotations(mesh);
+- src\scene\styles\seismicFigureAnnotations.ts:379 — lineLabel:
+- src\scene\styles\seismicFigureAnnotations.ts:380 — typeof mesh.userData.seismicProductLineLabel === "string"
+- src\scene\styles\seismicFigureAnnotations.ts:381 — ? mesh.userData.seismicProductLineLabel
+- src\scene\styles\seismicFigureAnnotations.ts:411 — const root = new THREE.Group();
+- src\scene\styles\seismicFigureAnnotations.ts:412 — root.name = `${mesh.name} figure annotations`;
+- src\scene\styles\seismicFigureAnnotations.ts:413 — root.renderOrder = FIGURE_RENDER_ORDER;
+- src\scene\styles\seismicFigureAnnotations.ts:414 — root.userData.seismicFigureAnnotationRoot = true;
+- src\scene\styles\seismicFigureAnnotations.ts:423 — root.add(
+- src\scene\styles\seismicFigureAnnotations.ts:434 — root.add(
+- src\scene\styles\seismicFigureAnnotations.ts:445 — root.add(
+- src\scene\styles\seismicFigureAnnotations.ts:460 — root.add(makeLine("seismic figure scale bar", [addNormalLift(scaleStart, normalLift), addNormalLift(scaleEnd, normalLift)], axisColor));
+- src\scene\styles\seismicFigureAnnotations.ts:461 — root.add(
+- src\scene\styles\seismicFigureAnnotations.ts:462 — makeLine("seismic figure scale left tick", [
+- src\scene\styles\seismicFigureAnnotations.ts:467 — root.add(
+- src\scene\styles\seismicFigureAnnotations.ts:468 — makeLine("seismic figure scale right tick", [
+- src\scene\styles\seismicFigureAnnotations.ts:473 — root.add(
+- src\scene\styles\seismicFigureAnnotations.ts:489 — root.add(
+- src\scene\styles\seismicFigureAnnotations.ts:490 — makeLine("seismic figure left axis", [
+- src\scene\styles\seismicFigureAnnotations.ts:495 — root.add(
+- src\scene\styles\seismicFigureAnnotations.ts:496 — makeLine("seismic figure right axis", [
+- src\scene\styles\seismicFigureAnnotations.ts:506 — root.add(
+- src\scene\styles\seismicFigureAnnotations.ts:507 — makeLine("seismic figure left axis tick", [
+- src\scene\styles\seismicFigureAnnotations.ts:512 — root.add(
+- src\scene\styles\seismicFigureAnnotations.ts:513 — makeLine("seismic figure right axis tick", [
+- src\scene\styles\seismicFigureAnnotations.ts:518 — root.add(
+- src\scene\styles\seismicFigureAnnotations.ts:529 — root.add(
+- src\scene\styles\seismicFigureAnnotations.ts:543 — root.add(
+- src\scene\styles\seismicFigureAnnotations.ts:554 — root.add(
+- src\scene\styles\seismicFigureAnnotations.ts:566 — if (model.horizonPolyline.length >= 2) {
+- src\scene\styles\seismicFigureAnnotations.ts:567 — const points = model.horizonPolyline.map(([u, t]) =>
+- src\scene\styles\seismicFigureAnnotations.ts:573 — root.add(makeLine("seismic figure horizon polyline", points, horizonColor, 1));
+- src\scene\styles\seismicFigureAnnotations.ts:593 — root.add(
+- src\scene\styles\seismicFigureAnnotations.ts:594 — makeLine("seismic figure well trace", [
+- src\scene\styles\seismicFigureAnnotations.ts:599 — root.add(
+- src\scene\styles\seismicFigureAnnotations.ts:620 — root.add(
+- src\scene\styles\seismicFigureAnnotations.ts:630 — root.add(
+- src\scene\styles\seismicFigureAnnotations.ts:638 — { multiline: true, fontPx: 40, weight: 650 },
+- src\scene\styles\seismicFigureAnnotations.ts:643 — mesh.add(root);
+- src\scene\styles\seismicFigureAnnotations.ts:644 — mesh.userData.seismicFigureAnnotationRoot = root;
+- src\scene\styles\siteDetailStyles.ts:2 — import { Line2 } from "three/examples/jsm/lines/Line2.js";
+- src\scene\styles\siteDetailStyles.ts:3 — import { LineMaterial } from "three/examples/jsm/lines/LineMaterial.js";
+- src\scene\styles\siteDetailStyles.ts:15 — rebuildDemoBoreholeCenterlineGeometry,
+- src\scene\styles\siteDetailStyles.ts:16 — rebuildDemoBoreholePipeGeometry,
+- src\scene\styles\siteDetailStyles.ts:93 — const material = (obj as THREE.Mesh | THREE.Line).material as
+- src\scene\styles\siteDetailStyles.ts:199 — style.gammaTraceWidthPx ?? style.lineWidth,
+- src\scene\styles\siteDetailStyles.ts:206 — if (obj.userData?.ezGammaHoleRoot === true) {
+- src\scene\styles\siteDetailStyles.ts:277 — const material = (obj as THREE.Line).material as
+- src\scene\styles\siteDetailStyles.ts:280 — if (material instanceof LineMaterial) {
+- src\scene\styles\siteDetailStyles.ts:284 — material.linewidth = traceWidth;
+- src\scene\styles\siteDetailStyles.ts:361 — const applyLineSourceMaterial = (
+- src\scene\styles\siteDetailStyles.ts:365 — linewidth: number,
+- src\scene\styles\siteDetailStyles.ts:370 — const line = obj as Line2;
+- src\scene\styles\siteDetailStyles.ts:371 — const material = line.material;
+- src\scene\styles\siteDetailStyles.ts:372 — if (!(material instanceof LineMaterial)) return;
+- src\scene\styles\siteDetailStyles.ts:378 — material.linewidth = linewidth;
+- src\scene\styles\siteDetailStyles.ts:383 — if (line.userData.demoBoreholeLineDistances !== true) {
+- src\scene\styles\siteDetailStyles.ts:384 — line.computeLineDistances();
+- src\scene\styles\siteDetailStyles.ts:385 — line.userData.demoBoreholeLineDistances = true;
+- src\scene\styles\siteDetailStyles.ts:421 — if (obj.userData?.demoBoreholePipeRoot === true) {
+- src\scene\styles\siteDetailStyles.ts:428 — const displayPoints = rebuildDemoBoreholePipeGeometry(obj, {
+- src\scene\styles\siteDetailStyles.ts:432 — lineStyle: wellStyle.lineStyle,
+- src\scene\styles\siteDetailStyles.ts:460 — obj.userData?.demoBoreholeCenterline === true
+- src\scene\styles\siteDetailStyles.ts:462 — obj.visible = wellStyle.visible && wellStyle.centerlineVisible;
+- src\scene\styles\siteDetailStyles.ts:463 — rebuildDemoBoreholeCenterlineGeometry(obj, displayPoints);
+- src\scene\styles\siteDetailStyles.ts:464 — const line = obj as Line2;
+- src\scene\styles\siteDetailStyles.ts:465 — if (line.material instanceof LineMaterial) {
+- src\scene\styles\siteDetailStyles.ts:466 — line.material.color.set(wellStyle.centerlineColor);
+- src\scene\styles\siteDetailStyles.ts:467 — line.material.opacity = wellStyle.centerlineOpacity * layerOpacity;
+- src\scene\styles\siteDetailStyles.ts:468 — line.material.transparent = true;
+- src\scene\styles\siteDetailStyles.ts:469 — line.material.linewidth = wellStyle.centerlineWidth;
+- src\scene\styles\siteDetailStyles.ts:470 — line.material.needsUpdate = true;
+- src\scene\styles\siteDetailStyles.ts:521 — if (obj.userData?.demoBoreholeSourceTraceRoot === true) {
+- src\scene\styles\siteDetailStyles.ts:562 — if (obj.userData?.demoBoreholeSourceLine === true) {
+- src\scene\styles\siteDetailStyles.ts:566 — sourceLocationStyle.lineVisible;
+- src\scene\styles\siteDetailStyles.ts:574 — applyLineSourceMaterial(
+- src\scene\styles\siteDetailStyles.ts:576 — sourceLocationStyle.lineColor,
+- src\scene\styles\siteDetailStyles.ts:577 — sourceLocationStyle.lineOpacity * layerOpacity,
+- src\scene\styles\siteDetailStyles.ts:578 — sourceLocationStyle.lineWidth,
+- src\scene\styles\siteDetailStyles.ts:579 — sourceLocationStyle.lineDashed,
+- src\scene\styles\siteDetailStyles.ts:580 — sourceLocationStyle.lineDashLengthM,
+- src\scene\styles\siteDetailStyles.ts:581 — sourceLocationStyle.lineDashGapM,
+- src\scene\styles\siteDetailStyles.ts:626 — applyLineSourceMaterial(
+- src\scene\styles\siteDetailStyles.ts:655 — mesh.geometry.dispose();
+- src\scene\styles\siteDetailStyles.ts:756 — blockStyle.outlineVisible);
+- src\scene\styles\siteDetailStyles.ts:770 — const material = (obj as THREE.Mesh | THREE.LineSegments).material as
+- src\scene\styles\siteDetailStyles.ts:777 — linewidth?: number;
+- src\scene\styles\siteDetailStyles.ts:783 — ? blockStyle.outlineColor
+- src\scene\styles\siteDetailStyles.ts:790 — ? blockStyle.outlineOpacity
+- src\scene\styles\siteDetailStyles.ts:793 — if ("linewidth" in colored) colored.linewidth = blockStyle.outlineThickness;
+- src\scene\styles\siteDetailStyles.ts:831 — const sampleRoots: THREE.Object3D[] = [];
+- src\scene\styles\siteDetailStyles.ts:833 — if (obj.userData?.geochemSampleRoot === true) sampleRoots.push(obj);
+- src\scene\styles\siteDetailStyles.ts:835 — if (sampleRoots.length === 0) return;
+- src\scene\styles\siteDetailStyles.ts:859 — const hasSelectedElement = sampleRoots.some((root) => {
+- src\scene\styles\siteDetailStyles.ts:860 — const values = root.userData.elements as
+- src\scene\styles\siteDetailStyles.ts:867 — const values = sampleRoots
+- src\scene\styles\siteDetailStyles.ts:868 — .map((root) => {
+- src\scene\styles\siteDetailStyles.ts:869 — const map = root.userData.elements as
+- src\scene\styles\siteDetailStyles.ts:930 — const showOutline = style.geochemShowOutline !== false;
+- src\scene\styles\siteDetailStyles.ts:931 — const outlineOpacity = showOutline
+- src\scene\styles\siteDetailStyles.ts:932 — ? numeric(style.geochemOutlineOpacity, 0.65, 0, 1)
+- src\scene\styles\siteDetailStyles.ts:939 — const outlineColor = color(style.geochemOutlineColor, "#221f1c");
+- src\scene\styles\siteDetailStyles.ts:981 — for (const root of sampleRoots) {
+- src\scene\styles\siteDetailStyles.ts:982 — const map = root.userData.elements as Record<string, number> | undefined;
+- src\scene\styles\siteDetailStyles.ts:985 — root.visible = valid;
+- src\scene\styles\siteDetailStyles.ts:993 — typeof root.userData.sceneTerrainZ === "number"
+- src\scene\styles\siteDetailStyles.ts:994 — ? root.userData.sceneTerrainZ
+- src\scene\styles\siteDetailStyles.ts:995 — : root.position.z - lift;
+- src\scene\styles\siteDetailStyles.ts:996 — root.position.z = sceneTerrainZ + lift;
+- src\scene\styles\siteDetailStyles.ts:998 — typeof root.userData.sampleId === "string"
+- src\scene\styles\siteDetailStyles.ts:999 — ? root.userData.sampleId
+- src\scene\styles\siteDetailStyles.ts:1002 — root.userData.displayName = displayName;
+- src\scene\styles\siteDetailStyles.ts:1004 — for (const child of root.children) {
+- src\scene\styles\siteDetailStyles.ts:1011 — if (child.userData.geochemPart === "outline") {
+- src\scene\styles\siteDetailStyles.ts:1012 — child.visible = showOutline && outlineOpacity > 0.001;
+- src\scene\styles\siteDetailStyles.ts:1015 — applyMaterial(child, outlineColor, outlineOpacity);
+- src\scene\terrain\applyLakesToTerrain.ts:117 — handle.setForestOutlineColor(forestStyle.color);
+- src\scene\terrain\applyLakesToTerrain.ts:132 — handle.setForestOutlineOpacity(forestOp * forestOpacity);
+- src\scene\terrain\applyLakesToTerrain.ts:164 — // Geology rebuild: per-unit visibility / colour are env-level
+- src\scene\terrain\applyLakesToTerrain.ts:166 — // them to the loader's rebuild() each apply tick. Cheap (single
+- src\scene\terrain\applyLakesToTerrain.ts:182 — this.geologyHandle.rebuild({ colorMap, unitOverrides });
+- src\scene\terrain\terrainStyleController.ts:2 — import { LineMaterial } from "three/examples/jsm/lines/LineMaterial.js";
+- src\scene\terrain\terrainStyleController.ts:3 — import { LineSegments2 } from "three/examples/jsm/lines/LineSegments2.js";
+- src\scene\terrain\terrainStyleController.ts:4 — import { LineSegmentsGeometry } from "three/examples/jsm/lines/LineSegmentsGeometry.js";
+- src\scene\terrain\terrainStyleController.ts:11 — import { getHeightSampler } from "../heightSampler";
+- src\scene\terrain\terrainStyleController.ts:13 — import { disposeObjectTree } from "../disposeObjectTree";
+- src\scene\terrain\terrainStyleController.ts:18 — const SITE_GUIDE_OUTLINE_LIFT_M = 3;
+- src\scene\terrain\terrainStyleController.ts:66 — handle.setForestOutlineOpacity(opacity);
+- src\scene\terrain\terrainStyleController.ts:199 — export function sourceSiteGuideLinesImpl(this: any, group: THREE.Object3D): Vec3[][] {
+- src\scene\terrain\terrainStyleController.ts:200 — const rawLines: unknown[] = [];
+- src\scene\terrain\terrainStyleController.ts:202 — const lines = child.userData?.sourceLineStrings;
+- src\scene\terrain\terrainStyleController.ts:203 — if (Array.isArray(lines)) rawLines.push(...lines);
+- src\scene\terrain\terrainStyleController.ts:205 — return rawLines
+- src\scene\terrain\terrainStyleController.ts:206 — .map((line) =>
+- src\scene\terrain\terrainStyleController.ts:207 — Array.isArray(line)
+- src\scene\terrain\terrainStyleController.ts:208 — ? line.filter(
+- src\scene\terrain\terrainStyleController.ts:219 — .filter((line) => line.length >= 2);
+- src\scene\terrain\terrainStyleController.ts:222 — export function resampleSiteGuideLineImpl(this: any, line: Vec3[], stepM: number): Vec3[] {
+- src\scene\terrain\terrainStyleController.ts:223 — if (line.length <= 1) return line;
+- src\scene\terrain\terrainStyleController.ts:224 — const resampled: Vec3[] = [line[0]];
+- src\scene\terrain\terrainStyleController.ts:225 — for (let index = 1; index < line.length; index += 1) {
+- src\scene\terrain\terrainStyleController.ts:226 — const start = line[index - 1];
+- src\scene\terrain\terrainStyleController.ts:227 — const end = line[index];
+- src\scene\terrain\terrainStyleController.ts:276 — export function siteGuideRingImpl(this: any, lines: Vec3[][]): Vec3[] | null {
+- src\scene\terrain\terrainStyleController.ts:277 — const longest = lines.reduce<Vec3[] | null>(
+- src\scene\terrain\terrainStyleController.ts:278 — (best, line) => (!best || line.length > best.length ? line : best),
+- src\scene\terrain\terrainStyleController.ts:303 — shape.lineTo(openRing[index][0], openRing[index][1]);
+- src\scene\terrain\terrainStyleController.ts:333 — const sourceLines = this.sourceSiteGuideLines(group) as Vec3[][];
+- src\scene\terrain\terrainStyleController.ts:334 — if (sourceLines.length === 0) return;
+- src\scene\terrain\terrainStyleController.ts:336 — const resampledLines = sourceLines.map((sourceLine) =>
+- src\scene\terrain\terrainStyleController.ts:337 — this.resampleSiteGuideLine(sourceLine, SITE_GUIDE_RESAMPLE_STEP_M),
+- src\scene\terrain\terrainStyleController.ts:339 — const linePositions: number[] = [];
+- src\scene\terrain\terrainStyleController.ts:340 — for (const line of resampledLines) {
+- src\scene\terrain\terrainStyleController.ts:341 — for (let index = 1; index < line.length; index += 1) {
+- src\scene\terrain\terrainStyleController.ts:342 — for (const point of [line[index - 1], line[index]]) {
+- src\scene\terrain\terrainStyleController.ts:343 — linePositions.push(
+- src\scene\terrain\terrainStyleController.ts:351 — SITE_GUIDE_OUTLINE_LIFT_M,
+- src\scene\terrain\terrainStyleController.ts:366 — const outlineColor =
+- src\scene\terrain\terrainStyleController.ts:367 — typeof style.outlineColor === "string" ? style.outlineColor : fillColor;
+- src\scene\terrain\terrainStyleController.ts:368 — const outlineOpacity =
+- src\scene\terrain\terrainStyleController.ts:373 — const authoredLineWidth =
+- src\scene\terrain\terrainStyleController.ts:374 — typeof style.lineWidth === "number" && Number.isFinite(style.lineWidth)
+- src\scene\terrain\terrainStyleController.ts:375 — ? style.lineWidth
+- src\scene\terrain\terrainStyleController.ts:381 — authoredLineWidth * SITE_BOUNDARY_RIBBON_WIDTH_SCALE,
+- src\scene\terrain\terrainStyleController.ts:385 — if (obj.userData?.terrainDrapedSiteGuideLine !== true) return;
+- src\scene\terrain\terrainStyleController.ts:386 — const line = obj as LineSegments2;
+- src\scene\terrain\terrainStyleController.ts:387 — const geometry = line.geometry as LineSegmentsGeometry | undefined;
+- src\scene\terrain\terrainStyleController.ts:389 — geometry.setPositions(linePositions);
+- src\scene\terrain\terrainStyleController.ts:392 — line.computeLineDistances();
+- src\scene\terrain\terrainStyleController.ts:394 — const material = line.material as LineMaterial | undefined;
+- src\scene\terrain\terrainStyleController.ts:395 — if (material instanceof LineMaterial) {
+- src\scene\terrain\terrainStyleController.ts:396 — material.color.set(outlineColor);
+- src\scene\terrain\terrainStyleController.ts:397 — material.opacity = outlineOpacity;
+- src\scene\terrain\terrainStyleController.ts:401 — material.linewidth = siteBoundaryRibbonWidthM;
+- src\scene\terrain\terrainStyleController.ts:407 — material.userData.lakeOutlineMaterial = true;
+- src\scene\terrain\terrainStyleController.ts:412 — const ring = this.siteGuideRing(resampledLines);
+- src\scene\terrain\terrainStyleController.ts:419 — disposeObjectTree(fill);
+- src\scene\terrain\terrainStyleController.ts:451 — fill.geometry.dispose();
+- src\scene\terrain\terrainStyleController.ts:468 — void getHeightSampler().then((sampleHeight) => {
+- src\scene\terrain\terrainStyleController.ts:551 — handle.setForestOutlineColor(style.color);
+- src\scene\terrain\terrainStyleController.ts:564 — handle.setForestOutlineOpacity(opacity);
+- src\scene\transitions\cinematicSceneTransitions.ts:180 — bandSize: 0.28,
+- src\scene\transitions\cinematicSceneTransitions.ts:199 — lineThickness: 0.25,
+- src\scene\transitions\cinematicSceneTransitions.ts:503 — "bandSize",
+- src\scene\transitions\cinematicSceneTransitions.ts:577 — const lineThickness = blendNumberField(
+- src\scene\transitions\cinematicSceneTransitions.ts:580 — "lineThickness",
+- src\scene\transitions\cinematicSceneTransitions.ts:612 — if (lineThickness !== undefined) {
+- src\scene\transitions\cinematicSceneTransitions.ts:613 — scene.compositionGuides.lineThickness = lineThickness;
+- src\scene\transitions\layerTweenRuntime.ts:33 — if (transition.sectionIsoStableLayerIds?.has(id)) return 1;
+- src\scene\transitions\layerTweenRuntime.ts:194 — this.tickSectionIsoOverlayTransition(nowMs, eased);
+- src\scene\transitions\layerTweenRuntime.ts:203 — this.tickSectionIsoOverlayTransition(nowMs, 1);
+- src\scene\transitions\layerTweenRuntime.ts:209 — this.commitSectionIsoOverlayTransition();
+- src\scene\transitions\layerTweenRuntime.ts:309 — this.tickSectionIsoOverlayTransition(nowMs);
+- src\scene\transitions\layerTweenRuntime.ts:350 — this.commitSectionIsoOverlayTransition?.();
+- src\scene\transitions\productFamilyRegistry.ts:32 — function sectionIsoEnabled(style: EditableStyle): boolean {
+- src\scene\transitions\productFamilyRegistry.ts:34 — style.sectionIsoEnabled === true &&
+- src\scene\transitions\productFamilyRegistry.ts:35 — (style.sectionIsoBandsVisible !== false ||
+- src\scene\transitions\productFamilyRegistry.ts:36 — style.sectionIsoLinesVisible !== false)
+- src\scene\transitions\productFamilyRegistry.ts:221 — (sectionIsoEnabled(fromStyle) || sectionIsoEnabled(toStyle))
+- src\scene\transitions\productFamilyRegistry.ts:226 — family: "section-iso-overlays",
+- src\scene\transitions\productFamilyRegistry.ts:227 — policy: "follow-section-iso-style",
+- src\scene\transitions\productFamilyRegistry.ts:235 — reason: "section ISO bands/isolines are authored on this layer",
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:36 — "outlineColor",
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:37 — "centerlineColor",
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:52 — "labelOutlineColor",
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:58 — "scalarEdgeLineStyle",
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:60 — "sectionIsoEnabled",
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:61 — "sectionIsoLinesVisible",
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:62 — "sectionIsoBandsVisible",
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:63 — "sectionIsoTargetIds",
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:64 — "sectionIsoLineStyle",
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:116 — function sectionIsoOverlayVisible(style: ReturnType<typeof effectiveStyle>): boolean {
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:117 — if (style.sectionIsoEnabled !== true) return false;
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:119 — style.sectionIsoLinesVisible === false &&
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:120 — style.sectionIsoBandsVisible === false
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:124 — const targetIds = style.sectionIsoTargetIds;
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:254 — const sectionIsoEnabled = sectionIsoOverlayVisible(input.style);
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:255 — const lineIsoVisible =
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:256 — input.style.sectionIsoEnabled === true &&
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:257 — input.style.sectionIsoLinesVisible !== false;
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:258 — const bandIsoVisible =
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:259 — input.style.sectionIsoEnabled === true &&
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:260 — input.style.sectionIsoBandsVisible !== false;
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:310 — representationKey: "derived:axis-lines",
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:317 — entityKey: `layer:${input.layerId}:derived:section-iso-lines`,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:318 — representationKey: "derived:section-iso-line",
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:319 — presenceState: derivedPresence(sectionIsoEnabled && lineIsoVisible),
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:326 — entityKey: `layer:${input.layerId}:derived:section-iso-bands`,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:327 — representationKey: "derived:section-iso-band",
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:328 — presenceState: derivedPresence(sectionIsoEnabled && bandIsoVisible),
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:377 — this.layerTweens.clear();
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:378 — this.scalarStyleTweens.clear();
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:382 — this.discardSectionIsoOverlayTransition?.();
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:383 — this.clearLayerTransitionSnapshots();
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:543 — sectionIsoStableLayerIds: new Set<string>(),
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:677 — this.beginSectionIsoOverlayTransition(
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:696 — const sectionIsoStable =
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:699 — sectionIsoOverlayVisible(fromStyle) &&
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:700 — sectionIsoOverlayVisible(targetStyle);
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:701 — if (sectionIsoStable) {
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:702 — this.activeSceneTransitionContext.sectionIsoStableLayerIds.add(id);
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:788 — this.applyLayerTransitionRenderOpacity(id, 0, sectionIsoStable ? 1 : 0);
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:812 — sectionIsoStable ? 1 : fromOpacity > 0.001 ? 1 : 0,
+- src\scene\transitions\transitionStyles.ts:39 — case "linear":
+- src\scene\transitions\transitionStyles.ts:93 — export type SectionIsoOverlayTransitionRootKind =
+- src\scene\transitions\transitionStyles.ts:98 — export interface SectionIsoOverlayTransitionRoot {
+- src\scene\transitions\transitionStyles.ts:99 — kind: SectionIsoOverlayTransitionRootKind;
+- src\scene\transitions\transitionStyles.ts:105 — export interface SectionIsoOverlayTransition {
+- src\scene\transitions\transitionStyles.ts:106 — sourceRoots: SectionIsoOverlayTransitionRoot[];
+- src\scene\transitions\transitionStyles.ts:107 — targetRoots: SectionIsoOverlayTransitionRoot[];
+- src\scene\transitions\transitionStyles.ts:150 — | "section-iso-overlays"
+- src\scene\transitions\transitionStyles.ts:161 — | "follow-section-iso-style";
+- src\scene\transitions\transitionStyles.ts:198 — sectionIsoStableLayerIds: Set<string>;
+- src\scene\transitions\transitionStyles.ts:226 — "scalarEdgeLineWidth",
+- src\scene\transitions\transitionStyles.ts:237 — "sectionIsoMin",
+- src\scene\transitions\transitionStyles.ts:238 — "sectionIsoMax",
+- src\scene\transitions\transitionStyles.ts:239 — "sectionIsoLevelCount",
+- src\scene\transitions\transitionStyles.ts:240 — "sectionIsoLineWidth",
+- src\scene\transitions\transitionStyles.ts:241 — "sectionIsoBandOpacity",
+- src\scene\transitions\transitionStyles.ts:242 — "sectionIsoFillOffset",
+- src\scene\transitions\transitionStyles.ts:243 — "sectionIsoSourceOpacity",
+- src\scene\transitions\transitionStyles.ts:323 — if (field === "scalarEdgeLineWidth") {
+- src\scene\transitions\transitionStyles.ts:334 — if (field === "sectionIsoMin") return displayMin;
+- src\scene\transitions\transitionStyles.ts:335 — if (field === "sectionIsoMax") return displayMax;
+- src\scene\transitions\transitionStyles.ts:336 — if (field === "sectionIsoLevelCount") return 5;
+- src\scene\transitions\transitionStyles.ts:337 — if (field === "sectionIsoLineWidth") return 2.6;
+- src\scene\transitions\transitionStyles.ts:338 — if (field === "sectionIsoBandOpacity") return 0.32;
+- src\scene\transitions\transitionStyles.ts:339 — if (field === "sectionIsoFillOffset") return 0;
+- src\scene\transitions\transitionStyles.ts:340 — if (field === "sectionIsoSourceOpacity") return 0;
+- src\scene\transitions\transitionStyles.ts:686 — "sectionIsoEnabled",
+- src\scene\transitions\transitionStyles.ts:687 — "sectionIsoTargetIds",
+- src\scene\workingArea\workingAreaFocusController.ts:2 — import { LineMaterial } from "three/examples/jsm/lines/LineMaterial.js";
+- src\scene\workingArea\workingAreaFocusController.ts:3 — import { LineSegments2 } from "three/examples/jsm/lines/LineSegments2.js";
+- src\scene\workingArea\workingAreaFocusController.ts:4 — import { LineSegmentsGeometry } from "three/examples/jsm/lines/LineSegmentsGeometry.js";
+- src\scene\workingArea\workingAreaFocusController.ts:31 — line: LineSegments2;
+- src\scene\workingArea\workingAreaFocusController.ts:184 — const geometry = new LineSegmentsGeometry();
+- src\scene\workingArea\workingAreaFocusController.ts:186 — const material = new LineMaterial({
+- src\scene\workingArea\workingAreaFocusController.ts:188 — linewidth: 2,
+- src\scene\workingArea\workingAreaFocusController.ts:202 — const line = new LineSegments2(geometry, material);
+- src\scene\workingArea\workingAreaFocusController.ts:203 — line.name = "Working area focus box";
+- src\scene\workingArea\workingAreaFocusController.ts:204 — line.renderOrder = WORKING_AREA_FOCUS_RENDER_ORDER;
+- src\scene\workingArea\workingAreaFocusController.ts:205 — line.userData.workingAreaFocusHelper = true;
+- src\scene\workingArea\workingAreaFocusController.ts:210 — group.add(line);
+- src\scene\workingArea\workingAreaFocusController.ts:212 — this.workingAreaFocusRuntime = { group, line };
+- src\scene\workingArea\workingAreaFocusController.ts:216 — export function rebuildWorkingAreaFocusHelperImpl(this: any, state: WorkingAreaFocusState): void {
+- src\scene\workingArea\workingAreaFocusController.ts:221 — const geometry = new LineSegmentsGeometry();
+- src\scene\workingArea\workingAreaFocusController.ts:225 — runtime.line.geometry.dispose();
+- src\scene\workingArea\workingAreaFocusController.ts:226 — runtime.line.geometry = geometry;
+- src\scene\workingArea\workingAreaFocusController.ts:227 — runtime.line.computeLineDistances();
+- src\scene\workingArea\workingAreaFocusController.ts:295 — this.rebuildWorkingAreaFocusHelper(state);
+- src\ui\AssayLegend.tsx:31 — const rootStyle: CSSProperties = {
+- src\ui\AssayLegend.tsx:46 — display: "inline-flex",
+- src\ui\AssayLegend.tsx:67 — const linear = [r, g, b].map((v) =>
+- src\ui\AssayLegend.tsx:70 — const luminance = 0.2126 * linear[0] + 0.7152 * linear[1] +
+- src\ui\AssayLegend.tsx:71 — 0.0722 * linear[2];
+- src\ui\AssayLegend.tsx:112 — const lineRefs = useRef<Map<string, SVGPathElement>>(new Map());
+- src\ui\AssayLegend.tsx:147 — for (const path of lineRefs.current.values()) setPathHidden(path);
+- src\ui\AssayLegend.tsx:166 — for (const path of lineRefs.current.values()) setPathHidden(path);
+- src\ui\AssayLegend.tsx:183 — const path = lineRefs.current.get(stop.id);
+- src\ui\AssayLegend.tsx:222 — if (node) lineRefs.current.set(stop.id, node);
+- src\ui\AssayLegend.tsx:223 — else lineRefs.current.delete(stop.id);
+- src\ui\AssayLegend.tsx:228 — strokeLinecap="round"
+- src\ui\AssayLegend.tsx:229 — strokeLinejoin="round"
+- src\ui\AssayLegend.tsx:245 — style={rootStyle}
+- src\ui\HoverTooltip.tsx:2 — import { frostedRoot } from "../editor/styles";
+- src\ui\HoverTooltip.tsx:4 — // Cursor-following hover tooltip. Mounted once at the App root; receives
+- src\ui\HoverTooltip.tsx:53 — ...frostedRoot,
+- src\ui\HoverTooltip.tsx:55 — // ensures backdrop-filter ends up in React's inline style output.
+- src\ui\legendStyles.ts:104 — display: "inline-flex",
+- src\ui\legendStyles.ts:109 — lineHeight: 1,
+- src\ui\legendStyles.ts:117 — outline: "none",
+- src\ui\legendStyles.ts:130 — display: "inline-flex",
+- src\ui\legendStyles.ts:135 — outline: "none",
+- src\ui\legendStyles.ts:157 — outline: "none",
+- src\ui\LightModeToggle.tsx:57 — <g stroke={color} strokeWidth="2" strokeLinecap="round">
+- src\ui\LightModeToggle.tsx:90 — strokeLinecap="round"
+- src\ui\LightModeToggle.tsx:91 — strokeLinejoin="round"
+- src\ui\LightModeToggle.tsx:98 — strokeLinejoin="round"
+- src\ui\LightModeToggle.tsx:201 — const rootStyle: React.CSSProperties = {
+- src\ui\LightModeToggle.tsx:214 — display: "inline-flex",
+- src\ui\LightModeToggle.tsx:271 — <div style={rootStyle}>
+- src\ui\LightModeToggle.tsx:430 — lineHeight: 1.45,
+- src\ui\LightModeToggle.tsx:437 — lineHeight: 1.35,
+- src\ui\MtSurfaceBoundaryLegend.tsx:35 — const rootStyle: CSSProperties = {
+- src\ui\MtSurfaceBoundaryLegend.tsx:173 — ...rootStyle,
+- src\ui\NavControls.tsx:2 — import { frostedRoot, vibrancyLabel } from "../editor/styles";
+- src\ui\NavControls.tsx:15 — ...frostedRoot,
+- src\ui\NavControls.tsx:28 — display: "inline-flex",
+- src\ui\NavControls.tsx:31 — lineHeight: 1,
+- src\ui\NavControls.tsx:148 — strokeLinejoin="bevel"
+- src\ui\NavControls.tsx:292 — guiNavigator.arrowOutlineColor ?? navArrowFillSource,
+- src\ui\NavControls.tsx:293 — clamp(guiNavigator.arrowOutlineAlpha ?? 0, 0, 1),
+- src\ui\NavControls.tsx:297 — ? Math.max(0, guiNavigator.arrowOutlineWidth ?? 0)
+- src\ui\ResistivityLegend.tsx:11 — FROSTED_HAIRLINE,
+- src\ui\ResistivityLegend.tsx:55 — const EDGE_LINE_MAX_WIDTH_PX = 8;
+- src\ui\ResistivityLegend.tsx:59 — const rootBaseStyle: CSSProperties = {
+- src\ui\ResistivityLegend.tsx:92 — lineHeight: 1.25,
+- src\ui\ResistivityLegend.tsx:109 — lineHeight: 1.1,
+- src\ui\ResistivityLegend.tsx:128 — border: FROSTED_HAIRLINE,
+- src\ui\ResistivityLegend.tsx:213 — strokeLinecap="round"
+- src\ui\ResistivityLegend.tsx:214 — strokeLinejoin="round"
+- src\ui\ResistivityLegend.tsx:227 — strokeLinecap="round"
+- src\ui\ResistivityLegend.tsx:228 — strokeLinejoin="round"
+- src\ui\ResistivityLegend.tsx:240 — strokeLinecap="round"
+- src\ui\ResistivityLegend.tsx:241 — strokeLinejoin="round"
+- src\ui\ResistivityLegend.tsx:342 — "scalarEdgeLineWidth",
+- src\ui\ResistivityLegend.tsx:398 — const edgeLineWidth = clamp(
+- src\ui\ResistivityLegend.tsx:401 — "scalarEdgeLineWidth",
+- src\ui\ResistivityLegend.tsx:402 — styleNumber(style, "scalarEdgeHighlight", 0) * EDGE_LINE_MAX_WIDTH_PX,
+- src\ui\ResistivityLegend.tsx:405 — EDGE_LINE_MAX_WIDTH_PX,
+- src\ui\ResistivityLegend.tsx:426 — scalarEdgeLineWidth: edgeLineWidth,
+- src\ui\ResistivityLegend.tsx:516 — "linear-gradient(90deg, #ffffff 0%, rgba(255, 255, 255, 0.18) 50%, #050607 100%)",
+- src\ui\ResistivityLegend.tsx:554 — scalarEdgeLineWidth: 0,
+- src\ui\ResistivityLegend.tsx:589 — const rootRef = useRef<HTMLElement | null>(null);
+- src\ui\ResistivityLegend.tsx:606 — edgePopoverPositionForLegend(rootRef.current, edgePopoverRef.current),
+- src\ui\ResistivityLegend.tsx:766 — const edgeLineWidth = clamp(
+- src\ui\ResistivityLegend.tsx:769 — "scalarEdgeLineWidth",
+- src\ui\ResistivityLegend.tsx:770 — styleNumber(style, "scalarEdgeHighlight", 0) * EDGE_LINE_MAX_WIDTH_PX,
+- src\ui\ResistivityLegend.tsx:773 — EDGE_LINE_MAX_WIDTH_PX,
+- src\ui\ResistivityLegend.tsx:787 — const edgeLineStyle =
+- src\ui\ResistivityLegend.tsx:788 — style.scalarEdgeLineStyle === "dashed" ? "dashed" : "solid";
+- src\ui\ResistivityLegend.tsx:1120 — ref={rootRef}
+- src\ui\ResistivityLegend.tsx:1122 — ...rootBaseStyle,
+- src\ui\ResistivityLegend.tsx:1221 — background: `linear-gradient(90deg, ${lowColor} 0%, ${lowColor} ${colorMinPercent.toFixed(
+- src\ui\ResistivityLegend.tsx:1255 — "linear-gradient(90deg, rgba(0, 0, 0, 0.58), rgba(0, 0, 0, 0))",
+- src\ui\ResistivityLegend.tsx:1268 — "linear-gradient(90deg, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.58))",
+- src\ui\ResistivityLegend.tsx:1305 — aria-label="Lower isoline log10 resistivity"
+- src\ui\ResistivityLegend.tsx:1307 — title="Lower isoline log10 resistivity"
+- src\ui\ResistivityLegend.tsx:1318 — aria-label="Upper isoline log10 resistivity"
+- src\ui\ResistivityLegend.tsx:1320 — title="Upper isoline log10 resistivity"
+- src\ui\ResistivityLegend.tsx:1382 — lineHeight: 1.35,
+- src\ui\ResistivityLegend.tsx:1401 — Band fill {edgeFillOffset === 0 ? "0%" : `${Math.round(edgeFillOffset * 100)}%`}
+- src\ui\ResistivityLegend.tsx:1409 — title="Isoline band fill offset"
+- src\ui\ResistivityLegend.tsx:1424 — Isoline style
+- src\ui\ResistivityLegend.tsx:1426 — value={edgeLineStyle}
+- src\ui\ResistivityLegend.tsx:1427 — data-testid={testId("resistivity-legend-edge-line-style")}
+- src\ui\ResistivityLegend.tsx:1428 — title="Isoline style"
+- src\ui\ResistivityLegend.tsx:1433 — scalarEdgeLineStyle:
+- src\ui\ResistivityLegend.tsx:1443 — Isoline {edgeLineWidth.toFixed(1)}px
+- src\ui\ResistivityLegend.tsx:1447 — max={EDGE_LINE_MAX_WIDTH_PX}
+- src\ui\ResistivityLegend.tsx:1449 — value={edgeLineWidth}
+- src\ui\ResistivityLegend.tsx:1451 — title="Isoline width"
+- src\ui\ResistivityLegend.tsx:1455 — scalarEdgeLineWidth: clamp(
+- src\ui\ResistivityLegend.tsx:1458 — EDGE_LINE_MAX_WIDTH_PX,
+- src\ui\ResistivityLegend.tsx:1474 — title="Isoline smoothing"
+- src\ui\ScaleBar.tsx:19 — const rootBaseStyle: React.CSSProperties = {
+- src\ui\ScaleBar.tsx:360 — const scaleLineColor = hexToRgba(borderSource, 0.86);
+- src\ui\ScaleBar.tsx:361 — const rootStyle: React.CSSProperties = {
+- src\ui\ScaleBar.tsx:362 — ...rootBaseStyle,
+- src\ui\ScaleBar.tsx:372 — const lineStyle: React.CSSProperties = {
+- src\ui\ScaleBar.tsx:376 — borderLeft: `1px solid ${scaleLineColor}`,
+- src\ui\ScaleBar.tsx:377 — borderRight: `1px solid ${scaleLineColor}`,
+- src\ui\ScaleBar.tsx:378 — borderBottom: `1px solid ${scaleLineColor}`,
+- src\ui\ScaleBar.tsx:383 — lineHeight: 1,
+- src\ui\ScaleBar.tsx:391 — <div style={rootStyle} aria-label={`Scale ${scale.label}`}>
+- src\ui\ScaleBar.tsx:394 — <div style={lineStyle} />
+- src\ui\SceneLabels.tsx:25 — // can have a collar Mesh + Line2 trace + halo Sprite, all carrying the
+- src\ui\SceneLabels.tsx:29 — // works for Line2 outlines (target rings) where the object's transform
+- src\ui\SceneLabels.tsx:34 — // positions against occupied labels, previous placement, and leader-line
+- src\ui\SceneLabels.tsx:39 — // anchor, a thin leader line connects them so the eye still maps chip
+- src\ui\SceneLabels.tsx:42 — const LABEL_LINE_HEIGHT_PX = 22;
+- src\ui\SceneLabels.tsx:102 — labelOutlineColor: string | null;
+- src\ui\SceneLabels.tsx:105 — labelOutlineOpacity: number;
+- src\ui\SceneLabels.tsx:181 — outlineColor: "#e6e2dc",
+- src\ui\SceneLabels.tsx:182 — outlineOpacity: 1,
+- src\ui\SceneLabels.tsx:191 — outlineColor: "#e6e2dc",
+- src\ui\SceneLabels.tsx:192 — outlineOpacity: 0.34,
+- src\ui\SceneLabels.tsx:201 — outlineColor: "#d9ead0",
+- src\ui\SceneLabels.tsx:202 — outlineOpacity: 0.76,
+- src\ui\SceneLabels.tsx:211 — outlineColor: "#ff9f43",
+- src\ui\SceneLabels.tsx:212 — outlineOpacity: 0.82,
+- src\ui\SceneLabels.tsx:441 — height: isCallout ? LAND_TITLE_FONT_SIZE_PX + 14 : LABEL_LINE_HEIGHT_PX,
+- src\ui\SceneLabels.tsx:450 — "white-space:nowrap;will-change:transform,opacity;line-height:14px;" +
+- src\ui\SceneLabels.tsx:469 — shapePath.setAttribute("stroke-linejoin", "round");
+- src\ui\SceneLabels.tsx:470 — shapePath.setAttribute("stroke-linecap", "round");
+- src\ui\SceneLabels.tsx:478 — pointEdge.setAttribute("stroke-linejoin", "round");
+- src\ui\SceneLabels.tsx:479 — pointEdge.setAttribute("stroke-linecap", "round");
+- src\ui\SceneLabels.tsx:515 — outlineColor: string | null,
+- src\ui\SceneLabels.tsx:518 — outlineOpacity: number,
+- src\ui\SceneLabels.tsx:522 — const outlineCss = outlineColor
+- src\ui\SceneLabels.tsx:523 — ? cssColorWithOpacity(outlineColor, outlineOpacity)
+- src\ui\SceneLabels.tsx:527 — el.style.borderTop = outlineCss ? `1px solid ${outlineCss}` : "none";
+- src\ui\SceneLabels.tsx:528 — el.style.borderRight = outlineCss ? `1px solid ${outlineCss}` : "none";
+- src\ui\SceneLabels.tsx:529 — el.style.borderBottom = outlineCss ? `1px solid ${outlineCss}` : "none";
+- src\ui\SceneLabels.tsx:530 — el.style.borderLeft = outlineCss ? `1px solid ${outlineCss}` : "none";
+- src\ui\SceneLabels.tsx:538 — if (outlineCss) {
+- src\ui\SceneLabels.tsx:539 — shapePath.setAttribute("stroke", outlineCss);
+- src\ui\SceneLabels.tsx:545 — pointEdge.setAttribute("stroke", outlineCss ?? fillCss);
+- src\ui\SceneLabels.tsx:556 — el.style.lineHeight = isCallout ? "18px" : "14px";
+- src\ui\SceneLabels.tsx:763 — // Strict intersection only: touching at an endpoint or nearly-colinear
+- src\ui\SceneLabels.tsx:764 — // leader lines is visually acceptable and avoids jittery side swapping.
+- src\ui\SceneLabels.tsx:1164 — const labelOutlineColor =
+- src\ui\SceneLabels.tsx:1165 — typeof eff.labelOutlineColor === "string" && eff.labelOutlineColor
+- src\ui\SceneLabels.tsx:1166 — ? eff.labelOutlineColor
+- src\ui\SceneLabels.tsx:1167 — : configuredLabelStyle.outlineColor ||
+- src\ui\SceneLabels.tsx:1170 — : defaultLabelStyle.outlineColor);
+- src\ui\SceneLabels.tsx:1182 — const labelOutlineOpacity =
+- src\ui\SceneLabels.tsx:1183 — typeof eff.labelOutlineOpacity === "number"
+- src\ui\SceneLabels.tsx:1184 — ? clamp(eff.labelOutlineOpacity, 0, 1)
+- src\ui\SceneLabels.tsx:1185 — : defaultLabelStyle.outlineOpacity;
+- src\ui\SceneLabels.tsx:1226 — // Linear fade between near (full) and far (gone).
+- src\ui\SceneLabels.tsx:1254 — labelOutlineColor,
+- src\ui\SceneLabels.tsx:1257 — labelOutlineOpacity,
+- src\ui\SceneLabels.tsx:1369 — window.clearTimeout(removalTimer);
+- src\ui\SceneLabels.tsx:1409 — v.labelOutlineColor,
+- src\ui\SceneLabels.tsx:1412 — v.labelOutlineOpacity,
+- src\ui\SceneLabels.tsx:1429 — pair.leader.style.background = v.labelOutlineColor ?? v.labelTextColor;
+- src\ui\SceneLabels.tsx:1459 — window.clearTimeout(timer);
+- src\ui\SceneLabels.tsx:1461 — removalTimersRef.current.clear();
+- src\ui\SceneLabels.tsx:1467 — elementsRef.current.clear();
+- src\ui\SceneLabels.tsx:1468 — previousPositionsRef.current.clear();
+- src\ui\SceneSectionLegend.tsx:39 — const rootStyle: CSSProperties = {
+- src\ui\SceneSectionLegend.tsx:123 — strokeLinecap="round"
+- src\ui\SceneSectionLegend.tsx:124 — strokeLinejoin="round"
+- src\ui\SceneSectionLegend.tsx:137 — strokeLinecap="round"
+- src\ui\SceneSectionLegend.tsx:153 — strokeLinecap="round"
+- src\ui\SceneSectionLegend.tsx:154 — strokeLinejoin="round"
+- src\ui\SceneSectionLegend.tsx:161 — strokeLinecap="round"
+- src\ui\SceneSectionLegend.tsx:174 — strokeLinecap="round"
+- src\ui\SceneSectionLegend.tsx:175 — strokeLinejoin="round"
+- src\ui\SceneSectionLegend.tsx:386 — ...rootStyle,
+- src\ui\SectionIsoLegend.tsx:6 — FROSTED_HAIRLINE,
+- src\ui\SectionIsoLegend.tsx:30 — ScalarSectionIsoTarget,
+- src\ui\SectionIsoLegend.tsx:31 — SectionIsoTargetGroup,
+- src\ui\SectionIsoLegend.tsx:42 — const rootStyle: CSSProperties = {
+- src\ui\SectionIsoLegend.tsx:87 — border: FROSTED_HAIRLINE,
+- src\ui\SectionIsoLegend.tsx:118 — lineHeight: 1.1,
+- src\ui\SectionIsoLegend.tsx:237 — | "lines"
+- src\ui\SectionIsoLegend.tsx:238 — | "bands";
+- src\ui\SectionIsoLegend.tsx:249 — strokeLinecap="round"
+- src\ui\SectionIsoLegend.tsx:265 — strokeLinecap="round"
+- src\ui\SectionIsoLegend.tsx:281 — strokeLinecap="round"
+- src\ui\SectionIsoLegend.tsx:282 — strokeLinejoin="round"
+- src\ui\SectionIsoLegend.tsx:287 — if (kind === "lines") {
+- src\ui\SectionIsoLegend.tsx:295 — strokeLinecap="round"
+- src\ui\SectionIsoLegend.tsx:307 — strokeLinecap="round"
+- src\ui\SectionIsoLegend.tsx:308 — strokeLinejoin="round"
+- src\ui\SectionIsoLegend.tsx:338 — function targetSignature(targets: ScalarSectionIsoTarget[]): string {
+- src\ui\SectionIsoLegend.tsx:359 — "linear-gradient(90deg, #ffffff 0%, rgba(255, 255, 255, 0.18) 50%, #050607 100%)",
+- src\ui\SectionIsoLegend.tsx:369 — targets: ScalarSectionIsoTarget[],
+- src\ui\SectionIsoLegend.tsx:370 — ): Array<{ id: SectionIsoTargetGroup; label: string }> {
+- src\ui\SectionIsoLegend.tsx:371 — const groups = new Map<SectionIsoTargetGroup, string>();
+- src\ui\SectionIsoLegend.tsx:380 — group: SectionIsoTargetGroup,
+- src\ui\SectionIsoLegend.tsx:402 — group: SectionIsoTargetGroup,
+- src\ui\SectionIsoLegend.tsx:422 — function groupSupportsVolumeToggle(group: SectionIsoTargetGroup): boolean {
+- src\ui\SectionIsoLegend.tsx:430 — export function SectionIsoLegend({
+- src\ui\SectionIsoLegend.tsx:445 — const rootRef = useRef<HTMLElement | null>(null);
+- src\ui\SectionIsoLegend.tsx:447 — const [targets, setTargets] = useState<ScalarSectionIsoTarget[]>([]);
+- src\ui\SectionIsoLegend.tsx:448 — const [activeGroup, setActiveGroup] = useState<SectionIsoTargetGroup | "">("");
+- src\ui\SectionIsoLegend.tsx:459 — .listSectionIsoTargets()
+- src\ui\SectionIsoLegend.tsx:469 — return () => window.clearInterval(interval);
+- src\ui\SectionIsoLegend.tsx:483 — setPopoverPosition(positionForLegend(rootRef.current, popoverRef.current));
+- src\ui\SectionIsoLegend.tsx:545 — styleNumber(style, "sectionIsoMin", displayMin),
+- src\ui\SectionIsoLegend.tsx:550 — Math.max(styleNumber(style, "sectionIsoMax", displayMax), isoMin + 0.01),
+- src\ui\SectionIsoLegend.tsx:555 — clamp(styleNumber(style, "sectionIsoLevelCount", 5), 2, 32),
+- src\ui\SectionIsoLegend.tsx:557 — const lineWidth = clamp(styleNumber(style, "sectionIsoLineWidth", 2.6), 0, 12);
+- src\ui\SectionIsoLegend.tsx:558 — const bandOpacity = clamp(
+- src\ui\SectionIsoLegend.tsx:559 — styleNumber(style, "sectionIsoBandOpacity", 0.32),
+- src\ui\SectionIsoLegend.tsx:563 — const fillOffset = clamp(styleNumber(style, "sectionIsoFillOffset", 0), -1, 1);
+- src\ui\SectionIsoLegend.tsx:564 — const lineStyle = style.sectionIsoLineStyle === "dashed" ? "dashed" : "solid";
+- src\ui\SectionIsoLegend.tsx:565 — const enabled = style.sectionIsoEnabled === true;
+- src\ui\SectionIsoLegend.tsx:566 — const linesVisible = styleBoolean(style, "sectionIsoLinesVisible", true);
+- src\ui\SectionIsoLegend.tsx:567 — const bandsVisible = styleBoolean(style, "sectionIsoBandsVisible", true);
+- src\ui\SectionIsoLegend.tsx:569 — styleNumber(style, "sectionIsoSourceOpacity", 0),
+- src\ui\SectionIsoLegend.tsx:576 — const bandsActive = enabled && bandsVisible;
+- src\ui\SectionIsoLegend.tsx:577 — const linesActive = enabled && linesVisible;
+- src\ui\SectionIsoLegend.tsx:579 — typeof style.sectionIsoTargetIds === "object" &&
+- src\ui\SectionIsoLegend.tsx:580 — style.sectionIsoTargetIds !== null
+- src\ui\SectionIsoLegend.tsx:581 — ? (style.sectionIsoTargetIds as Record<string, boolean>)
+- src\ui\SectionIsoLegend.tsx:599 — const nextLinesVisible =
+- src\ui\SectionIsoLegend.tsx:600 — typeof patch.sectionIsoLinesVisible === "boolean"
+- src\ui\SectionIsoLegend.tsx:601 — ? patch.sectionIsoLinesVisible
+- src\ui\SectionIsoLegend.tsx:602 — : linesVisible;
+- src\ui\SectionIsoLegend.tsx:603 — const nextBandsVisible =
+- src\ui\SectionIsoLegend.tsx:604 — typeof patch.sectionIsoBandsVisible === "boolean"
+- src\ui\SectionIsoLegend.tsx:605 — ? patch.sectionIsoBandsVisible
+- src\ui\SectionIsoLegend.tsx:606 — : bandsVisible;
+- src\ui\SectionIsoLegend.tsx:608 — typeof patch.sectionIsoTargetIds === "object" &&
+- src\ui\SectionIsoLegend.tsx:609 — patch.sectionIsoTargetIds !== null
+- src\ui\SectionIsoLegend.tsx:610 — ? (patch.sectionIsoTargetIds as Record<string, boolean>)
+- src\ui\SectionIsoLegend.tsx:613 — (nextLinesVisible || nextBandsVisible) &&
+- src\ui\SectionIsoLegend.tsx:617 — const commitIsoOverlayPatch = (patch: Partial<EditableStyle>) => {
+- src\ui\SectionIsoLegend.tsx:619 — sectionIsoEnabled: overlayVisibleForPatch(patch),
+- src\ui\SectionIsoLegend.tsx:625 — sectionIsoEnabled: nextEnabled ? overlayVisibleForPatch({}) : false,
+- src\ui\SectionIsoLegend.tsx:628 — const setTargetSelected = (target: ScalarSectionIsoTarget, checked: boolean) => {
+- src\ui\SectionIsoLegend.tsx:634 — sectionIsoEnabled:
+- src\ui\SectionIsoLegend.tsx:636 — ? overlayVisibleForPatch({ sectionIsoTargetIds: nextTargetIds })
+- src\ui\SectionIsoLegend.tsx:638 — sectionIsoTargetIds: nextTargetIds,
+- src\ui\SectionIsoLegend.tsx:644 — ref={rootRef}
+- src\ui\SectionIsoLegend.tsx:646 — ...rootStyle,
+- src\ui\SectionIsoLegend.tsx:655 — data-testid="section-iso-legend"
+- src\ui\SectionIsoLegend.tsx:663 — data-testid="section-iso-show-volume"
+- src\ui\SectionIsoLegend.tsx:668 — sectionIsoSourceOpacity: showVolume ? 0 : 1,
+- src\ui\SectionIsoLegend.tsx:683 — data-testid="section-iso-volume-controls"
+- src\ui\SectionIsoLegend.tsx:698 — data-testid="section-iso-remove-empty"
+- src\ui\SectionIsoLegend.tsx:720 — data-testid="section-iso-section-toggle"
+- src\ui\SectionIsoLegend.tsx:732 — data-testid="section-iso-configure"
+- src\ui\SectionIsoLegend.tsx:743 — aria-label="ISO Lines"
+- src\ui\SectionIsoLegend.tsx:744 — aria-pressed={linesActive}
+- src\ui\SectionIsoLegend.tsx:745 — data-testid="section-iso-lines-quick"
+- src\ui\SectionIsoLegend.tsx:746 — title="ISO Lines"
+- src\ui\SectionIsoLegend.tsx:748 — commitIsoOverlayPatch({ sectionIsoLinesVisible: !linesActive })
+- src\ui\SectionIsoLegend.tsx:751 — active: linesActive,
+- src\ui\SectionIsoLegend.tsx:755 — <IsoLegendIcon kind="lines" />
+- src\ui\SectionIsoLegend.tsx:759 — aria-label="ISO Bands"
+- src\ui\SectionIsoLegend.tsx:760 — aria-pressed={bandsActive}
+- src\ui\SectionIsoLegend.tsx:761 — data-testid="section-iso-bands-quick"
+- src\ui\SectionIsoLegend.tsx:762 — title="ISO Bands"
+- src\ui\SectionIsoLegend.tsx:764 — commitIsoOverlayPatch({ sectionIsoBandsVisible: !bandsActive })
+- src\ui\SectionIsoLegend.tsx:767 — active: bandsActive,
+- src\ui\SectionIsoLegend.tsx:771 — <IsoLegendIcon kind="bands" />
+- src\ui\SectionIsoLegend.tsx:785 — data-testid="section-iso-popout"
+- src\ui\SectionIsoLegend.tsx:810 — data-testid="section-iso-popout-dataset"
+- src\ui\SectionIsoLegend.tsx:815 — event.currentTarget.value as SectionIsoTargetGroup,
+- src\ui\SectionIsoLegend.tsx:828 — Lines
+- src\ui\SectionIsoLegend.tsx:831 — data-testid="section-iso-lines-visible"
+- src\ui\SectionIsoLegend.tsx:832 — checked={linesVisible}
+- src\ui\SectionIsoLegend.tsx:834 — commitIsoOverlayPatch({
+- src\ui\SectionIsoLegend.tsx:835 — sectionIsoLinesVisible: event.currentTarget.checked,
+- src\ui\SectionIsoLegend.tsx:838 — style={legendCheckboxStyle(linesVisible, {
+- src\ui\SectionIsoLegend.tsx:844 — Bands
+- src\ui\SectionIsoLegend.tsx:847 — data-testid="section-iso-bands-visible"
+- src\ui\SectionIsoLegend.tsx:848 — checked={bandsVisible}
+- src\ui\SectionIsoLegend.tsx:850 — commitIsoOverlayPatch({
+- src\ui\SectionIsoLegend.tsx:851 — sectionIsoBandsVisible: event.currentTarget.checked,
+- src\ui\SectionIsoLegend.tsx:854 — style={legendCheckboxStyle(bandsVisible, {
+- src\ui\SectionIsoLegend.tsx:867 — data-testid="section-iso-min"
+- src\ui\SectionIsoLegend.tsx:870 — commitIsoOverlayPatch({
+- src\ui\SectionIsoLegend.tsx:871 — sectionIsoMin: clamp(
+- src\ui\SectionIsoLegend.tsx:889 — data-testid="section-iso-max"
+- src\ui\SectionIsoLegend.tsx:892 — commitIsoOverlayPatch({
+- src\ui\SectionIsoLegend.tsx:893 — sectionIsoMax: clamp(
+- src\ui\SectionIsoLegend.tsx:904 — Bands {levelCount}
+- src\ui\SectionIsoLegend.tsx:911 — data-testid="section-iso-level-count"
+- src\ui\SectionIsoLegend.tsx:914 — commitIsoOverlayPatch({
+- src\ui\SectionIsoLegend.tsx:915 — sectionIsoLevelCount: Math.round(
+- src\ui\SectionIsoLegend.tsx:926 — value={lineStyle}
+- src\ui\SectionIsoLegend.tsx:927 — data-testid="section-iso-line-style"
+- src\ui\SectionIsoLegend.tsx:931 — commitIsoOverlayPatch({
+- src\ui\SectionIsoLegend.tsx:932 — sectionIsoLineStyle:
+- src\ui\SectionIsoLegend.tsx:942 — Line {lineWidth.toFixed(1)}px
+- src\ui\SectionIsoLegend.tsx:948 — value={lineWidth}
+- src\ui\SectionIsoLegend.tsx:949 — data-testid="section-iso-line-width"
+- src\ui\SectionIsoLegend.tsx:952 — commitIsoOverlayPatch({
+- src\ui\SectionIsoLegend.tsx:953 — sectionIsoLineWidth: clamp(
+- src\ui\SectionIsoLegend.tsx:964 — Band {Math.round(bandOpacity * 100)}%
+- src\ui\SectionIsoLegend.tsx:970 — value={bandOpacity}
+- src\ui\SectionIsoLegend.tsx:971 — data-testid="section-iso-band-opacity"
+- src\ui\SectionIsoLegend.tsx:974 — commitIsoOverlayPatch({
+- src\ui\SectionIsoLegend.tsx:975 — sectionIsoBandOpacity: clamp(
+- src\ui\SectionIsoLegend.tsx:999 — data-testid="section-iso-fill-offset"
+- src\ui\SectionIsoLegend.tsx:1002 — commitIsoOverlayPatch({
+- src\ui\SectionIsoLegend.tsx:1003 — sectionIsoFillOffset: clamp(
+- src\ui\SectionIsoLegend.tsx:1038 — data-testid={`section-iso-target-${target.sectionId}`}
+- src\ui\SeismicVolumeLegend.tsx:31 — const rootStyle: CSSProperties = {
+- src\ui\SeismicVolumeLegend.tsx:40 — lineHeight: 1.15,
+- src\ui\SeismicVolumeLegend.tsx:47 — lineHeight: 1.25,
+- src\ui\SeismicVolumeLegend.tsx:74 — lineHeight: 1.25,
+- src\ui\SeismicVolumeLegend.tsx:89 — lineHeight: 1.1,
+- src\ui\SeismicVolumeLegend.tsx:95 — lineHeight: 1.25,
+- src\ui\SeismicVolumeLegend.tsx:105 — lineHeight: 1.25,
+- src\ui\SeismicVolumeLegend.tsx:221 — lineLabel?: string;
+- src\ui\SeismicVolumeLegend.tsx:284 — lineLabel:
+- src\ui\SeismicVolumeLegend.tsx:285 — typeof product?.lineLabel === "string" ? product.lineLabel : undefined,
+- src\ui\SeismicVolumeLegend.tsx:523 — ...rootStyle,
+- src\ui\SeismicVolumeLegend.tsx:542 — background: `linear-gradient(90deg, ${amplitudeColor(
+- src\ui\SeismicVolumeLegend.tsx:639 — {figureModel.figureLines.slice(0, 6).map((line) => (
+- src\ui\SeismicVolumeLegend.tsx:640 — <div key={line}>{line}</div>
+- src\ui\SurfaceElevationLegend.tsx:32 — const rootStyle: CSSProperties = {
+- src\ui\SurfaceElevationLegend.tsx:42 — lineHeight: 1.15,
+- src\ui\SurfaceElevationLegend.tsx:60 — lineHeight: 1.2,
+- src\ui\SurfaceElevationLegend.tsx:201 — ...rootStyle,
+- src\ui\SurfaceElevationLegend.tsx:216 — background: `linear-gradient(90deg, ${rampStops})`,
+- src\editor\CLAUDE.md:12 — - `EnvironmentScenePanel.tsx` — ~3,800 lines. Environment, lighting, fog,
+- src\editor\CLAUDE.md:14 — - `PagePanel.tsx` — ~2,400 lines. Page authoring, scene-section
+- src\editor\CLAUDE.md:16 — - `topoMap/TopoMapPanel.tsx` — ~2,100 lines. Topographic map authoring,
+- src\editor\CLAUDE.md:18 — - `EditorContext.tsx` — ~1,900 lines. Central editor state, dispatch,
+- src\editor\CLAUDE.md:20 — - `UtahForgeAddToProjectDrop.tsx` — ~1,700 lines. Utah FORGE asset
+- src\editor\CLAUDE.md:25 — - `LayerPanel.tsx` — ~2,500 lines (down from 14,326; target met).
+- src\editor\CLAUDE.md:26 — - `layerControls/style/StyleControls.tsx` — ~700 lines.
+- src\editor\CLAUDE.md:32 — lines.
+- src\editor\CLAUDE.md:39 — - `EditorRoot.tsx`, `EditorChrome.tsx`, `OverlayPanel.tsx`,
+- src\editor\CLAUDE.md:41 — `InlineEditableTitle.tsx`, `DevModeInspector.tsx`, `styleControls.tsx`,
+- src\editor\CLAUDE.md:44 — ## Editing Discipline
+- src\editor\CollapsibleSection.tsx:17 — // Look in EditorRoot.tsx to rename, reorder, add, or remove top-level sections.
+- src\editor\CollapsibleSection.tsx:113 — data-dev-note="This renders the top-level section title text; the title prop is passed from EditorRoot."
+- src\editor\CollapsibleSection.tsx:158 — strokeLinecap="round"
+- src\editor\CollapsibleSection.tsx:159 — strokeLinejoin="round"
+- src\editor\DevModeInspector.tsx:5 — FROSTED_HAIRLINE,
+- src\editor\DevModeInspector.tsx:44 — >[] = ["flex-start", "center", "flex-end", "stretch", "baseline"];
+- src\editor\DevModeInspector.tsx:100 — interface ContainerOutlineInfo {
+- src\editor\DevModeInspector.tsx:113 — lineY: number;
+- src\editor\DevModeInspector.tsx:114 — lineStartX: number;
+- src\editor\DevModeInspector.tsx:115 — lineEndX: number;
+- src\editor\DevModeInspector.tsx:116 — lineEndY: number;
+- src\editor\DevModeInspector.tsx:192 — const containerOutlines = collectContainerOutlines();
+- src\editor\DevModeInspector.tsx:203 — {containerOutlines.map((outline) => (
+- src\editor\DevModeInspector.tsx:204 — <ContainerOutline
+- src\editor\DevModeInspector.tsx:205 — key={outline.key}
+- src\editor\DevModeInspector.tsx:206 — outline={outline}
+- src\editor\DevModeInspector.tsx:207 — selected={outline.element === locked?.element}
+- src\editor\DevModeInspector.tsx:249 — <div style={tooltipNoteStyle}>Press Esc to clear the lock.</div>
+- src\editor\DevModeInspector.tsx:359 — function ContainerOutline({
+- src\editor\DevModeInspector.tsx:360 — outline,
+- src\editor\DevModeInspector.tsx:363 — outline: ContainerOutlineInfo;
+- src\editor\DevModeInspector.tsx:367 — outline.rect,
+- src\editor\DevModeInspector.tsx:368 — outline.name,
+- src\editor\DevModeInspector.tsx:369 — outline.type,
+- src\editor\DevModeInspector.tsx:375 — ...containerOutlineStyle,
+- src\editor\DevModeInspector.tsx:376 — ...(selected ? selectedContainerOutlineStyle : {}),
+- src\editor\DevModeInspector.tsx:377 — left: outline.rect.left,
+- src\editor\DevModeInspector.tsx:378 — top: outline.rect.top,
+- src\editor\DevModeInspector.tsx:379 — width: outline.rect.width,
+- src\editor\DevModeInspector.tsx:380 — height: outline.rect.height,
+- src\editor\DevModeInspector.tsx:384 — <line
+- src\editor\DevModeInspector.tsx:385 — x1={label.lineStartX}
+- src\editor\DevModeInspector.tsx:386 — y1={label.lineY}
+- src\editor\DevModeInspector.tsx:387 — x2={label.lineEndX}
+- src\editor\DevModeInspector.tsx:388 — y2={label.lineEndY}
+- src\editor\DevModeInspector.tsx:389 — style={selected ? selectedContainerPointerLineStyle : containerPointerLineStyle}
+- src\editor\DevModeInspector.tsx:392 — cx={label.lineEndX}
+- src\editor\DevModeInspector.tsx:393 — cy={label.lineEndY}
+- src\editor\DevModeInspector.tsx:406 — {outline.name} - {outline.type}
+- src\editor\DevModeInspector.tsx:1079 — const lineY = top + 11;
+- src\editor\DevModeInspector.tsx:1080 — const lineStartX = left + width;
+- src\editor\DevModeInspector.tsx:1081 — const lineEndX = Math.max(lineStartX + 8, rect.left);
+- src\editor\DevModeInspector.tsx:1082 — const lineEndY = Math.min(
+- src\editor\DevModeInspector.tsx:1083 — Math.max(rect.top + 8, lineY),
+- src\editor\DevModeInspector.tsx:1086 — return { left, top, width, lineY, lineStartX, lineEndX, lineEndY };
+- src\editor\DevModeInspector.tsx:1152 — function collectContainerOutlines(): ContainerOutlineInfo[] {
+- src\editor\DevModeInspector.tsx:1538 — | { fileName?: string; lineNumber?: number; columnNumber?: number }
+- src\editor\DevModeInspector.tsx:1540 — if (debugSource?.fileName && debugSource.lineNumber) {
+- src\editor\DevModeInspector.tsx:1541 — const source = `${shortenPath(debugSource.fileName)}:${debugSource.lineNumber}`;
+- src\editor\DevModeInspector.tsx:1566 — border: FROSTED_HAIRLINE,
+- src\editor\DevModeInspector.tsx:1577 — const containerOutlineStyle: React.CSSProperties = {
+- src\editor\DevModeInspector.tsx:1587 — const selectedContainerOutlineStyle: React.CSSProperties = {
+- src\editor\DevModeInspector.tsx:1601 — const containerPointerLineStyle: React.CSSProperties = {
+- src\editor\DevModeInspector.tsx:1607 — const selectedContainerPointerLineStyle: React.CSSProperties = {
+- src\editor\DevModeInspector.tsx:1608 — ...containerPointerLineStyle,
+- src\editor\DevModeInspector.tsx:1628 — border: FROSTED_HAIRLINE,
+- src\editor\DevModeInspector.tsx:1631 — lineHeight: 1.2,
+- src\editor\DevModeInspector.tsx:1655 — border: FROSTED_HAIRLINE,
+- src\editor\DevModeInspector.tsx:1660 — lineHeight: 1.35,
+- src\editor\DevModeInspector.tsx:1690 — border: FROSTED_HAIRLINE,
+- src\editor\DevModeInspector.tsx:1710 — "linear-gradient(180deg, rgba(18, 21, 24, 0), rgba(18, 21, 24, 0.9))",
+- src\editor\DevModeInspector.tsx:1736 — borderBottom: FROSTED_HAIRLINE,
+- src\editor\DevModeInspector.tsx:1758 — borderBottom: FROSTED_HAIRLINE,
+- src\editor\DevModeInspector.tsx:1794 — border: FROSTED_HAIRLINE,
+- src\editor\DevModeInspector.tsx:1807 — border: FROSTED_HAIRLINE,
+- src\editor\DevModeInspector.tsx:1823 — border: FROSTED_HAIRLINE,
+- src\editor\DevModeInspector.tsx:1865 — border: FROSTED_HAIRLINE,
+- src\editor\DevModeInspector.tsx:1870 — lineHeight: 1.35,
+- src\editor\EditorChrome.tsx:19 — import { SectionIsoLegend } from "../ui/SectionIsoLegend";
+- src\editor\EditorChrome.tsx:55 — const EditorRoot = lazy(() =>
+- src\editor\EditorChrome.tsx:56 — import("./EditorRoot").then((module) => ({
+- src\editor\EditorChrome.tsx:57 — default: module.EditorRoot,
+- src\editor\EditorChrome.tsx:81 — | "section-iso"
+- src\editor\EditorChrome.tsx:89 — "section-iso",
+- src\editor\EditorChrome.tsx:129 — sectionIsoTargetsVisible: boolean,
+- src\editor\EditorChrome.tsx:135 — "section-iso": false,
+- src\editor\EditorChrome.tsx:173 — const possibleSectionIsoTargetVisible =
+- src\editor\EditorChrome.tsx:185 — "section-iso": possibleSectionIsoTargetVisible && sectionIsoTargetsVisible,
+- src\editor\EditorChrome.tsx:251 — <EditorRoot
+- src\editor\EditorChrome.tsx:270 — <SectionIsoLegend />
+- src\editor\EditorChrome.tsx:359 — const sectionIsoTargetsVisible = sceneHandle.manager
+- src\editor\EditorChrome.tsx:360 — .listSectionIsoTargets()
+- src\editor\EditorChrome.tsx:367 — sectionIsoTargetsVisible,
+- src\editor\EditorChrome.tsx:397 — sectionIsoTargetsVisible,
+- src\editor\EditorChrome.tsx:402 — sectionIsoTargetsVisible,
+- src\editor\EditorChrome.tsx:516 — case "section-iso":
+- src\editor\EditorChrome.tsx:517 — return <SectionIsoLegend stacked pageOverride={pageOverride} />;
+- src\editor\EditorContext.tsx:112 — clearPageLayerOverride: (
+- src\editor\EditorContext.tsx:122 — clearPageVisibilityOverride: (pageId: string, layerId: string) => void;
+- src\editor\EditorContext.tsx:243 — projectRoot: string,
+- src\editor\EditorContext.tsx:250 — [projectJsonPath(projectRoot)]: comparableJsonContent(manifest),
+- src\editor\EditorContext.tsx:251 — [environmentJsonPath(projectRoot)]: comparableJsonContent(environment),
+- src\editor\EditorContext.tsx:254 — known[pageJsonPath(page.id, projectRoot)] = comparableJsonContent(page);
+- src\editor\EditorContext.tsx:724 — const cleared = withoutLayerOverrideFields(
+- src\editor\EditorContext.tsx:729 — return { ...cleared, envSnapshot };
+- src\editor\EditorContext.tsx:732 — function clearSubMasterSnapshotLayerStyle(
+- src\editor\EditorContext.tsx:750 — const cleared = withoutLayerOverrideFields(
+- src\editor\EditorContext.tsx:755 — return { ...cleared, envSnapshot };
+- src\editor\EditorContext.tsx:1183 — case "CLEAR_PAGE_LAYER_OVERRIDE": {
+- src\editor\EditorContext.tsx:1187 — return clearSubMasterSnapshotLayerStyle(
+- src\editor\EditorContext.tsx:1233 — case "CLEAR_PAGE_VISIBILITY_OVERRIDE": {
+- src\editor\EditorContext.tsx:2136 — function isExternalOrRootedAssetPath(path: string): boolean {
+- src\editor\EditorContext.tsx:2151 — if (!clean || isExternalOrRootedAssetPath(clean)) return null;
+- src\editor\EditorContext.tsx:2193 — projectRoot: string,
+- src\editor\EditorContext.tsx:2201 — (await readFile(overlayMarkdownPath(fromPageId, projectRoot)).catch(
+- src\editor\EditorContext.tsx:2206 — overlayMarkdownPath(fromPageId, projectRoot),
+- src\editor\EditorContext.tsx:2207 — overlayMarkdownPath(toPageId, projectRoot),
+- src\editor\EditorContext.tsx:2225 — `${projectRoot}/overlays/${fromPageId}/${relative}`,
+- src\editor\EditorContext.tsx:2226 — `${projectRoot}/overlays/${toPageId}/${relative}`,
+- src\editor\EditorContext.tsx:2239 — projectRoot: string;
+- src\editor\EditorContext.tsx:2250 — projectRoot,
+- src\editor\EditorContext.tsx:2260 — projectRoot,
+- src\editor\EditorContext.tsx:2281 — projectRoot,
+- src\editor\EditorContext.tsx:2322 — readFile(overlayMarkdownPath(pageId, state.projectRoot))
+- src\editor\EditorContext.tsx:2327 — overlayMarkdownPath(pageId, state.projectRoot),
+- src\editor\EditorContext.tsx:2333 — // eslint-disable-next-line no-console
+- src\editor\EditorContext.tsx:2347 — // in EditorRoot trigger it; nothing fires automatically. The reducer
+- src\editor\EditorContext.tsx:2360 — // the dev endpoint and dirty bits are only cleared after the whole
+- src\editor\EditorContext.tsx:2379 — const path = projectJsonPath(cur.projectRoot);
+- src\editor\EditorContext.tsx:2395 — const content = await readFile(pageJsonPath(id, cur.projectRoot)).catch(
+- src\editor\EditorContext.tsx:2399 — const path = pageArchivePath(id, cur.projectRoot);
+- src\editor\EditorContext.tsx:2414 — const path = environmentJsonPath(cur.projectRoot);
+- src\editor\EditorContext.tsx:2431 — const path = pageJsonPath(id, cur.projectRoot);
+- src\editor\EditorContext.tsx:2444 — const path = overlayMarkdownPath(id, cur.projectRoot);
+- src\editor\EditorContext.tsx:2461 — await deleteFile(pageJsonPath(id, cur.projectRoot)).catch(() => {
+- src\editor\EditorContext.tsx:2466 — pageJsonPath(id, cur.projectRoot),
+- src\editor\EditorContext.tsx:2470 — deletedPageIdsRef.current.clear();
+- src\editor\EditorContext.tsx:2477 — // eslint-disable-next-line no-console
+- src\editor\EditorContext.tsx:2479 — // eslint-disable-next-line no-console
+- src\editor\EditorContext.tsx:2482 — // eslint-disable-next-line no-console
+- src\editor\EditorContext.tsx:2491 — // EditorRoot keyboard / button wiring stays simple.
+- src\editor\EditorContext.tsx:2827 — // rebuild geometry against the new rectangle.
+- src\editor\EditorContext.tsx:2839 — void sceneHandle.manager.rebuildSceneOverlayBounds(id, newBounds);
+- src\editor\EditorContext.tsx:2894 — // Area outlines are authored directly in the scene with move/scale handles.
+- src\editor\EditorContext.tsx:2896 — // outline keeps its own saved center and radii.
+- src\editor\EditorContext.tsx:2898 — sceneHandle.setAreaOutlineCommitHandler((id, patch) => {
+- src\editor\EditorContext.tsx:2908 — const outlines = scene.areaOutlines ?? [];
+- src\editor\EditorContext.tsx:2910 — const nextOutlines = outlines.map((outline) => {
+- src\editor\EditorContext.tsx:2911 — if (outline.id !== id) return outline;
+- src\editor\EditorContext.tsx:2913 — return { ...outline, ...patch };
+- src\editor\EditorContext.tsx:2918 — scene: { ...scene, areaOutlines: nextOutlines },
+- src\editor\EditorContext.tsx:2929 — areaOutlines: nextOutlines,
+- src\editor\EditorContext.tsx:2936 — patch: { areaOutlines: nextOutlines },
+- src\editor\EditorContext.tsx:2940 — return () => sceneHandle.setAreaOutlineCommitHandler(null);
+- src\editor\EditorContext.tsx:3184 — // outline brightening). Presenter mode keeps overlays read-only.
+- src\editor\EditorContext.tsx:3303 — const clearPageLayerOverride = useCallback<
+- src\editor\EditorContext.tsx:3304 — EditorContextValue["clearPageLayerOverride"]
+- src\editor\EditorContext.tsx:3350 — dispatch({ type: "CLEAR_PAGE_LAYER_OVERRIDE", pageId, layerId, field });
+- src\editor\EditorContext.tsx:3397 — const clearPageVisibilityOverride = useCallback<
+- src\editor\EditorContext.tsx:3398 — EditorContextValue["clearPageVisibilityOverride"]
+- src\editor\EditorContext.tsx:3428 — dispatch({ type: "CLEAR_PAGE_VISIBILITY_OVERRIDE", pageId, layerId });
+- src\editor\EditorContext.tsx:3514 — cur.projectRoot,
+- src\editor\EditorContext.tsx:3647 — cur.projectRoot,
+- src\editor\EditorContext.tsx:3764 — clearPageLayerOverride,
+- src\editor\EditorContext.tsx:3766 — clearPageVisibilityOverride,
+- src\editor\EditorContext.tsx:3822 — clearPageLayerOverride,
+- src\editor\EditorContext.tsx:3824 — clearPageVisibilityOverride,
+- src\editor\EditorRoot.tsx:30 — FROSTED_HAIRLINE,
+- src\editor\EditorRoot.tsx:31 — FROSTED_PANEL_OUTLINE,
+- src\editor\EditorRoot.tsx:403 — borderBottom: FROSTED_HAIRLINE,
+- src\editor\EditorRoot.tsx:418 — border: FROSTED_PANEL_OUTLINE,
+- src\editor\EditorRoot.tsx:422 — outline: "none",
+- src\editor\EditorRoot.tsx:470 — lineHeight: 1.1,
+- src\editor\EditorRoot.tsx:477 — // The current top-level sections are created near the bottom of EditorRoot:
+- src\editor\EditorRoot.tsx:497 — export function EditorRoot({
+- src\editor\EditorRoot.tsx:1002 — detail.sliceAxis === "inline" ||
+- src\editor\EditorRoot.tsx:1003 — detail.sliceAxis === "crossline" ||
+- src\editor\EditorRoot.tsx:1005 — detail.sliceAxis === "line"
+- src\editor\EditorRoot.tsx:1093 — const clearRevealTimers = () => {
+- src\editor\EditorRoot.tsx:1095 — window.clearTimeout(sceneRevealTimerRef.current);
+- src\editor\EditorRoot.tsx:1099 — window.clearTimeout(sceneRevealPulseTimerRef.current);
+- src\editor\EditorRoot.tsx:1122 — window.clearTimeout(sceneRevealPulseTimerRef.current);
+- src\editor\EditorRoot.tsx:1178 — clearRevealTimers();
+- src\editor\EditorRoot.tsx:1185 — clearRevealTimers();
+- src\editor\EditorRoot.tsx:1190 — clearRevealTimers();
+- src\editor\EditorRoot.tsx:1375 — data-dev-source="src/editor/EditorRoot.tsx:56"
+- src\editor\EditorRoot.tsx:1387 — data-dev-source="src/editor/EditorRoot.tsx:38"
+- src\editor\EditorRoot.tsx:1447 — data-dev-source="src/editor/EditorRoot.tsx:50"
+- src\editor\EditorRoot.tsx:1451 — data-dev-container-scope="EditorRoot / stackStyle / scrollEndPaddingPx"
+- src\editor\EditorRoot.tsx:1452 — data-dev-padding-source="src/editor/EditorRoot.tsx:50"
+- src\editor\EditorRoot.tsx:1553 — data-dev-source="src/editor/EditorRoot.tsx:save-footer"
+- src\editor\EditorRoot.tsx:1557 — data-dev-container-scope="EditorRoot / saveFooterStyle / saveFooterGapPx"
+- src\editor\EditorRoot.tsx:1558 — data-dev-padding-source="src/editor/EditorRoot.tsx:save-footer"
+- src\editor\EditorRoot.tsx:1605 — display: "inline-flex",
+- src\editor\EditorRoot.tsx:1617 — display: "inline-flex",
+- src\editor\EditorRoot.tsx:1623 — lineHeight: 1,
+- src\editor\EditorRoot.tsx:1638 — display: "inline-flex",
+- src\editor\EditorRoot.tsx:1650 — lineHeight: 0,
+- src\editor\EditorRoot.tsx:1715 — `linear-gradient(180deg, rgba(255, 255, 255, ${
+- src\editor\EditorRoot.tsx:1806 — strokeLinejoin="round"
+- src\editor\EditorRoot.tsx:1813 — strokeLinejoin="round"
+- src\editor\EditorRoot.tsx:1890 — display: "inline-flex",
+- src\editor\EditorRoot.tsx:1984 — strokeLinejoin="round"
+- src\editor\EditorRoot.tsx:1991 — strokeLinecap="round"
+- src\editor\EditorRoot.tsx:2013 — strokeLinecap="round"
+- src\editor\EnvironmentScenePanel.tsx:167 — outlineColor: "#e6e2dc",
+- src\editor\EnvironmentScenePanel.tsx:168 — outlineOpacity: 1,
+- src\editor\EnvironmentScenePanel.tsx:177 — outlineColor: "#e6e2dc",
+- src\editor\EnvironmentScenePanel.tsx:178 — outlineOpacity: 0.34,
+- src\editor\EnvironmentScenePanel.tsx:187 — outlineColor: "#d9ead0",
+- src\editor\EnvironmentScenePanel.tsx:188 — outlineOpacity: 0.76,
+- src\editor\EnvironmentScenePanel.tsx:197 — outlineColor: "#ff9f43",
+- src\editor\EnvironmentScenePanel.tsx:198 — outlineOpacity: 0.82,
+- src\editor\EnvironmentScenePanel.tsx:525 — arrowOutlineColor: "#222222",
+- src\editor\EnvironmentScenePanel.tsx:526 — arrowOutlineAlpha: 0,
+- src\editor\EnvironmentScenePanel.tsx:527 — arrowOutlineWidth: 0,
+- src\editor\EnvironmentScenePanel.tsx:589 — "linear",
+- src\editor\EnvironmentScenePanel.tsx:979 — Scene elements only show the drag handles and guide lines.
+- src\editor\EnvironmentScenePanel.tsx:1543 — data-dev-note="Grid controls: visible, color, opacity, spacing, line width, and underside surface."
+- src\editor\EnvironmentScenePanel.tsx:1580 — <Row label="Line width">
+- src\editor\EnvironmentScenePanel.tsx:1582 — value={scene.terrain?.gridLineWidthM ?? 2.75}
+- src\editor\EnvironmentScenePanel.tsx:1586 — onChange={(v) => setTerrain({ gridLineWidthM: v })}
+- src\editor\EnvironmentScenePanel.tsx:2136 — <Row label="Band">
+- src\editor\EnvironmentScenePanel.tsx:2138 — value={scene.tiltShift?.bandSize ?? 0.28}
+- src\editor\EnvironmentScenePanel.tsx:2142 — onChange={(v) => setTiltShift({ bandSize: v })}
+- src\editor\EnvironmentScenePanel.tsx:2559 — <Row label="Line thickness">
+- src\editor\EnvironmentScenePanel.tsx:2561 — value={scene.compositionGuides?.lineThickness ?? 0.25}
+- src\editor\EnvironmentScenePanel.tsx:2566 — onChange={(v) => setCompositionGuides({ lineThickness: v })}
+- src\editor\EnvironmentScenePanel.tsx:2744 — arrowOutlineColor:
+- src\editor\EnvironmentScenePanel.tsx:2745 — navigator.arrowOutlineColor ??
+- src\editor\EnvironmentScenePanel.tsx:2749 — NAVIGATOR_GUI_DEFAULTS.arrowOutlineColor,
+- src\editor\EnvironmentScenePanel.tsx:2778 — arrowOutlineColor:
+- src\editor\EnvironmentScenePanel.tsx:2779 — navigator.arrowOutlineColor ??
+- src\editor\EnvironmentScenePanel.tsx:2782 — NAVIGATOR_GUI_DEFAULTS.arrowOutlineColor,
+- src\editor\EnvironmentScenePanel.tsx:2883 — const path = `${state.projectRoot}/brand/${safeName}`;
+- src\editor\EnvironmentScenePanel.tsx:2909 — const path = `${state.projectRoot}/brand/editor-${safeName}`;
+- src\editor\EnvironmentScenePanel.tsx:3103 — Shows reusable container outlines and click-to-edit shared
+- src\editor\EnvironmentScenePanel.tsx:3150 — Clear
+- src\editor\EnvironmentScenePanel.tsx:3224 — <span style={cropMidlineHorizontalStyle} />
+- src\editor\EnvironmentScenePanel.tsx:3225 — <span style={cropMidlineVerticalStyle} />
+- src\editor\EnvironmentScenePanel.tsx:3574 — | "baseline",
+- src\editor\EnvironmentScenePanel.tsx:3583 — <option value="baseline">Baseline</option>
+- src\editor\EnvironmentScenePanel.tsx:3790 — <Row label="Outline">
+- src\editor\EnvironmentScenePanel.tsx:3793 — value={style.outlineColor}
+- src\editor\EnvironmentScenePanel.tsx:3796 — outlineColor: e.target.value,
+- src\editor\EnvironmentScenePanel.tsx:3801 — <Row label="Outline alpha">
+- src\editor\EnvironmentScenePanel.tsx:3803 — value={style.outlineOpacity}
+- src\editor\EnvironmentScenePanel.tsx:3808 — setLabelVisualStyle(key, { outlineOpacity: v })
+- src\editor\EnvironmentScenePanel.tsx:3944 — <GuiDetail title="Outline">
+- src\editor\EnvironmentScenePanel.tsx:3945 — <Row label="Outline">
+- src\editor\EnvironmentScenePanel.tsx:3952 — <Row label="Outline alpha">
+- src\editor\EnvironmentScenePanel.tsx:3961 — <Row label="Outline px">
+- src\editor\EnvironmentScenePanel.tsx:4383 — <Row label="Outline">
+- src\editor\EnvironmentScenePanel.tsx:4399 — <Row label="Outline alpha">
+- src\editor\EnvironmentScenePanel.tsx:4414 — <Row label="Outline px">
+- src\editor\EnvironmentScenePanel.tsx:4627 — <Row label="Outline">
+- src\editor\EnvironmentScenePanel.tsx:4632 — navigatorPreview.arrowOutlineColor ??
+- src\editor\EnvironmentScenePanel.tsx:4635 — NAVIGATOR_GUI_DEFAULTS.arrowOutlineColor
+- src\editor\EnvironmentScenePanel.tsx:4640 — arrowOutlineColor: e.target.value,
+- src\editor\EnvironmentScenePanel.tsx:4645 — <Row label="Outline alpha">
+- src\editor\EnvironmentScenePanel.tsx:4648 — navigatorPreview.arrowOutlineAlpha ??
+- src\editor\EnvironmentScenePanel.tsx:4649 — NAVIGATOR_GUI_DEFAULTS.arrowOutlineAlpha
+- src\editor\EnvironmentScenePanel.tsx:4656 — setNavigator({ useOverride: true, arrowOutlineAlpha: v })
+- src\editor\EnvironmentScenePanel.tsx:4660 — <Row label="Outline px">
+- src\editor\EnvironmentScenePanel.tsx:4663 — navigatorPreview.arrowOutlineWidth ??
+- src\editor\EnvironmentScenePanel.tsx:4664 — NAVIGATOR_GUI_DEFAULTS.arrowOutlineWidth
+- src\editor\EnvironmentScenePanel.tsx:4671 — setNavigator({ useOverride: true, arrowOutlineWidth: v })
+- src\editor\EnvironmentScenePanel.tsx:5136 — <GuiDetail title="Outline">
+- src\editor\EnvironmentScenePanel.tsx:5137 — <Row label="Outline">
+- src\editor\EnvironmentScenePanel.tsx:5140 — value={overlay.imageOutlineColor ?? "#ffffff"}
+- src\editor\EnvironmentScenePanel.tsx:5142 — setOverlay({ imageOutlineColor: e.target.value })
+- src\editor\EnvironmentScenePanel.tsx:5146 — <Row label="Outline alpha">
+- src\editor\EnvironmentScenePanel.tsx:5148 — value={overlay.imageOutlineAlpha ?? 0}
+- src\editor\EnvironmentScenePanel.tsx:5152 — onChange={(v) => setOverlay({ imageOutlineAlpha: v })}
+- src\editor\EnvironmentScenePanel.tsx:5155 — <Row label="Outline px">
+- src\editor\EnvironmentScenePanel.tsx:5157 — value={overlay.imageOutlineWidth ?? 0}
+- src\editor\EnvironmentScenePanel.tsx:5161 — onChange={(v) => setOverlay({ imageOutlineWidth: v })}
+- src\editor\EnvironmentScenePanel.tsx:5320 — lineHeight: 1.2,
+- src\editor\EnvironmentScenePanel.tsx:5378 — lineHeight: 1.35,
+- src\editor\EnvironmentScenePanel.tsx:5473 — "linear-gradient(45deg, rgba(255,255,255,0.08) 25%, transparent 25%, transparent 75%, rgba(255,255,255,0.08) 75%), linear-gradient(45deg, rgba(255,255,255,0.08) 25%, transparent 25%, transparent 75%, rgba(255,255,255,0.08) 75%)",
+- src\editor\EnvironmentScenePanel.tsx:5495 — const cropMidlineHorizontalStyle: React.CSSProperties = {
+- src\editor\EnvironmentScenePanel.tsx:5506 — const cropMidlineVerticalStyle: React.CSSProperties = {
+- src\editor\EnvironmentScenePanel.tsx:5559 — lineHeight: 1.2,
+- src\editor\InlineEditableTitle.tsx:25 — export function InlineEditableTitle({
+- src\editor\InlineEditableTitle.tsx:87 — lineHeight: "inherit",
+- src\editor\InlineEditableTitle.tsx:91 — outline: "none",
+- src\editor\InlineEditableTitle.tsx:99 — data-dev-source="src/editor/InlineEditableTitle.tsx:63"
+- src\editor\InlineEditableTitle.tsx:100 — data-dev-text-source="src/editor/InlineEditableTitle.tsx:63"
+- src\editor\InlineEditableTitle.tsx:101 — data-dev-note="InlineEditableTitle edit input for page or overlay title text."
+- src\editor\InlineEditableTitle.tsx:108 — data-dev-source="src/editor/InlineEditableTitle.tsx:95"
+- src\editor\InlineEditableTitle.tsx:109 — data-dev-text-source="src/editor/InlineEditableTitle.tsx:95"
+- src\editor\InlineEditableTitle.tsx:110 — data-dev-padding-source="src/editor/InlineEditableTitle.tsx:107"
+- src\editor\InlineEditableTitle.tsx:111 — data-dev-note="InlineEditableTitle display text. Padding and negative margin create the hover/edit hit area."
+- src\editor\InlineEditableTitle.tsx:136 — display: truncate ? "block" : "inline-block",
+- src\editor\LayerPanel.tsx:38 — LAND_TITLE_LABEL_OUTLINE_OPACITY_DEFAULT,
+- src\editor\LayerPanel.tsx:41 — labelOutlineColorControlValue,
+- src\editor\LayerPanel.tsx:42 — labelOutlineOpacityControlValue,
+- src\editor\LayerPanel.tsx:45 — LINE_WIDTH_LAYER_DEFAULTS,
+- src\editor\LayerPanel.tsx:104 — import { AreaOutlinesControls } from "./layerControls/style/AreaOutlinesControls";
+- src\editor\LayerPanel.tsx:286 — strokeLinejoin="round"
+- src\editor\LayerPanel.tsx:305 — strokeLinecap="round"
+- src\editor\LayerPanel.tsx:312 — strokeLinecap="round"
+- src\editor\LayerPanel.tsx:313 — strokeLinejoin="round"
+- src\editor\LayerPanel.tsx:341 — clearPageLayerOverride,
+- src\editor\LayerPanel.tsx:408 — const isAreaOutlines = layer.id === "area-outlines";
+- src\editor\LayerPanel.tsx:441 — const hasInfillAndOutline =
+- src\editor\LayerPanel.tsx:444 — const lineWidthDefault = isTopoMapGraticule
+- src\editor\LayerPanel.tsx:446 — : LINE_WIDTH_LAYER_DEFAULTS[layer.id];
+- src\editor\LayerPanel.tsx:447 — const supportsLineWidth = lineWidthDefault !== undefined;
+- src\editor\LayerPanel.tsx:577 — {!isAreaOutlines ? (
+- src\editor\LayerPanel.tsx:605 — label={hasInfillAndOutline ? "Infill color" : "Color"}
+- src\editor\LayerPanel.tsx:617 — label={hasInfillAndOutline ? "Infill color" : "Color"}
+- src\editor\LayerPanel.tsx:641 — onClear={() =>
+- src\editor\LayerPanel.tsx:642 — clearPageLayerOverride(
+- src\editor\LayerPanel.tsx:672 — clearPageLayerOverride(
+- src\editor\LayerPanel.tsx:684 — clearPageLayerOverride={clearPageLayerOverride}
+- src\editor\LayerPanel.tsx:688 — {hasInfillAndOutline && isEnv ? (
+- src\editor\LayerPanel.tsx:703 — ) : hasInfillAndOutline && currentPage ? (
+- src\editor\LayerPanel.tsx:739 — onClear={() =>
+- src\editor\LayerPanel.tsx:740 — clearPageLayerOverride(
+- src\editor\LayerPanel.tsx:749 — {hasInfillAndOutline && isEnv ? (
+- src\editor\LayerPanel.tsx:751 — label="Outline color"
+- src\editor\LayerPanel.tsx:754 — (envStyle.outlineColor as string | undefined) ??
+- src\editor\LayerPanel.tsx:759 — setEnvLayerStyle(layer.id, { outlineColor: v })
+- src\editor\LayerPanel.tsx:762 — ) : hasInfillAndOutline && currentPage ? (
+- src\editor\LayerPanel.tsx:764 — label="Outline color"
+- src\editor\LayerPanel.tsx:771 — ).outlineColor as string | undefined) ??
+- src\editor\LayerPanel.tsx:781 — "outlineColor",
+- src\editor\LayerPanel.tsx:785 — ?.outlineColor as string | undefined
+- src\editor\LayerPanel.tsx:789 — outlineColor: v,
+- src\editor\LayerPanel.tsx:792 — onClear={() =>
+- src\editor\LayerPanel.tsx:793 — clearPageLayerOverride(
+- src\editor\LayerPanel.tsx:796 — "outlineColor",
+- src\editor\LayerPanel.tsx:805 — hasInfillAndOutline ? "Outline opacity" : "Opacity"
+- src\editor\LayerPanel.tsx:818 — hasInfillAndOutline ? "Outline opacity" : "Opacity"
+- src\editor\LayerPanel.tsx:846 — onClear={() =>
+- src\editor\LayerPanel.tsx:847 — clearPageLayerOverride(
+- src\editor\LayerPanel.tsx:875 — clearPageLayerOverride(
+- src\editor\LayerPanel.tsx:921 — clearPageLayerOverride(
+- src\editor\LayerPanel.tsx:968 — clearPageLayerOverride(
+- src\editor\LayerPanel.tsx:1003 — clearPageLayerOverride={clearPageLayerOverride}
+- src\editor\LayerPanel.tsx:1022 — clearPageLayerOverride={clearPageLayerOverride}
+- src\editor\LayerPanel.tsx:1051 — clearPageLayerOverride={clearPageLayerOverride}
+- src\editor\LayerPanel.tsx:1061 — clearPageLayerOverride={clearPageLayerOverride}
+- src\editor\LayerPanel.tsx:1117 — onClear={() =>
+- src\editor\LayerPanel.tsx:1118 — clearPageLayerOverride(
+- src\editor\LayerPanel.tsx:1179 — onClear={() =>
+- src\editor\LayerPanel.tsx:1180 — clearPageLayerOverride(
+- src\editor\LayerPanel.tsx:1240 — onClear={() =>
+- src\editor\LayerPanel.tsx:1241 — clearPageLayerOverride(
+- src\editor\LayerPanel.tsx:1273 — onClear={() =>
+- src\editor\LayerPanel.tsx:1274 — clearPageLayerOverride(
+- src\editor\LayerPanel.tsx:1343 — onClear={() =>
+- src\editor\LayerPanel.tsx:1344 — clearPageLayerOverride(
+- src\editor\LayerPanel.tsx:1353 — {supportsLineWidth && !isEzGamma && isEnv ? (
+- src\editor\LayerPanel.tsx:1355 — label="Line width"
+- src\editor\LayerPanel.tsx:1358 — (envStyle.lineWidth as number | undefined) ??
+- src\editor\LayerPanel.tsx:1359 — lineWidthDefault,
+- src\editor\LayerPanel.tsx:1367 — lineWidth: parseFloat(v),
+- src\editor\LayerPanel.tsx:1371 — ) : supportsLineWidth && !isEzGamma && currentPage ? (
+- src\editor\LayerPanel.tsx:1373 — label="Line width"
+- src\editor\LayerPanel.tsx:1380 — ).lineWidth as number | undefined) ??
+- src\editor\LayerPanel.tsx:1381 — lineWidthDefault,
+- src\editor\LayerPanel.tsx:1386 — "lineWidth",
+- src\editor\LayerPanel.tsx:1389 — currentPage.layerOverrides?.[layer.id]?.lineWidth !==
+- src\editor\LayerPanel.tsx:1392 — currentPage.layerOverrides[layer.id].lineWidth,
+- src\editor\LayerPanel.tsx:1396 — fallbackValue={String(lineWidthDefault)}
+- src\editor\LayerPanel.tsx:1403 — lineWidth: parseFloat(v),
+- src\editor\LayerPanel.tsx:1406 — onClear={() =>
+- src\editor\LayerPanel.tsx:1407 — clearPageLayerOverride(
+- src\editor\LayerPanel.tsx:1410 — "lineWidth",
+- src\editor\LayerPanel.tsx:1428 — clearPageLayerOverride={clearPageLayerOverride}
+- src\editor\LayerPanel.tsx:1444 — clearPageLayerOverride={clearPageLayerOverride}
+- src\editor\LayerPanel.tsx:1460 — clearPageLayerOverride={clearPageLayerOverride}
+- src\editor\LayerPanel.tsx:1472 — clearPageLayerOverride={clearPageLayerOverride}
+- src\editor\LayerPanel.tsx:1488 — clearPageLayerOverride={clearPageLayerOverride}
+- src\editor\LayerPanel.tsx:1492 — label="Edge line"
+- src\editor\LayerPanel.tsx:1493 — field="graticuleEdgeLineColor"
+- src\editor\LayerPanel.tsx:1501 — clearPageLayerOverride={clearPageLayerOverride}
+- src\editor\LayerPanel.tsx:1502 — testId="topo-graticule-edge-line-color"
+- src\editor\LayerPanel.tsx:1505 — label="Edge line weight"
+- src\editor\LayerPanel.tsx:1506 — field="graticuleEdgeLineWidth"
+- src\editor\LayerPanel.tsx:1518 — clearPageLayerOverride={clearPageLayerOverride}
+- src\editor\LayerPanel.tsx:1519 — testId="topo-graticule-edge-line-width"
+- src\editor\LayerPanel.tsx:1531 — clearPageLayerOverride={clearPageLayerOverride}
+- src\editor\LayerPanel.tsx:1544 — clearPageLayerOverride={clearPageLayerOverride}
+- src\editor\LayerPanel.tsx:1560 — clearPageLayerOverride={clearPageLayerOverride}
+- src\editor\LayerPanel.tsx:1577 — clearPageLayerOverride={clearPageLayerOverride}
+- src\editor\LayerPanel.tsx:1645 — onClear={() =>
+- src\editor\LayerPanel.tsx:1646 — clearPageLayerOverride(
+- src\editor\LayerPanel.tsx:1708 — onClear={() =>
+- src\editor\LayerPanel.tsx:1709 — clearPageLayerOverride(
+- src\editor\LayerPanel.tsx:1769 — onClear={() =>
+- src\editor\LayerPanel.tsx:1770 — clearPageLayerOverride(
+- src\editor\LayerPanel.tsx:1829 — onClear={() =>
+- src\editor\LayerPanel.tsx:1830 — clearPageLayerOverride(
+- src\editor\LayerPanel.tsx:1890 — onClear={() =>
+- src\editor\LayerPanel.tsx:1891 — clearPageLayerOverride(
+- src\editor\LayerPanel.tsx:1968 — {isAreaOutlines ? (
+- src\editor\LayerPanel.tsx:1969 — <AreaOutlinesControls
+- src\editor\LayerPanel.tsx:1970 — outlines={currentPageEnvironment.scene?.areaOutlines ?? []}
+- src\editor\LayerPanel.tsx:1981 — onChange={(outlines) =>
+- src\editor\LayerPanel.tsx:1983 — areaOutlines: outlines,
+- src\editor\LayerPanel.tsx:2044 — onClear={() =>
+- src\editor\LayerPanel.tsx:2045 — clearPageLayerOverride(
+- src\editor\LayerPanel.tsx:2058 — <AreaOutlinesControls
+- src\editor\LayerPanel.tsx:2059 — outlines={currentPageEnvironment.scene?.areaOutlines ?? []}
+- src\editor\LayerPanel.tsx:2068 — onChange={(outlines) =>
+- src\editor\LayerPanel.tsx:2070 — areaOutlines: outlines,
+- src\editor\LayerPanel.tsx:2087 — clearPageLayerOverride={clearPageLayerOverride}
+- src\editor\LayerPanel.tsx:2103 — clearPageLayerOverride={clearPageLayerOverride}
+- src\editor\LayerPanel.tsx:2115 — clearPageLayerOverride(
+- src\editor\LayerPanel.tsx:2138 — clearPageLayerOverride={clearPageLayerOverride}
+- src\editor\LayerPanel.tsx:2152 — clearPageLayerOverride(
+- src\editor\LayerPanel.tsx:2190 — clearPageLayerOverride(
+- src\editor\LayerPanel.tsx:2260 — onClear={() =>
+- src\editor\LayerPanel.tsx:2261 — clearPageLayerOverride(
+- src\editor\LayerPanel.tsx:2273 — {!isAreaOutlines ? (
+- src\editor\LayerPanel.tsx:2301 — label="Outline color"
+- src\editor\LayerPanel.tsx:2303 — value={labelOutlineColorControlValue(envStyle)}
+- src\editor\LayerPanel.tsx:2305 — setEnvLayerStyle(layer.id, { labelOutlineColor: v })
+- src\editor\LayerPanel.tsx:2309 — label="Outline opacity"
+- src\editor\LayerPanel.tsx:2312 — labelOutlineOpacityControlValue(envStyle),
+- src\editor\LayerPanel.tsx:2316 — labelOutlineOpacity: parseFloat(v),
+- src\editor\LayerPanel.tsx:2365 — onClear={() =>
+- src\editor\LayerPanel.tsx:2366 — clearPageLayerOverride(
+- src\editor\LayerPanel.tsx:2402 — onClear={() =>
+- src\editor\LayerPanel.tsx:2403 — clearPageLayerOverride(
+- src\editor\LayerPanel.tsx:2411 — label="Outline color"
+- src\editor\LayerPanel.tsx:2413 — inheritedValue={labelOutlineColorControlValue(
+- src\editor\LayerPanel.tsx:2423 — "labelOutlineColor",
+- src\editor\LayerPanel.tsx:2427 — ?.labelOutlineColor as string | undefined
+- src\editor\LayerPanel.tsx:2431 — labelOutlineColor: v,
+- src\editor\LayerPanel.tsx:2434 — onClear={() =>
+- src\editor\LayerPanel.tsx:2435 — clearPageLayerOverride(
+- src\editor\LayerPanel.tsx:2438 — "labelOutlineColor",
+- src\editor\LayerPanel.tsx:2443 — label="Outline opacity"
+- src\editor\LayerPanel.tsx:2446 — labelOutlineOpacityControlValue(
+- src\editor\LayerPanel.tsx:2457 — "labelOutlineOpacity",
+- src\editor\LayerPanel.tsx:2461 — ?.labelOutlineOpacity !== undefined
+- src\editor\LayerPanel.tsx:2464 — .labelOutlineOpacity,
+- src\editor\LayerPanel.tsx:2474 — ? String(LAND_TITLE_LABEL_OUTLINE_OPACITY_DEFAULT)
+- src\editor\LayerPanel.tsx:2479 — labelOutlineOpacity: parseFloat(v),
+- src\editor\LayerPanel.tsx:2482 — onClear={() =>
+- src\editor\LayerPanel.tsx:2483 — clearPageLayerOverride(
+- src\editor\LayerPanel.tsx:2486 — "labelOutlineOpacity",
+- src\editor\LayerPanel.tsx:2523 — onClear={() =>
+- src\editor\LayerPanel.tsx:2524 — clearPageLayerOverride(
+- src\editor\LayerPanel.tsx:2571 — onClear={() =>
+- src\editor\LayerPanel.tsx:2572 — clearPageLayerOverride(
+- src\editor\LayerPanel.tsx:2599 — onClear={() =>
+- src\editor\LayerPanel.tsx:2600 — clearPageLayerOverride(
+- src\editor\LayerPanel.tsx:2629 — onClear={() =>
+- src\editor\LayerPanel.tsx:2630 — clearPageLayerOverride(
+- src\editor\LayerPanel.tsx:2687 — onClear={() =>
+- src\editor\LayerPanel.tsx:2688 — clearPageLayerOverride(
+- src\editor\LayerPanel.tsx:2717 — onClear={() =>
+- src\editor\LayerPanel.tsx:2718 — clearPageLayerOverride(
+- src\editor\LayerPanel.tsx:2755 — lineHeight: 1.35,
+- src\editor\LayerPanel.tsx:2764 — lineHeight: 1.35,
+- src\editor\LayerPanel.tsx:2779 — lineHeight: 1.35,
+- src\editor\LayerPanelGroups.tsx:94 — clearPageLayerOverride,
+- src\editor\LayerPanelGroups.tsx:96 — clearPageVisibilityOverride,
+- src\editor\LayerPanelGroups.tsx:557 — clearPageLayerOverride,
+- src\editor\LayerPanelGroups.tsx:559 — projectRoot: state.projectRoot,
+- src\editor\LayerPanelGroups.tsx:573 — clearPageTerrainVisible: () => {
+- src\editor\LayerPanelGroups.tsx:575 — clearPageVisibilityOverride(
+- src\editor\LayerPanelGroups.tsx:583 — clearPageVisibilityOverride,
+- src\editor\LayerPanelGroups.tsx:630 — devNote="Extents contains map footprint, clipping, material edge fade, and edge outline controls for the public topo map tool."
+- src\editor\OverlayPanel.tsx:5 — FROSTED_HAIRLINE,
+- src\editor\OverlayPanel.tsx:21 — "linear",
+- src\editor\OverlayPanel.tsx:59 — const easing = timing.easing ?? "linear";
+- src\editor\OverlayPanel.tsx:64 — // back to appending on a new line at the end. After the insert, focus
+- src\editor\OverlayPanel.tsx:107 — overlayImagePath(pageId, file.name, state.projectRoot),
+- src\editor\OverlayPanel.tsx:115 — // eslint-disable-next-line no-console
+- src\editor\OverlayPanel.tsx:205 — borderBottom: FROSTED_HAIRLINE,
+- src\editor\PagePanel.tsx:17 — FROSTED_HAIRLINE,
+- src\editor\PagePanel.tsx:37 — import { InlineEditableTitle } from "./InlineEditableTitle";
+- src\editor\PagePanel.tsx:56 — "linear",
+- src\editor\PagePanel.tsx:241 — // Inline confirm state for the Sub Master "Re-snapshot from Global"
+- src\editor\PagePanel.tsx:264 — clearAuthoringPreview,
+- src\editor\PagePanel.tsx:300 — return () => window.clearTimeout(timer);
+- src\editor\PagePanel.tsx:312 — window.clearTimeout(pulseRevealTimerRef.current);
+- src\editor\PagePanel.tsx:331 — clearAuthoringPreview();
+- src\editor\PagePanel.tsx:379 — window.clearTimeout(pulseRevealTimerRef.current);
+- src\editor\PagePanel.tsx:975 — <InlineEditableTitle
+- src\editor\PagePanel.tsx:1404 — <InlineEditableTitle
+- src\editor\PagePanel.tsx:2263 — ["linear", "Linear"],
+- src\editor\PagePanel.tsx:2491 — ["linear", "Linear"],
+- src\editor\PagePanel.tsx:2548 — ["linear", "Linear"],
+- src\editor\PagePanel.tsx:2803 — strokeLinecap="round"
+- src\editor\PagePanel.tsx:2804 — strokeLinejoin="round"
+- src\editor\PagePanel.tsx:3153 — lineHeight: 1,
+- src\editor\PagePanel.tsx:3161 — lineHeight: 1,
+- src\editor\PagePanel.tsx:3218 — border: FROSTED_HAIRLINE,
+- src\editor\PagePanel.tsx:3221 — display: "inline-flex",
+- src\editor\PagePanel.tsx:3227 — lineHeight: 1,
+- src\editor\PagePanel.tsx:3289 — lineHeight: 1,
+- src\editor\PagePanel.tsx:3300 — lineHeight: 1.2,
+- src\editor\PagePanel.tsx:3322 — display: "inline-flex",
+- src\editor\PagePanel.tsx:3326 — lineHeight: 0,
+- src\editor\PagePanel.tsx:3434 — strokeLinejoin="round"
+- src\editor\PagePanel.tsx:3454 — strokeLinecap="round"
+- src\editor\PagePanel.tsx:3461 — strokeLinecap="round"
+- src\editor\PagePanel.tsx:3462 — strokeLinejoin="round"
+- src\editor\PagePanel.tsx:3481 — strokeLinecap="round"
+- src\editor\PagePanel.tsx:3500 — strokeLinejoin="round"
+- src\editor\PagePanel.tsx:3519 — strokeLinecap="round"
+- src\editor\PagePanel.tsx:3520 — strokeLinejoin="round"
+- src\editor\PagePanel.tsx:3539 — strokeLinecap="round"
+- src\editor\PagePanel.tsx:3540 — strokeLinejoin="round"
+- src\editor\PagePanel.tsx:3608 — lineHeight: 1,
+- src\editor\PagePanel.tsx:3627 — : FROSTED_HAIRLINE,
+- src\editor\PagePanel.tsx:3650 — lineHeight: 1,
+- src\editor\PagePanel.tsx:3696 — lineHeight: 1.2,
+- src\editor\PagePanel.tsx:3778 — borderBottom: FROSTED_HAIRLINE,
+- src\editor\PagePanel.tsx:3801 — border: FROSTED_HAIRLINE,
+- src\editor\PagePanel.tsx:3877 — lineHeight: 1.2,
+- src\editor\PagePanel.tsx:3934 — lineHeight: 1.2,
+- src\editor\PagePanel.tsx:3940 — borderBottom: FROSTED_HAIRLINE,
+- src\editor\PagePanel.tsx:3962 — lineHeight: 1.2,
+- src\editor\PagePanel.tsx:4036 — lineHeight: 1.1,
+- src\editor\PagePanel.tsx:4113 — border: FROSTED_HAIRLINE,
+- src\editor\RangeCursorValueOverlay.tsx:104 — lineHeight: 1,
+- src\editor\save.ts:1 — // Thin wrappers over the dev /api/* endpoints. All paths are project-root
+- src\editor\save.ts:113 — export const PROJECT_ROOT = "projects/woodjam";
+- src\editor\save.ts:114 — export const projectJsonPath = (projectRoot = PROJECT_ROOT) =>
+- src\editor\save.ts:115 — `${projectRoot}/project.json`;
+- src\editor\save.ts:116 — export const environmentJsonPath = (projectRoot = PROJECT_ROOT) =>
+- src\editor\save.ts:117 — `${projectRoot}/environment.json`;
+- src\editor\save.ts:118 — export const pageJsonPath = (id: string, projectRoot = PROJECT_ROOT) =>
+- src\editor\save.ts:119 — `${projectRoot}/pages/${id}.json`;
+- src\editor\save.ts:120 — export const pageArchivePath = (id: string, projectRoot = PROJECT_ROOT) =>
+- src\editor\save.ts:121 — `${projectRoot}/pages/_archive/${id}.json`;
+- src\editor\save.ts:122 — export const overlayMarkdownPath = (id: string, projectRoot = PROJECT_ROOT) =>
+- src\editor\save.ts:123 — `${projectRoot}/overlays/${id}/text.md`;
+- src\editor\save.ts:127 — projectRoot = PROJECT_ROOT,
+- src\editor\save.ts:128 — ) => `${projectRoot}/overlays/${id}/${fileName}`;
+- src\editor\SiteDetailsPanel.tsx:18 — DemoBoreholeLineStyle,
+- src\editor\SiteDetailsPanel.tsx:45 — const LINE_STYLE_OPTIONS = [
+- src\editor\SiteDetailsPanel.tsx:48 — ] as const satisfies readonly { value: DemoBoreholeLineStyle; label: string }[];
+- src\editor\SiteDetailsPanel.tsx:394 — onClear,
+- src\editor\SiteDetailsPanel.tsx:401 — onClear: () => void;
+- src\editor\SiteDetailsPanel.tsx:428 — <button type="button" disabled={disabled} onClick={onClear}>
+- src\editor\SiteDetailsPanel.tsx:429 — Clear
+- src\editor\SiteDetailsPanel.tsx:682 — <AutoOpenDetails summary="Line" defaultOpen>
+- src\editor\SiteDetailsPanel.tsx:686 — checked={sourceLocations.lineVisible}
+- src\editor\SiteDetailsPanel.tsx:688 — onChange={(lineVisible) =>
+- src\editor\SiteDetailsPanel.tsx:689 — updateSourceLocations({ lineVisible })
+- src\editor\SiteDetailsPanel.tsx:691 — testId="site-details-borehole-line-visible"
+- src\editor\SiteDetailsPanel.tsx:695 — value={sourceLocations.lineColor}
+- src\editor\SiteDetailsPanel.tsx:696 — disabled={disabled || !sourceLocations.lineVisible}
+- src\editor\SiteDetailsPanel.tsx:697 — onChange={(lineColor) => updateSourceLocations({ lineColor })}
+- src\editor\SiteDetailsPanel.tsx:701 — value={sourceLocations.lineOpacity}
+- src\editor\SiteDetailsPanel.tsx:706 — disabled={disabled || !sourceLocations.lineVisible}
+- src\editor\SiteDetailsPanel.tsx:707 — onChange={(lineOpacity) =>
+- src\editor\SiteDetailsPanel.tsx:708 — updateSourceLocations({ lineOpacity })
+- src\editor\SiteDetailsPanel.tsx:713 — value={sourceLocations.lineWidth}
+- src\editor\SiteDetailsPanel.tsx:718 — disabled={disabled || !sourceLocations.lineVisible}
+- src\editor\SiteDetailsPanel.tsx:719 — onChange={(lineWidth) => updateSourceLocations({ lineWidth })}
+- src\editor\SiteDetailsPanel.tsx:728 — disabled={disabled || !sourceLocations.lineVisible}
+- src\editor\SiteDetailsPanel.tsx:733 — checked={sourceLocations.lineDashed}
+- src\editor\SiteDetailsPanel.tsx:734 — disabled={disabled || !sourceLocations.lineVisible}
+- src\editor\SiteDetailsPanel.tsx:735 — onChange={(lineDashed) =>
+- src\editor\SiteDetailsPanel.tsx:736 — updateSourceLocations({ lineDashed })
+- src\editor\SiteDetailsPanel.tsx:741 — value={sourceLocations.lineDashLengthM}
+- src\editor\SiteDetailsPanel.tsx:748 — !sourceLocations.lineVisible ||
+- src\editor\SiteDetailsPanel.tsx:749 — !sourceLocations.lineDashed
+- src\editor\SiteDetailsPanel.tsx:751 — onChange={(lineDashLengthM) =>
+- src\editor\SiteDetailsPanel.tsx:752 — updateSourceLocations({ lineDashLengthM })
+- src\editor\SiteDetailsPanel.tsx:757 — value={sourceLocations.lineDashGapM}
+- src\editor\SiteDetailsPanel.tsx:764 — !sourceLocations.lineVisible ||
+- src\editor\SiteDetailsPanel.tsx:765 — !sourceLocations.lineDashed
+- src\editor\SiteDetailsPanel.tsx:767 — onChange={(lineDashGapM) =>
+- src\editor\SiteDetailsPanel.tsx:768 — updateSourceLocations({ lineDashGapM })
+- src\editor\SiteDetailsPanel.tsx:1015 — onClear={() => updateSourceLocationIcon({ src: "" })}
+- src\editor\SiteDetailsPanel.tsx:1125 — value={well.lineStyle}
+- src\editor\SiteDetailsPanel.tsx:1126 — options={LINE_STYLE_OPTIONS}
+- src\editor\SiteDetailsPanel.tsx:1128 — onChange={(lineStyle) => updateWell(wellId, { lineStyle })}
+- src\editor\SiteDetailsPanel.tsx:1137 — disabled={disabled || well.lineStyle !== "dashed"}
+- src\editor\SiteDetailsPanel.tsx:1149 — disabled={disabled || well.lineStyle !== "dashed"}
+- src\editor\SiteDetailsPanel.tsx:1153 — label="Centerline"
+- src\editor\SiteDetailsPanel.tsx:1154 — checked={well.centerlineVisible}
+- src\editor\SiteDetailsPanel.tsx:1156 — onChange={(centerlineVisible) =>
+- src\editor\SiteDetailsPanel.tsx:1157 — updateWell(wellId, { centerlineVisible })
+- src\editor\SiteDetailsPanel.tsx:1161 — label="Line width"
+- src\editor\SiteDetailsPanel.tsx:1162 — value={well.centerlineWidth}
+- src\editor\SiteDetailsPanel.tsx:1168 — onChange={(centerlineWidth) =>
+- src\editor\SiteDetailsPanel.tsx:1169 — updateWell(wellId, { centerlineWidth })
+- src\editor\SiteDetailsPanel.tsx:1173 — label="Line color"
+- src\editor\SiteDetailsPanel.tsx:1174 — value={well.centerlineColor}
+- src\editor\SiteDetailsPanel.tsx:1176 — onChange={(centerlineColor) =>
+- src\editor\SiteDetailsPanel.tsx:1177 — updateWell(wellId, { centerlineColor })
+- src\editor\SiteDetailsPanel.tsx:1181 — label="Line opacity"
+- src\editor\SiteDetailsPanel.tsx:1182 — value={well.centerlineOpacity}
+- src\editor\SiteDetailsPanel.tsx:1188 — onChange={(centerlineOpacity) =>
+- src\editor\SiteDetailsPanel.tsx:1189 — updateWell(wellId, { centerlineOpacity })
+- src\editor\SiteDetailsPanel.tsx:1375 — label="Outline"
+- src\editor\SiteDetailsPanel.tsx:1376 — checked={block.outlineVisible}
+- src\editor\SiteDetailsPanel.tsx:1378 — onChange={(outlineVisible) => updateBlock({ outlineVisible })}
+- src\editor\SiteDetailsPanel.tsx:1381 — label="Outline color"
+- src\editor\SiteDetailsPanel.tsx:1382 — value={block.outlineColor}
+- src\editor\SiteDetailsPanel.tsx:1384 — onChange={(outlineColor) => updateBlock({ outlineColor })}
+- src\editor\SiteDetailsPanel.tsx:1387 — label="Outline thick."
+- src\editor\SiteDetailsPanel.tsx:1388 — value={block.outlineThickness}
+- src\editor\SiteDetailsPanel.tsx:1394 — onChange={(outlineThickness) =>
+- src\editor\SiteDetailsPanel.tsx:1395 — updateBlock({ outlineThickness })
+- src\editor\SiteDetailsPanel.tsx:1399 — label="Outline opacity"
+- src\editor\SiteDetailsPanel.tsx:1400 — value={block.outlineOpacity}
+- src\editor\SiteDetailsPanel.tsx:1406 — onChange={(outlineOpacity) => updateBlock({ outlineOpacity })}
+- src\editor\styleControls.tsx:8 — FROSTED_HAIRLINE,
+- src\editor\styleControls.tsx:32 — borderBottom: FROSTED_HAIRLINE,
+- src\editor\styleControls.tsx:47 — lineHeight: 1.3,
+- src\editor\styleControls.tsx:74 — lineHeight: 1.15,
+- src\editor\styleControls.tsx:122 — display: "inline-flex",
+- src\editor\styleControls.tsx:136 — lineHeight: 1.15,
+- src\editor\styleControls.tsx:160 — strokeLinejoin="round"
+- src\editor\styleControls.tsx:180 — strokeLinecap="round"
+- src\editor\styleControls.tsx:187 — strokeLinecap="round"
+- src\editor\styleControls.tsx:188 — strokeLinejoin="round"
+- src\editor\styleControls.tsx:328 — export type PageStyleClearer = (
+- src\editor\styleControls.tsx:360 — onClear,
+- src\editor\styleControls.tsx:366 — onClear: () => void;
+- src\editor\styleControls.tsx:393 — onClick={overridden ? onClear : () => onSet(effective)}
+- src\editor\styleControls.tsx:396 — ? "Clear page visibility override"
+- src\editor\styleControls.tsx:476 — onClear,
+- src\editor\styleControls.tsx:489 — onClear: () => void;
+- src\editor\styleControls.tsx:508 — onClear();
+- src\editor\styleControls.tsx:619 — clearPageLayerOverride,
+- src\editor\styleControls.tsx:635 — clearPageLayerOverride: PageStyleClearer;
+- src\editor\styleControls.tsx:677 — onClear={() => clearPageLayerOverride(currentPage.id, layerId, field)}
+- src\editor\styleControls.tsx:692 — clearPageLayerOverride,
+- src\editor\styleControls.tsx:704 — clearPageLayerOverride: PageStyleClearer;
+- src\editor\styleControls.tsx:730 — clearPageLayerOverride(currentPage.id, layerId, field);
+- src\editor\styleControls.tsx:760 — clearPageLayerOverride,
+- src\editor\styleControls.tsx:772 — clearPageLayerOverride: PageStyleClearer;
+- src\editor\styleControls.tsx:803 — onClear={() => clearPageLayerOverride(currentPage.id, layerId, field)}
+- src\editor\styles.ts:3 — // Shared editor panel styles. Plain inline objects -- no design system, no
+- src\editor\styles.ts:40 — export const FROSTED_HAIRLINE = "1px solid transparent";
+- src\editor\styles.ts:41 — export const FROSTED_PANEL_OUTLINE = "1px solid rgba(255, 255, 255, 0.2)";
+- src\editor\styles.ts:191 — // - FROSTED_HAIRLINE: transparent internal layout border; the outer editor
+- src\editor\styles.ts:192 — //   panel keeps its visible border through FROSTED_PANEL_OUTLINE.
+- src\editor\styles.ts:204 — export const frostedRoot = regularLightMaterial;
+- src\editor\styles.ts:254 — borderBottom: FROSTED_HAIRLINE,
+- src\editor\styles.ts:386 — borderTop: FROSTED_HAIRLINE,
+- src\editor\styles.ts:428 — display: "inline-flex",
+- src\editor\styles.ts:436 — lineHeight: 1.15,
+- src\editor\TransientSlider.tsx:110 — lineHeight: 1,
+- src\editor\types.ts:18 — // memory only (cleared on reload). FIFO, capped at 5 entries.
+- src\editor\types.ts:42 — projectRoot: string;
+- src\editor\types.ts:146 — type: "CLEAR_PAGE_LAYER_OVERRIDE";
+- src\editor\types.ts:149 — field?: keyof EditableStyle; // omit to clear whole layer entry
+- src\editor\types.ts:158 — type: "CLEAR_PAGE_VISIBILITY_OVERRIDE";
+- src\editor\UtahForgeAddToProjectDrop.tsx:9 — const UTAH_FORGE_PROJECT_ROOT = "projects/utah-forge";
+- src\editor\UtahForgeAddToProjectDrop.tsx:10 — const LATEST_INTAKE_REVIEW_PATH = `${UTAH_FORGE_PROJECT_ROOT}/intake_staging/LATEST_INTAKE_REVIEW.json`;
+- src\editor\UtahForgeAddToProjectDrop.tsx:11 — const LATEST_AI_REVIEW_PATH = `${UTAH_FORGE_PROJECT_ROOT}/intake_staging/LATEST_AI_REVIEW.json`;
+- src\editor\UtahForgeAddToProjectDrop.tsx:17 — projectRoot: string;
+- src\editor\UtahForgeAddToProjectDrop.tsx:144 — projectRoot,
+- src\editor\UtahForgeAddToProjectDrop.tsx:174 — projectRoot === UTAH_FORGE_PROJECT_ROOT;
+- src\editor\UtahForgeAddToProjectDrop.tsx:176 — const targetFolderPath = `${UTAH_FORGE_PROJECT_ROOT}/intake_staging/drops/${targetDropId}`;
+- src\editor\UtahForgeAddToProjectDrop.tsx:258 — const folderPath = `${UTAH_FORGE_PROJECT_ROOT}/intake_staging/drops/${dropId}`;
+- src\editor\UtahForgeAddToProjectDrop.tsx:346 — const intakeReviewPath = `${UTAH_FORGE_PROJECT_ROOT}/intake_staging/drops/${dropId}/INTAKE_REVIEW.json`;
+- src\editor\UtahForgeAddToProjectDrop.tsx:347 — const aiReviewPath = `${UTAH_FORGE_PROJECT_ROOT}/intake_staging/drops/${dropId}/AI_REVIEW.json`;
+- src\editor\UtahForgeAddToProjectDrop.tsx:348 — const switchboardPath = `${UTAH_FORGE_PROJECT_ROOT}/intake_staging/drops/${dropId}/INTAKE_SWITCHBOARD.json`;
+- src\editor\UtahForgeAddToProjectDrop.tsx:440 — const responseJsonPath = `${UTAH_FORGE_PROJECT_ROOT}/intake_staging/drops/${aiReview.dropId}/USER_CONTEXT_RESPONSE.json`;
+- src\editor\UtahForgeAddToProjectDrop.tsx:441 — const responseMdPath = `${UTAH_FORGE_PROJECT_ROOT}/intake_staging/drops/${aiReview.dropId}/USER_CONTEXT_RESPONSE.md`;
+- src\editor\UtahForgeAddToProjectDrop.tsx:711 — <code style={inlineCodeStyle}>{question.sourcePath}</code>
+- src\editor\UtahForgeAddToProjectDrop.tsx:1330 — `${UTAH_FORGE_PROJECT_ROOT}/intake_staging/drops/${dropId}/`,
+- src\editor\UtahForgeAddToProjectDrop.tsx:1424 — lineHeight: 1.2,
+- src\editor\UtahForgeAddToProjectDrop.tsx:1428 — display: "inline-flex",
+- src\editor\UtahForgeAddToProjectDrop.tsx:1469 — lineHeight: 1.45,
+- src\editor\UtahForgeAddToProjectDrop.tsx:1493 — lineHeight: 1.4,
+- src\editor\UtahForgeAddToProjectDrop.tsx:1512 — lineHeight: 1.35,
+- src\editor\UtahForgeAddToProjectDrop.tsx:1575 — lineHeight: 1.45,
+- src\editor\UtahForgeAddToProjectDrop.tsx:1631 — lineHeight: 1.45,
+- src\editor\UtahForgeAddToProjectDrop.tsx:1639 — lineHeight: 1.45,
+- src\editor\UtahForgeAddToProjectDrop.tsx:1642 — const inlineCodeStyle: React.CSSProperties = {
+- src\editor\UtahForgeAddToProjectDrop.tsx:1658 — display: "inline-flex",
+- src\editor\UtahForgeAddToProjectDrop.tsx:1685 — lineHeight: 1.4,
+- src\editor\UtahForgeAddToProjectDrop.tsx:1701 — lineHeight: 1.45,
+- src\editor\layerControls\layerPanelConfig.ts:62 — field: "contourFarLineScale",
+- src\editor\layerControls\layerPanelConfig.ts:114 — "power-lines",
+- src\editor\layerControls\layerPanelConfig.ts:136 — ids: ["ip-survey-lines-2024"],
+- src\editor\layerControls\layerPanelConfig.ts:160 — title: "Area Outlines",
+- src\editor\layerControls\layerPanelConfig.ts:161 — ids: ["area-outlines"],
+- src\editor\layerControls\layerPanelConfig.ts:187 — "shahbazi-tie-point-support-isolines",
+- src\editor\layerControls\layerPanelConfig.ts:249 — "scalarEdgeLineWidth",
+- src\editor\layerControls\layerPanelConfig.ts:252 — "scalarEdgeLineStyle",
+- src\editor\layerControls\layerPanelConfig.ts:257 — "sectionIsoEnabled",
+- src\editor\layerControls\layerPanelConfig.ts:258 — "sectionIsoLinesVisible",
+- src\editor\layerControls\layerPanelConfig.ts:259 — "sectionIsoBandsVisible",
+- src\editor\layerControls\layerPanelConfig.ts:260 — "sectionIsoTargetIds",
+- src\editor\layerControls\layerPanelConfig.ts:261 — "sectionIsoMin",
+- src\editor\layerControls\layerPanelConfig.ts:262 — "sectionIsoMax",
+- src\editor\layerControls\layerPanelConfig.ts:263 — "sectionIsoLevelCount",
+- src\editor\layerControls\layerPanelConfig.ts:264 — "sectionIsoLineWidth",
+- src\editor\layerControls\layerPanelConfig.ts:265 — "sectionIsoLineStyle",
+- src\editor\layerControls\layerPanelConfig.ts:266 — "sectionIsoBandOpacity",
+- src\editor\layerControls\layerPanelConfig.ts:267 — "sectionIsoFillOffset",
+- src\editor\layerControls\layerPanelConfig.ts:268 — "sectionIsoSourceOpacity",
+- src\editor\layerControls\layerPanelConfig.ts:299 — "sectionIsoEnabled",
+- src\editor\layerControls\layerPanelConfig.ts:300 — "sectionIsoLinesVisible",
+- src\editor\layerControls\layerPanelConfig.ts:301 — "sectionIsoBandsVisible",
+- src\editor\layerControls\layerPanelConfig.ts:302 — "sectionIsoTargetIds",
+- src\editor\layerControls\layerPanelConfig.ts:303 — "sectionIsoMin",
+- src\editor\layerControls\layerPanelConfig.ts:304 — "sectionIsoMax",
+- src\editor\layerControls\layerPanelConfig.ts:305 — "sectionIsoLevelCount",
+- src\editor\layerControls\layerPanelConfig.ts:306 — "sectionIsoLineWidth",
+- src\editor\layerControls\layerPanelConfig.ts:307 — "sectionIsoLineStyle",
+- src\editor\layerControls\layerPanelConfig.ts:308 — "sectionIsoBandOpacity",
+- src\editor\layerControls\layerPanelConfig.ts:309 — "sectionIsoFillOffset",
+- src\editor\layerControls\layerPanelConfig.ts:310 — "sectionIsoSourceOpacity",
+- src\editor\layerControls\layerPanelConfig.ts:386 — "sectionIsoEnabled",
+- src\editor\layerControls\layerPanelConfig.ts:387 — "sectionIsoLinesVisible",
+- src\editor\layerControls\layerPanelConfig.ts:388 — "sectionIsoBandsVisible",
+- src\editor\layerControls\layerPanelConfig.ts:389 — "sectionIsoTargetIds",
+- src\editor\layerControls\layerPanelConfig.ts:390 — "sectionIsoMin",
+- src\editor\layerControls\layerPanelConfig.ts:391 — "sectionIsoMax",
+- src\editor\layerControls\layerPanelConfig.ts:392 — "sectionIsoLevelCount",
+- src\editor\layerControls\layerPanelConfig.ts:393 — "sectionIsoLineWidth",
+- src\editor\layerControls\layerPanelConfig.ts:394 — "sectionIsoLineStyle",
+- src\editor\layerControls\layerPanelConfig.ts:395 — "sectionIsoBandOpacity",
+- src\editor\layerControls\layerPanelConfig.ts:396 — "sectionIsoFillOffset",
+- src\editor\layerControls\layerPanelConfig.ts:397 — "sectionIsoSourceOpacity",
+- src\editor\layerControls\layerPanelConfig.ts:459 — export const LINE_WIDTH_LAYER_DEFAULTS: Record<string, number> = {
+- src\editor\layerControls\layerPanelConfig.ts:463 — "power-lines": 4,
+- src\editor\layerControls\layerPanelConfig.ts:468 — "shahbazi-tie-point-support-isolines": 1.35,
+- src\editor\layerControls\layerPanelConfig.ts:470 — "ip-survey-lines-2024": 3.2,
+- src\editor\layerControls\layerPanelConfig.ts:502 — export const LAND_TITLE_LABEL_OUTLINE_OPACITY_DEFAULT = 0.34;
+- src\editor\layerControls\layerPanelConfig.ts:524 — export function labelOutlineColorControlValue(style: EditableStyle): string {
+- src\editor\layerControls\layerPanelConfig.ts:526 — (style.labelOutlineColor as string | undefined) ??
+- src\editor\layerControls\layerPanelConfig.ts:542 — export function labelOutlineOpacityControlValue(style: EditableStyle): number {
+- src\editor\layerControls\layerPanelConfig.ts:544 — (style.labelOutlineOpacity as number | undefined) ??
+- src\editor\layerControls\layerPanelConfig.ts:546 — ? LAND_TITLE_LABEL_OUTLINE_OPACITY_DEFAULT
+- src\editor\layerControls\layerPatchBuilders.ts:39 — ...sectionIsoPatchFromStyle(style),
+- src\editor\layerControls\layerPatchBuilders.ts:79 — scalarEdgeLineWidth: styleNumber(style, "scalarEdgeLineWidth", 0),
+- src\editor\layerControls\layerPatchBuilders.ts:82 — scalarEdgeLineStyle:
+- src\editor\layerControls\layerPatchBuilders.ts:83 — style.scalarEdgeLineStyle === "dashed" ? "dashed" : "solid",
+- src\editor\layerControls\layerPatchBuilders.ts:95 — export function sectionIsoPatchFromStyle(
+- src\editor\layerControls\layerPatchBuilders.ts:99 — sectionIsoEnabled: styleBoolean(style, "sectionIsoEnabled", false),
+- src\editor\layerControls\layerPatchBuilders.ts:100 — sectionIsoLinesVisible: styleBoolean(style, "sectionIsoLinesVisible", true),
+- src\editor\layerControls\layerPatchBuilders.ts:101 — sectionIsoBandsVisible: styleBoolean(style, "sectionIsoBandsVisible", true),
+- src\editor\layerControls\layerPatchBuilders.ts:102 — sectionIsoTargetIds:
+- src\editor\layerControls\layerPatchBuilders.ts:103 — typeof style.sectionIsoTargetIds === "object" &&
+- src\editor\layerControls\layerPatchBuilders.ts:104 — style.sectionIsoTargetIds !== null
+- src\editor\layerControls\layerPatchBuilders.ts:105 — ? { ...(style.sectionIsoTargetIds as Record<string, boolean>) }
+- src\editor\layerControls\layerPatchBuilders.ts:107 — sectionIsoMin: styleNumber(style, "sectionIsoMin", SCALAR_SOURCE_MIN),
+- src\editor\layerControls\layerPatchBuilders.ts:108 — sectionIsoMax: styleNumber(style, "sectionIsoMax", SCALAR_SOURCE_MAX),
+- src\editor\layerControls\layerPatchBuilders.ts:109 — sectionIsoLevelCount: Math.max(
+- src\editor\layerControls\layerPatchBuilders.ts:111 — Math.min(32, Math.round(styleNumber(style, "sectionIsoLevelCount", 32))),
+- src\editor\layerControls\layerPatchBuilders.ts:113 — sectionIsoLineWidth: styleNumber(style, "sectionIsoLineWidth", 2.6),
+- src\editor\layerControls\layerPatchBuilders.ts:114 — sectionIsoLineStyle:
+- src\editor\layerControls\layerPatchBuilders.ts:115 — style.sectionIsoLineStyle === "dashed" ? "dashed" : "solid",
+- src\editor\layerControls\layerPatchBuilders.ts:116 — sectionIsoBandOpacity: styleNumber(style, "sectionIsoBandOpacity", 0.32),
+- src\editor\layerControls\layerPatchBuilders.ts:117 — sectionIsoFillOffset: styleNumber(style, "sectionIsoFillOffset", 0),
+- src\editor\layerControls\layerPatchBuilders.ts:118 — sectionIsoSourceOpacity: styleNumber(style, "sectionIsoSourceOpacity", 0),
+- src\editor\layerControls\atmosphere\AtmosphereVolumeControls.tsx:6 — type PageStyleClearer,
+- src\editor\layerControls\atmosphere\AtmosphereVolumeControls.tsx:384 — clearPageLayerOverride: PageStyleClearer;
+- src\editor\layerControls\env\EnvRows.tsx:73 — lineHeight: "16px",
+- src\editor\layerControls\env\EnvRows.tsx:102 — onClear,
+- src\editor\layerControls\env\EnvRows.tsx:108 — onClear: () => void;
+- src\editor\layerControls\env\EnvRows.tsx:135 — onClick={overridden ? onClear : () => onSet(effective)}
+- src\editor\layerControls\env\EnvRows.tsx:138 — ? "Clear page visibility override"
+- src\editor\layerControls\env\EnvRows.tsx:266 — onClear,
+- src\editor\layerControls\env\EnvRows.tsx:272 — onClear: () => void;
+- src\editor\layerControls\env\EnvRows.tsx:288 — else onClear();
+- src\editor\layerControls\env\EnvRows.tsx:339 — onClear,
+- src\editor\layerControls\env\EnvRows.tsx:345 — onClear: () => void;
+- src\editor\layerControls\env\EnvRows.tsx:363 — else onClear();
+- src\editor\layerControls\env\EnvRows.tsx:415 — onClear,
+- src\editor\layerControls\env\EnvRows.tsx:421 — onClear: () => void;
+- src\editor\layerControls\env\EnvRows.tsx:440 — else onClear();
+- src\editor\layerControls\env\EnvRows.tsx:474 — onClear,
+- src\editor\layerControls\env\EnvRows.tsx:480 — onClear: () => void;
+- src\editor\layerControls\env\EnvRows.tsx:493 — else onClear();
+- src\editor\layerControls\env\EnvRows.tsx:513 — onClear,
+- src\editor\layerControls\env\EnvRows.tsx:519 — onClear: () => void;
+- src\editor\layerControls\env\EnvRows.tsx:532 — else onClear();
+- src\editor\layerControls\geology\GeologySubUnitsPanel.tsx:55 — const clearUnitColor = (code: string) => {
+- src\editor\layerControls\geology\GeologySubUnitsPanel.tsx:121 — onClick={() => clearUnitColor(u.code)}
+- src\editor\layerControls\layout\DrillingAssayPanel.tsx:16 — assayOutlineColorInputStyle,
+- src\editor\layerControls\layout\DrillingAssayPanel.tsx:36 — const showBoreLine = assays.showBoreLine ?? true;
+- src\editor\layerControls\layout\DrillingAssayPanel.tsx:37 — const boreLineColor = assays.boreLineColor ?? "#e7dcc4";
+- src\editor\layerControls\layout\DrillingAssayPanel.tsx:38 — const boreWidth = assays.boreLineWidthPx ?? 3.25;
+- src\editor\layerControls\layout\DrillingAssayPanel.tsx:39 — const boreLineOpacity = assays.boreLineOpacity ?? 0.72;
+- src\editor\layerControls\layout\DrillingAssayPanel.tsx:40 — const boreLineRenderOrder = assays.boreLineRenderOrder ?? 6.8;
+- src\editor\layerControls\layout\DrillingAssayPanel.tsx:122 — <div style={drillingAssayPaletteTitleStyle}>Bore line / outline</div>
+- src\editor\layerControls\layout\DrillingAssayPanel.tsx:124 — label="Line"
+- src\editor\layerControls\layout\DrillingAssayPanel.tsx:125 — checked={showBoreLine}
+- src\editor\layerControls\layout\DrillingAssayPanel.tsx:126 — onChange={(checked) => setAssays({ showBoreLine: checked })}
+- src\editor\layerControls\layout\DrillingAssayPanel.tsx:130 — value={boreLineColor}
+- src\editor\layerControls\layout\DrillingAssayPanel.tsx:131 — onChange={(color) => setAssays({ boreLineColor: color })}
+- src\editor\layerControls\layout\DrillingAssayPanel.tsx:135 — value={boreLineOpacity}
+- src\editor\layerControls\layout\DrillingAssayPanel.tsx:140 — onChange={(value) => setAssays({ boreLineOpacity: value })}
+- src\editor\layerControls\layout\DrillingAssayPanel.tsx:144 — value={boreLineRenderOrder}
+- src\editor\layerControls\layout\DrillingAssayPanel.tsx:149 — onChange={(value) => setAssays({ boreLineRenderOrder: value })}
+- src\editor\layerControls\layout\DrillingAssayPanel.tsx:224 — setAssays({ boreLineWidthPx: parseFloat(e.target.value) })
+- src\editor\layerControls\layout\DrillingAssayPanel.tsx:498 — style={assayOutlineColorInputStyle}
+- src\editor\layerControls\layout\DrillingAssayPanel.tsx:513 — Assay intervals are loaded from drillhole_assays.json; lithology bands
+- src\editor\layerControls\layout\LayoutControls.tsx:20 — assayOutlineColorInputStyle,
+- src\editor\layerControls\layout\LayoutControls.tsx:73 — const rootStyle = accentColor
+- src\editor\layerControls\layout\LayoutControls.tsx:81 — style={rootStyle}
+- src\editor\layerControls\layout\LayoutControls.tsx:138 — strokeLinecap="round"
+- src\editor\layerControls\layout\LayoutControls.tsx:139 — strokeLinejoin="round"
+- src\editor\layerControls\layout\LayoutControls.tsx:230 — if (normalized.includes("working area") || normalized.includes("area outline")) {
+- src\editor\layerControls\layout\LayoutControls.tsx:442 — const farLineScale = topo.farLineScale ?? 0.67;
+- src\editor\layerControls\layout\LayoutControls.tsx:457 — data-dev-note="TopoDetailDistancePanel controls global distance thinning/fade for roads, streams, and power lines."
+- src\editor\layerControls\layout\LayoutControls.tsx:483 — value={farLineScale}
+- src\editor\layerControls\layout\LayoutControls.tsx:488 — onChange={(v) => setTopo({ farLineScale: v })}
+- src\editor\layerControls\layout\LayoutControls.tsx:500 — Global controls for roads, streams, and power lines. Start/end are
+- src\editor\layerControls\layout\LayoutControls.tsx:580 — style={assayOutlineColorInputStyle}
+- src\editor\layerControls\layout\layoutStyles.ts:4 — FROSTED_HAIRLINE,
+- src\editor\layerControls\layout\layoutStyles.ts:48 — // Single-line title text in the subheading pill. Descriptive second-line text
+- src\editor\layerControls\layout\layoutStyles.ts:52 — display: "inline-flex",
+- src\editor\layerControls\layout\layoutStyles.ts:57 — lineHeight: 1.2,
+- src\editor\layerControls\layout\layoutStyles.ts:101 — borderBottom: FROSTED_HAIRLINE,
+- src\editor\layerControls\layout\layoutStyles.ts:112 — borderTop: FROSTED_HAIRLINE,
+- src\editor\layerControls\layout\layoutStyles.ts:126 — lineHeight: 1.35,
+- src\editor\layerControls\layout\layoutStyles.ts:136 — lineHeight: 1.25,
+- src\editor\layerControls\layout\layoutStyles.ts:173 — export const assayOutlineColorInputStyle: React.CSSProperties = {
+- src\editor\layerControls\layout\PageEnvironmentOverridePanel.tsx:58 — onClear={() => setPageField(page.id, { cinematicExposure: undefined })}
+- src\editor\layerControls\layout\PageEnvironmentOverridePanel.tsx:71 — onClear={() => setPageField(page.id, { bloomBoost: undefined })}
+- src\editor\layerControls\layout\PageEnvironmentOverridePanel.tsx:79 — onClear={() => setPageField(page.id, { sunLockToCamera: undefined })}
+- src\editor\layerControls\mt\IsobandControls.tsx:19 — type IsobandRangeKind = "mt" | "seismic";
+- src\editor\layerControls\mt\IsobandControls.tsx:21 — function isobandAxisRange(axis: "x" | "y" | "z") {
+- src\editor\layerControls\mt\IsobandControls.tsx:27 — function isobandDefaultPlanePosition(axis: "x" | "y" | "z"): number {
+- src\editor\layerControls\mt\IsobandControls.tsx:31 — export function IsobandControls({
+- src\editor\layerControls\mt\IsobandControls.tsx:32 — title = "Isobands",
+- src\editor\layerControls\mt\IsobandControls.tsx:51 — rangeKind: IsobandRangeKind;
+- src\editor\layerControls\mt\IsobandControls.tsx:59 — const enabled = styleBoolean(style, "sectionIsoEnabled", false);
+- src\editor\layerControls\mt\IsobandControls.tsx:60 — const linesVisible = styleBoolean(style, "sectionIsoLinesVisible", true);
+- src\editor\layerControls\mt\IsobandControls.tsx:61 — const bandsVisible = styleBoolean(style, "sectionIsoBandsVisible", true);
+- src\editor\layerControls\mt\IsobandControls.tsx:64 — Math.min(1, styleNumber(style, "sectionIsoSourceOpacity", 0)),
+- src\editor\layerControls\mt\IsobandControls.tsx:66 — const bandCount = Math.max(
+- src\editor\layerControls\mt\IsobandControls.tsx:68 — Math.min(32, Math.round(styleNumber(style, "sectionIsoLevelCount", 32))),
+- src\editor\layerControls\mt\IsobandControls.tsx:70 — const lineWidth = Math.max(
+- src\editor\layerControls\mt\IsobandControls.tsx:72 — Math.min(12, styleNumber(style, "sectionIsoLineWidth", 2.6)),
+- src\editor\layerControls\mt\IsobandControls.tsx:74 — const bandOpacity = Math.max(
+- src\editor\layerControls\mt\IsobandControls.tsx:76 — Math.min(0.85, styleNumber(style, "sectionIsoBandOpacity", 0.32)),
+- src\editor\layerControls\mt\IsobandControls.tsx:80 — Math.min(1, styleNumber(style, "sectionIsoFillOffset", 0)),
+- src\editor\layerControls\mt\IsobandControls.tsx:82 — const lineStyle = style.sectionIsoLineStyle === "dashed" ? "dashed" : "solid";
+- src\editor\layerControls\mt\IsobandControls.tsx:83 — const bandSelection = Array.isArray(style.sectionIsoBandSelection)
+- src\editor\layerControls\mt\IsobandControls.tsx:84 — ? style.sectionIsoBandSelection
+- src\editor\layerControls\mt\IsobandControls.tsx:86 — // sectionIsoLevels makes levelCount interior levels -> levelCount + 1 bands.
+- src\editor\layerControls\mt\IsobandControls.tsx:87 — const numBands = bandCount + 1;
+- src\editor\layerControls\mt\IsobandControls.tsx:102 — styleNumber(style, "sectionIsoMin", fallbackMin),
+- src\editor\layerControls\mt\IsobandControls.tsx:107 — Math.min(sourceMax, styleNumber(style, "sectionIsoMax", fallbackMax)),
+- src\editor\layerControls\mt\IsobandControls.tsx:118 — const axisRange = isobandAxisRange(activeAxis);
+- src\editor\layerControls\mt\IsobandControls.tsx:123 — : isobandDefaultPlanePosition(activeAxis);
+- src\editor\layerControls\mt\IsobandControls.tsx:191 — : isobandDefaultPlanePosition(axis),
+- src\editor\layerControls\mt\IsobandControls.tsx:201 — sectionIsoEnabled: true,
+- src\editor\layerControls\mt\IsobandControls.tsx:202 — sectionIsoBandsVisible: true,
+- src\editor\layerControls\mt\IsobandControls.tsx:203 — sectionIsoLinesVisible: true,
+- src\editor\layerControls\mt\IsobandControls.tsx:204 — sectionIsoLevelCount: 32,
+- src\editor\layerControls\mt\IsobandControls.tsx:205 — sectionIsoSourceOpacity: 0,
+- src\editor\layerControls\mt\IsobandControls.tsx:206 — sectionIsoMin: fallbackMin,
+- src\editor\layerControls\mt\IsobandControls.tsx:207 — sectionIsoMax: Math.max(fallbackMin + 0.001, fallbackMax),
+- src\editor\layerControls\mt\IsobandControls.tsx:209 — : { sectionIsoEnabled: false },
+- src\editor\layerControls\mt\IsobandControls.tsx:214 — <details style={nestedDetailsStyle} data-testid="layer-isobands-controls">
+- src\editor\layerControls\mt\IsobandControls.tsx:220 — data-testid="layer-isobands-enabled"
+- src\editor\layerControls\mt\IsobandControls.tsx:235 — {volumePlanes ? "section plane iso-bands" : "slice overlay iso-bands"}
+- src\editor\layerControls\mt\IsobandControls.tsx:244 — data-testid="layer-isobands-volume-axis"
+- src\editor\layerControls\mt\IsobandControls.tsx:260 — data-testid="layer-isobands-volume-position"
+- src\editor\layerControls\mt\IsobandControls.tsx:296 — data-testid="layer-isobands-source-opacity"
+- src\editor\layerControls\mt\IsobandControls.tsx:305 — sectionIsoSourceOpacity: parseFloat(event.target.value),
+- src\editor\layerControls\mt\IsobandControls.tsx:318 — <label style={nestedFieldLabelStyle}>Iso-band count</label>
+- src\editor\layerControls\mt\IsobandControls.tsx:320 — data-testid="layer-isobands-count"
+- src\editor\layerControls\mt\IsobandControls.tsx:325 — value={bandCount}
+- src\editor\layerControls\mt\IsobandControls.tsx:329 — sectionIsoLevelCount: Math.round(
+- src\editor\layerControls\mt\IsobandControls.tsx:338 — "--editor-slider-fill": `${((bandCount - 2) / 30) * 100}%`,
+- src\editor\layerControls\mt\IsobandControls.tsx:344 — <label style={nestedFieldLabelStyle}>3D bands (cells)</label>
+- src\editor\layerControls\mt\IsobandControls.tsx:346 — data-testid="layer-isobands-3d-select"
+- src\editor\layerControls\mt\IsobandControls.tsx:355 — {Array.from({ length: numBands }, (_, index) => {
+- src\editor\layerControls\mt\IsobandControls.tsx:356 — const selected = bandSelection.includes(index);
+- src\editor\layerControls\mt\IsobandControls.tsx:361 — title={`Show iso-band ${index} cells in 3D`}
+- src\editor\layerControls\mt\IsobandControls.tsx:364 — const next = new Set(bandSelection);
+- src\editor\layerControls\mt\IsobandControls.tsx:368 — sectionIsoBandSelection: Array.from(next).sort(
+- src\editor\layerControls\mt\IsobandControls.tsx:392 — {bandSelection.length > 0 ? (
+- src\editor\layerControls\mt\IsobandControls.tsx:395 — data-testid="layer-isobands-3d-clear"
+- src\editor\layerControls\mt\IsobandControls.tsx:397 — onClick={() => commit({ sectionIsoBandSelection: [] })}
+- src\editor\layerControls\mt\IsobandControls.tsx:409 — clear
+- src\editor\layerControls\mt\IsobandControls.tsx:417 — data-testid="layer-isobands-min"
+- src\editor\layerControls\mt\IsobandControls.tsx:427 — sectionIsoMin: next,
+- src\editor\layerControls\mt\IsobandControls.tsx:428 — sectionIsoMax: Math.max(isoMax, next + 0.001),
+- src\editor\layerControls\mt\IsobandControls.tsx:443 — data-testid="layer-isobands-max"
+- src\editor\layerControls\mt\IsobandControls.tsx:453 — sectionIsoMin: Math.min(isoMin, next - 0.001),
+- src\editor\layerControls\mt\IsobandControls.tsx:454 — sectionIsoMax: next,
+- src\editor\layerControls\mt\IsobandControls.tsx:467 — <span style={nestedFieldLabelStyle}>Iso-band fill</span>
+- src\editor\layerControls\mt\IsobandControls.tsx:469 — data-testid="layer-isobands-bands-visible"
+- src\editor\layerControls\mt\IsobandControls.tsx:471 — checked={bandsVisible}
+- src\editor\layerControls\mt\IsobandControls.tsx:474 — commit({ sectionIsoBandsVisible: event.target.checked })
+- src\editor\layerControls\mt\IsobandControls.tsx:481 — <label style={nestedFieldLabelStyle}>Band opacity</label>
+- src\editor\layerControls\mt\IsobandControls.tsx:483 — data-testid="layer-isobands-band-opacity"
+- src\editor\layerControls\mt\IsobandControls.tsx:488 — value={bandOpacity}
+- src\editor\layerControls\mt\IsobandControls.tsx:489 — disabled={disabled || !enabled || !bandsVisible}
+- src\editor\layerControls\mt\IsobandControls.tsx:491 — commit({ sectionIsoBandOpacity: parseFloat(event.target.value) })
+- src\editor\layerControls\mt\IsobandControls.tsx:496 — opacity: enabled && bandsVisible ? controlOpacity : 0.35,
+- src\editor\layerControls\mt\IsobandControls.tsx:497 — "--editor-slider-fill": `${(bandOpacity / 0.85) * 100}%`,
+- src\editor\layerControls\mt\IsobandControls.tsx:503 — <label style={nestedFieldLabelStyle}>Band fill offset</label>
+- src\editor\layerControls\mt\IsobandControls.tsx:505 — data-testid="layer-isobands-fill-offset"
+- src\editor\layerControls\mt\IsobandControls.tsx:511 — disabled={disabled || !enabled || !bandsVisible}
+- src\editor\layerControls\mt\IsobandControls.tsx:513 — commit({ sectionIsoFillOffset: parseFloat(event.target.value) })
+- src\editor\layerControls\mt\IsobandControls.tsx:518 — opacity: enabled && bandsVisible ? controlOpacity : 0.35,
+- src\editor\layerControls\mt\IsobandControls.tsx:525 — <span style={nestedFieldLabelStyle}>Isolines</span>
+- src\editor\layerControls\mt\IsobandControls.tsx:527 — data-testid="layer-isobands-lines-visible"
+- src\editor\layerControls\mt\IsobandControls.tsx:529 — checked={linesVisible}
+- src\editor\layerControls\mt\IsobandControls.tsx:532 — commit({ sectionIsoLinesVisible: event.target.checked })
+- src\editor\layerControls\mt\IsobandControls.tsx:539 — <label style={nestedFieldLabelStyle}>Isoline style</label>
+- src\editor\layerControls\mt\IsobandControls.tsx:541 — data-testid="layer-isobands-line-style"
+- src\editor\layerControls\mt\IsobandControls.tsx:542 — value={lineStyle}
+- src\editor\layerControls\mt\IsobandControls.tsx:543 — disabled={disabled || !enabled || !linesVisible}
+- src\editor\layerControls\mt\IsobandControls.tsx:546 — sectionIsoLineStyle:
+- src\editor\layerControls\mt\IsobandControls.tsx:553 — opacity: enabled && linesVisible ? controlOpacity : 0.35,
+- src\editor\layerControls\mt\IsobandControls.tsx:561 — <label style={nestedFieldLabelStyle}>Isoline width</label>
+- src\editor\layerControls\mt\IsobandControls.tsx:563 — data-testid="layer-isobands-line-width"
+- src\editor\layerControls\mt\IsobandControls.tsx:568 — value={lineWidth}
+- src\editor\layerControls\mt\IsobandControls.tsx:569 — disabled={disabled || !enabled || !linesVisible}
+- src\editor\layerControls\mt\IsobandControls.tsx:571 — commit({ sectionIsoLineWidth: parseFloat(event.target.value) })
+- src\editor\layerControls\mt\IsobandControls.tsx:576 — opacity: enabled && linesVisible ? controlOpacity : 0.35,
+- src\editor\layerControls\mt\IsobandControls.tsx:577 — "--editor-slider-fill": `${(lineWidth / 12) * 100}%`,
+- src\editor\layerControls\mt\MtControls.tsx:3 — import { FROSTED_HAIRLINE, panelStyles, vibrancyTertiaryLabel } from "../../styles";
+- src\editor\layerControls\mt\MtControls.tsx:17 — type PageStyleClearer,
+- src\editor\layerControls\mt\MtControls.tsx:30 — import { IsobandControls } from "./IsobandControls";
+- src\editor\layerControls\mt\MtControls.tsx:41 — alignItems: "baseline",
+- src\editor\layerControls\mt\MtControls.tsx:45 — lineHeight: 1.25,
+- src\editor\layerControls\mt\MtControls.tsx:88 — const gradientBackground = `linear-gradient(90deg, ${lowColor} 0%, ${midColor} ${midpointFill.toFixed(
+- src\editor\layerControls\mt\MtControls.tsx:109 — border: FROSTED_HAIRLINE,
+- src\editor\layerControls\mt\MtControls.tsx:367 — clearPageLayerOverride: PageStyleClearer;
+- src\editor\layerControls\mt\MtControls.tsx:471 — <div style={{ ...panelStyles.muted, lineHeight: 1.35 }}>
+- src\editor\layerControls\mt\MtControls.tsx:489 — clearPageLayerOverride,
+- src\editor\layerControls\mt\MtControls.tsx:498 — clearPageLayerOverride: PageStyleClearer;
+- src\editor\layerControls\mt\MtControls.tsx:601 — clearPageLayerOverride={clearPageLayerOverride}
+- src\editor\layerControls\mt\MtControls.tsx:613 — clearPageLayerOverride={clearPageLayerOverride}
+- src\editor\layerControls\mt\MtControls.tsx:625 — clearPageLayerOverride={clearPageLayerOverride}
+- src\editor\layerControls\mt\MtControls.tsx:643 — clearPageLayerOverride(
+- src\editor\layerControls\mt\MtControls.tsx:650 — Clear page slice override
+- src\editor\layerControls\mt\MtControls.tsx:657 — <IsobandControls
+- src\editor\layerControls\mt\MtControls.tsx:658 — title="2D isobands"
+- src\editor\layerControls\mt\MtControls.tsx:673 — export { IsobandControls } from "./IsobandControls";
+- src\editor\layerControls\mt\MtThresholdSurfaceControls.tsx:3 — import { FROSTED_HAIRLINE, panelStyles, vibrancyTertiaryLabel } from "../../styles";
+- src\editor\layerControls\mt\MtThresholdSurfaceControls.tsx:14 — type PageStyleClearer,
+- src\editor\layerControls\mt\MtThresholdSurfaceControls.tsx:96 — clearPageLayerOverride: PageStyleClearer;
+- src\editor\layerControls\mt\MtThresholdSurfaceControls.tsx:343 — borderTop: FROSTED_HAIRLINE,
+- src\editor\layerControls\mt\MtVolumeControls.tsx:11 — type PageStyleClearer,
+- src\editor\layerControls\mt\MtVolumeControls.tsx:17 — import { IsobandControls } from "./IsobandControls";
+- src\editor\layerControls\mt\MtVolumeControls.tsx:93 — clearPageLayerOverride: PageStyleClearer;
+- src\editor\layerControls\mt\MtVolumeControls.tsx:346 — <IsobandControls
+- src\editor\layerControls\mt\MtVolumeControls.tsx:347 — title="3D iso-resistivity bands"
+- src\editor\layerControls\overlays\SceneOverlayControls.tsx:323 — const path = `${state.projectRoot}/overlays-source/${fileName}`;
+- src\editor\layerControls\page\PageOverrideRows.tsx:45 — onClear,
+- src\editor\layerControls\page\PageOverrideRows.tsx:52 — onClear: () => void;
+- src\editor\layerControls\page\PageOverrideRows.tsx:63 — else onClear();
+- src\editor\layerControls\page\PageOverrideRows.tsx:87 — onClear,
+- src\editor\layerControls\page\PageOverrideRows.tsx:97 — onClear: () => void;
+- src\editor\layerControls\page\PageOverrideRows.tsx:108 — else onClear();
+- src\editor\layerControls\scalar\PointMarkerControls.tsx:5 — type PageStyleClearer,
+- src\editor\layerControls\scalar\PointMarkerControls.tsx:17 — clearPageLayerOverride,
+- src\editor\layerControls\scalar\PointMarkerControls.tsx:25 — clearPageLayerOverride: PageStyleClearer;
+- src\editor\layerControls\scalar\PointMarkerControls.tsx:43 — clearPageLayerOverride={clearPageLayerOverride}
+- src\editor\layerControls\scalar\PointMarkerControls.tsx:59 — clearPageLayerOverride={clearPageLayerOverride}
+- src\editor\layerControls\scalar\PointMarkerControls.tsx:75 — clearPageLayerOverride={clearPageLayerOverride}
+- src\editor\layerControls\scalar\PointMarkerControls.tsx:87 — clearPageLayerOverride={clearPageLayerOverride}
+- src\editor\layerControls\scalar\ScalarPointDrawReadout.tsx:48 — lineHeight: 1.35,
+- src\editor\layerControls\scalar\ScalarRampControls.tsx:2 — import { FROSTED_HAIRLINE, vibrancyLabel, vibrancyTertiaryLabel } from "../../styles";
+- src\editor\layerControls\scalar\ScalarRampControls.tsx:112 — const edgeLineWidth = Math.max(
+- src\editor\layerControls\scalar\ScalarRampControls.tsx:118 — "scalarEdgeLineWidth",
+- src\editor\layerControls\scalar\ScalarRampControls.tsx:131 — const edgeLineStyle =
+- src\editor\layerControls\scalar\ScalarRampControls.tsx:132 — style.scalarEdgeLineStyle === "dashed" ? "dashed" : "solid";
+- src\editor\layerControls\scalar\ScalarRampControls.tsx:193 — const spectrumBackground = `linear-gradient(90deg, ${lowColor} 0%, ${lowColor} ${colorMinFill.toFixed(
+- src\editor\layerControls\scalar\ScalarRampControls.tsx:210 — lineHeight: 1.3,
+- src\editor\layerControls\scalar\ScalarRampControls.tsx:248 — lineHeight: 1.35,
+- src\editor\layerControls\scalar\ScalarRampControls.tsx:359 — border: FROSTED_HAIRLINE,
+- src\editor\layerControls\scalar\ScalarRampControls.tsx:395 — "linear-gradient(90deg, rgba(0, 0, 0, 0.54), rgba(0, 0, 0, 0))",
+- src\editor\layerControls\scalar\ScalarRampControls.tsx:408 — "linear-gradient(90deg, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.54))",
+- src\editor\layerControls\scalar\ScalarRampControls.tsx:673 — lineHeight: 1.35,
+- src\editor\layerControls\scalar\ScalarRampControls.tsx:728 — <div style={scalarGroupHeadingStyle}>Isoline rendering</div>
+- src\editor\layerControls\scalar\ScalarRampControls.tsx:731 — Lower isoline log10(Ohm-m)
+- src\editor\layerControls\scalar\ScalarRampControls.tsx:735 — aria-label="Lower isoline log10 resistivity"
+- src\editor\layerControls\scalar\ScalarRampControls.tsx:759 — Upper isoline log10(Ohm-m)
+- src\editor\layerControls\scalar\ScalarRampControls.tsx:763 — aria-label="Upper isoline log10 resistivity"
+- src\editor\layerControls\scalar\ScalarRampControls.tsx:786 — <label style={nestedFieldLabelStyle}>Isoline width</label>
+- src\editor\layerControls\scalar\ScalarRampControls.tsx:789 — aria-label="MT resistivity isoline width"
+- src\editor\layerControls\scalar\ScalarRampControls.tsx:793 — value={edgeLineWidth}
+- src\editor\layerControls\scalar\ScalarRampControls.tsx:796 — onChange({ scalarEdgeLineWidth: parseFloat(e.target.value) })
+- src\editor\layerControls\scalar\ScalarRampControls.tsx:802 — "--editor-slider-fill": percentFill(edgeLineWidth, 0, 8),
+- src\editor\layerControls\scalar\ScalarRampControls.tsx:808 — <label style={nestedFieldLabelStyle}>Isoline smoothing</label>
+- src\editor\layerControls\scalar\ScalarRampControls.tsx:811 — aria-label="MT resistivity isoline smoothing"
+- src\editor\layerControls\scalar\ScalarRampControls.tsx:830 — <label style={nestedFieldLabelStyle}>Band fill offset</label>
+- src\editor\layerControls\scalar\ScalarRampControls.tsx:833 — aria-label="MT resistivity isoline band fill offset"
+- src\editor\layerControls\scalar\ScalarRampControls.tsx:852 — <label style={nestedFieldLabelStyle}>Isoline style</label>
+- src\editor\layerControls\scalar\ScalarRampControls.tsx:854 — value={edgeLineStyle}
+- src\editor\layerControls\scalar\ScalarRampControls.tsx:858 — scalarEdgeLineStyle:
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:15 — import { InlineEditableTitle } from "../../InlineEditableTitle";
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:78 — const frameInlineUnitInputWrapStyle: React.CSSProperties = {
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:81 — display: "inline-flex",
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:85 — const frameInlineUnitNumberInputStyle: React.CSSProperties = {
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:92 — const frameInlineScaleNumberInputStyle: React.CSSProperties = {
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:93 — ...frameInlineUnitNumberInputStyle,
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:97 — const frameInlineUnitSuffixStyle: React.CSSProperties = {
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:104 — lineHeight: 1,
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:146 — display: "inline-flex",
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:159 — display: "inline-flex",
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:166 — display: "inline-flex",
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:171 — lineHeight: 1,
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:187 — lineHeight: 1.1,
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:194 — display: "inline-flex",
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:1170 — <InlineEditableTitle
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:1229 — title="When off: section still cuts onscreen objects, but no outline or push/pull controls render"
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:1360 — <label style={nestedFieldLabelStyle}>Ground line width</label>
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:1381 — <span style={frameInlineUnitInputWrapStyle}>
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:1400 — style={frameInlineUnitNumberInputStyle}
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:1404 — style={frameInlineUnitSuffixStyle}
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:1581 — <span style={frameInlineUnitInputWrapStyle}>
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:1598 — style={frameInlineUnitNumberInputStyle}
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:1602 — style={frameInlineUnitSuffixStyle}
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:1625 — <span style={frameInlineUnitInputWrapStyle}>
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:1642 — style={frameInlineScaleNumberInputStyle}
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:1646 — style={frameInlineUnitSuffixStyle}
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:1672 — <span style={frameInlineUnitInputWrapStyle}>
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:1689 — style={frameInlineUnitNumberInputStyle}
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:1693 — style={frameInlineUnitSuffixStyle}
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:1753 — <span style={frameInlineUnitInputWrapStyle}>
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:1772 — style={frameInlineUnitNumberInputStyle}
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:1776 — style={frameInlineUnitSuffixStyle}
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:1802 — <span style={frameInlineUnitInputWrapStyle}>
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:1819 — style={frameInlineScaleNumberInputStyle}
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:1823 — style={frameInlineUnitSuffixStyle}
+- src\editor\layerControls\seismic\SeismicAudienceAndDataConfidenceControls.tsx:128 — lineHeight: 1.35,
+- src\editor\layerControls\seismic\SeismicBrowserControls.tsx:95 — ? "line"
+- src\editor\layerControls\seismic\SeismicBrowserControls.tsx:96 — : style.seismicSliceAxis === "crossline" ||
+- src\editor\layerControls\seismic\SeismicBrowserControls.tsx:99 — : "inline";
+- src\editor\layerControls\seismic\SeismicBrowserControls.tsx:249 — patch.seismicSliceAxis = "line";
+- src\editor\layerControls\seismic\SeismicBrowserControls.tsx:250 — } else if (sliceAxis === "line") {
+- src\editor\layerControls\seismic\SeismicBrowserControls.tsx:251 — patch.seismicSliceAxis = "inline";
+- src\editor\layerControls\seismic\SeismicBrowserControls.tsx:304 — "Approximate legacy line placement; precise registration not validated.")
+- src\editor\layerControls\seismic\SeismicBrowserControls.tsx:350 — lineHeight: 1.35,
+- src\editor\layerControls\seismic\SeismicBrowserControls.tsx:423 — lineHeight: 1.35,
+- src\editor\layerControls\seismic\SeismicBrowserControls.tsx:435 — lineHeight: 1.35,
+- src\editor\layerControls\seismic\SeismicBrowserControls.tsx:451 — lineHeight: 1.35,
+- src\editor\layerControls\seismic\SeismicBrowserControls.tsx:487 — lineHeight: 1.35,
+- src\editor\layerControls\seismic\SeismicBrowserControls.tsx:656 — { value: "inline", label: "Inline" },
+- src\editor\layerControls\seismic\SeismicBrowserControls.tsx:657 — { value: "crossline", label: "Crossline" },
+- src\editor\layerControls\seismic\SeismicBrowserControls.tsx:660 — : [{ value: "line", label: "2D line" }]
+- src\editor\layerControls\seismic\SeismicCapabilityLayerContainers.tsx:84 — lineHeight: 1.25,
+- src\editor\layerControls\seismic\SeismicCapabilityLayerContainers.tsx:138 — ? "line"
+- src\editor\layerControls\seismic\SeismicCapabilityLayerContainers.tsx:139 — : style.seismicSliceAxis === "crossline" ||
+- src\editor\layerControls\seismic\SeismicCapabilityLayerContainers.tsx:142 — : "inline";
+- src\editor\layerControls\seismic\SeismicCapabilityLayerContainers.tsx:202 — const navigationLinesVisible = navigationRoleVisibility.lines !== false;
+- src\editor\layerControls\seismic\SeismicCapabilityLayerContainers.tsx:394 — ? sliceAxis === "line"
+- src\editor\layerControls\seismic\SeismicCapabilityLayerContainers.tsx:395 — ? "inline"
+- src\editor\layerControls\seismic\SeismicCapabilityLayerContainers.tsx:397 — : "line",
+- src\editor\layerControls\seismic\SeismicCapabilityLayerContainers.tsx:406 — lines: true,
+- src\editor\layerControls\seismic\SeismicCapabilityLayerContainers.tsx:447 — role: "sources" | "receivers" | "lines",
+- src\editor\layerControls\seismic\SeismicCapabilityLayerContainers.tsx:455 — lines: navigationLinesVisible,
+- src\editor\layerControls\seismic\SeismicCapabilityLayerContainers.tsx:627 — testId="seismic-capability-line-theatre"
+- src\editor\layerControls\seismic\SeismicCapabilityLayerContainers.tsx:634 — { id: "line-301-theatre", label: "Line 301" },
+- src\editor\layerControls\seismic\SeismicCapabilityLayerContainers.tsx:635 — { id: "line-302-theatre", label: "Line 302" },
+- src\editor\layerControls\seismic\SeismicCapabilityLayerContainers.tsx:726 — seismicSliceAxis: "line",
+- src\editor\layerControls\seismic\SeismicCapabilityLayerContainers.tsx:1211 — role: "lines" as const,
+- src\editor\layerControls\seismic\SeismicCapabilityLayerContainers.tsx:1212 — label: "Lines",
+- src\editor\layerControls\seismic\SeismicCapabilityLayerContainers.tsx:1213 — checked: navigationLinesVisible,
+- src\editor\layerControls\seismic\SeismicDisplayTuningControls.tsx:11 — import { IsobandControls } from "../mt/IsobandControls";
+- src\editor\layerControls\seismic\SeismicDisplayTuningControls.tsx:70 — <IsobandControls
+- src\editor\layerControls\seismic\SeismicDisplayTuningControls.tsx:263 — source/receiver lines
+- src\editor\layerControls\seismic\seismicModel.ts:7 — lineId?: string;
+- src\editor\layerControls\seismic\seismicModel.ts:8 — lineLabel?: string;
+- src\editor\layerControls\seismic\seismicModel.ts:28 — lineId?: string;
+- src\editor\layerControls\seismic\seismicModel.ts:163 — lineId:
+- src\editor\layerControls\seismic\seismicModel.ts:164 — typeof product.lineId === "string" ? product.lineId : undefined,
+- src\editor\layerControls\seismic\seismicModel.ts:165 — lineLabel:
+- src\editor\layerControls\seismic\seismicModel.ts:166 — typeof product.lineLabel === "string" ? product.lineLabel : undefined,
+- src\editor\layerControls\seismic\seismicModel.ts:216 — const SEISMIC_LINE_GROUP_ORDER = ["3d", "301", "302", "95", "L11", "L5"];
+- src\editor\layerControls\seismic\seismicModel.ts:246 — function seismicProductLineKey(product: SeismicProductOption): string {
+- src\editor\layerControls\seismic\seismicModel.ts:247 — if (product.lineId) return product.lineId;
+- src\editor\layerControls\seismic\seismicModel.ts:248 — if (product.navigationPlacement?.lineId) return product.navigationPlacement.lineId;
+- src\editor\layerControls\seismic\seismicModel.ts:253 — const index = SEISMIC_LINE_GROUP_ORDER.indexOf(key);
+- src\editor\layerControls\seismic\seismicModel.ts:272 — const key = seismicProductLineKey(product);
+- src\editor\layerControls\seismic\seismicModel.ts:284 — groupProducts[0]?.lineLabel ??
+- src\editor\layerControls\seismic\seismicModel.ts:353 — preset.sliceAxis === "crossline" ||
+- src\editor\layerControls\seismic\seismicModel.ts:355 — preset.sliceAxis === "line"
+- src\editor\layerControls\seismic\seismicModel.ts:357 — : "inline",
+- src\editor\layerControls\seismic\seismicModel.ts:503 — ? "line"
+- src\editor\layerControls\seismic\seismicModel.ts:504 — : preset.sliceAxis === "crossline" || preset.sliceAxis === "sample"
+- src\editor\layerControls\seismic\seismicModel.ts:506 — : "inline";
+- src\editor\layerControls\seismic\seismicModel.ts:545 — lines: true,
+- src\editor\layerControls\seismic\seismicModel.ts:591 — primary: "gdr-1141-line-301-pdm-enh",
+- src\editor\layerControls\seismic\seismicModel.ts:592 — compare: "gdr-1141-line-301-psdm-unenh",
+- src\editor\layerControls\seismic\seismicModel.ts:596 — primary: "gdr-1141-line-302-psdm-enh",
+- src\editor\layerControls\seismic\seismicModel.ts:597 — compare: "gdr-1141-line-302-psdm-unenh",
+- src\editor\layerControls\seismic\seismicModel.ts:601 — primary: "gdr-1141-line-l5-psdm-enh",
+- src\editor\layerControls\seismic\seismicModel.ts:602 — compare: "gdr-1141-line-l5-psdm-unenh",
+- src\editor\layerControls\seismic\seismicModel.ts:606 — primary: "gdr-1141-line-l11-psdm-enh",
+- src\editor\layerControls\seismic\seismicModel.ts:607 — compare: "gdr-1141-line-l11-psdm-unenh",
+- src\editor\layerControls\seismic\seismicModel.ts:616 — export function sectionIsoPatchFromStyle(
+- src\editor\layerControls\seismic\seismicModel.ts:620 — sectionIsoEnabled: styleBoolean(style, "sectionIsoEnabled", false),
+- src\editor\layerControls\seismic\seismicModel.ts:621 — sectionIsoLinesVisible: styleBoolean(style, "sectionIsoLinesVisible", true),
+- src\editor\layerControls\seismic\seismicModel.ts:622 — sectionIsoBandsVisible: styleBoolean(style, "sectionIsoBandsVisible", true),
+- src\editor\layerControls\seismic\seismicModel.ts:623 — sectionIsoTargetIds:
+- src\editor\layerControls\seismic\seismicModel.ts:624 — typeof style.sectionIsoTargetIds === "object" &&
+- src\editor\layerControls\seismic\seismicModel.ts:625 — style.sectionIsoTargetIds !== null
+- src\editor\layerControls\seismic\seismicModel.ts:626 — ? { ...(style.sectionIsoTargetIds as Record<string, boolean>) }
+- src\editor\layerControls\seismic\seismicModel.ts:628 — sectionIsoMin: styleNumber(style, "sectionIsoMin", SCALAR_SOURCE_MIN),
+- src\editor\layerControls\seismic\seismicModel.ts:629 — sectionIsoMax: styleNumber(style, "sectionIsoMax", SCALAR_SOURCE_MAX),
+- src\editor\layerControls\seismic\seismicModel.ts:630 — sectionIsoLevelCount: Math.max(
+- src\editor\layerControls\seismic\seismicModel.ts:632 — Math.min(32, Math.round(styleNumber(style, "sectionIsoLevelCount", 32))),
+- src\editor\layerControls\seismic\seismicModel.ts:634 — sectionIsoLineWidth: styleNumber(style, "sectionIsoLineWidth", 2.6),
+- src\editor\layerControls\seismic\seismicModel.ts:635 — sectionIsoLineStyle:
+- src\editor\layerControls\seismic\seismicModel.ts:636 — style.sectionIsoLineStyle === "dashed" ? "dashed" : "solid",
+- src\editor\layerControls\seismic\seismicModel.ts:637 — sectionIsoBandOpacity: styleNumber(style, "sectionIsoBandOpacity", 0.32),
+- src\editor\layerControls\seismic\seismicModel.ts:638 — sectionIsoFillOffset: styleNumber(style, "sectionIsoFillOffset", 0),
+- src\editor\layerControls\seismic\seismicModel.ts:639 — sectionIsoSourceOpacity: styleNumber(style, "sectionIsoSourceOpacity", 0),
+- src\editor\layerControls\seismic\seismicModel.ts:658 — ...sectionIsoPatchFromStyle(style),
+- src\editor\layerControls\seismic\seismicModel.ts:686 — style.seismicSliceAxis === "crossline" ||
+- src\editor\layerControls\seismic\seismicModel.ts:688 — style.seismicSliceAxis === "line"
+- src\editor\layerControls\seismic\seismicModel.ts:690 — : "inline",
+- src\editor\layerControls\seismic\seismicModel.ts:721 — : { sources: true, receivers: true, lines: true },
+- src\editor\layerControls\seismic\seismicModel.ts:750 — sectionIsoMin: styleNumber(
+- src\editor\layerControls\seismic\seismicModel.ts:752 — "sectionIsoMin",
+- src\editor\layerControls\seismic\seismicModel.ts:755 — sectionIsoMax: styleNumber(
+- src\editor\layerControls\seismic\seismicModel.ts:757 — "sectionIsoMax",
+- src\editor\layerControls\seismic\SeismicProductDisplayVariables.tsx:63 — { value: "inline", label: "Inline" },
+- src\editor\layerControls\seismic\SeismicProductDisplayVariables.tsx:64 — { value: "crossline", label: "Crossline" },
+- src\editor\layerControls\seismic\SeismicProductDisplayVariables.tsx:67 — : [{ value: "line", label: "2D line" }];
+- src\editor\layerControls\seismic\SeismicProductDisplayVariables.tsx:86 — : "line"
+- src\editor\layerControls\seismic\SeismicProductVisibilityControls.tsx:142 — "Approximate legacy line placement; precise registration not validated.")
+- src\editor\layerControls\seismic\SeismicProductVisibilityControls.tsx:222 — lineHeight: 1.35,
+- src\editor\layerControls\style\AreaOutlinesControls.tsx:11 — import type { AreaOutlineDef } from "../../../pages/types";
+- src\editor\layerControls\style\AreaOutlinesControls.tsx:15 — const AREA_OUTLINE_MODE_OPTIONS = [
+- src\editor\layerControls\style\AreaOutlinesControls.tsx:20 — const areaOutlineButtonStackStyle: React.CSSProperties = {
+- src\editor\layerControls\style\AreaOutlinesControls.tsx:32 — export function AreaOutlinesControls({
+- src\editor\layerControls\style\AreaOutlinesControls.tsx:33 — outlines,
+- src\editor\layerControls\style\AreaOutlinesControls.tsx:37 — outlines: AreaOutlineDef[];
+- src\editor\layerControls\style\AreaOutlinesControls.tsx:39 — onChange: (outlines: AreaOutlineDef[]) => void;
+- src\editor\layerControls\style\AreaOutlinesControls.tsx:41 — const updateOutline = (id: string, patch: Partial<AreaOutlineDef>) => {
+- src\editor\layerControls\style\AreaOutlinesControls.tsx:43 — outlines.map((outline) =>
+- src\editor\layerControls\style\AreaOutlinesControls.tsx:44 — outline.id === id ? { ...outline, ...patch } : outline,
+- src\editor\layerControls\style\AreaOutlinesControls.tsx:48 — const addOutline = () => {
+- src\editor\layerControls\style\AreaOutlinesControls.tsx:49 — const index = outlines.length + 1;
+- src\editor\layerControls\style\AreaOutlinesControls.tsx:50 — const id = `area-outline-${Date.now().toString(36)}`;
+- src\editor\layerControls\style\AreaOutlinesControls.tsx:52 — ...outlines,
+- src\editor\layerControls\style\AreaOutlinesControls.tsx:55 — label: `Area outline ${index}`,
+- src\editor\layerControls\style\AreaOutlinesControls.tsx:64 — outlineVisible: true,
+- src\editor\layerControls\style\AreaOutlinesControls.tsx:65 — outlineColor: "#ff8a3d",
+- src\editor\layerControls\style\AreaOutlinesControls.tsx:66 — outlineOpacity: 0.95,
+- src\editor\layerControls\style\AreaOutlinesControls.tsx:67 — outlineWidthM: 14,
+- src\editor\layerControls\style\AreaOutlinesControls.tsx:69 — outlineMode: "terrain3d",
+- src\editor\layerControls\style\AreaOutlinesControls.tsx:76 — const duplicateOutline = (source: AreaOutlineDef, index: number) => {
+- src\editor\layerControls\style\AreaOutlinesControls.tsx:79 — ...outlines.slice(0, index + 1),
+- src\editor\layerControls\style\AreaOutlinesControls.tsx:82 — id: `area-outline-${Date.now().toString(36)}`,
+- src\editor\layerControls\style\AreaOutlinesControls.tsx:83 — label: `${source.label || `Area outline ${index + 1}`} duplicate`,
+- src\editor\layerControls\style\AreaOutlinesControls.tsx:86 — ...outlines.slice(index + 1),
+- src\editor\layerControls\style\AreaOutlinesControls.tsx:89 — const removeOutline = (id: string) => {
+- src\editor\layerControls\style\AreaOutlinesControls.tsx:90 — onChange(outlines.filter((outline) => outline.id !== id));
+- src\editor\layerControls\style\AreaOutlinesControls.tsx:95 — <div style={areaOutlineButtonStackStyle}>
+- src\editor\layerControls\style\AreaOutlinesControls.tsx:100 — onClick={addOutline}
+- src\editor\layerControls\style\AreaOutlinesControls.tsx:102 — Add outline
+- src\editor\layerControls\style\AreaOutlinesControls.tsx:105 — {outlines.length === 0 ? (
+- src\editor\layerControls\style\AreaOutlinesControls.tsx:107 — Add an outline to rough in a boundary as a ground-parallel ellipse.
+- src\editor\layerControls\style\AreaOutlinesControls.tsx:110 — {outlines.map((outline, index) => (
+- src\editor\layerControls\style\AreaOutlinesControls.tsx:111 — <details key={outline.id} style={drillingAssayDetailsStyle}>
+- src\editor\layerControls\style\AreaOutlinesControls.tsx:113 — {outline.label || `Area outline ${index + 1}`}
+- src\editor\layerControls\style\AreaOutlinesControls.tsx:118 — value={outline.label}
+- src\editor\layerControls\style\AreaOutlinesControls.tsx:119 — onChange={(value) => updateOutline(outline.id, { label: value })}
+- src\editor\layerControls\style\AreaOutlinesControls.tsx:124 — value={String(Math.round(outline.center?.[0] ?? viewCenter[0]))}
+- src\editor\layerControls\style\AreaOutlinesControls.tsx:127 — const next = [...(outline.center ?? viewCenter)] as [
+- src\editor\layerControls\style\AreaOutlinesControls.tsx:132 — updateOutline(outline.id, { center: next });
+- src\editor\layerControls\style\AreaOutlinesControls.tsx:138 — value={String(Math.round(outline.center?.[1] ?? viewCenter[1]))}
+- src\editor\layerControls\style\AreaOutlinesControls.tsx:141 — const next = [...(outline.center ?? viewCenter)] as [
+- src\editor\layerControls\style\AreaOutlinesControls.tsx:146 — updateOutline(outline.id, { center: next });
+- src\editor\layerControls\style\AreaOutlinesControls.tsx:149 — <div style={areaOutlineButtonStackStyle}>
+- src\editor\layerControls\style\AreaOutlinesControls.tsx:155 — updateOutline(outline.id, { center: viewCenter })
+- src\editor\layerControls\style\AreaOutlinesControls.tsx:164 — value={String(outline.radiusX ?? 850)}
+- src\editor\layerControls\style\AreaOutlinesControls.tsx:170 — updateOutline(outline.id, { radiusX: parseFloat(value) })
+- src\editor\layerControls\style\AreaOutlinesControls.tsx:176 — value={String(outline.radiusY ?? 520)}
+- src\editor\layerControls\style\AreaOutlinesControls.tsx:182 — updateOutline(outline.id, { radiusY: parseFloat(value) })
+- src\editor\layerControls\style\AreaOutlinesControls.tsx:188 — value={String(outline.rotationDeg ?? 0)}
+- src\editor\layerControls\style\AreaOutlinesControls.tsx:194 — updateOutline(outline.id, { rotationDeg: parseFloat(value) })
+- src\editor\layerControls\style\AreaOutlinesControls.tsx:200 — value={String(outline.liftMeters ?? 18)}
+- src\editor\layerControls\style\AreaOutlinesControls.tsx:206 — updateOutline(outline.id, { liftMeters: parseFloat(value) })
+- src\editor\layerControls\style\AreaOutlinesControls.tsx:210 — label="Line mode"
+- src\editor\layerControls\style\AreaOutlinesControls.tsx:211 — value={outline.outlineMode ?? "terrain3d"}
+- src\editor\layerControls\style\AreaOutlinesControls.tsx:212 — options={AREA_OUTLINE_MODE_OPTIONS}
+- src\editor\layerControls\style\AreaOutlinesControls.tsx:214 — updateOutline(outline.id, { outlineMode: value })
+- src\editor\layerControls\style\AreaOutlinesControls.tsx:223 — checked={outline.fillVisible !== false}
+- src\editor\layerControls\style\AreaOutlinesControls.tsx:225 — updateOutline(outline.id, { fillVisible: checked })
+- src\editor\layerControls\style\AreaOutlinesControls.tsx:231 — value={outline.fillColor ?? "#ff8a3d"}
+- src\editor\layerControls\style\AreaOutlinesControls.tsx:233 — updateOutline(outline.id, { fillColor: value })
+- src\editor\layerControls\style\AreaOutlinesControls.tsx:239 — value={String(outline.fillOpacity ?? 0.18)}
+- src\editor\layerControls\style\AreaOutlinesControls.tsx:245 — updateOutline(outline.id, {
+- src\editor\layerControls\style\AreaOutlinesControls.tsx:254 — <summary style={drillingAssaySummaryStyle}>Outline</summary>
+- src\editor\layerControls\style\AreaOutlinesControls.tsx:258 — checked={outline.outlineVisible !== false}
+- src\editor\layerControls\style\AreaOutlinesControls.tsx:260 — updateOutline(outline.id, { outlineVisible: checked })
+- src\editor\layerControls\style\AreaOutlinesControls.tsx:266 — value={outline.outlineColor ?? "#ff8a3d"}
+- src\editor\layerControls\style\AreaOutlinesControls.tsx:268 — updateOutline(outline.id, { outlineColor: value })
+- src\editor\layerControls\style\AreaOutlinesControls.tsx:274 — value={String(outline.outlineOpacity ?? 0.95)}
+- src\editor\layerControls\style\AreaOutlinesControls.tsx:280 — updateOutline(outline.id, {
+- src\editor\layerControls\style\AreaOutlinesControls.tsx:281 — outlineOpacity: parseFloat(value),
+- src\editor\layerControls\style\AreaOutlinesControls.tsx:288 — value={String(outline.outlineWidthM ?? 14)}
+- src\editor\layerControls\style\AreaOutlinesControls.tsx:294 — updateOutline(outline.id, {
+- src\editor\layerControls\style\AreaOutlinesControls.tsx:295 — outlineWidthM: parseFloat(value),
+- src\editor\layerControls\style\AreaOutlinesControls.tsx:301 — checked={outline.dashed !== false}
+- src\editor\layerControls\style\AreaOutlinesControls.tsx:303 — updateOutline(outline.id, { dashed: checked })
+- src\editor\layerControls\style\AreaOutlinesControls.tsx:309 — value={String(outline.dashLengthM ?? 170)}
+- src\editor\layerControls\style\AreaOutlinesControls.tsx:315 — updateOutline(outline.id, {
+- src\editor\layerControls\style\AreaOutlinesControls.tsx:323 — value={String(outline.dashGapM ?? 90)}
+- src\editor\layerControls\style\AreaOutlinesControls.tsx:329 — updateOutline(outline.id, {
+- src\editor\layerControls\style\AreaOutlinesControls.tsx:339 — value={outline.labelKind ?? "area"}
+- src\editor\layerControls\style\AreaOutlinesControls.tsx:342 — updateOutline(outline.id, {
+- src\editor\layerControls\style\AreaOutlinesControls.tsx:343 — labelKind: value as AreaOutlineDef["labelKind"],
+- src\editor\layerControls\style\AreaOutlinesControls.tsx:347 — <div style={areaOutlineButtonStackStyle}>
+- src\editor\layerControls\style\AreaOutlinesControls.tsx:352 — onClick={() => duplicateOutline(outline, index)}
+- src\editor\layerControls\style\AreaOutlinesControls.tsx:360 — onClick={() => removeOutline(outline.id)}
+- src\editor\layerControls\style\StyleControls.tsx:324 — label="Outline"
+- src\editor\layerControls\style\StyleControls.tsx:325 — checked={styleBoolean(style, "geochemShowOutline", true)}
+- src\editor\layerControls\style\StyleControls.tsx:326 — onChange={(checked) => onChange({ geochemShowOutline: checked })}
+- src\editor\layerControls\style\StyleControls.tsx:329 — label="Outline color"
+- src\editor\layerControls\style\StyleControls.tsx:331 — value={styleString(style, "geochemOutlineColor", "#221f1c")}
+- src\editor\layerControls\style\StyleControls.tsx:332 — onChange={(value) => onChange({ geochemOutlineColor: value })}
+- src\editor\layerControls\style\StyleControls.tsx:335 — label="Outline opac."
+- src\editor\layerControls\style\StyleControls.tsx:337 — value={String(styleNumber(style, "geochemOutlineOpacity", 0.65))}
+- src\editor\layerControls\style\StyleControls.tsx:343 — onChange({ geochemOutlineOpacity: parseFloat(value) })
+- src\editor\layerControls\style\StyleControls.tsx:690 — styleNumber(style, "lineWidth", 2.4),
+- src\editor\topoMap\TopoMapPanel.tsx:19 — type PageStyleClearer,
+- src\editor\topoMap\TopoMapPanel.tsx:129 — const topoInlineActionRowStyle: CSSProperties = {
+- src\editor\topoMap\TopoMapPanel.tsx:135 — const topoInlineActionButtonStyle: CSSProperties = {
+- src\editor\topoMap\TopoMapPanel.tsx:152 — lineHeight: 1.35,
+- src\editor\topoMap\TopoMapPanel.tsx:288 — strokeLinecap="round"
+- src\editor\topoMap\TopoMapPanel.tsx:289 — strokeLinejoin="round"
+- src\editor\topoMap\TopoMapPanel.tsx:449 — clearPageLayerOverride,
+- src\editor\topoMap\TopoMapPanel.tsx:451 — projectRoot,
+- src\editor\topoMap\TopoMapPanel.tsx:456 — clearPageTerrainVisible,
+- src\editor\topoMap\TopoMapPanel.tsx:459 — clearPageVisibilityOverride,
+- src\editor\topoMap\TopoMapPanel.tsx:475 — clearPageLayerOverride: PageStyleClearer;
+- src\editor\topoMap\TopoMapPanel.tsx:477 — projectRoot: string;
+- src\editor\topoMap\TopoMapPanel.tsx:482 — clearPageTerrainVisible: () => void;
+- src\editor\topoMap\TopoMapPanel.tsx:489 — clearPageVisibilityOverride: (pageId: string, layerId: string) => void;
+- src\editor\topoMap\TopoMapPanel.tsx:521 — clearPageLayerOverride,
+- src\editor\topoMap\TopoMapPanel.tsx:625 — const sourcePath = `${projectRoot}/branding/source/${fileName}`;
+- src\editor\topoMap\TopoMapPanel.tsx:626 — const outputPath = `${projectRoot}/branding/generated/${stem}.png`;
+- src\editor\topoMap\TopoMapPanel.tsx:641 — const path = `${projectRoot}/branding/${fileName}`;
+- src\editor\topoMap\TopoMapPanel.tsx:743 — clearPageLayerOverride: (
+- src\editor\topoMap\TopoMapPanel.tsx:749 — clearPageLayerOverride(pageId, id, field);
+- src\editor\topoMap\TopoMapPanel.tsx:967 — onClear={clearPageTerrainVisible}
+- src\editor\topoMap\TopoMapPanel.tsx:1371 — label="Grid line width"
+- src\editor\topoMap\TopoMapPanel.tsx:1373 — value={String(terrain.gridLineWidthM ?? 18)}
+- src\editor\topoMap\TopoMapPanel.tsx:1378 — testId="topo-terrain-grid-line-width"
+- src\editor\topoMap\TopoMapPanel.tsx:1379 — onChange={(v) => setTerrain({ gridLineWidthM: parseFloat(v) })}
+- src\editor\topoMap\TopoMapPanel.tsx:1694 — <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+- src\editor\topoMap\TopoMapPanel.tsx:1796 — <div style={topoInlineActionRowStyle}>
+- src\editor\topoMap\TopoMapPanel.tsx:1799 — style={topoInlineActionButtonStyle}
+- src\editor\topoMap\TopoMapPanel.tsx:1808 — style={topoInlineActionButtonStyle}
+- src\editor\topoMap\TopoMapPanel.tsx:1817 — style={topoInlineActionButtonStyle}
+- src\editor\topoMap\TopoMapPanel.tsx:1853 — <div style={{ ...panelStyles.muted, lineHeight: 1.35 }}>
+- src\editor\topoMap\TopoMapPanel.tsx:1875 — onClear={() =>
+- src\editor\topoMap\TopoMapPanel.tsx:1876 — clearPageVisibilityOverride(
+- src\editor\topoMap\TopoMapPanel.tsx:1905 — clearPageLayerOverride(
+- src\editor\topoMap\TopoMapPanel.tsx:1917 — clearPageLayerOverride={clearPageLayerOverride}
+- src\editor\topoMap\TopoMapPanel.tsx:1921 — <div style={{ ...panelStyles.muted, lineHeight: 1.35 }}>
+- src\editor\topoMap\TopoMapPanel.tsx:2333 — clearPageLayerOverride={clearPageLayerOverride}
+- src\editor\topoMap\TopoMapPanel.tsx:2336 — clearPageVisibilityOverride={clearPageVisibilityOverride}
+- src\editor\topoMap\TopoMapPanel.tsx:2382 — Clear
+- src\editor\topoMap\TopoMapPanel.tsx:2667 — label="Line gap"
+- src\editor\topoMap\TopoMapPanel.tsx:2669 — value={String(topoMapBranding.lineGapM ?? 2500)}
+- src\editor\topoMap\TopoMapPanel.tsx:2674 — testId="topo-map-branding-line-gap"
+- src\editor\topoMap\TopoMapPanel.tsx:2675 — onChange={(v) => setTopoMapBranding({ lineGapM: parseFloat(v) })}
+- src\editor\topoMap\TopoMapPanel.tsx:2776 — label="Outline"
+- src\editor\topoMap\TopoMapPanel.tsx:2777 — checked={topoMapBranding.outlineEnabled === true}
+- src\editor\topoMap\TopoMapPanel.tsx:2778 — testId="topo-map-branding-outline-enabled"
+- src\editor\topoMap\TopoMapPanel.tsx:2780 — setTopoMapBranding({ outlineEnabled: checked })
+- src\editor\topoMap\TopoMapPanel.tsx:2784 — label="Outline color"
+- src\editor\topoMap\TopoMapPanel.tsx:2786 — value={topoMapBranding.outlineColor ?? "#ffffff"}
+- src\editor\topoMap\TopoMapPanel.tsx:2787 — testId="topo-map-branding-outline-color"
+- src\editor\topoMap\TopoMapPanel.tsx:2788 — onChange={(v) => setTopoMapBranding({ outlineColor: v })}
+- src\editor\topoMap\TopoMapPanel.tsx:2791 — label="Outline opacity"
+- src\editor\topoMap\TopoMapPanel.tsx:2793 — value={String(topoMapBranding.outlineOpacity ?? 0.8)}
+- src\editor\topoMap\TopoMapPanel.tsx:2798 — testId="topo-map-branding-outline-opacity"
+- src\editor\topoMap\TopoMapPanel.tsx:2800 — setTopoMapBranding({ outlineOpacity: parseFloat(v) })
+- src\editor\topoMap\TopoMapPanel.tsx:2804 — label="Outline width"
+- src\editor\topoMap\TopoMapPanel.tsx:2806 — value={String(topoMapBranding.outlineWidthM ?? 2500)}
+- src\editor\topoMap\TopoMapPanel.tsx:2811 — testId="topo-map-branding-outline-width"
+- src\editor\topoMap\TopoMapPanel.tsx:2813 — setTopoMapBranding({ outlineWidthM: parseFloat(v) })
+- src\editor\topoMap\TopoMapPanel.tsx:2854 — clearPageLayerOverride,
+- src\editor\topoMap\TopoMapPanel.tsx:2857 — clearPageVisibilityOverride,
+- src\editor\topoMap\TopoMapPanel.tsx:2866 — clearPageLayerOverride: PageStyleClearer;
+- src\editor\topoMap\TopoMapPanel.tsx:2873 — clearPageVisibilityOverride: (pageId: string, layerId: string) => void;
+- src\editor\topoMap\TopoMapPanel.tsx:2895 — clearPageLayerOverride,
+- src\editor\topoMap\TopoMapPanel.tsx:2904 — const minorLinesActive = (style.graticuleMinorOpacity ?? 0.5) > 0;
+- src\editor\topoMap\TopoMapPanel.tsx:2949 — onClear={() => clearPageVisibilityOverride(currentPage.id, layerId)}
+- src\editor\topoMap\TopoMapPanel.tsx:2969 — label="Line width"
+- src\editor\topoMap\TopoMapPanel.tsx:2970 — field="lineWidth"
+- src\editor\topoMap\TopoMapPanel.tsx:3022 — label="Edge line"
+- src\editor\topoMap\TopoMapPanel.tsx:3023 — field="graticuleEdgeLineColor"
+- src\editor\topoMap\TopoMapPanel.tsx:3025 — testId="topo-graticule-edge-line-color"
+- src\editor\topoMap\TopoMapPanel.tsx:3029 — label="Edge line weight"
+- src\editor\topoMap\TopoMapPanel.tsx:3030 — field="graticuleEdgeLineWidth"
+- src\editor\topoMap\TopoMapPanel.tsx:3036 — testId="topo-graticule-edge-line-width"
+- src\editor\topoMap\TopoMapPanel.tsx:3040 — label="Half-degree (.5) lines"
+- src\editor\topoMap\TopoMapPanel.tsx:3041 — active={minorLinesActive}
+- src\editor\topoMap\TopoMapPanel.tsx:3044 — graticuleMinorOpacity: minorLinesActive ? 0 : 0.5,
+- src\editor\topoMap\TopoMapPanel.tsx:3049 — label="Minor line weight"
+- src\editor\topoMap\TopoMapPanel.tsx:3050 — field="graticuleMinorLineWidth"
+- src\editor\topoMap\TopoMapPanel.tsx:3083 — label="Perspective line width"
+- src\editor\topoMap\TopoMapPanel.tsx:3084 — field="graticulePerspectiveLineWidth"
+- src\editor\topoMap\TopoMapPanel.tsx:3298 — <div style={{ ...panelStyles.muted, lineHeight: 1.35 }}>
+- src\editor\topoMap\TopoMapPanel.tsx:3309 — <div style={topoInlineActionRowStyle}>
+- src\editor\topoMap\TopoMapPanel.tsx:3312 — style={topoInlineActionButtonStyle}
+- src\editor\topoMap\TopoMapPanel.tsx:3320 — style={topoInlineActionButtonStyle}
+- src\editor\topoMap\TopoMapPanel.tsx:3328 — style={topoInlineActionButtonStyle}
+- src\editor\topoMap\TopoMapPanel.tsx:3335 — style={topoInlineActionButtonStyle}
+- src\editor\topoMap\TopoMapPanel.tsx:3355 — clearPageLayerOverride,
+- src\editor\topoMap\TopoMapPanel.tsx:3366 — clearPageLayerOverride: PageStyleClearer;
+- src\editor\topoMap\TopoMapPanel.tsx:3375 — clearPageLayerOverride,
+- src\editor\topoMap\TopoMapPanel.tsx:3385 — edgeOutlineEnabled: false,
+- src\editor\topoMap\TopoMapPanel.tsx:3386 — edgeOutlineOpacity: 0,
+- src\editor\topoMap\TopoMapPanel.tsx:3387 — edgeOutlineOffsetM: 0,
+- src\editor\topoMap\TopoMapPanel.tsx:3410 — <div style={{ ...panelStyles.muted, lineHeight: 1.35 }}>
+- src\editor\topoMap\TopoMapPanel.tsx:3412 — outline below.
+- src\editor\topoMap\TopoMapPanel.tsx:3414 — <div style={topoInlineActionRowStyle}>
+- src\editor\topoMap\TopoMapPanel.tsx:3417 — style={topoInlineActionButtonStyle}
+- src\editor\topoMap\TopoMapPanel.tsx:3476 — label="Material edge outline"
+- src\editor\topoMap\TopoMapPanel.tsx:3477 — active={terrain.edgeOutlineEnabled === true}
+- src\editor\topoMap\TopoMapPanel.tsx:3478 — testId="topo-edge-outline-enabled"
+- src\editor\topoMap\TopoMapPanel.tsx:3481 — edgeOutlineEnabled: terrain.edgeOutlineEnabled !== true,
+- src\editor\topoMap\TopoMapPanel.tsx:3486 — label="Outline offset"
+- src\editor\topoMap\TopoMapPanel.tsx:3488 — value={String(terrain.edgeOutlineOffsetM ?? 0)}
+- src\editor\topoMap\TopoMapPanel.tsx:3493 — onChange={(v) => setTerrain({ edgeOutlineOffsetM: parseFloat(v) })}
+- src\editor\topoMap\TopoMapPanel.tsx:3494 — testId="topo-edge-outline-offset"
+- src\editor\topoMap\TopoMapPanel.tsx:3497 — label="Outline width"
+- src\editor\topoMap\TopoMapPanel.tsx:3499 — value={String(terrain.edgeOutlineThicknessM ?? 2500)}
+- src\editor\topoMap\TopoMapPanel.tsx:3504 — onChange={(v) => setTerrain({ edgeOutlineThicknessM: parseFloat(v) })}
+- src\editor\topoMap\TopoMapPanel.tsx:3505 — testId="topo-edge-outline-thickness"
+- src\editor\topoMap\TopoMapPanel.tsx:3508 — label="Outline opacity"
+- src\editor\topoMap\TopoMapPanel.tsx:3510 — value={String(terrain.edgeOutlineOpacity ?? 0)}
+- src\editor\topoMap\TopoMapPanel.tsx:3515 — onChange={(v) => setTerrain({ edgeOutlineOpacity: parseFloat(v) })}
+- src\editor\topoMap\TopoMapPanel.tsx:3516 — testId="topo-edge-outline-opacity"
+- src\editor\topoMap\TopoMapPanel.tsx:3519 — label="Outline color"
+- src\editor\topoMap\TopoMapPanel.tsx:3521 — value={terrain.edgeOutlineColor ?? "#f8ead0"}
+- src\editor\topoMap\TopoMapPanel.tsx:3522 — onChange={(v) => setTerrain({ edgeOutlineColor: v })}
+- src\editor\topoMap\TopoMapPanel.tsx:3523 — testId="topo-edge-outline-color"
+
+## Opacity composition and direct opacity writes
+
+Pattern: `material\.opacity|uOpacity|opacityPolicy|transitionOpacity|authoredOpacity|baseOpacity|layerRenderOpacity|sectionIsoSourceOpacity|scalarVolumeOpacity|renderOpacity|outsideOpacity|attenuation|composed` 
+
+- src\scene\layerLoaders.ts:274 — lineMaterial.opacity = 1;
+- src\scene\SceneManager.ts:157 — applySceneSectionHelperTransitionOpacity as applySceneSectionHelperTransitionOpacityImpl,
+- src\scene\SceneManager.ts:207 — workingAreaFocusOutsideOpacityImpl,
+- src\scene\SceneManager.ts:452 — outsideOpacityByAxis: Record<SceneSectionAxis, number>;
+- src\scene\SceneManager.ts:453 — outsideOpacityByFrameId: Record<string, number>;
+- src\scene\SceneManager.ts:654 — opacityPolicy: "split-section-iso-overlay-opacity-from-layer-opacity";
+- src\scene\SceneManager.ts:659 — layerRenderOpacityMin: number | null;
+- src\scene\SceneManager.ts:660 — layerRenderOpacityMax: number | null;
+- src\scene\SceneManager.ts:661 — transitionOpacityMin: number | null;
+- src\scene\SceneManager.ts:662 — transitionOpacityMax: number | null;
+- src\scene\SceneManager.ts:670 — transitionOpacity: number;
+- src\scene\SceneManager.ts:775 — sceneSectionHelperTransitionOpacity = 1;
+- src\scene\SceneManager.ts:788 — private materialBaseOpacity = new WeakMap<THREE.Material, number>();
+- src\scene\SceneManager.ts:1211 — : this.baseOpacityForLayer(layerId);
+- src\scene\SceneManager.ts:1214 — private baseOpacityForMaterial(material: THREE.Material): number {
+- src\scene\SceneManager.ts:1215 — const stored = this.materialBaseOpacity.get(material);
+- src\scene\SceneManager.ts:1217 — this.materialBaseOpacity.set(material, material.opacity);
+- src\scene\SceneManager.ts:1218 — return material.opacity;
+- src\scene\SceneManager.ts:1224 — typeof material.uniforms?.uOpacity?.value === "number" &&
+- src\scene\SceneManager.ts:1225 — Number.isFinite(material.uniforms.uOpacity.value)
+- src\scene\SceneManager.ts:1227 — return material.uniforms.uOpacity.value;
+- src\scene\SceneManager.ts:1239 — return clamp01(this.baseOpacityForMaterial(material));
+- src\scene\SceneManager.ts:1251 — private baseOpacityForLayer(id: string): number {
+- src\scene\SceneManager.ts:1263 — if (first) opacity = this.baseOpacityForMaterial(first);
+- src\scene\SceneManager.ts:1268 — private currentRenderOpacityForTree(
+- src\scene\SceneManager.ts:1297 — : material.opacity;
+- src\scene\SceneManager.ts:1314 — private sectionIsoAuthoredOpacity(material: THREE.Material): number {
+- src\scene\SceneManager.ts:1315 — const authored = material.userData?.sectionIsoBaseOpacity;
+- src\scene\SceneManager.ts:1321 — typeof material.uniforms.uOpacity?.value === "number"
+- src\scene\SceneManager.ts:1323 — const value = clamp01(material.uniforms.uOpacity.value);
+- src\scene\SceneManager.ts:1324 — material.userData.sectionIsoBaseOpacity = value;
+- src\scene\SceneManager.ts:1328 — typeof material.opacity === "number" && Number.isFinite(material.opacity)
+- src\scene\SceneManager.ts:1329 — ? clamp01(material.opacity)
+- src\scene\SceneManager.ts:1331 — material.userData.sectionIsoBaseOpacity = value;
+- src\scene\SceneManager.ts:1338 — layerRenderOpacity?: number,
+- src\scene\SceneManager.ts:1342 — const transitionOpacity = clamp01(opacity);
+- src\scene\SceneManager.ts:1345 — material.userData?.sectionIsoOpacityPolicy ===
+- src\scene\SceneManager.ts:1347 — transitionOpacity < 0.999
+- src\scene\SceneManager.ts:1351 — typeof layerRenderOpacity === "number" && Number.isFinite(layerRenderOpacity)
+- src\scene\SceneManager.ts:1352 — ? clamp01(layerRenderOpacity)
+- src\scene\SceneManager.ts:1353 — : typeof material.userData?.sectionIsoLayerRenderOpacity === "number" &&
+- src\scene\SceneManager.ts:1354 — Number.isFinite(material.userData.sectionIsoLayerRenderOpacity)
+- src\scene\SceneManager.ts:1355 — ? clamp01(material.userData.sectionIsoLayerRenderOpacity)
+- src\scene\SceneManager.ts:1356 — : transitionOpacity;
+- src\scene\SceneManager.ts:1357 — const authoredOpacity = this.sectionIsoAuthoredOpacity(material);
+- src\scene\SceneManager.ts:1359 — typeof material.userData?.sectionIsoThresholdOcclusionAttenuation ===
+- src\scene\SceneManager.ts:1361 — Number.isFinite(material.userData.sectionIsoThresholdOcclusionAttenuation)
+- src\scene\SceneManager.ts:1362 — ? clamp01(material.userData.sectionIsoThresholdOcclusionAttenuation)
+- src\scene\SceneManager.ts:1364 — const nextOpacity = clamp01(authoredOpacity * transitionOpacity * occlusion);
+- src\scene\SceneManager.ts:1365 — material.userData.sectionIsoTransitionOpacity = transitionOpacity;
+- src\scene\SceneManager.ts:1366 — material.userData.sectionIsoLayerRenderOpacity = parentLayerOpacity;
+- src\scene\SceneManager.ts:1367 — material.userData.sectionIsoOpacityPolicy =
+- src\scene\SceneManager.ts:1368 — transitionOpacity <= 0.001
+- src\scene\SceneManager.ts:1373 — material.userData.sectionIsoComposedOpacity = nextOpacity;
+- src\scene\SceneManager.ts:1374 — material.opacity = nextOpacity;
+- src\scene\SceneManager.ts:1376 — if (material instanceof THREE.ShaderMaterial && material.uniforms.uOpacity) {
+- src\scene\SceneManager.ts:1377 — material.uniforms.uOpacity.value = nextOpacity;
+- src\scene\SceneManager.ts:1397 — ? this.currentRenderOpacityForTree(group, fallbackOpacity)
+- src\scene\SceneManager.ts:1401 — ? this.currentRenderOpacityForTree(snapshot.group, snapshot.from)
+- src\scene\SceneManager.ts:1419 — private applyRenderOpacityToTree(
+- src\scene\SceneManager.ts:1422 — sectionIsoTransitionOpacity?: number,
+- src\scene\SceneManager.ts:1426 — typeof sectionIsoTransitionOpacity === "number" &&
+- src\scene\SceneManager.ts:1427 — Number.isFinite(sectionIsoTransitionOpacity)
+- src\scene\SceneManager.ts:1428 — ? clamp01(sectionIsoTransitionOpacity)
+- src\scene\SceneManager.ts:1464 — this.baseOpacityForMaterial(m);
+- src\scene\SceneManager.ts:1480 — if (m instanceof THREE.ShaderMaterial && m.uniforms.uOpacity) {
+- src\scene\SceneManager.ts:1481 — m.uniforms.uOpacity.value = materialOpacity;
+- src\scene\SceneManager.ts:1492 — applyLayerRenderOpacity(id: string, opacity: number): void {
+- src\scene\SceneManager.ts:1499 — this.applyRenderOpacityToTree(group, next);
+- src\scene\SceneManager.ts:1504 — applyLayerTransitionRenderOpacity(
+- src\scene\SceneManager.ts:1507 — transitionOpacity: number,
+- src\scene\SceneManager.ts:1511 — const envelope = clamp01(transitionOpacity);
+- src\scene\SceneManager.ts:1516 — this.applyRenderOpacityToTree(group, next, envelope);
+- src\scene\SceneManager.ts:1704 — this.applyRenderOpacityToTree(snapshot, 1);
+- src\scene\SceneManager.ts:1819 — this.applyRenderOpacityToTree(snapshot, 1, 1);
+- src\scene\SceneManager.ts:1838 — currentSectionIsoOverlayTransitionOpacity(): number {
+- src\scene\SceneManager.ts:1850 — this.applyRenderOpacityToTree(group, 1, transition.targetOpacity);
+- src\scene\SceneManager.ts:1861 — this.applyRenderOpacityToTree(group, 1, transition.targetOpacity);
+- src\scene\SceneManager.ts:1880 — this.applyRenderOpacityToTree(root.group, 1, sourceOpacity);
+- src\scene\SceneManager.ts:1883 — this.applyRenderOpacityToTree(root.group, 1, targetOpacity);
+- src\scene\SceneManager.ts:1896 — this.applyRenderOpacityToTree(root.group, 1, 1);
+- src\scene\SceneManager.ts:1926 — this.applyRenderOpacityToTree(clone, opacity);
+- src\scene\SceneManager.ts:2227 — applySceneSectionHelperTransitionOpacity(): void {
+- src\scene\SceneManager.ts:2228 — return applySceneSectionHelperTransitionOpacityImpl.call(this);
+- src\scene\SceneManager.ts:2318 — renderOpacity?: number,
+- src\scene\SceneManager.ts:2329 — renderOpacity !== undefined
+- src\scene\SceneManager.ts:2330 — ? clamp01(renderOpacity)
+- src\scene\SceneManager.ts:2357 — if (typeof material.userData.caseBDemoBaseOpacity !== "number") {
+- src\scene\SceneManager.ts:2358 — material.userData.caseBDemoBaseOpacity =
+- src\scene\SceneManager.ts:2359 — typeof material.userData.demoBaseOpacity === "number"
+- src\scene\SceneManager.ts:2360 — ? material.userData.demoBaseOpacity
+- src\scene\SceneManager.ts:2361 — : this.baseOpacityForMaterial(material);
+- src\scene\SceneManager.ts:2363 — const baseOpacity = material.userData.caseBDemoBaseOpacity as number;
+- src\scene\SceneManager.ts:2364 — const nextOpacity = clamp01(baseOpacity * layerOpacity);
+- src\scene\SceneManager.ts:2377 — material.opacity = nextOpacity;
+- src\scene\SceneManager.ts:2398 — workingAreaFocusOutsideOpacity(style: EditableStyle, layerId: string): number {
+- src\scene\SceneManager.ts:2399 — return workingAreaFocusOutsideOpacityImpl.call(this, style, layerId);
+- src\scene\SceneManager.ts:2429 — setKnownShaderWorkingAreaFocus(material: THREE.ShaderMaterial, enabled: boolean, state: WorkingAreaFocusState, outsideOpacity: number): boolean {
+- src\scene\SceneManager.ts:2430 — return setKnownShaderWorkingAreaFocusImpl.call(this, material, enabled, state, outsideOpacity);
+- src\scene\SceneManager.ts:2433 — applyWorkingAreaFocusMaterial(material: THREE.Material, enabled: boolean, state: WorkingAreaFocusState, outsideOpacity: number): void {
+- src\scene\SceneManager.ts:2434 — return applyWorkingAreaFocusMaterialImpl.call(this, material, enabled, state, outsideOpacity);
+- src\scene\SceneManager.ts:2458 — outsideOpacityByLayerId: Record<string, number>;
+- src\scene\SceneManager.ts:2615 — let layerRenderOpacityMin: number | null = null;
+- src\scene\SceneManager.ts:2616 — let layerRenderOpacityMax: number | null = null;
+- src\scene\SceneManager.ts:2617 — let transitionOpacityMin: number | null = null;
+- src\scene\SceneManager.ts:2618 — let transitionOpacityMax: number | null = null;
+- src\scene\SceneManager.ts:2649 — material.userData?.sectionIsoOpacityPolicy ===
+- src\scene\SceneManager.ts:2655 — material.userData?.sectionIsoOpacityPolicy ===
+- src\scene\SceneManager.ts:2661 — material.userData?.sectionIsoOpacityPolicy ===
+- src\scene\SceneManager.ts:2666 — [layerRenderOpacityMin, layerRenderOpacityMax] = addRangeValue(
+- src\scene\SceneManager.ts:2667 — material.userData?.sectionIsoLayerRenderOpacity,
+- src\scene\SceneManager.ts:2668 — layerRenderOpacityMin,
+- src\scene\SceneManager.ts:2669 — layerRenderOpacityMax,
+- src\scene\SceneManager.ts:2671 — [transitionOpacityMin, transitionOpacityMax] = addRangeValue(
+- src\scene\SceneManager.ts:2672 — material.userData?.sectionIsoTransitionOpacity,
+- src\scene\SceneManager.ts:2673 — transitionOpacityMin,
+- src\scene\SceneManager.ts:2674 — transitionOpacityMax,
+- src\scene\SceneManager.ts:2681 — opacityPolicy: "split-section-iso-overlay-opacity-from-layer-opacity",
+- src\scene\SceneManager.ts:2686 — layerRenderOpacityMin,
+- src\scene\SceneManager.ts:2687 — layerRenderOpacityMax,
+- src\scene\SceneManager.ts:2688 — transitionOpacityMin,
+- src\scene\SceneManager.ts:2689 — transitionOpacityMax,
+- src\scene\SceneManager.ts:2712 — transitionOpacity: this.sceneSectionHelperTransitionOpacity,
+- src\scene\SceneManager.ts:2728 — sceneSectionHelperTransitionOpacity: number;
+- src\scene\SceneManager.ts:2766 — sceneSectionHelperTransitionOpacity: this.sceneSectionHelperTransitionOpacity,
+- src\scene\SceneManager.ts:3077 — this.sceneSectionHelperTransitionOpacity =
+- src\scene\SceneManager.ts:4027 — this.sceneSectionHelperTransitionOpacity = 1;
+- src\scene\SceneManager.ts:4053 — this.sceneSectionHelperTransitionOpacity = 1;
+- src\scene\SceneManager.ts:4572 — attenuation: number,
+- src\scene\SceneManager.ts:4578 — const baseOpacity =
+- src\scene\SceneManager.ts:4579 — typeof m.userData?.sectionIsoBaseOpacity === "number"
+- src\scene\SceneManager.ts:4580 — ? m.userData.sectionIsoBaseOpacity
+- src\scene\SceneManager.ts:4582 — m.userData.sectionIsoBaseOpacity = baseOpacity;
+- src\scene\SceneManager.ts:4584 — m.userData.sectionIsoThresholdOcclusionAttenuation = attenuation;
+- src\scene\SceneManager.ts:4585 — const transitionOpacity =
+- src\scene\SceneManager.ts:4586 — typeof m.userData?.sectionIsoTransitionOpacity === "number"
+- src\scene\SceneManager.ts:4587 — ? m.userData.sectionIsoTransitionOpacity
+- src\scene\SceneManager.ts:4589 — this.applySectionIsoOverlayMaterialOpacity(m, transitionOpacity);
+- src\scene\SceneManager.ts:4592 — line.userData.sectionIsoThresholdOcclusionAttenuation = attenuation;
+- src\scene\terrainMaterial.ts:103 — orthoPhotoOutsideOpacity?: number;
+- src\scene\terrainMaterial.ts:322 — uOpacity: { value: 1 },
+- src\scene\terrainMaterial.ts:443 — uOrthoPhotoOutsideOpacity: {
+- src\scene\terrainMaterial.ts:444 — value: THREE.MathUtils.clamp(initial.orthoPhotoOutsideOpacity ?? 0, 0, 1),
+- src\scene\terrainMaterial.ts:556 — uSceneSectionPlaneOutsideOpacity: {
+- src\scene\terrainMaterial.ts:563 — uSceneSectionFrameOutsideOpacity: {
+- src\scene\terrainMaterial.ts:570 — uSceneSectionTargetPlaneOutsideOpacity: {
+- src\scene\terrainMaterial.ts:577 — uSceneSectionTargetFrameOutsideOpacity: {
+- src\scene\terrainMaterial.ts:617 — uniform float uOpacity;
+- src\scene\terrainMaterial.ts:667 — uniform float uOrthoPhotoOutsideOpacity;
+- src\scene\terrainMaterial.ts:751 — uniform float uSceneSectionPlaneOutsideOpacity[8];
+- src\scene\terrainMaterial.ts:756 — uniform float uSceneSectionFrameOutsideOpacity[8];
+- src\scene\terrainMaterial.ts:761 — uniform float uSceneSectionTargetPlaneOutsideOpacity[8];
+- src\scene\terrainMaterial.ts:766 — uniform float uSceneSectionTargetFrameOutsideOpacity[8];
+- src\scene\terrainMaterial.ts:1086 — alpha = min(alpha, clamp(uSceneSectionPlaneOutsideOpacity[i], 0.0, 1.0));
+- src\scene\terrainMaterial.ts:1098 — alpha = min(alpha, clamp(uSceneSectionFrameOutsideOpacity[i], 0.0, 1.0));
+- src\scene\terrainMaterial.ts:1112 — alpha = min(alpha, clamp(uSceneSectionTargetPlaneOutsideOpacity[i], 0.0, 1.0));
+- src\scene\terrainMaterial.ts:1124 — alpha = min(alpha, clamp(uSceneSectionTargetFrameOutsideOpacity[i], 0.0, 1.0));
+- src\scene\terrainMaterial.ts:1252 — uOrthoPhotoOutsideOpacity > 0.001
+- src\scene\terrainMaterial.ts:1255 — uOrthoPhotoOutsideOpacity,
+- src\scene\terrainMaterial.ts:1543 — float alpha = clamp(max(uUndersideOpacity, uOpacity), 0.0, 1.0);
+- src\scene\terrainMaterial.ts:1548 — gl_FragColor = vec4(surface, clamp(uOpacity, 0.0, 1.0) * sectionAlpha);
+- src\scene\terrainMaterial.ts:1559 — uniforms.uOpacity.value = next;
+- src\scene\terrainMaterial.ts:1560 — material.opacity = next;
+- src\scene\terrainMaterial.ts:1734 — if (typeof p.orthoPhotoOutsideOpacity === "number") {
+- src\scene\terrainMaterial.ts:1735 — uniforms.uOrthoPhotoOutsideOpacity.value = THREE.MathUtils.clamp(
+- src\scene\terrainMaterial.ts:1736 — p.orthoPhotoOutsideOpacity,
+- src\scene\atmosphere\localAtmosphereVolume.ts:361 — const baseOpacity =
+- src\scene\atmosphere\localAtmosphereVolume.ts:371 — opacity: THREE.MathUtils.clamp(baseOpacity * resolved.opacity, 0, 1),
+- src\scene\atmosphere\localAtmosphereVolume.ts:378 — material.userData.preserveMaterialOpacityBase = THREE.MathUtils.clamp(baseOpacity, 0, 1);
+- src\scene\atmosphere\localAtmosphereVolume.ts:380 — material.userData.localAtmosphereBaseOpacity = material.userData.preserveMaterialOpacityBase;
+- src\scene\atmosphere\localAtmosphereVolume.ts:389 — sprite.userData.localAtmosphereBaseOpacity = material.userData.preserveMaterialOpacityBase;
+- src\scene\atmosphere\localAtmosphereVolume.ts:441 — const baseOpacity =
+- src\scene\atmosphere\localAtmosphereVolume.ts:442 — typeof material.userData.localAtmosphereBaseOpacity === "number"
+- src\scene\atmosphere\localAtmosphereVolume.ts:443 — ? material.userData.localAtmosphereBaseOpacity
+- src\scene\atmosphere\localAtmosphereVolume.ts:450 — : baseOpacity;
+- src\scene\atmosphere\localAtmosphereVolume.ts:453 — ? THREE.MathUtils.clamp(material.opacity / previousBase, 0, 1)
+- src\scene\atmosphere\localAtmosphereVolume.ts:460 — material.opacity = THREE.MathUtils.clamp(baseOpacity * nextLayerOpacity, 0, 1);
+- src\scene\atmosphere\localAtmosphereVolume.ts:465 — material.userData.preserveMaterialOpacityBase = baseOpacity;
+- src\scene\atmosphere\localAtmosphereVolume.ts:466 — material.userData.localAtmosphereBaseOpacity = baseOpacity;
+- src\scene\environment\applyEnvironment.ts:334 — material.opacity = opacity;
+- src\scene\environment\sunVisual.ts:202 — material.opacity = opacity;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1084 — const authoredOpacity = clampRange(options.bandOpacity, 0, 0.85);
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1101 — uOpacity: { value: authoredOpacity },
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1147 — uniform float uOpacity;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1223 — gl_FragColor = vec4(color, uOpacity * saturate(vSectionIsoAlpha));
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1229 — material.userData.sectionIsoBaseOpacity = authoredOpacity;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1388 — lineMaterial.userData.sectionIsoBaseOpacity = 0.96;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:36 — initialTransitionOpacity?: number;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1016 — initialTransitionOpacity:
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1017 — this.currentSectionIsoOverlayTransitionOpacity?.() ?? 0,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1185 — this.applyRenderOpacityToTree?.(
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1188 — options?.initialTransitionOpacity ??
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1189 — this.currentSectionIsoOverlayTransitionOpacity?.() ??
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1590 — initialTransitionOpacity:
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1591 — this.currentSectionIsoOverlayTransitionOpacity?.() ?? 0,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1727 — this.applyRenderOpacityToTree?.(
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1730 — options?.initialTransitionOpacity ??
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1731 — this.currentSectionIsoOverlayTransitionOpacity?.() ??
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1908 — initialTransitionOpacity:
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1909 — this.currentSectionIsoOverlayTransitionOpacity?.() ?? 0,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:2007 — this.applyRenderOpacityToTree?.(
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:2010 — options?.initialTransitionOpacity ??
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:2011 — this.currentSectionIsoOverlayTransitionOpacity?.() ??
+- src\scene\overlays\SceneOverlaysController.ts:165 — prev.outlineMaterial.opacity = prev.outlineTarget;
+- src\scene\overlays\SceneOverlaysController.ts:171 — handle.outlineMaterial.opacity = Math.min(
+- src\scene\overlays\SceneOverlaysController.ts:186 — opacity: handle.material.opacity,
+- src\scene\overlays\SceneOverlaysController.ts:189 — outlineOpacity: handle.outlineMaterial.opacity,
+- src\scene\section\sceneSectionController.ts:884 — function sceneSectionAxisOutsideOpacity(
+- src\scene\section\sceneSectionController.ts:891 — const value = entry?.outsideOpacity;
+- src\scene\section\sceneSectionController.ts:1045 — function sceneSectionFrameOutsideOpacity(
+- src\scene\section\sceneSectionController.ts:1054 — ?.outsideOpacity;
+- src\scene\section\sceneSectionController.ts:1058 — return sceneSectionAxisOutsideOpacity(style, axis, objectId, legacyTargeted);
+- src\scene\section\sceneSectionController.ts:1062 — Record<string, { outsideOpacity?: number }>;
+- src\scene\section\sceneSectionController.ts:1064 — function sceneSectionVisibilityEntryOutsideOpacity(
+- src\scene\section\sceneSectionController.ts:1069 — const value = entries?.[objectId]?.outsideOpacity;
+- src\scene\section\sceneSectionController.ts:1087 — const fromOutsideOpacity = sceneSectionVisibilityEntryOutsideOpacity(
+- src\scene\section\sceneSectionController.ts:1092 — const toOutsideOpacity = sceneSectionVisibilityEntryOutsideOpacity(
+- src\scene\section\sceneSectionController.ts:1098 — outsideOpacity:
+- src\scene\section\sceneSectionController.ts:1099 — fromOutsideOpacity + (toOutsideOpacity - fromOutsideOpacity) * t,
+- src\scene\section\sceneSectionController.ts:1161 — const outsideOpacityByAxis = {
+- src\scene\section\sceneSectionController.ts:1162 — x: sceneSectionAxisOutsideOpacity(style, "x", objectId, legacyTargeted),
+- src\scene\section\sceneSectionController.ts:1163 — y: sceneSectionAxisOutsideOpacity(style, "y", objectId, legacyTargeted),
+- src\scene\section\sceneSectionController.ts:1164 — z: sceneSectionAxisOutsideOpacity(style, "z", objectId, legacyTargeted),
+- src\scene\section\sceneSectionController.ts:1166 — const outsideOpacityByFrameId: Record<string, number> = {};
+- src\scene\section\sceneSectionController.ts:1168 — const value = sceneSectionFrameOutsideOpacity(
+- src\scene\section\sceneSectionController.ts:1175 — outsideOpacityByFrameId[entry.id] = value;
+- src\scene\section\sceneSectionController.ts:1176 — outsideOpacityByAxis[entry.axis] = Math.min(
+- src\scene\section\sceneSectionController.ts:1177 — outsideOpacityByAxis[entry.axis],
+- src\scene\section\sceneSectionController.ts:1182 — ...Object.values(outsideOpacityByAxis),
+- src\scene\section\sceneSectionController.ts:1183 — ...Object.values(outsideOpacityByFrameId),
+- src\scene\section\sceneSectionController.ts:1193 — outsideOpacityByAxis,
+- src\scene\section\sceneSectionController.ts:1194 — outsideOpacityByFrameId,
+- src\scene\section\sceneSectionController.ts:1968 — "uSceneSectionPlaneOutsideOpacity",
+- src\scene\section\sceneSectionController.ts:1975 — visibility.outsideOpacityByFrameId[plane.frameId] ??
+- src\scene\section\sceneSectionController.ts:1976 — visibility.outsideOpacityByAxis[plane.axis] ??
+- src\scene\section\sceneSectionController.ts:2024 — "uSceneSectionFrameOutsideOpacity",
+- src\scene\section\sceneSectionController.ts:2031 — visibility.outsideOpacityByFrameId[frame.frameId] ??
+- src\scene\section\sceneSectionController.ts:2032 — visibility.outsideOpacityByAxis[frame.axis] ??
+- src\scene\section\sceneSectionController.ts:2060 — "uSceneSectionTargetPlaneOutsideOpacity",
+- src\scene\section\sceneSectionController.ts:2073 — targetVisibility.outsideOpacityByFrameId[plane.frameId] ??
+- src\scene\section\sceneSectionController.ts:2074 — targetVisibility.outsideOpacityByAxis[plane.axis] ??
+- src\scene\section\sceneSectionController.ts:2094 — "uSceneSectionTargetFrameOutsideOpacity",
+- src\scene\section\sceneSectionController.ts:2122 — targetVisibility.outsideOpacityByFrameId[frame.frameId] ??
+- src\scene\section\sceneSectionController.ts:2123 — targetVisibility.outsideOpacityByAxis[frame.axis] ??
+- src\scene\section\sceneSectionController.ts:2163 — (frameId) => (visibility.outsideOpacityByFrameId[frameId] ?? 1) < 0.999,
+- src\scene\section\sceneSectionController.ts:2166 — (axis) => (visibility.outsideOpacityByAxis[axis] ?? 1) < 0.999,
+- src\scene\section\sceneSectionController.ts:2176 — (Object.values(maskTransition.source.visibility.outsideOpacityByAxis).some(
+- src\scene\section\sceneSectionController.ts:2180 — maskTransition.source.visibility.outsideOpacityByFrameId,
+- src\scene\section\sceneSectionController.ts:2182 — Object.values(maskTransition.target.visibility.outsideOpacityByAxis).some(
+- src\scene\section\sceneSectionController.ts:2186 — maskTransition.target.visibility.outsideOpacityByFrameId,
+- src\scene\section\sceneSectionController.ts:2195 — (visibility.outsideOpacityByFrameId[frameId] ?? 1) > 0.001,
+- src\scene\section\sceneSectionController.ts:2198 — (axis) => (visibility.outsideOpacityByAxis[axis] ?? 1) > 0.001,
+- src\scene\section\sceneSectionController.ts:2510 — export function applySceneSectionHelperTransitionOpacity(this: any): void {
+- src\scene\section\sceneSectionController.ts:2513 — const opacity = clamp01(this.sceneSectionHelperTransitionOpacity);
+- src\scene\section\sceneSectionController.ts:2521 — const baseOpacity = this.baseOpacityForMaterial(material);
+- src\scene\section\sceneSectionController.ts:2522 — material.opacity = baseOpacity * opacity;
+- src\scene\section\sceneSectionController.ts:2525 — material.opacity < 0.999;
+- src\scene\section\sceneSectionController.ts:2528 — material.uniforms.uOpacity
+- src\scene\section\sceneSectionController.ts:2530 — material.uniforms.uOpacity.value = material.opacity;
+- src\scene\section\sceneSectionController.ts:3481 — (visibility.outsideOpacityByFrameId[plane.frameId] ??
+- src\scene\section\sceneSectionController.ts:3482 — visibility.outsideOpacityByAxis[plane.axis] ??
+- src\scene\section\sceneSectionController.ts:3489 — (visibility.outsideOpacityByFrameId[frame.frameId] ??
+- src\scene\section\sceneSectionController.ts:3490 — visibility.outsideOpacityByAxis[frame.axis] ??
+- src\scene\section\sceneSectionController.ts:3562 — this.applySceneSectionHelperTransitionOpacity();
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:79 — sourceVisibility.outsideOpacityByFrameId[plane.frameId] ??
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:80 — sourceVisibility.outsideOpacityByAxis[plane.axis] ??
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:141 — sourceVisibility.outsideOpacityByFrameId[frame.frameId] ??
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:142 — sourceVisibility.outsideOpacityByAxis[frame.axis] ??
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:187 — targetVisibility.outsideOpacityByFrameId[plane.frameId] ??
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:188 — targetVisibility.outsideOpacityByAxis[plane.axis] ??
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:245 — targetVisibility.outsideOpacityByFrameId[frame.frameId] ??
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:246 — targetVisibility.outsideOpacityByAxis[frame.axis] ??
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:283 — outsideOpacityByAxis: { x: 1, y: 1, z: 1 },
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:284 — outsideOpacityByFrameId: {},
+- src\scene\shaders\workingAreaFocusShader.ts:19 — outsideOpacity: number,
+- src\scene\shaders\workingAreaFocusShader.ts:35 — ensure<number>("uWorkingAreaFocusOutsideOpacity", 1).value =
+- src\scene\shaders\workingAreaFocusShader.ts:36 — clamp01(outsideOpacity);
+- src\scene\shaders\workingAreaFocusShader.ts:44 — outsideOpacity: number,
+- src\scene\shaders\workingAreaFocusShader.ts:49 — material.userData.workingAreaFocusOutsideOpacity = clamp01(outsideOpacity);
+- src\scene\shaders\workingAreaFocusShader.ts:64 — typeof material.userData.workingAreaFocusOutsideOpacity === "number"
+- src\scene\shaders\workingAreaFocusShader.ts:65 — ? material.userData.workingAreaFocusOutsideOpacity
+- src\scene\shaders\workingAreaFocusShader.ts:86 — "uniform float uWorkingAreaFocusOutsideOpacity;",
+- src\scene\shaders\workingAreaFocusShader.ts:91 — "  return inside ? 1.0 : clamp(uWorkingAreaFocusOutsideOpacity, 0.0, 1.0);",
+- src\scene\shaders\workingAreaFocusShader.ts:132 — outsideOpacity,
+- src\scene\styles\applyLayerStyle.ts:47 — : this.baseOpacityForMaterial(m);
+- src\scene\styles\applyLayerStyle.ts:130 — if (m instanceof THREE.ShaderMaterial && m.uniforms.uOpacity) {
+- src\scene\styles\applyLayerStyle.ts:131 — m.uniforms.uOpacity.value = targetOpacity;
+- src\scene\styles\applyLayerStyle.ts:191 — this.sceneSectionHelperTransitionOpacity = 1;
+- src\scene\styles\drillingAndTopoDisplay.ts:156 — lensMaterial.opacity = boreLensOpacity;
+- src\scene\styles\scalarEdgeLines.ts:571 — material.opacity = clampRange(0.4 + options.edgeLineWidth / 10, 0.4, 0.96);
+- src\scene\styles\scalarPreviewStyle.ts:84 — const sectionIsoSourceOpacity = sectionIsoEnabled
+- src\scene\styles\scalarPreviewStyle.ts:85 — ? styleNumber(style, "sectionIsoSourceOpacity", 0, 0, 1)
+- src\scene\styles\scalarPreviewStyle.ts:401 — layerOpacity * sectionIsoSourceOpacity;
+- src\scene\styles\scalarPreviewStyle.ts:404 — layerOpacity * sectionIsoSourceOpacity < 1;
+- src\scene\styles\scalarVolumeStyle.ts:60 — "scalarVolumeOpacity",
+- src\scene\styles\scalarVolumeStyle.ts:67 — ? styleNumber(style, "sectionIsoSourceOpacity", 0, 0, 1)
+- src\scene\styles\scalarVolumeStyle.ts:69 — const renderOpacity = opacity * isoSourceOpacity;
+- src\scene\styles\scalarVolumeStyle.ts:141 — if (uniforms.uOpacity) uniforms.uOpacity.value = renderOpacity;
+- src\scene\styles\scalarVolumeStyle.ts:142 — this.setProductOpacityBaseForMaterial(m, renderOpacity);
+- src\scene\styles\scalarVolumeStyle.ts:154 — opacity: renderOpacity,
+- src\scene\styles\scalarVolumeStyle.ts:156 — sectionIsoSourceOpacity: isoSourceOpacity,
+- src\scene\styles\seismicBrowserStyle.ts:291 — const sectionIsoSourceOpacity = sectionIsoEnabled
+- src\scene\styles\seismicBrowserStyle.ts:292 — ? styleNumber(effectiveStyle, "sectionIsoSourceOpacity", 0, 0, 1)
+- src\scene\styles\seismicBrowserStyle.ts:295 — const volumeSourceOpacity = opacity * sectionIsoSourceOpacity;
+- src\scene\styles\seismicBrowserStyle.ts:598 — if (uniforms.uOpacity) uniforms.uOpacity.value = volumeSourceOpacity;
+- src\scene\styles\seismicBrowserStyle.ts:711 — if (material.uniforms.uOpacity) {
+- src\scene\styles\seismicBrowserStyle.ts:712 — material.uniforms.uOpacity.value = sectionSourceOpacity;
+- src\scene\styles\seismicBrowserStyle.ts:735 — material.opacity = sectionSourceOpacity;
+- src\scene\styles\siteDetailStyles.ts:282 — material.opacity = traceOpacity;
+- src\scene\styles\siteDetailStyles.ts:355 — material.opacity = clamp01(opacity);
+- src\scene\styles\siteDetailStyles.ts:374 — material.opacity = clamp01(opacity);
+- src\scene\styles\siteDetailStyles.ts:467 — line.material.opacity = wellStyle.centerlineOpacity * layerOpacity;
+- src\scene\styles\siteDetailStyles.ts:492 — material.opacity = wellStyle.opacity * layerOpacity;
+- src\scene\styles\siteDetailStyles.ts:725 — material.opacity = 0;
+- src\scene\styles\siteDetailStyles.ts:727 — material.opacity = material.map ? targetOpacity : 0;
+- src\scene\styles\siteDetailStyles.ts:733 — material.opacity = texture ? targetOpacity : 0;
+- src\scene\terrain\terrainStyleController.ts:397 — material.opacity = outlineOpacity;
+- src\scene\terrain\terrainStyleController.ts:457 — material.opacity = fillOpacity;
+- src\scene\transitions\layerTweenRuntime.ts:108 — this.applyLayerTransitionRenderOpacity(
+- src\scene\transitions\layerTweenRuntime.ts:117 — this.applyLayerTransitionRenderOpacity(id, 0, 0);
+- src\scene\transitions\layerTweenRuntime.ts:190 — this.sceneSectionHelperTransitionOpacity = done
+- src\scene\transitions\layerTweenRuntime.ts:211 — this.sceneSectionHelperTransitionOpacity = 1;
+- src\scene\transitions\layerTweenRuntime.ts:258 — this.applyLayerTransitionRenderOpacity(
+- src\scene\transitions\layerTweenRuntime.ts:276 — this.applyRenderOpacityToTree(
+- src\scene\transitions\layerTweenRuntime.ts:299 — this.applyRenderOpacityToTree(
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:107 — "workingAreaFocusOutsideOpacityByLayerId",
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:381 — this.sceneSectionHelperTransitionOpacity = 1;
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:650 — this.sceneSectionHelperTransitionOpacity =
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:662 — this.sceneSectionHelperTransitionOpacity = 0;
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:787 — this.applyRenderOpacityToTree(transitionSnapshot, fromOpacity, 1);
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:788 — this.applyLayerTransitionRenderOpacity(id, 0, sectionIsoStable ? 1 : 0);
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:809 — this.applyLayerTransitionRenderOpacity(
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:817 — this.applyLayerTransitionRenderOpacity(
+- src\scene\transitions\transitionStyles.ts:235 — "scalarVolumeOpacity",
+- src\scene\transitions\transitionStyles.ts:243 — "sectionIsoSourceOpacity",
+- src\scene\transitions\transitionStyles.ts:340 — if (field === "sectionIsoSourceOpacity") return 0;
+- src\scene\workingArea\workingAreaFocusController.ts:41 — outsideOpacityByLayerId: Map<string, number>;
+- src\scene\workingArea\workingAreaFocusController.ts:58 — export function workingAreaFocusOutsideOpacityImpl(this: any, style: EditableStyle, layerId: string): number {
+- src\scene\workingArea\workingAreaFocusController.ts:61 — const map = style.workingAreaFocusOutsideOpacityByLayerId ?? {};
+- src\scene\workingArea\workingAreaFocusController.ts:125 — const outsideOpacityByLayerId = new Map<string, number>();
+- src\scene\workingArea\workingAreaFocusController.ts:127 — outsideOpacityByLayerId.set(
+- src\scene\workingArea\workingAreaFocusController.ts:129 — this.workingAreaFocusOutsideOpacity(style, layerId),
+- src\scene\workingArea\workingAreaFocusController.ts:142 — outsideOpacityByLayerId,
+- src\scene\workingArea\workingAreaFocusController.ts:230 — export function setKnownShaderWorkingAreaFocusImpl(this: any, material: THREE.ShaderMaterial, enabled: boolean, state: WorkingAreaFocusState, outsideOpacity: number): boolean {
+- src\scene\workingArea\workingAreaFocusController.ts:238 — outsideOpacity,
+- src\scene\workingArea\workingAreaFocusController.ts:244 — export function applyWorkingAreaFocusMaterialImpl(this: any, material: THREE.Material, enabled: boolean, state: WorkingAreaFocusState, outsideOpacity: number): void {
+- src\scene\workingArea\workingAreaFocusController.ts:252 — outsideOpacity,
+- src\scene\workingArea\workingAreaFocusController.ts:265 — outsideOpacity,
+- src\scene\workingArea\workingAreaFocusController.ts:278 — const outsideOpacity = state.outsideOpacityByLayerId.get(layerId) ?? 1;
+- src\scene\workingArea\workingAreaFocusController.ts:290 — outsideOpacity,
+- src\scene\workingArea\workingAreaFocusController.ts:307 — const outsideOpacityByLayerId: Record<string, number> = {};
+- src\scene\workingArea\workingAreaFocusController.ts:309 — const from = this.workingAreaFocusOutsideOpacity(fromStyle, layerId);
+- src\scene\workingArea\workingAreaFocusController.ts:310 — const to = this.workingAreaFocusOutsideOpacity(toStyle, layerId);
+- src\scene\workingArea\workingAreaFocusController.ts:311 — outsideOpacityByLayerId[layerId] = from + (to - from) * t;
+- src\scene\workingArea\workingAreaFocusController.ts:320 — workingAreaFocusOutsideOpacityByLayerId: outsideOpacityByLayerId,
+- src\scene\workingArea\workingAreaFocusController.ts:366 — sameOpacityMap(a.outsideOpacityByLayerId, b.outsideOpacityByLayerId)
+- src\scene\workingArea\workingAreaFocusController.ts:409 — outsideOpacityByLayerId: Record<string, number>;
+- src\scene\workingArea\workingAreaFocusController.ts:421 — outsideOpacityByLayerId: Object.fromEntries(
+- src\scene\workingArea\workingAreaFocusController.ts:422 — state.outsideOpacityByLayerId,
+- src\ui\SectionIsoLegend.tsx:569 — styleNumber(style, "sectionIsoSourceOpacity", 0),
+- src\ui\SectionIsoLegend.tsx:668 — sectionIsoSourceOpacity: showVolume ? 0 : 1,
+- src\projectModules\utahForge\editorPreviewFields.ts:56 — "sectionIsoSourceOpacity",
+- src\projectModules\utahForge\editorPreviewFields.ts:63 — "scalarVolumeOpacity",
+- src\projectModules\utahForge\editorPreviewFields.ts:146 — "sectionIsoSourceOpacity",
+- src\projectModules\utahForge\editorPreviewFields.ts:180 — "workingAreaFocusOutsideOpacityByLayerId",
+
+## Working-area focus composition
+
+Pattern: `workingArea|WorkingArea|working-area|focusTween|uWorkingAreaFocus|outsideOpacity|targetLayerIds|mask|clip|attenuation` 
+
+- src\scene\CLAUDE.md:20 — `terrain/terrainStyleController.ts`, `workingArea/workingAreaFocusController.ts`,
+- src\scene\CLAUDE.md:28 — - `scalarFocus.ts` — scalar focus / working-area clip helpers.
+- src\scene\heightSampler.ts:7 — //   - OverlayMask slots: rasterized polygon masks passed to the terrain
+- src\scene\heightSampler.ts:17 — export interface OverlayMaskInfo {
+- src\scene\heightSampler.ts:44 — // ---- Overlay masks -------------------------------------------------------
+- src\scene\heightSampler.ts:46 — const overlayMasks = new Map<string, OverlayMaskInfo>();
+- src\scene\heightSampler.ts:48 — (slot: string, info: OverlayMaskInfo) => void
+- src\scene\heightSampler.ts:51 — export function setOverlayMask(slot: string, info: OverlayMaskInfo): void {
+- src\scene\heightSampler.ts:52 — overlayMasks.set(slot, info);
+- src\scene\heightSampler.ts:56 — export function peekOverlayMask(slot: string): OverlayMaskInfo | null {
+- src\scene\heightSampler.ts:57 — return overlayMasks.get(slot) ?? null;
+- src\scene\heightSampler.ts:60 — export function subscribeOverlayMask(
+- src\scene\heightSampler.ts:61 — cb: (slot: string, info: OverlayMaskInfo) => void,
+- src\scene\heightSampler.ts:71 — // still calls setLakeMask; loadTerrain still uses peekLakeMask /
+- src\scene\heightSampler.ts:72 — // subscribeLakeMask. Internally these now route through the generic
+- src\scene\heightSampler.ts:73 — // overlay-mask broker with slot id "lake".
+- src\scene\heightSampler.ts:75 — export interface LakeMaskInfo extends OverlayMaskInfo {}
+- src\scene\heightSampler.ts:77 — export function setLakeMask(info: LakeMaskInfo): void {
+- src\scene\heightSampler.ts:78 — setOverlayMask("lake", info);
+- src\scene\heightSampler.ts:81 — export function peekLakeMask(): LakeMaskInfo | null {
+- src\scene\heightSampler.ts:82 — return peekOverlayMask("lake");
+- src\scene\heightSampler.ts:85 — export function subscribeLakeMask(
+- src\scene\heightSampler.ts:86 — cb: (m: LakeMaskInfo) => void,
+- src\scene\heightSampler.ts:88 — return subscribeOverlayMask((slot, info) => {
+- src\scene\layerLoaders.ts:145 — function workingAreaSceneBounds(spec: ProjectLayerSpec): {
+- src\scene\layerLoaders.ts:150 — const workingArea =
+- src\scene\layerLoaders.ts:151 — metadata.phase3WorkingArea && typeof metadata.phase3WorkingArea === "object"
+- src\scene\layerLoaders.ts:152 — ? (metadata.phase3WorkingArea as Record<string, unknown>)
+- src\scene\layerLoaders.ts:155 — workingArea?.sceneBounds && typeof workingArea.sceneBounds === "object"
+- src\scene\layerLoaders.ts:156 — ? (workingArea.sceneBounds as Record<string, unknown>)
+- src\scene\layerLoaders.ts:197 — function applyWorkingAreaTopLinePolicy(
+- src\scene\layerLoaders.ts:208 — phase3WorkingArea: true,
+- src\scene\layerLoaders.ts:235 — phase3WorkingArea: true,
+- src\scene\layerLoaders.ts:294 — function loadUtahForgePhase3WorkingAreaBox(
+- src\scene\layerLoaders.ts:298 — const bounds = workingAreaSceneBounds(spec);
+- src\scene\layerLoaders.ts:324 — phase3WorkingAreaBoundingBox: true,
+- src\scene\layerLoaders.ts:333 — phase3WorkingArea: true,
+- src\scene\layerLoaders.ts:342 — id: "utah-forge-phase3-working-area",
+- src\scene\layerLoaders.ts:343 — matches: (spec) => spec.id === "utah-forge-phase3-working-area",
+- src\scene\layerLoaders.ts:346 — const bounds = workingAreaSceneBounds(context.spec);
+- src\scene\layerLoaders.ts:351 — "loadUtahForgePhase3WorkingArea",
+- src\scene\layerLoaders.ts:353 — applyWorkingAreaTopLinePolicy(
+- src\scene\layerLoaders.ts:363 — context.onLoaded(loadUtahForgePhase3WorkingAreaBox(context.spec));
+- src\scene\postprocessing.ts:17 — //   TiltShiftPass     -- optional band-masked directional blur
+- src\scene\postprocessing.ts:70 — float mask = smoothstep(bandSize, bandSize + max(feather, 0.0001), distanceToBand);
+- src\scene\postprocessing.ts:83 — gl_FragColor = mix(base, blurred, mask);
+- src\scene\postprocessing.ts:272 — float mask = 0.0;
+- src\scene\postprocessing.ts:274 — mask = max(mask, guideLine(uv.x, 1.0 / 3.0, width));
+- src\scene\postprocessing.ts:275 — mask = max(mask, guideLine(uv.x, 2.0 / 3.0, width));
+- src\scene\postprocessing.ts:276 — mask = max(mask, guideLine(uv.y, 1.0 / 3.0, width));
+- src\scene\postprocessing.ts:277 — mask = max(mask, guideLine(uv.y, 2.0 / 3.0, width));
+- src\scene\postprocessing.ts:282 — mask = max(mask, max(crossX, crossY));
+- src\scene\postprocessing.ts:285 — mask = max(mask, guideRect(uv, vec2(0.06, 0.06), width));
+- src\scene\postprocessing.ts:301 — mask = max(mask, guideRect(uv, inset, width));
+- src\scene\postprocessing.ts:303 — return mix(color, vec3(1.0, 0.92, 0.72), clamp(mask, 0.0, 1.0) * 0.78);
+- src\scene\SceneManager.ts:97 — type WorkingAreaFocusStyleTween,
+- src\scene\SceneManager.ts:119 — applyMtSurfaceMaskStyleImpl,
+- src\scene\SceneManager.ts:124 — restoreMtSurfaceMaskMaterialsImpl,
+- src\scene\SceneManager.ts:125 — updateMtSurfaceMaskForPointsImpl,
+- src\scene\SceneManager.ts:182 — sceneSectionClippingPlanes as sceneSectionClippingPlanesImpl,
+- src\scene\SceneManager.ts:183 — sceneSectionFrameClippingPlanes as sceneSectionFrameClippingPlanesImpl,
+- src\scene\SceneManager.ts:187 — sceneSectionMaskTransitionForTween as sceneSectionMaskTransitionForTweenImpl,
+- src\scene\SceneManager.ts:196 — applyWorkingAreaFocusMaterialImpl,
+- src\scene\SceneManager.ts:197 — applyWorkingAreaFocusStyleImpl,
+- src\scene\SceneManager.ts:198 — cleanWorkingAreaFocusVectorImpl,
+- src\scene\SceneManager.ts:199 — ensureWorkingAreaFocusRuntimeImpl,
+- src\scene\SceneManager.ts:200 — getWorkingAreaFocusDebugStateImpl,
+- src\scene\SceneManager.ts:201 — interpolatedWorkingAreaFocusStyleImpl,
+- src\scene\SceneManager.ts:202 — rebuildWorkingAreaFocusHelperImpl,
+- src\scene\SceneManager.ts:203 — reapplyWorkingAreaFocusImpl,
+- src\scene\SceneManager.ts:204 — resolveWorkingAreaFocusBoundsImpl,
+- src\scene\SceneManager.ts:205 — setKnownShaderWorkingAreaFocusImpl,
+- src\scene\SceneManager.ts:206 — transitionWorkingAreaFocusForPageImpl,
+- src\scene\SceneManager.ts:207 — workingAreaFocusOutsideOpacityImpl,
+- src\scene\SceneManager.ts:208 — workingAreaFocusSegmentPositionsImpl,
+- src\scene\SceneManager.ts:209 — workingAreaFocusStateImpl,
+- src\scene\SceneManager.ts:210 — workingAreaFocusTargetLayerIdsImpl,
+- src\scene\SceneManager.ts:211 — type WorkingAreaFocusRuntime,
+- src\scene\SceneManager.ts:212 — type WorkingAreaFocusState,
+- src\scene\SceneManager.ts:213 — } from "./workingArea/workingAreaFocusController";
+- src\scene\SceneManager.ts:452 — outsideOpacityByAxis: Record<SceneSectionAxis, number>;
+- src\scene\SceneManager.ts:453 — outsideOpacityByFrameId: Record<string, number>;
+- src\scene\SceneManager.ts:458 — export interface SceneSectionMaskUniformState {
+- src\scene\SceneManager.ts:464 — export interface SceneSectionMaskTransition {
+- src\scene\SceneManager.ts:466 — source: SceneSectionMaskUniformState;
+- src\scene\SceneManager.ts:467 — target: SceneSectionMaskUniformState;
+- src\scene\SceneManager.ts:470 — export interface SceneSectionStyleMaskTransition {
+- src\scene\SceneManager.ts:478 — maskTransition?: SceneSectionStyleMaskTransition | null;
+- src\scene\SceneManager.ts:602 — maskedTriangleCount: number;
+- src\scene\SceneManager.ts:614 — workingAreaMs: number;
+- src\scene\SceneManager.ts:630 — workingAreaFocusTweenActiveBefore: boolean;
+- src\scene\SceneManager.ts:697 — private workingAreaFocusRuntime: WorkingAreaFocusRuntime | null = null;
+- src\scene\SceneManager.ts:699 — private lastWorkingAreaFocusStyle: EditableStyle = {};
+- src\scene\SceneManager.ts:700 — currentWorkingAreaFocusStyle: EditableStyle = {};
+- src\scene\SceneManager.ts:701 — private sceneSectionClippingActive = false;
+- src\scene\SceneManager.ts:702 — private publicSurfaceClippingActive = false;
+- src\scene\SceneManager.ts:773 — private workingAreaFocusTween: WorkingAreaFocusStyleTween | null = null;
+- src\scene\SceneManager.ts:797 — // mask rebuild, and the editor's sub-layer panel can read the
+- src\scene\SceneManager.ts:831 — onPublicSurfaceClippingActive: (active) => {
+- src\scene\SceneManager.ts:832 — this.publicSurfaceClippingActive = active;
+- src\scene\SceneManager.ts:834 — updateRendererLocalClipping: () => this.updateRendererLocalClipping(),
+- src\scene\SceneManager.ts:900 — if (this.workingAreaFocusRuntime) {
+- src\scene\SceneManager.ts:901 — const focusState = this.workingAreaFocusState(
+- src\scene\SceneManager.ts:902 — this.lastWorkingAreaFocusStyle,
+- src\scene\SceneManager.ts:904 — this.workingAreaFocusRuntime.group.visible =
+- src\scene\SceneManager.ts:1198 — this.reapplyWorkingAreaFocus();
+- src\scene\SceneManager.ts:1359 — typeof material.userData?.sectionIsoThresholdOcclusionAttenuation ===
+- src\scene\SceneManager.ts:1361 — Number.isFinite(material.userData.sectionIsoThresholdOcclusionAttenuation)
+- src\scene\SceneManager.ts:1362 — ? clamp01(material.userData.sectionIsoThresholdOcclusionAttenuation)
+- src\scene\SceneManager.ts:2061 — applyMtSurfaceMaskStyle(id: string, style: EditableStyle): void {
+- src\scene\SceneManager.ts:2062 — return applyMtSurfaceMaskStyleImpl.call(this, id, style);
+- src\scene\SceneManager.ts:2065 — updateMtSurfaceMaskForPoints(points: THREE.Points, options: {
+- src\scene\SceneManager.ts:2070 — maskKey: string;
+- src\scene\SceneManager.ts:2075 — return updateMtSurfaceMaskForPointsImpl.call(this, points, options);
+- src\scene\SceneManager.ts:2078 — restoreMtSurfaceMaskMaterials(id: string): void {
+- src\scene\SceneManager.ts:2079 — return restoreMtSurfaceMaskMaterialsImpl.call(this, id);
+- src\scene\SceneManager.ts:2133 — sceneSectionClippingPlanes(
+- src\scene\SceneManager.ts:2136 — return sceneSectionClippingPlanesImpl.call(this, planes);
+- src\scene\SceneManager.ts:2159 — sceneSectionFrameClippingPlanes(
+- src\scene\SceneManager.ts:2162 — return sceneSectionFrameClippingPlanesImpl.call(this, frame);
+- src\scene\SceneManager.ts:2178 — maskTransition?: SceneSectionMaskTransition | null,
+- src\scene\SceneManager.ts:2180 — return setSceneSectionUniformsImpl.call(this, material, planes, visibility, frames, maskTransition);
+- src\scene\SceneManager.ts:2187 — clippingPlanes: THREE.Plane[],
+- src\scene\SceneManager.ts:2189 — frameClippingPlanes: THREE.Plane[],
+- src\scene\SceneManager.ts:2190 — maskTransition?: SceneSectionMaskTransition | null,
+- src\scene\SceneManager.ts:2192 — return applySceneSectionMaterialImpl.call(this, material, planes, visibility, clippingPlanes, frames, frameClippingPlanes, maskTransition);
+- src\scene\SceneManager.ts:2220 — sceneSectionMaskTransitionForTween(
+- src\scene\SceneManager.ts:2223 — ): SceneSectionStyleMaskTransition {
+- src\scene\SceneManager.ts:2224 — return sceneSectionMaskTransitionForTweenImpl.call(this, tween, eased);
+- src\scene\SceneManager.ts:2389 — private updateRendererLocalClipping(): void {
+- src\scene\SceneManager.ts:2390 — this.renderer.localClippingEnabled =
+- src\scene\SceneManager.ts:2391 — this.sceneSectionClippingActive || this.publicSurfaceClippingActive;
+- src\scene\SceneManager.ts:2394 — workingAreaFocusTargetLayerIds(style: EditableStyle): Set<string> {
+- src\scene\SceneManager.ts:2395 — return workingAreaFocusTargetLayerIdsImpl.call(this, style);
+- src\scene\SceneManager.ts:2398 — workingAreaFocusOutsideOpacity(style: EditableStyle, layerId: string): number {
+- src\scene\SceneManager.ts:2399 — return workingAreaFocusOutsideOpacityImpl.call(this, style, layerId);
+- src\scene\SceneManager.ts:2402 — cleanWorkingAreaFocusVector(value: unknown): THREE.Vector3 | null {
+- src\scene\SceneManager.ts:2403 — return cleanWorkingAreaFocusVectorImpl.call(this, value);
+- src\scene\SceneManager.ts:2406 — resolveWorkingAreaFocusBounds(boundsLayerId: string): {
+- src\scene\SceneManager.ts:2410 — return resolveWorkingAreaFocusBoundsImpl.call(this, boundsLayerId);
+- src\scene\SceneManager.ts:2413 — workingAreaFocusState(style: EditableStyle): WorkingAreaFocusState {
+- src\scene\SceneManager.ts:2414 — return workingAreaFocusStateImpl.call(this, style);
+- src\scene\SceneManager.ts:2417 — workingAreaFocusSegmentPositions(min: THREE.Vector3, max: THREE.Vector3): number[] {
+- src\scene\SceneManager.ts:2418 — return workingAreaFocusSegmentPositionsImpl.call(this, min, max);
+- src\scene\SceneManager.ts:2421 — ensureWorkingAreaFocusRuntime(): WorkingAreaFocusRuntime {
+- src\scene\SceneManager.ts:2422 — return ensureWorkingAreaFocusRuntimeImpl.call(this);
+- src\scene\SceneManager.ts:2425 — rebuildWorkingAreaFocusHelper(state: WorkingAreaFocusState): void {
+- src\scene\SceneManager.ts:2426 — return rebuildWorkingAreaFocusHelperImpl.call(this, state);
+- src\scene\SceneManager.ts:2429 — setKnownShaderWorkingAreaFocus(material: THREE.ShaderMaterial, enabled: boolean, state: WorkingAreaFocusState, outsideOpacity: number): boolean {
+- src\scene\SceneManager.ts:2430 — return setKnownShaderWorkingAreaFocusImpl.call(this, material, enabled, state, outsideOpacity);
+- src\scene\SceneManager.ts:2433 — applyWorkingAreaFocusMaterial(material: THREE.Material, enabled: boolean, state: WorkingAreaFocusState, outsideOpacity: number): void {
+- src\scene\SceneManager.ts:2434 — return applyWorkingAreaFocusMaterialImpl.call(this, material, enabled, state, outsideOpacity);
+- src\scene\SceneManager.ts:2437 — applyWorkingAreaFocusStyle(style: EditableStyle): void {
+- src\scene\SceneManager.ts:2438 — return applyWorkingAreaFocusStyleImpl.call(this, style);
+- src\scene\SceneManager.ts:2441 — reapplyWorkingAreaFocus(): void {
+- src\scene\SceneManager.ts:2442 — return reapplyWorkingAreaFocusImpl.call(this);
+- src\scene\SceneManager.ts:2445 — interpolatedWorkingAreaFocusStyle(fromStyle: EditableStyle, toStyle: EditableStyle, t: number): EditableStyle {
+- src\scene\SceneManager.ts:2446 — return interpolatedWorkingAreaFocusStyleImpl.call(this, fromStyle, toStyle, t);
+- src\scene\SceneManager.ts:2449 — transitionWorkingAreaFocusForPage(fromEnvironment: EnvironmentSetup, toEnvironment: EnvironmentSetup, fromPage: PresentationPage, toPage: PresentationPage, durationMs: number, easing: EasingName): void {
+- src\scene\SceneManager.ts:2450 — return transitionWorkingAreaFocusForPageImpl.call(this, fromEnvironment, toEnvironment, fromPage, toPage, durationMs, easing);
+- src\scene\SceneManager.ts:2453 — getWorkingAreaFocusDebugState(): {
+- src\scene\SceneManager.ts:2457 — targetLayerIds: string[];
+- src\scene\SceneManager.ts:2458 — outsideOpacityByLayerId: Record<string, number>;
+- src\scene\SceneManager.ts:2464 — return getWorkingAreaFocusDebugStateImpl.call(this);
+- src\scene\SceneManager.ts:2725 — workingAreaFocusTweenActive: boolean;
+- src\scene\SceneManager.ts:2758 — (this.workingAreaFocusTween ? 1 : 0),
+- src\scene\SceneManager.ts:2762 — workingAreaFocusTweenActive: this.workingAreaFocusTween !== null,
+- src\scene\SceneManager.ts:3085 — if (this.workingAreaFocusTween) {
+- src\scene\SceneManager.ts:3086 — this.applyWorkingAreaFocusStyle(
+- src\scene\SceneManager.ts:3087 — this.interpolatedWorkingAreaFocusStyle(
+- src\scene\SceneManager.ts:3088 — this.workingAreaFocusTween.fromStyle,
+- src\scene\SceneManager.ts:3089 — this.workingAreaFocusTween.toStyle,
+- src\scene\SceneManager.ts:3090 — this.transitionTweenEasedProgress(this.workingAreaFocusTween, nowMs),
+- src\scene\SceneManager.ts:3094 — this.reapplyWorkingAreaFocus();
+- src\scene\SceneManager.ts:3329 — maskVisible: boolean;
+- src\scene\SceneManager.ts:3336 — hardMaskValues: Float32Array;
+- src\scene\SceneManager.ts:3389 — hardMaskValues: Float32Array;
+- src\scene\SceneManager.ts:3543 — const maskData = volumeMesh?.userData.scalarVolumeMaskData as
+- src\scene\SceneManager.ts:3555 — if (!volumeData || !maskData || !dimensions || !bounds?.min || !bounds?.max || !sourceRange) {
+- src\scene\SceneManager.ts:3589 — mask: maskData,
+- src\scene\SceneManager.ts:4025 — this.workingAreaFocusTween = null;
+- src\scene\SceneManager.ts:4039 — this.applyWorkingAreaFocusStyle(
+- src\scene\SceneManager.ts:4051 — this.workingAreaFocusTween = null;
+- src\scene\SceneManager.ts:4060 — this.applyWorkingAreaFocusStyle(
+- src\scene\SceneManager.ts:4083 — * are rendered by the TERRAIN shader (rasterized polygon masks
+- src\scene\SceneManager.ts:4385 — this.reapplyWorkingAreaFocus();
+- src\scene\SceneManager.ts:4572 — attenuation: number,
+- src\scene\SceneManager.ts:4584 — m.userData.sectionIsoThresholdOcclusionAttenuation = attenuation;
+- src\scene\SceneManager.ts:4592 — line.userData.sectionIsoThresholdOcclusionAttenuation = attenuation;
+- src\scene\SceneManager.ts:4903 — const focusMaterial = this.workingAreaFocusRuntime?.line.material;
+- src\scene\terrainMaterial.ts:3 — function makeBlankMask(): THREE.DataTexture {
+- src\scene\terrainMaterial.ts:4 — // 1x1 RGBA8 zeros -- shader's lake-mask sample returns 0 everywhere
+- src\scene\terrainMaterial.ts:5 — // until loadLakes publishes a real mask via setLakeMask().
+- src\scene\terrainMaterial.ts:94 — orthoPhotoEdgeClipInsetM?: number;
+- src\scene\terrainMaterial.ts:103 — orthoPhotoOutsideOpacity?: number;
+- src\scene\terrainMaterial.ts:153 — // A rasterized polygon mask is overlaid onto terrain pixels by the
+- src\scene\terrainMaterial.ts:154 — // fragment shader, recoloring them to lake color where the mask is
+- src\scene\terrainMaterial.ts:158 — setLakeMask(
+- src\scene\terrainMaterial.ts:169 — // mask. Slot IDs the shader knows about: "target-three-firs",
+- src\scene\terrainMaterial.ts:171 — setTargetMask(
+- src\scene\terrainMaterial.ts:181 — // Claim boundary -- single polygon mask, flat tinted mix onto terrain
+- src\scene\terrainMaterial.ts:184 — setClaimMask(
+- src\scene\terrainMaterial.ts:195 — // single-colour mask. Shader samples RGBA and mixes into terrain at
+- src\scene\terrainMaterial.ts:197 — setGeologyMask(
+- src\scene\terrainMaterial.ts:205 — // VRI forest cover -- mask texture stores the dissolved forest body in
+- src\scene\terrainMaterial.ts:208 — setForestMask(
+- src\scene\terrainMaterial.ts:220 — setPublicClip(
+- src\scene\terrainMaterial.ts:403 — uOrthoPhotoMap: { value: makeBlankMask() as THREE.Texture },
+- src\scene\terrainMaterial.ts:410 — uOrthoPhotoEdgeClipInset: {
+- src\scene\terrainMaterial.ts:411 — value: Math.max(initial.orthoPhotoEdgeClipInsetM ?? 0, 0),
+- src\scene\terrainMaterial.ts:443 — uOrthoPhotoOutsideOpacity: {
+- src\scene\terrainMaterial.ts:444 — value: THREE.MathUtils.clamp(initial.orthoPhotoOutsideOpacity ?? 0, 0, 1),
+- src\scene\terrainMaterial.ts:461 — uTopoImageDetailMap: { value: makeBlankMask() as THREE.Texture },
+- src\scene\terrainMaterial.ts:485 — // Lake mask defaults to a 1x1 transparent texture so the shader can
+- src\scene\terrainMaterial.ts:487 — // paint shows until the real mask is plugged in.
+- src\scene\terrainMaterial.ts:488 — uLakeMask: { value: makeBlankMask() as THREE.Texture },
+- src\scene\terrainMaterial.ts:496 — uTarget0Mask: { value: makeBlankMask() as THREE.Texture },
+- src\scene\terrainMaterial.ts:504 — uTarget1Mask: { value: makeBlankMask() as THREE.Texture },
+- src\scene\terrainMaterial.ts:513 — uClaimMask: { value: makeBlankMask() as THREE.Texture },
+- src\scene\terrainMaterial.ts:520 — // Bedrock geology -- per-pixel colour carried in the mask texture
+- src\scene\terrainMaterial.ts:523 — uGeologyMask: { value: makeBlankMask() as THREE.Texture },
+- src\scene\terrainMaterial.ts:531 — uForestMask: { value: makeBlankMask() as THREE.Texture },
+- src\scene\terrainMaterial.ts:542 — uPublicClipEnabled: { value: 0 },
+- src\scene\terrainMaterial.ts:543 — uPublicClipShape: { value: 0 },
+- src\scene\terrainMaterial.ts:544 — uPublicClipCenter: { value: new THREE.Vector3(0, 0, 0) },
+- src\scene\terrainMaterial.ts:545 — uPublicClipHalfSize: { value: new THREE.Vector3(1, 1, 1) },
+- src\scene\terrainMaterial.ts:546 — uPublicClipCosSin: { value: new THREE.Vector2(1, 0) },
+- src\scene\terrainMaterial.ts:556 — uSceneSectionPlaneOutsideOpacity: {
+- src\scene\terrainMaterial.ts:563 — uSceneSectionFrameOutsideOpacity: {
+- src\scene\terrainMaterial.ts:570 — uSceneSectionTargetPlaneOutsideOpacity: {
+- src\scene\terrainMaterial.ts:577 — uSceneSectionTargetFrameOutsideOpacity: {
+- src\scene\terrainMaterial.ts:616 — #include <shadowmask_pars_fragment>
+- src\scene\terrainMaterial.ts:658 — uniform float uOrthoPhotoEdgeClipInset;
+- src\scene\terrainMaterial.ts:667 — uniform float uOrthoPhotoOutsideOpacity;
+- src\scene\terrainMaterial.ts:692 — uniform sampler2D uLakeMask;
+- src\scene\terrainMaterial.ts:699 — uniform sampler2D uTarget0Mask;
+- src\scene\terrainMaterial.ts:706 — uniform sampler2D uTarget1Mask;
+- src\scene\terrainMaterial.ts:713 — uniform sampler2D uClaimMask;
+- src\scene\terrainMaterial.ts:720 — uniform sampler2D uGeologyMask;
+- src\scene\terrainMaterial.ts:726 — uniform sampler2D uForestMask;
+- src\scene\terrainMaterial.ts:737 — uniform float uPublicClipEnabled;
+- src\scene\terrainMaterial.ts:738 — uniform float uPublicClipShape;
+- src\scene\terrainMaterial.ts:739 — uniform vec3 uPublicClipCenter;
+- src\scene\terrainMaterial.ts:740 — uniform vec3 uPublicClipHalfSize;
+- src\scene\terrainMaterial.ts:741 — uniform vec2 uPublicClipCosSin;
+- src\scene\terrainMaterial.ts:751 — uniform float uSceneSectionPlaneOutsideOpacity[8];
+- src\scene\terrainMaterial.ts:756 — uniform float uSceneSectionFrameOutsideOpacity[8];
+- src\scene\terrainMaterial.ts:761 — uniform float uSceneSectionTargetPlaneOutsideOpacity[8];
+- src\scene\terrainMaterial.ts:766 — uniform float uSceneSectionTargetFrameOutsideOpacity[8];
+- src\scene\terrainMaterial.ts:785 — float gridMask(vec2 worldXY, float spacing, float lineWidth) {
+- src\scene\terrainMaterial.ts:999 — float shadowMask = getShadowMask();
+- src\scene\terrainMaterial.ts:1000 — float shadowAmount = (1.0 - shadowMask) * opacity;
+- src\scene\terrainMaterial.ts:1014 — float clipInset = max(uOrthoPhotoEdgeClipInset, 0.0);
+- src\scene\terrainMaterial.ts:1015 — vec2 clippedMin = uOrthoPhotoBoundsMin + vec2(clipInset);
+- src\scene\terrainMaterial.ts:1016 — vec2 clippedMax = uOrthoPhotoBoundsMax - vec2(clipInset);
+- src\scene\terrainMaterial.ts:1017 — if (clippedMax.x <= clippedMin.x || clippedMax.y <= clippedMin.y) {
+- src\scene\terrainMaterial.ts:1021 — worldXY.x < clippedMin.x || worldXY.x > clippedMax.x ||
+- src\scene\terrainMaterial.ts:1022 — worldXY.y < clippedMin.y || worldXY.y > clippedMax.y
+- src\scene\terrainMaterial.ts:1028 — clippedMin,
+- src\scene\terrainMaterial.ts:1029 — clippedMax,
+- src\scene\terrainMaterial.ts:1086 — alpha = min(alpha, clamp(uSceneSectionPlaneOutsideOpacity[i], 0.0, 1.0));
+- src\scene\terrainMaterial.ts:1098 — alpha = min(alpha, clamp(uSceneSectionFrameOutsideOpacity[i], 0.0, 1.0));
+- src\scene\terrainMaterial.ts:1112 — alpha = min(alpha, clamp(uSceneSectionTargetPlaneOutsideOpacity[i], 0.0, 1.0));
+- src\scene\terrainMaterial.ts:1124 — alpha = min(alpha, clamp(uSceneSectionTargetFrameOutsideOpacity[i], 0.0, 1.0));
+- src\scene\terrainMaterial.ts:1131 — if (uPublicClipEnabled > 0.5) {
+- src\scene\terrainMaterial.ts:1132 — vec3 rel = vWorldPos - uPublicClipCenter;
+- src\scene\terrainMaterial.ts:1134 — dot(rel.xy, vec2(uPublicClipCosSin.x, uPublicClipCosSin.y)),
+- src\scene\terrainMaterial.ts:1135 — dot(rel.xy, vec2(-uPublicClipCosSin.y, uPublicClipCosSin.x))
+- src\scene\terrainMaterial.ts:1138 — if (abs(localPos.z) > uPublicClipHalfSize.z) {
+- src\scene\terrainMaterial.ts:1141 — if (uPublicClipShape > 0.5) {
+- src\scene\terrainMaterial.ts:1142 — float radius = min(uPublicClipHalfSize.x, uPublicClipHalfSize.y);
+- src\scene\terrainMaterial.ts:1148 — abs(localPos.x) > uPublicClipHalfSize.x ||
+- src\scene\terrainMaterial.ts:1149 — abs(localPos.y) > uPublicClipHalfSize.y
+- src\scene\terrainMaterial.ts:1252 — uOrthoPhotoOutsideOpacity > 0.001
+- src\scene\terrainMaterial.ts:1255 — uOrthoPhotoOutsideOpacity,
+- src\scene\terrainMaterial.ts:1328 — // lake mask is set. Lakes are NOT separate meshes; they're
+- src\scene\terrainMaterial.ts:1329 — // terrain pixels with a different color. Mask UV maps the
+- src\scene\terrainMaterial.ts:1330 — // pixel's scene XY into the mask texture's bounds. Hillshade
+- src\scene\terrainMaterial.ts:1338 — float lakeMaskAlpha = texture2D(uLakeMask, lakeUv).a;
+- src\scene\terrainMaterial.ts:1345 — lakeMaskAlpha * uLakeOpacity
+- src\scene\terrainMaterial.ts:1360 — float a = texture2D(uTarget0Mask, t0Uv).a;
+- src\scene\terrainMaterial.ts:1369 — float a = texture2D(uTarget1Mask, t1Uv).a;
+- src\scene\terrainMaterial.ts:1384 — vec4 g = texture2D(uGeologyMask, gUv);
+- src\scene\terrainMaterial.ts:1400 — float a = texture2D(uClaimMask, cUv).a;
+- src\scene\terrainMaterial.ts:1424 — float lakeMaskAlpha = texture2D(uLakeMask, lakeUv).a;
+- src\scene\terrainMaterial.ts:1429 — surface = mix(surface, lakeShaded, lakeMaskAlpha * uLakeOpacity);
+- src\scene\terrainMaterial.ts:1437 — float a = texture2D(uTarget0Mask, t0Uv).a;
+- src\scene\terrainMaterial.ts:1449 — float a = texture2D(uTarget1Mask, t1Uv).a;
+- src\scene\terrainMaterial.ts:1461 — vec4 g = texture2D(uGeologyMask, gUv);
+- src\scene\terrainMaterial.ts:1473 — float a = texture2D(uClaimMask, cUv).a;
+- src\scene\terrainMaterial.ts:1485 — vec4 f = texture2D(uForestMask, fUv);
+- src\scene\terrainMaterial.ts:1486 — float forestMaskRaw = max(f.r, f.g);
+- src\scene\terrainMaterial.ts:1487 — float forestMask = step(uForestEdgeThreshold, forestMaskRaw);
+- src\scene\terrainMaterial.ts:1489 — forestMask = smoothstep(
+- src\scene\terrainMaterial.ts:1492 — forestMaskRaw
+- src\scene\terrainMaterial.ts:1499 — surface = mix(surface, forestColor, forestMask * forestOpacity);
+- src\scene\terrainMaterial.ts:1684 — if (typeof p.orthoPhotoEdgeClipInsetM === "number") {
+- src\scene\terrainMaterial.ts:1685 — uniforms.uOrthoPhotoEdgeClipInset.value = Math.max(
+- src\scene\terrainMaterial.ts:1686 — p.orthoPhotoEdgeClipInsetM,
+- src\scene\terrainMaterial.ts:1734 — if (typeof p.orthoPhotoOutsideOpacity === "number") {
+- src\scene\terrainMaterial.ts:1735 — uniforms.uOrthoPhotoOutsideOpacity.value = THREE.MathUtils.clamp(
+- src\scene\terrainMaterial.ts:1736 — p.orthoPhotoOutsideOpacity,
+- src\scene\terrainMaterial.ts:1844 — setLakeMask(texture, boundsMin, boundsMax) {
+- src\scene\terrainMaterial.ts:1845 — uniforms.uLakeMask.value = texture;
+- src\scene\terrainMaterial.ts:1862 — setTargetMask(slot, texture, boundsMin, boundsMax) {
+- src\scene\terrainMaterial.ts:1864 — const maskU =
+- src\scene\terrainMaterial.ts:1865 — slotIdx === 0 ? uniforms.uTarget0Mask : uniforms.uTarget1Mask;
+- src\scene\terrainMaterial.ts:1870 — maskU.value = texture;
+- src\scene\terrainMaterial.ts:1903 — setClaimMask(texture, boundsMin, boundsMax) {
+- src\scene\terrainMaterial.ts:1904 — uniforms.uClaimMask.value = texture;
+- src\scene\terrainMaterial.ts:1921 — setGeologyMask(texture, boundsMin, boundsMax) {
+- src\scene\terrainMaterial.ts:1922 — uniforms.uGeologyMask.value = texture;
+- src\scene\terrainMaterial.ts:1936 — setForestMask(texture, boundsMin, boundsMax) {
+- src\scene\terrainMaterial.ts:1937 — uniforms.uForestMask.value = texture;
+- src\scene\terrainMaterial.ts:1970 — setPublicClip(enabled, shape, center, halfSize, rotationZRad) {
+- src\scene\terrainMaterial.ts:1971 — uniforms.uPublicClipEnabled.value = enabled ? 1 : 0;
+- src\scene\terrainMaterial.ts:1972 — uniforms.uPublicClipShape.value = shape === "circle" ? 1 : 0;
+- src\scene\terrainMaterial.ts:1973 — uniforms.uPublicClipCenter.value.copy(center);
+- src\scene\terrainMaterial.ts:1974 — uniforms.uPublicClipHalfSize.value.copy(halfSize);
+- src\scene\terrainMaterial.ts:1975 — uniforms.uPublicClipCosSin.value.set(
+- src\scene\environment\applyEnvironment.ts:43 — function aspectRatioForMask(
+- src\scene\environment\applyEnvironment.ts:44 — mask: NonNullable<SceneProperties["compositionGuides"]>["aspectMask"],
+- src\scene\environment\applyEnvironment.ts:46 — switch (mask) {
+- src\scene\environment\applyEnvironment.ts:517 — ? aspectRatioForMask(guides.aspectMask)
+- src\scene\isoOverlays\sectionIsoOverlay.ts:53 — maskedTriangleCount: number;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:88 — hardMaskValues?: Float32Array | number[];
+- src\scene\isoOverlays\sectionIsoOverlay.ts:95 — skipSceneSectionClipping?: boolean;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:295 — function sectionIsoTriangleMasked(
+- src\scene\isoOverlays\sectionIsoOverlay.ts:325 — if (sectionIsoTriangleMasked(alphaValues, ia, ib, ic)) continue;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:931 — if (sectionIsoTriangleMasked(options.hardMaskValues, ia, ib, ic)) {
+- src\scene\isoOverlays\sectionIsoOverlay.ts:933 — debug.maskedTriangleCount += 1;
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1255 — options.hardMaskValues && options.hardMaskValues.length === position.count
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1256 — ? options.hardMaskValues
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1276 — if (options.skipSceneSectionClipping) {
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1328 — if (options.skipSceneSectionClipping) {
+- src\scene\isoOverlays\sectionIsoOverlay.ts:1398 — if (options.skipSceneSectionClipping) {
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:171 — maskedTriangleCount: 0,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:243 — target.lineGeometryDebug.maskedTriangleCount +=
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:244 — source.lineGeometryDebug.maskedTriangleCount;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:663 — maskData?: Uint8Array;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:676 — const maskData = mesh.userData.scalarVolumeMaskData as Uint8Array | undefined;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:682 — maskData,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:695 — maskVisible: boolean;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:697 — ): { value: number; alpha: number; hardMask: number } {
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:700 — return { value: options.sourceMin, alpha: 0, hardMask: 0 };
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:702 — const { min, max, dimensions, data, maskData } = source;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:705 — return { value: options.sourceMin, alpha: 0, hardMask: 0 };
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:714 — const mask =
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:715 — options.maskVisible && maskData
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:716 — ? host.sampleScalarVolumeByte(maskData, dimensions, u, v, w) / 255
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:721 — mask > 0.01
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:722 — ? mask
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:724 — return { value, alpha, hardMask: 1 };
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:750 — maskVisible: boolean;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:757 — hardMaskValues: Float32Array;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:770 — const maskData = mesh.userData.scalarVolumeMaskData as
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:786 — const hardMaskValues = new Float32Array(grid * grid);
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:853 — const mask =
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:854 — insideVolume && options.maskVisible && maskData
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:855 — ? this.sampleScalarVolumeByte(maskData, dimensions, u, v, w) / 255
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:860 — hardMaskValues[vertexIndex] = columnVisible && insideVolume ? 1 : 0;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:864 — mask > 0.01
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:865 — ? mask
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:921 — return { mesh: cut, values, alphaValues, hardMaskValues, debug };
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1113 — skipSceneSectionClipping: true,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1135 — maskVisible: style.scalarVolumeMaskVisible !== false,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1153 — hardMaskValues: cut.hardMaskValues,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1263 — hardMaskValues: Float32Array;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1289 — const hardMaskValues = new Float32Array(grid * grid);
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1349 — hardMaskValues[vertexIndex] = columnVisible && insideVolume ? 1 : 0;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1403 — return { mesh: cut, values, alphaValues, hardMaskValues };
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1424 — maskVisible: boolean;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1430 — hardMaskValues: Float32Array;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1512 — const hardMaskValues = new Float32Array(values.length);
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1520 — maskVisible: options.maskVisible,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1525 — hardMaskValues[i] =
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1526 — sample.hardMask > 0 && sectionAlpha > 0.01 ? 1 : 0;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1553 — return { mesh: helper, values, alphaValues, hardMaskValues };
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1669 — skipSceneSectionClipping: true,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1699 — hardMaskValues: cut.hardMaskValues,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1835 — skipSceneSectionClipping: true,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1842 — maskVisible: mtStyle.scalarVolumeMaskVisible !== false,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1874 — hardMaskValues: helper.hardMaskValues,
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1976 — cut.hardMaskValues[i] = cut.hardMaskValues[i] * sample.hardMask;
+- src\scene\isoOverlays\volumeCutIsoOverlays.ts:1982 — hardMaskValues: cut.hardMaskValues,
+- src\scene\section\sceneSectionController.ts:35 — SceneSectionMaskTransition,
+- src\scene\section\sceneSectionController.ts:39 — SceneSectionStyleMaskTransition,
+- src\scene\section\sceneSectionController.ts:105 — const SCENE_SECTION_CLIP_EPSILON_M = 0.001;
+- src\scene\section\sceneSectionController.ts:740 — const configured = Array.isArray(style.sceneSectionTargetLayerIds)
+- src\scene\section\sceneSectionController.ts:741 — ? style.sceneSectionTargetLayerIds.filter((id) => typeof id === "string")
+- src\scene\section\sceneSectionController.ts:884 — function sceneSectionAxisOutsideOpacity(
+- src\scene\section\sceneSectionController.ts:891 — const value = entry?.outsideOpacity;
+- src\scene\section\sceneSectionController.ts:1045 — function sceneSectionFrameOutsideOpacity(
+- src\scene\section\sceneSectionController.ts:1054 — ?.outsideOpacity;
+- src\scene\section\sceneSectionController.ts:1058 — return sceneSectionAxisOutsideOpacity(style, axis, objectId, legacyTargeted);
+- src\scene\section\sceneSectionController.ts:1062 — Record<string, { outsideOpacity?: number }>;
+- src\scene\section\sceneSectionController.ts:1064 — function sceneSectionVisibilityEntryOutsideOpacity(
+- src\scene\section\sceneSectionController.ts:1069 — const value = entries?.[objectId]?.outsideOpacity;
+- src\scene\section\sceneSectionController.ts:1087 — const fromOutsideOpacity = sceneSectionVisibilityEntryOutsideOpacity(
+- src\scene\section\sceneSectionController.ts:1092 — const toOutsideOpacity = sceneSectionVisibilityEntryOutsideOpacity(
+- src\scene\section\sceneSectionController.ts:1098 — outsideOpacity:
+- src\scene\section\sceneSectionController.ts:1099 — fromOutsideOpacity + (toOutsideOpacity - fromOutsideOpacity) * t,
+- src\scene\section\sceneSectionController.ts:1161 — const outsideOpacityByAxis = {
+- src\scene\section\sceneSectionController.ts:1162 — x: sceneSectionAxisOutsideOpacity(style, "x", objectId, legacyTargeted),
+- src\scene\section\sceneSectionController.ts:1163 — y: sceneSectionAxisOutsideOpacity(style, "y", objectId, legacyTargeted),
+- src\scene\section\sceneSectionController.ts:1164 — z: sceneSectionAxisOutsideOpacity(style, "z", objectId, legacyTargeted),
+- src\scene\section\sceneSectionController.ts:1166 — const outsideOpacityByFrameId: Record<string, number> = {};
+- src\scene\section\sceneSectionController.ts:1168 — const value = sceneSectionFrameOutsideOpacity(
+- src\scene\section\sceneSectionController.ts:1175 — outsideOpacityByFrameId[entry.id] = value;
+- src\scene\section\sceneSectionController.ts:1176 — outsideOpacityByAxis[entry.axis] = Math.min(
+- src\scene\section\sceneSectionController.ts:1177 — outsideOpacityByAxis[entry.axis],
+- src\scene\section\sceneSectionController.ts:1182 — ...Object.values(outsideOpacityByAxis),
+- src\scene\section\sceneSectionController.ts:1183 — ...Object.values(outsideOpacityByFrameId),
+- src\scene\section\sceneSectionController.ts:1193 — outsideOpacityByAxis,
+- src\scene\section\sceneSectionController.ts:1194 — outsideOpacityByFrameId,
+- src\scene\section\sceneSectionController.ts:1419 — export function sceneSectionClippingPlanes(this: any,
+- src\scene\section\sceneSectionController.ts:1422 — const clippingPlanes: THREE.Plane[] = [];
+- src\scene\section\sceneSectionController.ts:1429 — clippingPlanes.push(new THREE.Plane(normal, constant));
+- src\scene\section\sceneSectionController.ts:1431 — return clippingPlanes;
+- src\scene\section\sceneSectionController.ts:1453 — function sceneSectionPointClippedByPlanes(
+- src\scene\section\sceneSectionController.ts:1458 — (plane) => plane.distanceToPoint(point) < -SCENE_SECTION_CLIP_EPSILON_M,
+- src\scene\section\sceneSectionController.ts:1465 — clippingPlanes: THREE.Plane[],
+- src\scene\section\sceneSectionController.ts:1466 — frameClippingPlanes: THREE.Plane[],
+- src\scene\section\sceneSectionController.ts:1478 — ? [...clippingPlanes, ...frameClippingPlanes]
+- src\scene\section\sceneSectionController.ts:1486 — const hidden = sceneSectionPointClippedByPlanes(anchorPoint, activePlanes);
+- src\scene\section\sceneSectionController.ts:1500 — function clipSectionSurfaceTraceSegmentToFrame(
+- src\scene\section\sceneSectionController.ts:1508 — const clip = (p: number, q: number): boolean => {
+- src\scene\section\sceneSectionController.ts:1524 — if (!clip(-deltaA, startA - frame.minAM)) return null;
+- src\scene\section\sceneSectionController.ts:1525 — if (!clip(deltaA, frame.maxAM - startA)) return null;
+- src\scene\section\sceneSectionController.ts:1526 — if (!clip(-deltaB, startB - frame.minBM)) return null;
+- src\scene\section\sceneSectionController.ts:1527 — if (!clip(deltaB, frame.maxBM - startB)) return null;
+- src\scene\section\sceneSectionController.ts:1529 — const clippedStart = start.clone().addScaledVector(d, t0);
+- src\scene\section\sceneSectionController.ts:1530 — const clippedEnd = start.clone().addScaledVector(d, t1);
+- src\scene\section\sceneSectionController.ts:1532 — clippedStart.distanceToSquared(clippedEnd) <
+- src\scene\section\sceneSectionController.ts:1538 — return { start: clippedStart, end: clippedEnd };
+- src\scene\section\sceneSectionController.ts:1574 — const clippedToFirst = clipSectionSurfaceTraceSegmentToFrame(
+- src\scene\section\sceneSectionController.ts:1579 — if (!clippedToFirst) return null;
+- src\scene\section\sceneSectionController.ts:1580 — const clippedToBoth = clipSectionSurfaceTraceSegmentToFrame(
+- src\scene\section\sceneSectionController.ts:1581 — clippedToFirst.start,
+- src\scene\section\sceneSectionController.ts:1582 — clippedToFirst.end,
+- src\scene\section\sceneSectionController.ts:1585 — if (!clippedToBoth) return null;
+- src\scene\section\sceneSectionController.ts:1587 — clippedToBoth.start.distanceToSquared(clippedToBoth.end) <
+- src\scene\section\sceneSectionController.ts:1594 — ...clippedToBoth,
+- src\scene\section\sceneSectionController.ts:1837 — export function sceneSectionFrameClippingPlanes(this: any,
+- src\scene\section\sceneSectionController.ts:1905 — maskTransition?: SceneSectionMaskTransition | null,
+- src\scene\section\sceneSectionController.ts:1912 — if (maskTransition) {
+- src\scene\section\sceneSectionController.ts:1913 — planes = maskTransition.source.planes;
+- src\scene\section\sceneSectionController.ts:1914 — visibility = maskTransition.source.visibility;
+- src\scene\section\sceneSectionController.ts:1915 — frames = maskTransition.source.frames;
+- src\scene\section\sceneSectionController.ts:1921 — ensure<number>("uSceneSectionTransitionEnabled", 0).value = maskTransition
+- src\scene\section\sceneSectionController.ts:1925 — maskTransition?.progress ?? 0,
+- src\scene\section\sceneSectionController.ts:1968 — "uSceneSectionPlaneOutsideOpacity",
+- src\scene\section\sceneSectionController.ts:1975 — visibility.outsideOpacityByFrameId[plane.frameId] ??
+- src\scene\section\sceneSectionController.ts:1976 — visibility.outsideOpacityByAxis[plane.axis] ??
+- src\scene\section\sceneSectionController.ts:2024 — "uSceneSectionFrameOutsideOpacity",
+- src\scene\section\sceneSectionController.ts:2031 — visibility.outsideOpacityByFrameId[frame.frameId] ??
+- src\scene\section\sceneSectionController.ts:2032 — visibility.outsideOpacityByAxis[frame.axis] ??
+- src\scene\section\sceneSectionController.ts:2037 — const targetVisibility = maskTransition?.target.visibility ?? visibility;
+- src\scene\section\sceneSectionController.ts:2038 — const targetPlanes = maskTransition?.target.planes ?? [];
+- src\scene\section\sceneSectionController.ts:2040 — targetVisibility.active && maskTransition
+- src\scene\section\sceneSectionController.ts:2041 — ? maskTransition.target.frames.slice(0, SCENE_SECTION_MAX_FRAME_COUNT)
+- src\scene\section\sceneSectionController.ts:2044 — maskTransition && targetVisibility.active
+- src\scene\section\sceneSectionController.ts:2060 — "uSceneSectionTargetPlaneOutsideOpacity",
+- src\scene\section\sceneSectionController.ts:2073 — targetVisibility.outsideOpacityByFrameId[plane.frameId] ??
+- src\scene\section\sceneSectionController.ts:2074 — targetVisibility.outsideOpacityByAxis[plane.axis] ??
+- src\scene\section\sceneSectionController.ts:2094 — "uSceneSectionTargetFrameOutsideOpacity",
+- src\scene\section\sceneSectionController.ts:2122 — targetVisibility.outsideOpacityByFrameId[frame.frameId] ??
+- src\scene\section\sceneSectionController.ts:2123 — targetVisibility.outsideOpacityByAxis[frame.axis] ??
+- src\scene\section\sceneSectionController.ts:2147 — clippingPlanes: THREE.Plane[],
+- src\scene\section\sceneSectionController.ts:2149 — frameClippingPlanes: THREE.Plane[],
+- src\scene\section\sceneSectionController.ts:2150 — maskTransition?: SceneSectionMaskTransition | null,
+- src\scene\section\sceneSectionController.ts:2163 — (frameId) => (visibility.outsideOpacityByFrameId[frameId] ?? 1) < 0.999,
+- src\scene\section\sceneSectionController.ts:2166 — (axis) => (visibility.outsideOpacityByAxis[axis] ?? 1) < 0.999,
+- src\scene\section\sceneSectionController.ts:2169 — !!maskTransition &&
+- src\scene\section\sceneSectionController.ts:2170 — (maskTransition.source.visibility.active ||
+- src\scene\section\sceneSectionController.ts:2171 — maskTransition.target.visibility.active) &&
+- src\scene\section\sceneSectionController.ts:2172 — (maskTransition.source.planes.length > 0 ||
+- src\scene\section\sceneSectionController.ts:2173 — maskTransition.source.frames.length > 0 ||
+- src\scene\section\sceneSectionController.ts:2174 — maskTransition.target.planes.length > 0 ||
+- src\scene\section\sceneSectionController.ts:2175 — maskTransition.target.frames.length > 0) &&
+- src\scene\section\sceneSectionController.ts:2176 — (Object.values(maskTransition.source.visibility.outsideOpacityByAxis).some(
+- src\scene\section\sceneSectionController.ts:2180 — maskTransition.source.visibility.outsideOpacityByFrameId,
+- src\scene\section\sceneSectionController.ts:2182 — Object.values(maskTransition.target.visibility.outsideOpacityByAxis).some(
+- src\scene\section\sceneSectionController.ts:2186 — maskTransition.target.visibility.outsideOpacityByFrameId,
+- src\scene\section\sceneSectionController.ts:2192 — (maskTransition ||
+- src\scene\section\sceneSectionController.ts:2195 — (visibility.outsideOpacityByFrameId[frameId] ?? 1) > 0.001,
+- src\scene\section\sceneSectionController.ts:2198 — (axis) => (visibility.outsideOpacityByAxis[axis] ?? 1) > 0.001,
+- src\scene\section\sceneSectionController.ts:2209 — if (maskTransition) {
+- src\scene\section\sceneSectionController.ts:2210 — this.setSceneSectionUniforms(material, planes, visibility, frames, maskTransition);
+- src\scene\section\sceneSectionController.ts:2218 — this.setSceneSectionUniforms(material, planes, visibility, frames, maskTransition);
+- src\scene\section\sceneSectionController.ts:2225 — maskTransition,
+- src\scene\section\sceneSectionController.ts:2231 — const publicSurfaceClipPlanes = Array.isArray(
+- src\scene\section\sceneSectionController.ts:2232 — material.userData?.publicSurfaceClipPlanes,
+- src\scene\section\sceneSectionController.ts:2234 — ? (material.userData.publicSurfaceClipPlanes as THREE.Plane[])
+- src\scene\section\sceneSectionController.ts:2243 — maskTransition,
+- src\scene\section\sceneSectionController.ts:2245 — material.clippingPlanes =
+- src\scene\section\sceneSectionController.ts:2246 — publicSurfaceClipPlanes.length > 0 ? publicSurfaceClipPlanes : null;
+- src\scene\section\sceneSectionController.ts:2247 — material.clipIntersection = false;
+- src\scene\section\sceneSectionController.ts:2258 — maskTransition,
+- src\scene\section\sceneSectionController.ts:2262 — ...publicSurfaceClipPlanes,
+- src\scene\section\sceneSectionController.ts:2263 — ...(active ? clippingPlanes : []),
+- src\scene\section\sceneSectionController.ts:2264 — ...(active ? frameClippingPlanes : []),
+- src\scene\section\sceneSectionController.ts:2266 — material.clippingPlanes = combinedPlanes.length > 0 ? combinedPlanes : null;
+- src\scene\section\sceneSectionController.ts:2267 — material.clipIntersection = false;
+- src\scene\section\sceneSectionController.ts:2498 — export function sceneSectionMaskTransitionForTween(
+- src\scene\section\sceneSectionController.ts:2502 — ): SceneSectionStyleMaskTransition {
+- src\scene\section\sceneSectionController.ts:2860 — const clippedMaxZ = Math.min(maxZ, groundZ);
+- src\scene\section\sceneSectionController.ts:2861 — if (clippedMaxZ - minZ < SCENE_SECTION_SURFACE_TRACE_MIN_SEGMENT_M) {
+- src\scene\section\sceneSectionController.ts:2867 — new THREE.Vector3(x, y, clippedMaxZ),
+- src\scene\section\sceneSectionController.ts:3402 — function resolveSceneSectionMaskContext(this: any, style: EditableStyle) {
+- src\scene\section\sceneSectionController.ts:3433 — const clippingPlanes = this.sceneSectionClippingPlanes(planes);
+- src\scene\section\sceneSectionController.ts:3447 — this.sceneSectionClippingActive =
+- src\scene\section\sceneSectionController.ts:3449 — this.updateRendererLocalClipping();
+- src\scene\section\sceneSectionController.ts:3454 — const allFrameClippingPlanes = sectionFrames.flatMap(
+- src\scene\section\sceneSectionController.ts:3456 — this.sceneSectionFrameClippingPlanes(frame),
+- src\scene\section\sceneSectionController.ts:3458 — const sourceMaskContext = options?.maskTransition
+- src\scene\section\sceneSectionController.ts:3459 — ? resolveSceneSectionMaskContext.call(this, options.maskTransition.fromStyle)
+- src\scene\section\sceneSectionController.ts:3461 — const targetMaskContext = options?.maskTransition
+- src\scene\section\sceneSectionController.ts:3462 — ? resolveSceneSectionMaskContext.call(this, options.maskTransition.toStyle)
+- src\scene\section\sceneSectionController.ts:3476 — const frameClippingPlanes = visibility.active
+- src\scene\section\sceneSectionController.ts:3477 — ? allFrameClippingPlanes
+- src\scene\section\sceneSectionController.ts:3481 — (visibility.outsideOpacityByFrameId[plane.frameId] ??
+- src\scene\section\sceneSectionController.ts:3482 — visibility.outsideOpacityByAxis[plane.axis] ??
+- src\scene\section\sceneSectionController.ts:3485 — const hardPlaneClippingPlanes = this.sceneSectionClippingPlanes(hardPlanes);
+- src\scene\section\sceneSectionController.ts:3486 — const hardFrameClippingPlanes = sectionFrames
+- src\scene\section\sceneSectionController.ts:3489 — (visibility.outsideOpacityByFrameId[frame.frameId] ??
+- src\scene\section\sceneSectionController.ts:3490 — visibility.outsideOpacityByAxis[frame.axis] ??
+- src\scene\section\sceneSectionController.ts:3494 — this.sceneSectionFrameClippingPlanes(frame),
+- src\scene\section\sceneSectionController.ts:3496 — const materialMaskTransition =
+- src\scene\section\sceneSectionController.ts:3497 — sourceMaskContext && targetMaskContext && options?.maskTransition
+- src\scene\section\sceneSectionController.ts:3499 — progress: options.maskTransition.progress,
+- src\scene\section\sceneSectionController.ts:3501 — planes: sourceMaskContext.planes,
+- src\scene\section\sceneSectionController.ts:3502 — frames: sourceMaskContext.frames,
+- src\scene\section\sceneSectionController.ts:3506 — sourceMaskContext.style,
+- src\scene\section\sceneSectionController.ts:3507 — sourceMaskContext.layerTargets,
+- src\scene\section\sceneSectionController.ts:3508 — sourceMaskContext.productTargets,
+- src\scene\section\sceneSectionController.ts:3512 — planes: targetMaskContext.planes,
+- src\scene\section\sceneSectionController.ts:3513 — frames: targetMaskContext.frames,
+- src\scene\section\sceneSectionController.ts:3517 — targetMaskContext.style,
+- src\scene\section\sceneSectionController.ts:3518 — targetMaskContext.layerTargets,
+- src\scene\section\sceneSectionController.ts:3519 — targetMaskContext.productTargets,
+- src\scene\section\sceneSectionController.ts:3522 — } satisfies SceneSectionMaskTransition
+- src\scene\section\sceneSectionController.ts:3527 — materialMaskTransition ? [] : hardPlaneClippingPlanes,
+- src\scene\section\sceneSectionController.ts:3528 — materialMaskTransition ? [] : hardFrameClippingPlanes,
+- src\scene\section\sceneSectionController.ts:3542 — clippingPlanes,
+- src\scene\section\sceneSectionController.ts:3544 — frameClippingPlanes,
+- src\scene\section\sceneSectionController.ts:3545 — materialMaskTransition,
+- src\scene\shaders\mtSurfaceMaskShader.ts:3 — interface MtSurfaceMaskShader {
+- src\scene\shaders\mtSurfaceMaskShader.ts:9 — export function applyMtSurfaceMaskPointMaterial(
+- src\scene\shaders\mtSurfaceMaskShader.ts:18 — if (material.userData.mtSurfaceMaskPatched === true) return;
+- src\scene\shaders\mtSurfaceMaskShader.ts:24 — const patchedShader = shader as MtSurfaceMaskShader;
+- src\scene\shaders\mtSurfaceMaskShader.ts:25 — if (!patchedShader.vertexShader.includes("surfaceMaskAlpha")) {
+- src\scene\shaders\mtSurfaceMaskShader.ts:29 — "attribute float surfaceMaskAlpha;",
+- src\scene\shaders\mtSurfaceMaskShader.ts:30 — "varying float vMtSurfaceMaskAlpha;",
+- src\scene\shaders\mtSurfaceMaskShader.ts:32 — "  vMtSurfaceMaskAlpha = clamp(surfaceMaskAlpha, 0.0, 1.0);",
+- src\scene\shaders\mtSurfaceMaskShader.ts:36 — if (!patchedShader.fragmentShader.includes("vMtSurfaceMaskAlpha")) {
+- src\scene\shaders\mtSurfaceMaskShader.ts:39 — ["varying float vMtSurfaceMaskAlpha;", "void main() {"].join("\n"),
+- src\scene\shaders\mtSurfaceMaskShader.ts:42 — "diffuseColor.a *= clamp(vMtSurfaceMaskAlpha, 0.0, 1.0);",
+- src\scene\shaders\mtSurfaceMaskShader.ts:57 — material.userData.mtSurfaceMaskShader = patchedShader;
+- src\scene\shaders\mtSurfaceMaskShader.ts:60 — `${previousKey()}|geosee-mt-surface-mask-v1`;
+- src\scene\shaders\mtSurfaceMaskShader.ts:61 — material.userData.mtSurfaceMaskPatched = true;
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:5 — SceneSectionMaskTransition,
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:27 — maskTransition?: SceneSectionMaskTransition | null,
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:34 — const sourcePlanes = maskTransition?.source.planes ?? planes;
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:35 — const sourceFrames = maskTransition?.source.frames ?? frames;
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:36 — const sourceVisibility = maskTransition?.source.visibility ?? visibility;
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:37 — const sourceEnabled = maskTransition
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:38 — ? maskTransition.source.visibility.active
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:40 — ensure<number>("uSceneSectionTransitionEnabled", 0).value = maskTransition
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:44 — maskTransition?.progress ?? 0,
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:79 — sourceVisibility.outsideOpacityByFrameId[plane.frameId] ??
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:80 — sourceVisibility.outsideOpacityByAxis[plane.axis] ??
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:141 — sourceVisibility.outsideOpacityByFrameId[frame.frameId] ??
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:142 — sourceVisibility.outsideOpacityByAxis[frame.axis] ??
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:148 — const targetVisibility = maskTransition?.target.visibility ?? visibility;
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:149 — const targetPlanes = maskTransition?.target.planes ?? [];
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:151 — maskTransition && targetVisibility.active
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:152 — ? maskTransition.target.frames.slice(0, SCENE_SECTION_OBJECT_VISIBILITY_SLOT_COUNT)
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:155 — maskTransition && targetVisibility.active
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:187 — targetVisibility.outsideOpacityByFrameId[plane.frameId] ??
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:188 — targetVisibility.outsideOpacityByAxis[plane.axis] ??
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:245 — targetVisibility.outsideOpacityByFrameId[frame.frameId] ??
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:246 — targetVisibility.outsideOpacityByAxis[frame.axis] ??
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:259 — maskTransition?: SceneSectionMaskTransition | null,
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:265 — material.userData.sceneSectionObjectVisibilityMaskTransition =
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:266 — maskTransition ?? null;
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:283 — outsideOpacityByAxis: { x: 1, y: 1, z: 1 },
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:284 — outsideOpacityByFrameId: {},
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:289 — .sceneSectionObjectVisibilityMaskTransition as SceneSectionMaskTransition | null) ??
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:418 — maskTransition,
+- src\scene\shaders\sceneSectionObjectVisibilityShader.ts:421 — if ((enabled && visibility.hasSoftOpacity) || maskTransition) {
+- src\scene\shaders\workingAreaFocusShader.ts:2 — import { WORKING_AREA_FOCUS_DEFAULT_BOUNDS } from "../../projectModules/utahForge/workingAreaFocus";
+- src\scene\shaders\workingAreaFocusShader.ts:4 — interface WorkingAreaFocusShader {
+- src\scene\shaders\workingAreaFocusShader.ts:14 — export function setWorkingAreaFocusShaderUniforms(
+- src\scene\shaders\workingAreaFocusShader.ts:19 — outsideOpacity: number,
+- src\scene\shaders\workingAreaFocusShader.ts:26 — ensure<number>("uWorkingAreaFocusEnabled", 0).value = enabled ? 1 : 0;
+- src\scene\shaders\workingAreaFocusShader.ts:28 — "uWorkingAreaFocusBoundsMin",
+- src\scene\shaders\workingAreaFocusShader.ts:32 — "uWorkingAreaFocusBoundsMax",
+- src\scene\shaders\workingAreaFocusShader.ts:35 — ensure<number>("uWorkingAreaFocusOutsideOpacity", 1).value =
+- src\scene\shaders\workingAreaFocusShader.ts:36 — clamp01(outsideOpacity);
+- src\scene\shaders\workingAreaFocusShader.ts:39 — export function applyWorkingAreaFocusBuiltInMaterial(
+- src\scene\shaders\workingAreaFocusShader.ts:44 — outsideOpacity: number,
+- src\scene\shaders\workingAreaFocusShader.ts:46 — material.userData.workingAreaFocusEnabled = enabled;
+- src\scene\shaders\workingAreaFocusShader.ts:47 — material.userData.workingAreaFocusBoundsMin = boundsMin.clone();
+- src\scene\shaders\workingAreaFocusShader.ts:48 — material.userData.workingAreaFocusBoundsMax = boundsMax.clone();
+- src\scene\shaders\workingAreaFocusShader.ts:49 — material.userData.workingAreaFocusOutsideOpacity = clamp01(outsideOpacity);
+- src\scene\shaders\workingAreaFocusShader.ts:51 — if (material.userData.workingAreaFocusPatched !== true) {
+- src\scene\shaders\workingAreaFocusShader.ts:56 — const patchedShader = shader as WorkingAreaFocusShader;
+- src\scene\shaders\workingAreaFocusShader.ts:57 — setWorkingAreaFocusShaderUniforms(
+- src\scene\shaders\workingAreaFocusShader.ts:59 — material.userData.workingAreaFocusEnabled === true,
+- src\scene\shaders\workingAreaFocusShader.ts:60 — (material.userData.workingAreaFocusBoundsMin as THREE.Vector3) ??
+- src\scene\shaders\workingAreaFocusShader.ts:62 — (material.userData.workingAreaFocusBoundsMax as THREE.Vector3) ??
+- src\scene\shaders\workingAreaFocusShader.ts:64 — typeof material.userData.workingAreaFocusOutsideOpacity === "number"
+- src\scene\shaders\workingAreaFocusShader.ts:65 — ? material.userData.workingAreaFocusOutsideOpacity
+- src\scene\shaders\workingAreaFocusShader.ts:75 — "varying vec3 vWorkingAreaFocusWorldPosition;",
+- src\scene\shaders\workingAreaFocusShader.ts:77 — "  vWorkingAreaFocusWorldPosition = (modelMatrix * vec4(position, 1.0)).xyz;",
+- src\scene\shaders\workingAreaFocusShader.ts:83 — "uniform int uWorkingAreaFocusEnabled;",
+- src\scene\shaders\workingAreaFocusShader.ts:84 — "uniform vec3 uWorkingAreaFocusBoundsMin;",
+- src\scene\shaders\workingAreaFocusShader.ts:85 — "uniform vec3 uWorkingAreaFocusBoundsMax;",
+- src\scene\shaders\workingAreaFocusShader.ts:86 — "uniform float uWorkingAreaFocusOutsideOpacity;",
+- src\scene\shaders\workingAreaFocusShader.ts:87 — "varying vec3 vWorkingAreaFocusWorldPosition;",
+- src\scene\shaders\workingAreaFocusShader.ts:88 — "float workingAreaFocusAlpha(vec3 position) {",
+- src\scene\shaders\workingAreaFocusShader.ts:89 — "  if (uWorkingAreaFocusEnabled == 0) return 1.0;",
+- src\scene\shaders\workingAreaFocusShader.ts:90 — "  bool inside = all(greaterThanEqual(position, uWorkingAreaFocusBoundsMin)) && all(lessThanEqual(position, uWorkingAreaFocusBoundsMax));",
+- src\scene\shaders\workingAreaFocusShader.ts:91 — "  return inside ? 1.0 : clamp(uWorkingAreaFocusOutsideOpacity, 0.0, 1.0);",
+- src\scene\shaders\workingAreaFocusShader.ts:97 — "float workingAreaFocusLayerAlpha = workingAreaFocusAlpha(vWorkingAreaFocusWorldPosition);",
+- src\scene\shaders\workingAreaFocusShader.ts:98 — "diffuseColor.a *= workingAreaFocusLayerAlpha;",
+- src\scene\shaders\workingAreaFocusShader.ts:115 — material.userData.workingAreaFocusShader = patchedShader;
+- src\scene\shaders\workingAreaFocusShader.ts:118 — `${previousKey()}|geosee-working-area-focus-v1`;
+- src\scene\shaders\workingAreaFocusShader.ts:119 — material.userData.workingAreaFocusPatched = true;
+- src\scene\shaders\workingAreaFocusShader.ts:123 — const shader = material.userData.workingAreaFocusShader as
+- src\scene\shaders\workingAreaFocusShader.ts:124 — | WorkingAreaFocusShader
+- src\scene\shaders\workingAreaFocusShader.ts:127 — setWorkingAreaFocusShaderUniforms(
+- src\scene\shaders\workingAreaFocusShader.ts:132 — outsideOpacity,
+- src\scene\styles\applyLayerStyle.ts:24 — this.applyWorkingAreaFocusStyle(style);
+- src\scene\styles\applyLayerStyle.ts:149 — this.topoRuntime.applyPublicSurfaceClipStyle(
+- src\scene\styles\applyLayerStyle.ts:161 — this.applyMtSurfaceMaskStyle(
+- src\scene\styles\applyLayerStyle.ts:179 — this.applyMtSurfaceMaskStyle(id, style);
+- src\scene\styles\applyLayerStyle.ts:196 — this.reapplyWorkingAreaFocus();
+- src\scene\styles\mtResistivityStyles.ts:12 — import { applyMtSurfaceMaskPointMaterial } from "../shaders/mtSurfaceMaskShader";
+- src\scene\styles\mtResistivityStyles.ts:21 — const MT_SURFACE_MASK_DEFAULT_DEPTH_M = 25;
+- src\scene\styles\mtResistivityStyles.ts:22 — const MT_SURFACE_MASK_DEFAULT_FEATHER_M = 175;
+- src\scene\styles\mtResistivityStyles.ts:34 — export function applyMtSurfaceMaskStyleImpl(this: any, id: string, style: EditableStyle): void {
+- src\scene\styles\mtResistivityStyles.ts:38 — this.restoreMtSurfaceMaskMaterials(id);
+- src\scene\styles\mtResistivityStyles.ts:39 — const enabled = style.scalarSurfaceMaskEnabled !== false;
+- src\scene\styles\mtResistivityStyles.ts:42 — "scalarSurfaceMaskDepthM",
+- src\scene\styles\mtResistivityStyles.ts:43 — MT_SURFACE_MASK_DEFAULT_DEPTH_M,
+- src\scene\styles\mtResistivityStyles.ts:49 — "scalarSurfaceMaskFeatherM",
+- src\scene\styles\mtResistivityStyles.ts:50 — MT_SURFACE_MASK_DEFAULT_FEATHER_M,
+- src\scene\styles\mtResistivityStyles.ts:69 — const maskKey = [
+- src\scene\styles\mtResistivityStyles.ts:82 — this.updateMtSurfaceMaskForPoints(obj, {
+- src\scene\styles\mtResistivityStyles.ts:87 — maskKey,
+- src\scene\styles\mtResistivityStyles.ts:96 — export function updateMtSurfaceMaskForPointsImpl(this: any, points: THREE.Points, options: {
+- src\scene\styles\mtResistivityStyles.ts:101 — maskKey: string;
+- src\scene\styles\mtResistivityStyles.ts:114 — applyMtSurfaceMaskPointMaterial(mat);
+- src\scene\styles\mtResistivityStyles.ts:119 — geometry.userData.mtSurfaceMaskKey === options.maskKey &&
+- src\scene\styles\mtResistivityStyles.ts:120 — geometry.getAttribute("surfaceMaskAlpha")
+- src\scene\styles\mtResistivityStyles.ts:125 — let alphaAttribute = geometry.getAttribute("surfaceMaskAlpha");
+- src\scene\styles\mtResistivityStyles.ts:134 — geometry.setAttribute("surfaceMaskAlpha", alphaAttribute);
+- src\scene\styles\mtResistivityStyles.ts:172 — geometry.userData.mtSurfaceMaskKey = options.maskKey;
+- src\scene\styles\mtResistivityStyles.ts:175 — export function restoreMtSurfaceMaskMaterialsImpl(this: any, id: string): void {
+- src\scene\styles\scalarVolumeStyle.ts:78 — const maskVisible = style.scalarVolumeMaskVisible !== false ? 1 : 0;
+- src\scene\styles\scalarVolumeStyle.ts:146 — if (uniforms.uMaskVisible) uniforms.uMaskVisible.value = maskVisible;
+- src\scene\styles\scalarVolumeStyle.ts:160 — maskVisible,
+- src\scene\styles\seismicBrowserStyle.ts:355 — skipSceneSectionClipping: true,
+- src\scene\transitions\cinematicSceneTransitions.ts:606 — aspectMask: pickMid(
+- src\scene\transitions\cinematicSceneTransitions.ts:607 — from.compositionGuides?.aspectMask,
+- src\scene\transitions\cinematicSceneTransitions.ts:608 — to.compositionGuides?.aspectMask,
+- src\scene\transitions\layerTweenRuntime.ts:129 — const workingAreaFocusTweenActiveBefore = !!this.workingAreaFocusTween;
+- src\scene\transitions\layerTweenRuntime.ts:136 — !this.workingAreaFocusTween &&
+- src\scene\transitions\layerTweenRuntime.ts:144 — workingAreaMs: 0,
+- src\scene\transitions\layerTweenRuntime.ts:160 — workingAreaFocusTweenActiveBefore: false,
+- src\scene\transitions\layerTweenRuntime.ts:179 — : tween.maskMode === "dual-mask"
+- src\scene\transitions\layerTweenRuntime.ts:186 — const maskTransition =
+- src\scene\transitions\layerTweenRuntime.ts:187 — !done && tween.maskMode === "dual-mask"
+- src\scene\transitions\layerTweenRuntime.ts:188 — ? this.sceneSectionMaskTransitionForTween(tween, eased)
+- src\scene\transitions\layerTweenRuntime.ts:197 — maskTransition,
+- src\scene\transitions\layerTweenRuntime.ts:217 — if (this.workingAreaFocusTween) {
+- src\scene\transitions\layerTweenRuntime.ts:218 — const tween = this.workingAreaFocusTween;
+- src\scene\transitions\layerTweenRuntime.ts:223 — this.applyWorkingAreaFocusStyle(
+- src\scene\transitions\layerTweenRuntime.ts:226 — : this.interpolatedWorkingAreaFocusStyle(
+- src\scene\transitions\layerTweenRuntime.ts:232 — if (done) this.workingAreaFocusTween = null;
+- src\scene\transitions\layerTweenRuntime.ts:234 — const workingAreaMs = transitionDebugMs(performance.now() - stageStart);
+- src\scene\transitions\layerTweenRuntime.ts:317 — workingAreaMs,
+- src\scene\transitions\layerTweenRuntime.ts:333 — workingAreaFocusTweenActiveBefore,
+- src\scene\transitions\layerTweenRuntime.ts:342 — !this.workingAreaFocusTween
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:68 — "scalarVolumeMaskVisible",
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:107 — "workingAreaFocusOutsideOpacityByLayerId",
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:379 — this.workingAreaFocusTween = null;
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:648 — maskMode: sceneSectionDiscreteChanged ? "dual-mask" : "interpolated",
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:868 — if (this.sceneSectionStyleTween?.maskMode === "dual-mask") {
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:870 — maskTransition: this.sceneSectionMaskTransitionForTween(
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:882 — this.transitionWorkingAreaFocusForPage(
+- src\scene\transitions\transitionStyles.ts:22 — TOPO_MAP_PUBLIC_SURFACE_CLIP_STYLE_FIELDS,
+- src\scene\transitions\transitionStyles.ts:29 — const MT_SURFACE_MASK_DEFAULT_DEPTH_M = 25;
+- src\scene\transitions\transitionStyles.ts:30 — const MT_SURFACE_MASK_DEFAULT_FEATHER_M = 175;
+- src\scene\transitions\transitionStyles.ts:120 — export interface WorkingAreaFocusStyleTween {
+- src\scene\transitions\transitionStyles.ts:211 — maskMode: "interpolated" | "dual-mask";
+- src\scene\transitions\transitionStyles.ts:231 — "scalarSurfaceMaskDepthM",
+- src\scene\transitions\transitionStyles.ts:232 — "scalarSurfaceMaskFeatherM",
+- src\scene\transitions\transitionStyles.ts:330 — if (field === "scalarSurfaceMaskDepthM")
+- src\scene\transitions\transitionStyles.ts:331 — return MT_SURFACE_MASK_DEFAULT_DEPTH_M;
+- src\scene\transitions\transitionStyles.ts:332 — if (field === "scalarSurfaceMaskFeatherM")
+- src\scene\transitions\transitionStyles.ts:333 — return MT_SURFACE_MASK_DEFAULT_FEATHER_M;
+- src\scene\transitions\transitionStyles.ts:394 — "sceneSectionTargetLayerIds",
+- src\scene\transitions\transitionStyles.ts:585 — targetLayerIds: style.sceneSectionTargetLayerIds ?? [],
+- src\scene\transitions\transitionStyles.ts:628 — TOPO_MAP_PUBLIC_SURFACE_CLIP_STYLE_FIELDS,
+- src\scene\transitions\transitionStyles.ts:653 — "scalarVolumeMaskVisible",
+- src\scene\workingArea\workingAreaFocusController.ts:20 — } from "../../projectModules/utahForge/workingAreaFocus";
+- src\scene\workingArea\workingAreaFocusController.ts:22 — applyWorkingAreaFocusBuiltInMaterial,
+- src\scene\workingArea\workingAreaFocusController.ts:23 — setWorkingAreaFocusShaderUniforms,
+- src\scene\workingArea\workingAreaFocusController.ts:24 — } from "../shaders/workingAreaFocusShader";
+- src\scene\workingArea\workingAreaFocusController.ts:29 — export interface WorkingAreaFocusRuntime {
+- src\scene\workingArea\workingAreaFocusController.ts:34 — export interface WorkingAreaFocusState {
+- src\scene\workingArea\workingAreaFocusController.ts:40 — targetLayerIds: Set<string>;
+- src\scene\workingArea\workingAreaFocusController.ts:41 — outsideOpacityByLayerId: Map<string, number>;
+- src\scene\workingArea\workingAreaFocusController.ts:45 — export function workingAreaFocusTargetLayerIdsImpl(this: any, style: EditableStyle): Set<string> {
+- src\scene\workingArea\workingAreaFocusController.ts:46 — const configured = Array.isArray(style.workingAreaFocusTargetLayerIds)
+- src\scene\workingArea\workingAreaFocusController.ts:47 — ? style.workingAreaFocusTargetLayerIds.filter(
+- src\scene\workingArea\workingAreaFocusController.ts:58 — export function workingAreaFocusOutsideOpacityImpl(this: any, style: EditableStyle, layerId: string): number {
+- src\scene\workingArea\workingAreaFocusController.ts:59 — if (style.workingAreaFocusEnabled !== true) return 1;
+- src\scene\workingArea\workingAreaFocusController.ts:60 — if (style.workingAreaFocusMode === "inside-only") return 0;
+- src\scene\workingArea\workingAreaFocusController.ts:61 — const map = style.workingAreaFocusOutsideOpacityByLayerId ?? {};
+- src\scene\workingArea\workingAreaFocusController.ts:68 — export function cleanWorkingAreaFocusVectorImpl(this: any, value: unknown): THREE.Vector3 | null {
+- src\scene\workingArea\workingAreaFocusController.ts:95 — export function resolveWorkingAreaFocusBoundsImpl(this: any, boundsLayerId: string): {
+- src\scene\workingArea\workingAreaFocusController.ts:108 — const min = this.cleanWorkingAreaFocusVector(bounds.min);
+- src\scene\workingArea\workingAreaFocusController.ts:109 — const max = this.cleanWorkingAreaFocusVector(bounds.max);
+- src\scene\workingArea\workingAreaFocusController.ts:118 — export function workingAreaFocusStateImpl(this: any, style: EditableStyle): WorkingAreaFocusState {
+- src\scene\workingArea\workingAreaFocusController.ts:120 — typeof style.workingAreaFocusBoundsLayerId === "string"
+- src\scene\workingArea\workingAreaFocusController.ts:121 — ? style.workingAreaFocusBoundsLayerId
+- src\scene\workingArea\workingAreaFocusController.ts:123 — const bounds = this.resolveWorkingAreaFocusBounds(boundsLayerId);
+- src\scene\workingArea\workingAreaFocusController.ts:124 — const targetLayerIds = this.workingAreaFocusTargetLayerIds(style);
+- src\scene\workingArea\workingAreaFocusController.ts:125 — const outsideOpacityByLayerId = new Map<string, number>();
+- src\scene\workingArea\workingAreaFocusController.ts:126 — for (const layerId of targetLayerIds) {
+- src\scene\workingArea\workingAreaFocusController.ts:127 — outsideOpacityByLayerId.set(
+- src\scene\workingArea\workingAreaFocusController.ts:129 — this.workingAreaFocusOutsideOpacity(style, layerId),
+- src\scene\workingArea\workingAreaFocusController.ts:133 — enabled: style.workingAreaFocusEnabled === true,
+- src\scene\workingArea\workingAreaFocusController.ts:135 — style.workingAreaFocusMode === "inside-only"
+- src\scene\workingArea\workingAreaFocusController.ts:141 — targetLayerIds,
+- src\scene\workingArea\workingAreaFocusController.ts:142 — outsideOpacityByLayerId,
+- src\scene\workingArea\workingAreaFocusController.ts:143 — helperVisible: style.workingAreaFocusHelperVisible !== false,
+- src\scene\workingArea\workingAreaFocusController.ts:147 — export function workingAreaFocusSegmentPositionsImpl(this: any, min: THREE.Vector3, max: THREE.Vector3): number[] {
+- src\scene\workingArea\workingAreaFocusController.ts:182 — export function ensureWorkingAreaFocusRuntimeImpl(this: any): WorkingAreaFocusRuntime {
+- src\scene\workingArea\workingAreaFocusController.ts:183 — if (this.workingAreaFocusRuntime) return this.workingAreaFocusRuntime;
+- src\scene\workingArea\workingAreaFocusController.ts:205 — line.userData.workingAreaFocusHelper = true;
+- src\scene\workingArea\workingAreaFocusController.ts:209 — group.userData.workingAreaFocusHelper = true;
+- src\scene\workingArea\workingAreaFocusController.ts:212 — this.workingAreaFocusRuntime = { group, line };
+- src\scene\workingArea\workingAreaFocusController.ts:213 — return this.workingAreaFocusRuntime;
+- src\scene\workingArea\workingAreaFocusController.ts:216 — export function rebuildWorkingAreaFocusHelperImpl(this: any, state: WorkingAreaFocusState): void {
+- src\scene\workingArea\workingAreaFocusController.ts:217 — const runtime = this.ensureWorkingAreaFocusRuntime();
+- src\scene\workingArea\workingAreaFocusController.ts:223 — this.workingAreaFocusSegmentPositions(state.boundsMin, state.boundsMax),
+- src\scene\workingArea\workingAreaFocusController.ts:230 — export function setKnownShaderWorkingAreaFocusImpl(this: any, material: THREE.ShaderMaterial, enabled: boolean, state: WorkingAreaFocusState, outsideOpacity: number): boolean {
+- src\scene\workingArea\workingAreaFocusController.ts:232 — if (!uniforms.uWorkingAreaFocusEnabled) return false;
+- src\scene\workingArea\workingAreaFocusController.ts:233 — setWorkingAreaFocusShaderUniforms(
+- src\scene\workingArea\workingAreaFocusController.ts:238 — outsideOpacity,
+- src\scene\workingArea\workingAreaFocusController.ts:244 — export function applyWorkingAreaFocusMaterialImpl(this: any, material: THREE.Material, enabled: boolean, state: WorkingAreaFocusState, outsideOpacity: number): void {
+- src\scene\workingArea\workingAreaFocusController.ts:245 — if (material.userData?.workingAreaFocusHelper === true) return;
+- src\scene\workingArea\workingAreaFocusController.ts:248 — this.setKnownShaderWorkingAreaFocus(
+- src\scene\workingArea\workingAreaFocusController.ts:252 — outsideOpacity,
+- src\scene\workingArea\workingAreaFocusController.ts:257 — material.userData.workingAreaFocusUnsupported = enabled;
+- src\scene\workingArea\workingAreaFocusController.ts:260 — applyWorkingAreaFocusBuiltInMaterial(
+- src\scene\workingArea\workingAreaFocusController.ts:265 — outsideOpacity,
+- src\scene\workingArea\workingAreaFocusController.ts:269 — export function applyWorkingAreaFocusStyleImpl(this: any, style: EditableStyle): void {
+- src\scene\workingArea\workingAreaFocusController.ts:270 — this.lastWorkingAreaFocusStyle = style;
+- src\scene\workingArea\workingAreaFocusController.ts:271 — this.currentWorkingAreaFocusStyle = style;
+- src\scene\workingArea\workingAreaFocusController.ts:272 — const state = this.workingAreaFocusState(style);
+- src\scene\workingArea\workingAreaFocusController.ts:276 — state.targetLayerIds.has(layerId) &&
+- src\scene\workingArea\workingAreaFocusController.ts:278 — const outsideOpacity = state.outsideOpacityByLayerId.get(layerId) ?? 1;
+- src\scene\workingArea\workingAreaFocusController.ts:286 — this.applyWorkingAreaFocusMaterial(
+- src\scene\workingArea\workingAreaFocusController.ts:290 — outsideOpacity,
+- src\scene\workingArea\workingAreaFocusController.ts:295 — this.rebuildWorkingAreaFocusHelper(state);
+- src\scene\workingArea\workingAreaFocusController.ts:298 — export function reapplyWorkingAreaFocusImpl(this: any): void {
+- src\scene\workingArea\workingAreaFocusController.ts:299 — this.applyWorkingAreaFocusStyle(this.lastWorkingAreaFocusStyle);
+- src\scene\workingArea\workingAreaFocusController.ts:302 — export function interpolatedWorkingAreaFocusStyleImpl(this: any, fromStyle: EditableStyle, toStyle: EditableStyle, t: number): EditableStyle {
+- src\scene\workingArea\workingAreaFocusController.ts:303 — const targetLayerIds = new Set<string>([
+- src\scene\workingArea\workingAreaFocusController.ts:304 — ...this.workingAreaFocusTargetLayerIds(fromStyle),
+- src\scene\workingArea\workingAreaFocusController.ts:305 — ...this.workingAreaFocusTargetLayerIds(toStyle),
+- src\scene\workingArea\workingAreaFocusController.ts:307 — const outsideOpacityByLayerId: Record<string, number> = {};
+- src\scene\workingArea\workingAreaFocusController.ts:308 — for (const layerId of targetLayerIds) {
+- src\scene\workingArea\workingAreaFocusController.ts:309 — const from = this.workingAreaFocusOutsideOpacity(fromStyle, layerId);
+- src\scene\workingArea\workingAreaFocusController.ts:310 — const to = this.workingAreaFocusOutsideOpacity(toStyle, layerId);
+- src\scene\workingArea\workingAreaFocusController.ts:311 — outsideOpacityByLayerId[layerId] = from + (to - from) * t;
+- src\scene\workingArea\workingAreaFocusController.ts:315 — workingAreaFocusEnabled:
+- src\scene\workingArea\workingAreaFocusController.ts:316 — fromStyle.workingAreaFocusEnabled === true ||
+- src\scene\workingArea\workingAreaFocusController.ts:317 — toStyle.workingAreaFocusEnabled === true,
+- src\scene\workingArea\workingAreaFocusController.ts:318 — workingAreaFocusMode: "outside-context",
+- src\scene\workingArea\workingAreaFocusController.ts:319 — workingAreaFocusTargetLayerIds: Array.from(targetLayerIds),
+- src\scene\workingArea\workingAreaFocusController.ts:320 — workingAreaFocusOutsideOpacityByLayerId: outsideOpacityByLayerId,
+- src\scene\workingArea\workingAreaFocusController.ts:354 — function sameWorkingAreaFocusState(
+- src\scene\workingArea\workingAreaFocusController.ts:355 — a: WorkingAreaFocusState,
+- src\scene\workingArea\workingAreaFocusController.ts:356 — b: WorkingAreaFocusState,
+- src\scene\workingArea\workingAreaFocusController.ts:365 — sameStringSet(a.targetLayerIds, b.targetLayerIds) &&
+- src\scene\workingArea\workingAreaFocusController.ts:366 — sameOpacityMap(a.outsideOpacityByLayerId, b.outsideOpacityByLayerId)
+- src\scene\workingArea\workingAreaFocusController.ts:370 — export function transitionWorkingAreaFocusForPageImpl(this: any, fromEnvironment: EnvironmentSetup, toEnvironment: EnvironmentSetup, fromPage: PresentationPage, toPage: PresentationPage, durationMs: number, easing: EasingName): void {
+- src\scene\workingArea\workingAreaFocusController.ts:372 — Object.keys(this.currentWorkingAreaFocusStyle).length > 0
+- src\scene\workingArea\workingAreaFocusController.ts:373 — ? this.currentWorkingAreaFocusStyle
+- src\scene\workingArea\workingAreaFocusController.ts:384 — const fromState = this.workingAreaFocusState(fromStyle);
+- src\scene\workingArea\workingAreaFocusController.ts:385 — const toState = this.workingAreaFocusState(toStyle);
+- src\scene\workingArea\workingAreaFocusController.ts:387 — if (duration <= 0 || sameWorkingAreaFocusState(fromState, toState)) {
+- src\scene\workingArea\workingAreaFocusController.ts:388 — this.workingAreaFocusTween = null;
+- src\scene\workingArea\workingAreaFocusController.ts:389 — this.applyWorkingAreaFocusStyle(toStyle);
+- src\scene\workingArea\workingAreaFocusController.ts:392 — this.workingAreaFocusTween = {
+- src\scene\workingArea\workingAreaFocusController.ts:399 — this.applyWorkingAreaFocusStyle(
+- src\scene\workingArea\workingAreaFocusController.ts:400 — this.interpolatedWorkingAreaFocusStyle(fromStyle, toStyle, 0),
+- src\scene\workingArea\workingAreaFocusController.ts:404 — export function getWorkingAreaFocusDebugStateImpl(this: any): {
+- src\scene\workingArea\workingAreaFocusController.ts:408 — targetLayerIds: string[];
+- src\scene\workingArea\workingAreaFocusController.ts:409 — outsideOpacityByLayerId: Record<string, number>;
+- src\scene\workingArea\workingAreaFocusController.ts:415 — const state = this.workingAreaFocusState(this.currentWorkingAreaFocusStyle);
+- src\scene\workingArea\workingAreaFocusController.ts:420 — targetLayerIds: Array.from(state.targetLayerIds),
+- src\scene\workingArea\workingAreaFocusController.ts:421 — outsideOpacityByLayerId: Object.fromEntries(
+- src\scene\workingArea\workingAreaFocusController.ts:422 — state.outsideOpacityByLayerId,
+- src\scene\workingArea\workingAreaFocusController.ts:425 — helperRenderable: this.workingAreaFocusRuntime?.group.visible === true,
+- src\projectModules\utahForge\editorPreviewFields.ts:17 — TOPO_MAP_PUBLIC_SURFACE_CLIP_STYLE_FIELDS,
+- src\projectModules\utahForge\editorPreviewFields.ts:69 — "scalarVolumeMaskVisible",
+- src\projectModules\utahForge\editorPreviewFields.ts:85 — "scalarSurfaceMaskEnabled",
+- src\projectModules\utahForge\editorPreviewFields.ts:86 — "scalarSurfaceMaskDepthM",
+- src\projectModules\utahForge\editorPreviewFields.ts:87 — "scalarSurfaceMaskFeatherM",
+- src\projectModules\utahForge\editorPreviewFields.ts:169 — "sceneSectionTargetLayerIds",
+- src\projectModules\utahForge\editorPreviewFields.ts:176 — "workingAreaFocusEnabled",
+- src\projectModules\utahForge\editorPreviewFields.ts:177 — "workingAreaFocusMode",
+- src\projectModules\utahForge\editorPreviewFields.ts:178 — "workingAreaFocusBoundsLayerId",
+- src\projectModules\utahForge\editorPreviewFields.ts:179 — "workingAreaFocusTargetLayerIds",
+- src\projectModules\utahForge\editorPreviewFields.ts:180 — "workingAreaFocusOutsideOpacityByLayerId",
+- src\projectModules\utahForge\editorPreviewFields.ts:181 — "workingAreaFocusHelperVisible",
+- src\projectModules\utahForge\editorPreviewFields.ts:185 — [TOPO_MAP_DEFAULT_SURFACE_LAYER_ID]: TOPO_MAP_PUBLIC_SURFACE_CLIP_STYLE_FIELDS,
+- src\projectModules\utahForge\editorPreviewFields.ts:186 — [TOPO_MAP_LEGACY_GRATICULE_LAYER_ID]: TOPO_MAP_PUBLIC_SURFACE_CLIP_STYLE_FIELDS,
+- src\projectModules\utahForge\editorPreviewFields.ts:187 — [TOPO_MAP_DEFAULT_REFERENCE_LAYER_IDS[0]]: TOPO_MAP_PUBLIC_SURFACE_CLIP_STYLE_FIELDS,
+- src\projectModules\utahForge\editorPreviewFields.ts:188 — [TOPO_MAP_DEFAULT_REFERENCE_LAYER_IDS[1]]: TOPO_MAP_PUBLIC_SURFACE_CLIP_STYLE_FIELDS,
+- src\projectModules\utahForge\editorPreviewFields.ts:189 — [TOPO_MAP_DEFAULT_REFERENCE_LAYER_IDS[2]]: TOPO_MAP_PUBLIC_SURFACE_CLIP_STYLE_FIELDS,
+- src\projectModules\utahForge\layerIds.ts:45 — "utah-forge-phase3-working-area";
+- src\projectModules\utahForge\layerIds.ts:55 — "utah-forge-working-area-focus";
+- src\projectModules\utahForge\workingAreaFocus.ts:1 — // Utah FORGE working-area focus defaults.
+- src\projectModules\utahForge\workingAreaFocus.ts:4 — // doesn't override the working-area focus explicitly. The bounds are
+- src\editor\CLAUDE.md:30 — `seismic/`, `workingArea/`, and `geology/` hold the extracted
+- src\editor\EditorRoot.tsx:846 — return style.workingAreaFocusEnabled === true;
+- src\editor\EnvironmentScenePanel.tsx:2543 — value={scene.compositionGuides?.aspectMask ?? "none"}
+- src\editor\EnvironmentScenePanel.tsx:2546 — aspectMask: e.target.value as NonNullable<
+- src\editor\EnvironmentScenePanel.tsx:2548 — >["aspectMask"],
+- src\editor\LayerPanelGroups.tsx:29 — import { WorkingAreaFocusContainer } from "./layerControls/workingArea/WorkingAreaFocusContainer";
+- src\editor\LayerPanelGroups.tsx:286 — const workingAreaFocusStyle =
+- src\editor\LayerPanelGroups.tsx:302 — const workingAreaFocusDisabled =
+- src\editor\LayerPanelGroups.tsx:362 — const workingAreaFocusOpenSignal =
+- src\editor\LayerPanelGroups.tsx:365 — workingAreaFocusStyle.workingAreaFocusEnabled === true
+- src\editor\LayerPanelGroups.tsx:521 — resolvedGroupOpenSignal ?? workingAreaFocusOpenSignal;
+- src\editor\LayerPanelGroups.tsx:526 — devSource="src/editor/LayerPanel.tsx:sections-cropping-working-area"
+- src\editor\LayerPanelGroups.tsx:532 — <WorkingAreaFocusContainer
+- src\editor\LayerPanelGroups.tsx:534 — style={workingAreaFocusStyle}
+- src\editor\LayerPanelGroups.tsx:535 — disabled={workingAreaFocusDisabled}
+- src\editor\LayerPanelGroups.tsx:630 — devNote="Extents contains map footprint, clipping, material edge fade, and edge outline controls for the public topo map tool."
+- src\editor\styleControls.tsx:72 — textOverflow: "clip",
+- src\editor\layerControls\layerPanelConfig.ts:254 — "scalarSurfaceMaskEnabled",
+- src\editor\layerControls\layerPanelConfig.ts:255 — "scalarSurfaceMaskDepthM",
+- src\editor\layerControls\layerPanelConfig.ts:256 — "scalarSurfaceMaskFeatherM",
+- src\editor\layerControls\layerPanelConfig.ts:287 — "scalarVolumeMaskVisible",
+- src\editor\layerControls\layerPatchBuilders.ts:85 — scalarSurfaceMaskEnabled: style.scalarSurfaceMaskEnabled !== false,
+- src\editor\layerControls\layerPatchBuilders.ts:86 — scalarSurfaceMaskDepthM: styleNumber(style, "scalarSurfaceMaskDepthM", 25),
+- src\editor\layerControls\layerPatchBuilders.ts:87 — scalarSurfaceMaskFeatherM: styleNumber(
+- src\editor\layerControls\layerPatchBuilders.ts:89 — "scalarSurfaceMaskFeatherM",
+- src\editor\layerControls\layerPatchBuilders.ts:163 — scalarVolumeMaskVisible: styleBoolean(
+- src\editor\layerControls\layerPatchBuilders.ts:165 — "scalarVolumeMaskVisible",
+- src\editor\layerControls\mt\IsobandControls.tsx:169 — const targetLayerIds = new Set(
+- src\editor\layerControls\mt\IsobandControls.tsx:170 — Array.isArray(sceneStyle.sceneSectionTargetLayerIds)
+- src\editor\layerControls\mt\IsobandControls.tsx:171 — ? sceneStyle.sceneSectionTargetLayerIds
+- src\editor\layerControls\mt\IsobandControls.tsx:174 — targetLayerIds.add(layerId);
+- src\editor\layerControls\mt\IsobandControls.tsx:180 — sceneSectionTargetLayerIds: Array.from(targetLayerIds),
+- src\editor\layerControls\mt\MtVolumeControls.tsx:134 — const maskVisible = styleBoolean(style, "scalarVolumeMaskVisible", true);
+- src\editor\layerControls\mt\MtVolumeControls.tsx:207 — <label style={nestedFieldLabelStyle}>Volume attenuation</label>
+- src\editor\layerControls\mt\MtVolumeControls.tsx:270 — <span style={nestedFieldLabelStyle}>Empty-cell mask</span>
+- src\editor\layerControls\mt\MtVolumeControls.tsx:272 — data-testid="mt-volume-mask-visible"
+- src\editor\layerControls\mt\MtVolumeControls.tsx:274 — checked={maskVisible}
+- src\editor\layerControls\mt\MtVolumeControls.tsx:277 — commit({ scalarVolumeMaskVisible: e.target.checked })
+- src\editor\layerControls\scalar\ScalarRampControls.tsx:257 — <div style={scalarGroupHeadingStyle}>Mask</div>
+- src\editor\layerControls\scalar\ScalarRampControls.tsx:259 — <label style={nestedFieldLabelStyle}>Topographic mask</label>
+- src\editor\layerControls\scalar\ScalarRampControls.tsx:262 — checked={style.scalarSurfaceMaskEnabled !== false}
+- src\editor\layerControls\scalar\ScalarRampControls.tsx:265 — onChange({ scalarSurfaceMaskEnabled: e.target.checked })
+- src\editor\layerControls\scalar\ScalarRampControls.tsx:270 — <label style={nestedFieldLabelStyle}>Mask depth (m)</label>
+- src\editor\layerControls\scalar\ScalarRampControls.tsx:273 — aria-label="MT topographic mask depth below surface"
+- src\editor\layerControls\scalar\ScalarRampControls.tsx:277 — value={styleNumber(style, "scalarSurfaceMaskDepthM", 25)}
+- src\editor\layerControls\scalar\ScalarRampControls.tsx:278 — disabled={disabled || style.scalarSurfaceMaskEnabled === false}
+- src\editor\layerControls\scalar\ScalarRampControls.tsx:281 — scalarSurfaceMaskDepthM: parseFloat(e.target.value),
+- src\editor\layerControls\scalar\ScalarRampControls.tsx:288 — disabled || style.scalarSurfaceMaskEnabled === false
+- src\editor\layerControls\scalar\ScalarRampControls.tsx:292 — (styleNumber(style, "scalarSurfaceMaskDepthM", 25) / 500) *
+- src\editor\layerControls\scalar\ScalarRampControls.tsx:300 — <label style={nestedFieldLabelStyle}>Mask transition (m)</label>
+- src\editor\layerControls\scalar\ScalarRampControls.tsx:303 — aria-label="MT topographic mask transition width"
+- src\editor\layerControls\scalar\ScalarRampControls.tsx:307 — value={styleNumber(style, "scalarSurfaceMaskFeatherM", 175)}
+- src\editor\layerControls\scalar\ScalarRampControls.tsx:308 — disabled={disabled || style.scalarSurfaceMaskEnabled === false}
+- src\editor\layerControls\scalar\ScalarRampControls.tsx:311 — scalarSurfaceMaskFeatherM: parseFloat(e.target.value),
+- src\editor\layerControls\scalar\ScalarRampControls.tsx:318 — disabled || style.scalarSurfaceMaskEnabled === false
+- src\editor\layerControls\scalar\ScalarRampControls.tsx:322 — (styleNumber(style, "scalarSurfaceMaskFeatherM", 175) /
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:297 — targetLayerIds,
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:302 — targetLayerIds: Set<string>;
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:309 — return targetLayerIds.has(target.layerId) ? 0 : 1;
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:318 — targetLayerIds: Set<string>,
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:323 — ?.outsideOpacity;
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:329 — ?.outsideOpacity;
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:335 — targetLayerIds,
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:478 — const targetLayerIds = new Set(
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:479 — Array.isArray(style.sceneSectionTargetLayerIds)
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:480 — ? style.sceneSectionTargetLayerIds
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:797 — outsideOpacity: clampNumber(value, 0, 1),
+- src\editor\layerControls\seismic\SceneSectionPlanesContainer.tsx:1904 — targetLayerIds,
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:33 — } from "../../../projectModules/utahForge/workingAreaFocus";
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:35 — type WorkingAreaFocusCapability = "two-zone" | "fallback" | "unsupported";
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:37 — interface WorkingAreaFocusLayerOption {
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:40 — capability: WorkingAreaFocusCapability;
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:44 — function workingAreaFocusCapabilityForLayer(
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:46 — ): Pick<WorkingAreaFocusLayerOption, "capability" | "capabilityLabel"> {
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:70 — function workingAreaFocusLayerOptions(
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:72 — ): WorkingAreaFocusLayerOption[] {
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:93 — const capability = workingAreaFocusCapabilityForLayer(id);
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:103 — .filter((layer): layer is WorkingAreaFocusLayerOption => layer !== null);
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:106 — function workingAreaFocusDefaultTargets(
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:107 — options: WorkingAreaFocusLayerOption[],
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:115 — function workingAreaFocusTargetSet(
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:117 — options: WorkingAreaFocusLayerOption[],
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:119 — const configured = Array.isArray(style.workingAreaFocusTargetLayerIds)
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:120 — ? style.workingAreaFocusTargetLayerIds.filter(
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:123 — : workingAreaFocusDefaultTargets(options);
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:132 — function workingAreaFocusOpacityForLayer(
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:136 — const value = style.workingAreaFocusOutsideOpacityByLayerId?.[layerId];
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:142 — function completeWorkingAreaFocusOpacityMap(
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:144 — options: WorkingAreaFocusLayerOption[],
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:158 — : workingAreaFocusOpacityForLayer(style, option.id),
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:165 — function workingAreaFocusPatchFromStyle(
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:167 — options: WorkingAreaFocusLayerOption[],
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:169 — const targetLayerIds = workingAreaFocusTargetSet(style, options);
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:171 — workingAreaFocusEnabled: styleBoolean(
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:173 — "workingAreaFocusEnabled",
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:176 — workingAreaFocusMode:
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:177 — style.workingAreaFocusMode === "inside-only"
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:180 — workingAreaFocusBoundsLayerId:
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:181 — style.workingAreaFocusBoundsLayerId ??
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:183 — workingAreaFocusTargetLayerIds: Array.from(targetLayerIds),
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:184 — workingAreaFocusOutsideOpacityByLayerId:
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:185 — completeWorkingAreaFocusOpacityMap(style, options),
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:186 — workingAreaFocusHelperVisible: styleBoolean(
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:188 — "workingAreaFocusHelperVisible",
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:194 — export function WorkingAreaFocusContainer({
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:214 — const layerOptions = workingAreaFocusLayerOptions(allLayers);
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:215 — const targetLayerIds = workingAreaFocusTargetSet(style, layerOptions);
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:216 — const enabled = styleBoolean(style, "workingAreaFocusEnabled", false);
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:218 — style.workingAreaFocusMode === "inside-only"
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:223 — "workingAreaFocusHelperVisible",
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:236 — workingAreaFocusBoundsLayerId:
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:237 — base.workingAreaFocusBoundsLayerId ??
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:239 — workingAreaFocusOutsideOpacityByLayerId:
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:240 — completeWorkingAreaFocusOpacityMap(base, layerOptions),
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:250 — const persistedPatch = workingAreaFocusPatchFromStyle(merged, layerOptions);
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:262 — const commitTargetLayerIds = (nextTargets: Set<string>) => {
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:264 — workingAreaFocusTargetLayerIds: Array.from(nextTargets),
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:265 — workingAreaFocusOutsideOpacityByLayerId:
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:266 — completeWorkingAreaFocusOpacityMap(liveStyleRef.current, layerOptions),
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:271 — const next = new Set(targetLayerIds);
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:274 — commitTargetLayerIds(next);
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:277 — const updateOutsideOpacity = (id: string, value: number) => {
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:279 — workingAreaFocusOutsideOpacityByLayerId:
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:280 — completeWorkingAreaFocusOpacityMap(liveStyleRef.current, layerOptions, {
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:289 — type="clip"
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:290 — testId="working-area-focus-container"
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:297 — data-testid="working-area-focus-enabled"
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:303 — workingAreaFocusEnabled: event.target.checked,
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:304 — workingAreaFocusMode: mode,
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:305 — workingAreaFocusBoundsLayerId:
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:307 — workingAreaFocusTargetLayerIds: Array.from(targetLayerIds),
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:308 — workingAreaFocusOutsideOpacityByLayerId:
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:309 — completeWorkingAreaFocusOpacityMap(
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:320 — data-testid="working-area-focus-mode"
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:325 — workingAreaFocusMode:
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:329 — workingAreaFocusOutsideOpacityByLayerId:
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:330 — completeWorkingAreaFocusOpacityMap(
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:345 — data-testid="working-area-focus-helper-visible"
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:350 — commit({ workingAreaFocusHelperVisible: event.target.checked })
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:359 — const checked = supported && targetLayerIds.has(layer.id);
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:360 — const opacity = workingAreaFocusOpacityForLayer(style, layer.id);
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:378 — data-testid={`working-area-focus-target-${layer.id}`}
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:398 — data-testid={`working-area-focus-opacity-${layer.id}`}
+- src\editor\layerControls\workingArea\WorkingAreaFocusContainer.tsx:406 — updateOutsideOpacity(
+- src\editor\topoMap\TopoMapPanel.tsx:146 — const topoClipReadoutStyle: CSSProperties = {
+- src\editor\topoMap\TopoMapPanel.tsx:411 — publicSurfaceClipEnabled: true,
+- src\editor\topoMap\TopoMapPanel.tsx:412 — publicSurfaceClipCenterX: footprint.centerX,
+- src\editor\topoMap\TopoMapPanel.tsx:413 — publicSurfaceClipCenterY: footprint.centerY,
+- src\editor\topoMap\TopoMapPanel.tsx:414 — publicSurfaceClipCenterZ: footprint.centerZ,
+- src\editor\topoMap\TopoMapPanel.tsx:415 — publicSurfaceClipSizeX: footprint.sizeX,
+- src\editor\topoMap\TopoMapPanel.tsx:416 — publicSurfaceClipSizeY: footprint.sizeY,
+- src\editor\topoMap\TopoMapPanel.tsx:417 — publicSurfaceClipSizeZ: footprint.sizeZ,
+- src\editor\topoMap\TopoMapPanel.tsx:418 — publicSurfaceClipRotationZDeg: 0,
+- src\editor\topoMap\TopoMapPanel.tsx:419 — publicSurfaceClipShape: "box",
+- src\editor\topoMap\TopoMapPanel.tsx:723 — const targetLayerIds =
+- src\editor\topoMap\TopoMapPanel.tsx:727 — for (const id of targetLayerIds) setEnvLayerStyle(id, patch);
+- src\editor\topoMap\TopoMapPanel.tsx:729 — for (const id of targetLayerIds) {
+- src\editor\topoMap\TopoMapPanel.tsx:748 — for (const id of targetLayerIds) {
+- src\editor\topoMap\TopoMapPanel.tsx:999 — <div style={topoClipReadoutStyle}>
+- src\editor\topoMap\TopoMapPanel.tsx:1515 — orthoPhotoOutsideOpacity:
+- src\editor\topoMap\TopoMapPanel.tsx:1517 — (terrain.orthoPhotoOutsideOpacity ?? 0) <= 0.001
+- src\editor\topoMap\TopoMapPanel.tsx:1519 — : (terrain.orthoPhotoOutsideOpacity ?? 0),
+- src\editor\topoMap\TopoMapPanel.tsx:1544 — value={String(terrain.orthoPhotoOutsideOpacity ?? 0)}
+- src\editor\topoMap\TopoMapPanel.tsx:1551 — setTerrain({ orthoPhotoOutsideOpacity: parseFloat(v) })
+- src\editor\topoMap\TopoMapPanel.tsx:1579 — label="Edge clip"
+- src\editor\topoMap\TopoMapPanel.tsx:1581 — value={String(terrain.orthoPhotoEdgeClipInsetM ?? 0)}
+- src\editor\topoMap\TopoMapPanel.tsx:1586 — testId="topo-ortho-photo-edge-clip-inset"
+- src\editor\topoMap\TopoMapPanel.tsx:1588 — setTerrain({ orthoPhotoEdgeClipInsetM: parseFloat(v) })
+- src\editor\topoMap\TopoMapPanel.tsx:1606 — <TopoSurfaceClipControls
+- src\editor\topoMap\TopoMapPanel.tsx:3220 — function TopoSurfaceClipControls({
+- src\editor\topoMap\TopoMapPanel.tsx:3245 — const publicSurfaceClipActive = style.publicSurfaceClipEnabled === true;
+- src\editor\topoMap\TopoMapPanel.tsx:3269 — publicSurfaceClipActive
+- src\editor\topoMap\TopoMapPanel.tsx:3270 — ? kmSizeLabel(style.publicSurfaceClipSizeX, style.publicSurfaceClipSizeY)
+- src\editor\topoMap\TopoMapPanel.tsx:3271 — : `${heightMapFootprintLabel} (clip off)`;
+- src\editor\topoMap\TopoMapPanel.tsx:3272 — const setPublicSurfaceClipPatch = (patch: Partial<EditableStyle>) => {
+- src\editor\topoMap\TopoMapPanel.tsx:3281 — setPublicSurfaceClipPatch(footprintStylePatch(footprint));
+- src\editor\topoMap\TopoMapPanel.tsx:3284 — setPublicSurfaceClipPatch({
+- src\editor\topoMap\TopoMapPanel.tsx:3285 — publicSurfaceClipEnabled: true,
+- src\editor\topoMap\TopoMapPanel.tsx:3286 — ...(style.publicSurfaceClipSizeX && style.publicSurfaceClipSizeY
+- src\editor\topoMap\TopoMapPanel.tsx:3295 — label="Map footprint / clipping"
+- src\editor\topoMap\TopoMapPanel.tsx:3296 — testId="topo-clipping-controls"
+- src\editor\topoMap\TopoMapPanel.tsx:3302 — <div style={topoClipReadoutStyle}>
+- src\editor\topoMap\TopoMapPanel.tsx:3378 — const publicSurfaceClipActive = style.publicSurfaceClipEnabled === true;
+- src\editor\topoMap\TopoMapPanel.tsx:3389 — const setPublicSurfaceClipPatch = (patch: Partial<EditableStyle>) => {
+- src\editor\topoMap\TopoMapPanel.tsx:3396 — const setPublicSurfaceClipEnabled = (enabled: boolean) => {
+- src\editor\topoMap\TopoMapPanel.tsx:3397 — setPublicSurfaceClipPatch({ publicSurfaceClipEnabled: enabled });
+- src\editor\topoMap\TopoMapPanel.tsx:3560 — label="Public surface clip"
+- src\editor\topoMap\TopoMapPanel.tsx:3561 — active={publicSurfaceClipActive}
+- src\editor\topoMap\TopoMapPanel.tsx:3562 — testId="public-surface-clip-enabled"
+- src\editor\topoMap\TopoMapPanel.tsx:3563 — onToggle={() => setPublicSurfaceClipEnabled(!publicSurfaceClipActive)}
+- src\editor\topoMap\TopoMapPanel.tsx:3568 — data-testid="public-surface-clip-preview-visible"
+- src\editor\topoMap\TopoMapPanel.tsx:3570 — checked={style.publicSurfaceClipPreviewVisible === true}
+- src\editor\topoMap\TopoMapPanel.tsx:3572 — setPublicSurfaceClipPatch({
+- src\editor\topoMap\TopoMapPanel.tsx:3573 — publicSurfaceClipPreviewVisible: event.currentTarget.checked,
+- src\editor\topoMap\TopoMapPanel.tsx:3581 — data-testid="public-surface-clip-shape"
+- src\editor\topoMap\TopoMapPanel.tsx:3582 — value={style.publicSurfaceClipShape === "circle" ? "circle" : "box"}
+- src\editor\topoMap\TopoMapPanel.tsx:3587 — setEnvLayerStyle(layerId, { publicSurfaceClipShape: value });
+- src\editor\topoMap\TopoMapPanel.tsx:3590 — publicSurfaceClipShape: value,
+- src\editor\topoMap\TopoMapPanel.tsx:3602 — field="publicSurfaceClipCenterX"
+- src\editor\topoMap\TopoMapPanel.tsx:3612 — field="publicSurfaceClipCenterY"
+- src\editor\topoMap\TopoMapPanel.tsx:3622 — field="publicSurfaceClipCenterZ"
+- src\editor\topoMap\TopoMapPanel.tsx:3632 — field="publicSurfaceClipSizeX"
+- src\editor\topoMap\TopoMapPanel.tsx:3642 — field="publicSurfaceClipSizeY"
+- src\editor\topoMap\TopoMapPanel.tsx:3652 — field="publicSurfaceClipSizeZ"
+- src\editor\topoMap\TopoMapPanel.tsx:3662 — field="publicSurfaceClipRotationZDeg"
+- src\ui\ResistivityLegend.tsx:78 — const rampMaskStyle: CSSProperties = {
+- src\ui\ResistivityLegend.tsx:1234 — ...rampMaskStyle,
+- src\ui\ResistivityLegend.tsx:1241 — ...rampMaskStyle,
+- src\ui\SectionIsoLegend.tsx:575 — const maskVisible = styleBoolean(style, "scalarVolumeMaskVisible", true);
+- src\ui\SectionIsoLegend.tsx:697 — aria-pressed={supportsVolumeToggle && showVolume && maskVisible}
+- src\ui\SectionIsoLegend.tsx:703 — scalarVolumeMaskVisible: !maskVisible,
+- src\ui\SectionIsoLegend.tsx:707 — active: supportsVolumeToggle && showVolume && maskVisible,
+
+## Live state vs saved/default/global state
+
+Pattern: `previewEnvironmentBase|Global Settings|environmentBase|visibilityOverrides|layerOverrides|effectiveStyle|effectiveVisibility|selectedAuthoringTarget|authoringTarget|current live|saved page|target resolved|source graph|target graph` 
+
+- src\pages\effective.ts:124 — //                page.visibilityOverrides, force-show on true / force-hide
+- src\pages\effective.ts:126 — //   styling:     shallow-merge env.layerStyles[id] then page.layerOverrides[id]
+- src\pages\effective.ts:163 — export function effectiveStyle(
+- src\pages\effective.ts:181 — const override = page.layerOverrides?.[layerId] ?? {};
+- src\pages\effective.ts:219 — export function effectiveVisibility(
+- src\pages\effective.ts:224 — const overrides = page.visibilityOverrides ?? {};
+- src\pages\effective.ts:363 — export function effectiveStyleForPage(
+- src\pages\effective.ts:369 — return effectiveStyle(resolveEnvironmentForPage(environment, pages, page), page, layerId);
+- src\pages\effective.ts:372 — export function effectiveVisibilityForPage(
+- src\pages\effective.ts:377 — return effectiveVisibility(resolveEnvironmentForPage(environment, pages, page), page);
+- src\pages\effective.ts:389 — const o = page.layerOverrides?.[layerId];
+- src\pages\effective.ts:398 — return page.visibilityOverrides?.[layerId] !== undefined;
+- src\pages\PageController.tsx:662 — previewEnvironmentBase?: boolean;
+- src\pages\PageController.tsx:667 — context: { previewEnvironmentBase: boolean },
+- src\pages\PageController.tsx:687 — if (!page.layerOverrides && !page.visibilityOverrides) return page;
+- src\pages\PageController.tsx:689 — delete next.visibilityOverrides;
+- src\pages\PageController.tsx:691 — if (!page.layerOverrides || !previewLayerOverrideFields) {
+- src\pages\PageController.tsx:692 — delete next.layerOverrides;
+- src\pages\PageController.tsx:696 — const preservedLayerOverrides: Record<string, EditableStyle> = {};
+- src\pages\PageController.tsx:698 — const source = page.layerOverrides[layerId];
+- src\pages\PageController.tsx:705 — preservedLayerOverrides[layerId] = preserved;
+- src\pages\PageController.tsx:709 — if (Object.keys(preservedLayerOverrides).length > 0) {
+- src\pages\PageController.tsx:710 — next.layerOverrides = preservedLayerOverrides;
+- src\pages\PageController.tsx:712 — delete next.layerOverrides;
+- src\pages\PageController.tsx:963 — previewEnvironmentBase = false,
+- src\pages\PageController.tsx:1087 — const layerPage = previewEnvironmentBase
+- src\pages\PageController.tsx:1092 — ? transform(resolvedBase, layerPage, { previewEnvironmentBase })
+- src\pages\PageController.tsx:1095 — [previewEnvironmentBase, previewLayerOverrideFields],
+- src\pages\PageController.tsx:1910 — manager.applyEffectiveVisibilityForPage(
+- src\pages\PageController.tsx:1914 — manager.applyEffectiveStylesForPage(
+- src\pages\PageController.tsx:2330 — sceneHandle.manager.applyEffectiveVisibilityForPage(
+- src\pages\PageController.tsx:2334 — sceneHandle.manager.applyEffectiveStylesForPage(
+- src\pages\PageController.tsx:2397 — sceneHandle.manager.applyEffectiveVisibilityForPage(
+- src\pages\PageController.tsx:2401 — sceneHandle.manager.applyEffectiveStylesForPage(
+- src\pages\PageController.tsx:2438 — previewEnvironmentBase,
+- src\pages\types.ts:10 — //     environment as `layerOverrides` and `visibilityOverrides` deltas.
+- src\pages\types.ts:274 — // values are authored through environment.layerStyles and page layerOverrides.
+- src\pages\types.ts:1747 — layerOverrides?: Record<string, EditableStyle>;
+- src\pages\types.ts:1750 — visibilityOverrides?: Record<string, boolean>;
+- src\editor\EditorChrome.tsx:33 — effectiveStyle,
+- src\editor\EditorChrome.tsx:34 — effectiveVisibility,
+- src\editor\EditorChrome.tsx:146 — const visible = effectiveVisibility(environment, page);
+- src\editor\EditorChrome.tsx:148 — effectiveStyle(environment, page, layerId);
+- src\editor\EditorChrome.tsx:154 — (layerId) => page.visibilityOverrides?.[layerId] !== undefined,
+- src\editor\EditorChrome.tsx:209 — context: { previewEnvironmentBase: boolean },
+- src\editor\EditorChrome.tsx:213 — if (context.previewEnvironmentBase) {
+- src\editor\EditorChrome.tsx:229 — previewEnvironmentBase={state.selectedPageId === ENVIRONMENT_SENTINEL}
+- src\editor\EditorChrome.tsx:533 — // Skips the mirror when the user has explicitly selected Global Settings.
+- src\editor\EditorContext.tsx:47 — effectiveStyle,
+- src\editor\EditorContext.tsx:48 — effectiveVisibility,
+- src\editor\EditorContext.tsx:51 — import { selectedPageWriteBlocked } from "./authoringTarget";
+- src\editor\EditorContext.tsx:663 — ...Object.keys(page.layerOverrides ?? {}),
+- src\editor\EditorContext.tsx:669 — layerStyles[layerId] = effectiveStyle(base, page, layerId);
+- src\editor\EditorContext.tsx:673 — defaultVisibleLayers: Array.from(effectiveVisibility(base, page)),
+- src\editor\EditorContext.tsx:683 — const overrides = { ...(page.layerOverrides ?? {}) };
+- src\editor\EditorContext.tsx:695 — const next: PresentationPage = { ...page, layerOverrides: overrides };
+- src\editor\EditorContext.tsx:696 — if (Object.keys(overrides).length === 0) delete next.layerOverrides;
+- src\editor\EditorContext.tsx:704 — const visibilityOverrides = { ...(page.visibilityOverrides ?? {}) };
+- src\editor\EditorContext.tsx:705 — delete visibilityOverrides[layerId];
+- src\editor\EditorContext.tsx:706 — const next: PresentationPage = { ...page, visibilityOverrides };
+- src\editor\EditorContext.tsx:707 — if (Object.keys(visibilityOverrides).length === 0) {
+- src\editor\EditorContext.tsx:708 — delete next.visibilityOverrides;
+- src\editor\EditorContext.tsx:817 — if (page.layerOverrides) {
+- src\editor\EditorContext.tsx:818 — const layerOverrides = normalizeMtBoundaryVisibilityLayerStyles(
+- src\editor\EditorContext.tsx:819 — page.layerOverrides,
+- src\editor\EditorContext.tsx:821 — if (layerOverrides !== page.layerOverrides) {
+- src\editor\EditorContext.tsx:822 — next = { ...next, layerOverrides };
+- src\editor\EditorContext.tsx:840 — for (const [layerId, patch] of Object.entries(page.layerOverrides ?? {})) {
+- src\editor\EditorContext.tsx:846 — for (const [layerId, visible] of Object.entries(page.visibilityOverrides ?? {})) {
+- src\editor\EditorContext.tsx:856 — delete next.layerOverrides;
+- src\editor\EditorContext.tsx:857 — delete next.visibilityOverrides;
+- src\editor\EditorContext.tsx:1107 — if (next.layerOverrides?.[action.layerId]) {
+- src\editor\EditorContext.tsx:1108 — const layerOverrides = { ...next.layerOverrides };
+- src\editor\EditorContext.tsx:1109 — delete layerOverrides[action.layerId];
+- src\editor\EditorContext.tsx:1110 — if (Object.keys(layerOverrides).length > 0) {
+- src\editor\EditorContext.tsx:1111 — next.layerOverrides = layerOverrides;
+- src\editor\EditorContext.tsx:1113 — delete next.layerOverrides;
+- src\editor\EditorContext.tsx:1117 — if (next.visibilityOverrides?.[action.layerId] !== undefined) {
+- src\editor\EditorContext.tsx:1118 — const visibilityOverrides = { ...next.visibilityOverrides };
+- src\editor\EditorContext.tsx:1119 — delete visibilityOverrides[action.layerId];
+- src\editor\EditorContext.tsx:1120 — if (Object.keys(visibilityOverrides).length > 0) {
+- src\editor\EditorContext.tsx:1121 — next.visibilityOverrides = visibilityOverrides;
+- src\editor\EditorContext.tsx:1123 — delete next.visibilityOverrides;
+- src\editor\EditorContext.tsx:1169 — const overrides = { ...(p.layerOverrides ?? {}) };
+- src\editor\EditorContext.tsx:1174 — return { ...p, layerOverrides: overrides };
+- src\editor\EditorContext.tsx:1193 — const overrides = { ...(p.layerOverrides ?? {}) };
+- src\editor\EditorContext.tsx:1205 — const next: PresentationPage = { ...p, layerOverrides: overrides };
+- src\editor\EditorContext.tsx:1206 — if (Object.keys(overrides).length === 0) delete next.layerOverrides;
+- src\editor\EditorContext.tsx:1222 — const overrides = { ...(p.visibilityOverrides ?? {}) };
+- src\editor\EditorContext.tsx:1224 — return { ...p, visibilityOverrides: overrides };
+- src\editor\EditorContext.tsx:1239 — const overrides = { ...(p.visibilityOverrides ?? {}) };
+- src\editor\EditorContext.tsx:1241 — const next: PresentationPage = { ...p, visibilityOverrides: overrides };
+- src\editor\EditorContext.tsx:1242 — if (Object.keys(overrides).length === 0) delete next.visibilityOverrides;
+- src\editor\EditorContext.tsx:1810 — delete converted.layerOverrides;
+- src\editor\EditorContext.tsx:1811 — delete converted.visibilityOverrides;
+- src\editor\EditorContext.tsx:2055 — p.layerOverrides !== undefined ||
+- src\editor\EditorContext.tsx:2056 — p.visibilityOverrides !== undefined ||
+- src\editor\EditorContext.tsx:2062 — delete next.layerOverrides;
+- src\editor\EditorContext.tsx:2063 — delete next.visibilityOverrides;
+- src\editor\EditorContext.tsx:2081 — // Strip layerOverrides, visibilityOverrides, cinematicExposure, and
+- src\editor\EditorContext.tsx:2088 — p.layerOverrides !== undefined ||
+- src\editor\EditorContext.tsx:2089 — p.visibilityOverrides !== undefined ||
+- src\editor\EditorContext.tsx:2096 — delete next.layerOverrides;
+- src\editor\EditorContext.tsx:2097 — delete next.visibilityOverrides;
+- src\editor\EditorContext.tsx:2267 — // Open the editor on the editor-only Global Settings pseudo-page so
+- src\editor\EditorContext.tsx:2514 — const previewEnvironmentBase =
+- src\editor\EditorContext.tsx:2530 — const previewPage = previewEnvironmentBase
+- src\editor\EditorContext.tsx:2533 — layerOverrides: undefined,
+- src\editor\EditorContext.tsx:2536 — const previewEnvironment = previewEnvironmentBase
+- src\editor\EditorContext.tsx:2545 — effectiveStyle(previewEnvironment, previewPage, layerId),
+- src\editor\EditorContext.tsx:2568 — : effectiveVisibility(
+- src\editor\EditorContext.tsx:2957 — ? effectiveStyle(pageEnvironment, page, layerId)
+- src\editor\EditorContext.tsx:2992 — ? effectiveStyle(pageEnvironment, page, layerId)
+- src\editor\EditorContext.tsx:3075 — ? effectiveStyle(pageEnvironment, page, layerId)
+- src\editor\EditorContext.tsx:3233 — effectiveStyle(pageEnvironment, displayPage, layer.id),
+- src\editor\EditorContext.tsx:3236 — effectiveVisibility(pageEnvironment, displayPage),
+- src\editor\EditorContext.tsx:3281 — ...(page.layerOverrides?.[layerId] ?? {}),
+- src\editor\EditorContext.tsx:3284 — const merged = effectiveStyle(
+- src\editor\EditorContext.tsx:3288 — layerOverrides: {
+- src\editor\EditorContext.tsx:3289 — ...(page.layerOverrides ?? {}),
+- src\editor\EditorContext.tsx:3325 — const overrides = { ...(page.layerOverrides ?? {}) };
+- src\editor\EditorContext.tsx:3339 — layerOverrides: overrides,
+- src\editor\EditorContext.tsx:3342 — delete nextPage.layerOverrides;
+- src\editor\EditorContext.tsx:3346 — effectiveStyle(pageEnvironment, nextPage, layerId),
+- src\editor\EditorContext.tsx:3377 — const merged = effectiveVisibility(pageEnvironment, {
+- src\editor\EditorContext.tsx:3379 — visibilityOverrides: {
+- src\editor\EditorContext.tsx:3380 — ...(page.visibilityOverrides ?? {}),
+- src\editor\EditorContext.tsx:3419 — const overrides = { ...(page.visibilityOverrides ?? {}) };
+- src\editor\EditorContext.tsx:3421 — const merged = effectiveVisibility(pageEnvironment, {
+- src\editor\EditorContext.tsx:3423 — visibilityOverrides: overrides,
+- src\editor\EditorRoot.tsx:44 — effectiveStyle,
+- src\editor\EditorRoot.tsx:45 — effectiveVisibility,
+- src\editor\EditorRoot.tsx:48 — import { selectedAuthoringPage } from "./authoringTarget";
+- src\editor\EditorRoot.tsx:834 — ? effectiveVisibility(selectedPageEnvironment, selectedPage)
+- src\editor\EditorRoot.tsx:840 — ? effectiveStyle(selectedPageEnvironment, selectedPage, layerId)
+- src\editor\EditorRoot.tsx:988 — page?.layerOverrides?.[UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID]
+- src\editor\EditorRoot.tsx:1026 — ? page.layerOverrides?.[UTAH_FORGE_SCENE_SECTION_LAYER_ID] ??
+- src\editor\EnvironmentScenePanel.tsx:52 — data-dev-note="Row controls Global Settings label/control alignment."
+- src\editor\EnvironmentScenePanel.tsx:860 — data-dev-note="environmentGroupStyle controls the Global Settings subheading inset."
+- src\editor\LayerPanel.tsx:111 — effectiveStyle,
+- src\editor\LayerPanel.tsx:121 — import { pageSelectionHasLanded, selectedAuthoringPage } from "./authoringTarget";
+- src\editor\LayerPanel.tsx:325 — //                         active and edits page.layerOverrides.
+- src\editor\LayerPanel.tsx:386 — ? currentPage.visibilityOverrides?.[layer.id] === true
+- src\editor\LayerPanel.tsx:452 — ? effectiveStyle(currentPageEnvironment, currentPage, layer.id)
+- src\editor\LayerPanel.tsx:455 — ? effectiveStyle(
+- src\editor\LayerPanel.tsx:620 — effectiveStyle(
+- src\editor\LayerPanel.tsx:632 — currentPage.layerOverrides?.[layer.id]?.color as
+- src\editor\LayerPanel.tsx:708 — (effectiveStyle(
+- src\editor\LayerPanel.tsx:713 — (effectiveStyle(
+- src\editor\LayerPanel.tsx:726 — currentPage.layerOverrides?.[layer.id]
+- src\editor\LayerPanel.tsx:729 — currentPage.layerOverrides[layer.id]
+- src\editor\LayerPanel.tsx:767 — (effectiveStyle(
+- src\editor\LayerPanel.tsx:772 — (effectiveStyle(
+- src\editor\LayerPanel.tsx:784 — currentPage.layerOverrides?.[layer.id]
+- src\editor\LayerPanel.tsx:822 — (effectiveStyle(
+- src\editor\LayerPanel.tsx:834 — currentPage.layerOverrides?.[layer.id]?.opacity !==
+- src\editor\LayerPanel.tsx:837 — currentPage.layerOverrides[layer.id].opacity,
+- src\editor\LayerPanel.tsx:1088 — (effectiveStyle(
+- src\editor\LayerPanel.tsx:1100 — currentPage.layerOverrides?.[layer.id]
+- src\editor\LayerPanel.tsx:1103 — currentPage.layerOverrides[layer.id]
+- src\editor\LayerPanel.tsx:1161 — currentPage.layerOverrides?.[layer.id]
+- src\editor\LayerPanel.tsx:1164 — currentPage.layerOverrides[layer.id]
+- src\editor\LayerPanel.tsx:1222 — currentPage.layerOverrides?.[layer.id]
+- src\editor\LayerPanel.tsx:1225 — currentPage.layerOverrides[layer.id]
+- src\editor\LayerPanel.tsx:1312 — ((effectiveStyle(
+- src\editor\LayerPanel.tsx:1325 — currentPage.layerOverrides?.[layer.id]?.fogDensity !==
+- src\editor\LayerPanel.tsx:1328 — (currentPage.layerOverrides[layer.id]
+- src\editor\LayerPanel.tsx:1376 — (effectiveStyle(
+- src\editor\LayerPanel.tsx:1389 — currentPage.layerOverrides?.[layer.id]?.lineWidth !==
+- src\editor\LayerPanel.tsx:1392 — currentPage.layerOverrides[layer.id].lineWidth,
+- src\editor\LayerPanel.tsx:1625 — currentPage.layerOverrides?.[layer.id]?.[
+- src\editor\LayerPanel.tsx:1629 — currentPage.layerOverrides[layer.id][
+- src\editor\LayerPanel.tsx:1690 — currentPage.layerOverrides?.[layer.id]
+- src\editor\LayerPanel.tsx:1693 — currentPage.layerOverrides[layer.id]
+- src\editor\LayerPanel.tsx:1751 — currentPage.layerOverrides?.[layer.id]
+- src\editor\LayerPanel.tsx:1754 — currentPage.layerOverrides[layer.id]
+- src\editor\LayerPanel.tsx:1811 — currentPage.layerOverrides?.[layer.id]
+- src\editor\LayerPanel.tsx:1814 — currentPage.layerOverrides[layer.id]
+- src\editor\LayerPanel.tsx:1872 — currentPage.layerOverrides?.[layer.id]
+- src\editor\LayerPanel.tsx:1875 — currentPage.layerOverrides[layer.id]
+- src\editor\LayerPanel.tsx:2013 — (effectiveStyle(
+- src\editor\LayerPanel.tsx:2026 — currentPage.layerOverrides?.[layer.id]
+- src\editor\LayerPanel.tsx:2029 — currentPage.layerOverrides[layer.id]
+- src\editor\LayerPanel.tsx:2242 — currentPage.layerOverrides?.[layer.id]
+- src\editor\LayerPanel.tsx:2245 — currentPage.layerOverrides[layer.id]
+- src\editor\LayerPanel.tsx:2345 — effectiveStyle(
+- src\editor\LayerPanel.tsx:2357 — currentPage.layerOverrides?.[layer.id]
+- src\editor\LayerPanel.tsx:2377 — (effectiveStyle(
+- src\editor\LayerPanel.tsx:2389 — currentPage.layerOverrides?.[layer.id]
+- src\editor\LayerPanel.tsx:2392 — currentPage.layerOverrides[layer.id]
+- src\editor\LayerPanel.tsx:2414 — effectiveStyle(
+- src\editor\LayerPanel.tsx:2426 — currentPage.layerOverrides?.[layer.id]
+- src\editor\LayerPanel.tsx:2447 — effectiveStyle(
+- src\editor\LayerPanel.tsx:2460 — currentPage.layerOverrides?.[layer.id]
+- src\editor\LayerPanel.tsx:2463 — currentPage.layerOverrides[layer.id]
+- src\editor\LayerPanel.tsx:2469 — effectiveStyle(
+- src\editor\LayerPanel.tsx:2494 — effectiveStyle(
+- src\editor\LayerPanel.tsx:2506 — currentPage.layerOverrides?.[layer.id]
+- src\editor\LayerPanel.tsx:2510 — effectiveStyle(
+- src\editor\LayerPanel.tsx:2536 — effectiveStyle(
+- src\editor\LayerPanel.tsx:2549 — currentPage.layerOverrides?.[layer.id]
+- src\editor\LayerPanel.tsx:2552 — currentPage.layerOverrides[layer.id]
+- src\editor\LayerPanel.tsx:2558 — effectiveStyle(
+- src\editor\LayerPanel.tsx:2646 — effectiveStyle(
+- src\editor\LayerPanel.tsx:2653 — effectiveStyle(
+- src\editor\LayerPanelGroups.tsx:8 — effectiveStyle,
+- src\editor\LayerPanelGroups.tsx:9 — effectiveVisibility,
+- src\editor\LayerPanelGroups.tsx:54 — import { pageSelectionHasLanded, selectedAuthoringPage } from "./authoringTarget";
+- src\editor\LayerPanelGroups.tsx:276 — ? effectiveStyle(
+- src\editor\LayerPanelGroups.tsx:293 — ? effectiveStyle(
+- src\editor\LayerPanelGroups.tsx:317 — ? currentPage.visibilityOverrides?.[publicTopoTerrainLayerId] === true
+- src\editor\LayerPanelGroups.tsx:321 — ? effectiveVisibility(currentPageEnvironment, currentPage)
+- src\editor\LayerPanelGroups.tsx:336 — ? effectiveStyle(currentPageEnvironment, currentPage, layerId)
+- src\editor\LayerPanelGroups.tsx:377 — Select global settings or a page in Pages.
+- src\editor\LayerPanelGroups.tsx:444 — ? effectiveStyle(currentPageEnvironment, currentPage, seismicLayer.id)
+- src\editor\LayerPanelGroups.tsx:479 — ? effectiveStyle(
+- src\editor\PagePanel.tsx:13 — import { selectedAuthoringPage } from "./authoringTarget";
+- src\editor\PagePanel.tsx:740 — data-dev-note="PagePanel contains Global Settings plus the Pages select/order list."
+- src\editor\PagePanel.tsx:745 — data-dev-note="globalSettingsSelectorStyle aligns the Global Settings selector with the Global Settings containers."
+- src\editor\PagePanel.tsx:750 — data-dev-note="Global Settings is an editor-only pseudo-page. It selects environment/global controls and is not part of presenter navigation."
+- src\editor\PagePanel.tsx:799 — <span>Global Settings</span>
+- src\editor\PagePanel.tsx:1162 — `Reset page "${selectedActionPage.title}" to Global Settings defaults? Camera, dynamic camera, title, timing, and text/image overlays will be preserved.`,
+- src\editor\PagePanel.tsx:4139 — // Row text aligns with Global Settings section labels like Atmosphere:
+- src\editor\styleControls.tsx:369 — const overrideVal = page.visibilityOverrides?.[layerId];
+- src\editor\styleControls.tsx:663 — currentPage.layerOverrides?.[layerId]?.[field] !== undefined
+- src\editor\styleControls.tsx:664 — ? String(currentPage.layerOverrides[layerId][field])
+- src\editor\styleControls.tsx:795 — currentPage.layerOverrides?.[layerId]?.[field] !== undefined
+- src\editor\styleControls.tsx:796 — ? String(currentPage.layerOverrides[layerId][field])
+- src\editor\types.ts:24 — // Sentinel for the "Global Settings" pseudo-page. selectedPageId can hold
+- src\editor\layerControls\env\EnvRows.tsx:111 — const overrideVal = page.visibilityOverrides?.[layerId];
+- src\editor\layerControls\env\EnvRows.tsx:275 — const overrideVal = page.layerOverrides?.[layerId]?.labelKind;
+- src\editor\layerControls\env\EnvRows.tsx:353 — page.layerOverrides?.[layerId]?.labelPointerVisible !== false;
+- src\editor\layerControls\env\EnvRows.tsx:424 — const overrideVal = page.layerOverrides?.[layerId]?.labelPointerSide;
+- src\editor\layerControls\env\EnvRows.tsx:483 — const overrideVal = page.layerOverrides?.[layerId]?.showLabels === true;
+- src\editor\layerControls\env\EnvRows.tsx:522 — const overrideVal = page.layerOverrides?.[layerId]?.affectedByFog !== false;
+- src\editor\layerControls\layout\LayoutControls.tsx:3 — import { effectiveStyle } from "../../../pages/effective";
+- src\editor\layerControls\layout\LayoutControls.tsx:354 — ? effectiveStyle(environment, currentPage, id)
+- src\editor\topoMap\TopoMapPanel.tsx:28 — import { effectiveStyle, isVisibilityOverridden } from "../../pages/effective";
+- src\editor\topoMap\TopoMapPanel.tsx:781 — const atmosphereEffectiveStyle =
+- src\editor\topoMap\TopoMapPanel.tsx:783 — ? effectiveStyle(environment, currentPage, atmosphereLayer.id)
+- src\editor\topoMap\TopoMapPanel.tsx:787 — ? (currentPage.layerOverrides?.[atmosphereLayer.id] ?? {})
+- src\editor\topoMap\TopoMapPanel.tsx:799 — ? currentPage.visibilityOverrides?.[atmosphereLayer.id]
+- src\editor\topoMap\TopoMapPanel.tsx:872 — const source = atmosphereVolumePatchFromStyle(atmosphereEffectiveStyle);
+- src\editor\topoMap\TopoMapPanel.tsx:1886 — isEnv ? atmosphereEnvStyle : atmosphereEffectiveStyle
+- src\editor\topoMap\TopoMapPanel.tsx:1900 — atmosphereEffectiveStyle,
+- src\editor\topoMap\TopoMapPanel.tsx:2880 — ? effectiveStyle(environment, currentPage, layerId)
+- src\editor\topoMap\TopoMapPanel.tsx:2885 — ? currentPage.visibilityOverrides?.[layerId] === true
+- src\scene\SceneManager.ts:14 — effectiveStyle,
+- src\scene\SceneManager.ts:15 — effectiveVisibility,
+- src\scene\SceneManager.ts:795 — // Geology layer handle. Stashed so applyEffectiveStylesForPage can
+- src\scene\SceneManager.ts:1206 — const visible = effectiveVisibility(environment, page).has(layerId);
+- src\scene\SceneManager.ts:1208 — const style = effectiveStyle(environment, page, layerId);
+- src\scene\SceneManager.ts:1387 — const visibleSet = effectiveVisibility(environment, page);
+- src\scene\SceneManager.ts:1390 — const fallbackStyle = effectiveStyle(environment, page, id);
+- src\scene\SceneManager.ts:1942 — return effectiveStyle(this.lastEffectiveEnv, this.lastEffectivePage, id);
+- src\scene\SceneManager.ts:2958 — effectiveStyle(
+- src\scene\SceneManager.ts:3070 — this.applyStyle(id, effectiveStyle(environment, page, id));
+- src\scene\SceneManager.ts:4019 — applyEffectiveStylesForPage(
+- src\scene\SceneManager.ts:4034 — this.applyStyle(id, effectiveStyle(environment, page, id));
+- src\scene\SceneManager.ts:4037 — effectiveStyle(environment, page, UTAH_FORGE_SCENE_SECTION_LAYER_ID),
+- src\scene\SceneManager.ts:4040 — effectiveStyle(environment, page, UTAH_FORGE_WORKING_AREA_FOCUS_LAYER_ID),
+- src\scene\SceneManager.ts:4045 — applyEffectiveVisibilityForPage(
+- src\scene\SceneManager.ts:4059 — this.setVisible(effectiveVisibility(environment, page));
+- src\scene\SceneManager.ts:4061 — effectiveStyle(environment, page, UTAH_FORGE_WORKING_AREA_FOCUS_LAYER_ID),
+- src\scene\SceneManager.ts:4112 — this.applyEffectiveStylesForPage(
+- src\scene\SceneManager.ts:4394 — this.applyEffectiveVisibilityForPage(env, page);
+- src\scene\SceneManager.ts:4395 — this.applyEffectiveStylesForPage(env, page);
+- src\scene\styles\seismicBrowserStyle.ts:168 — const effectiveStyle: EditableStyle = {
+- src\scene\styles\seismicBrowserStyle.ts:215 — typeof effectiveStyle.seismicProductVisibility === "object" &&
+- src\scene\styles\seismicBrowserStyle.ts:216 — effectiveStyle.seismicProductVisibility !== null
+- src\scene\styles\seismicBrowserStyle.ts:217 — ? (effectiveStyle.seismicProductVisibility as Record<string, boolean>)
+- src\scene\styles\seismicBrowserStyle.ts:239 — effectiveStyle.seismicRenderMode === "raymarch" ? "raymarch" : "slice";
+- src\scene\styles\seismicBrowserStyle.ts:243 — effectiveStyle.seismicSliceAxis === "crossline" ||
+- src\scene\styles\seismicBrowserStyle.ts:244 — effectiveStyle.seismicSliceAxis === "sample" ||
+- src\scene\styles\seismicBrowserStyle.ts:245 — effectiveStyle.seismicSliceAxis === "line"
+- src\scene\styles\seismicBrowserStyle.ts:246 — ? effectiveStyle.seismicSliceAxis
+- src\scene\styles\seismicBrowserStyle.ts:249 — effectiveStyle,
+- src\scene\styles\seismicBrowserStyle.ts:255 — const opacity = styleNumber(effectiveStyle, "opacity", 0.62, 0, 1);
+- src\scene\styles\seismicBrowserStyle.ts:257 — effectiveStyle,
+- src\scene\styles\seismicBrowserStyle.ts:265 — styleNumber(effectiveStyle, "seismicAmplitudeMax", 0.92, 0, 1),
+- src\scene\styles\seismicBrowserStyle.ts:268 — effectiveStyle,
+- src\scene\styles\seismicBrowserStyle.ts:275 — effectiveStyle.seismicColormap === "grayscale" ||
+- src\scene\styles\seismicBrowserStyle.ts:276 — effectiveStyle.seismicColormap === "velocity"
+- src\scene\styles\seismicBrowserStyle.ts:277 — ? effectiveStyle.seismicColormap
+- src\scene\styles\seismicBrowserStyle.ts:279 — const removeBackground = effectiveStyle.seismicRemoveBackground === true;
+- src\scene\styles\seismicBrowserStyle.ts:281 — effectiveStyle,
+- src\scene\styles\seismicBrowserStyle.ts:288 — styleNumber(effectiveStyle, "seismicVolumeSampleSteps", 96, 24, 160),
+- src\scene\styles\seismicBrowserStyle.ts:290 — const sectionIsoEnabled = effectiveStyle.sectionIsoEnabled === true;
+- src\scene\styles\seismicBrowserStyle.ts:292 — ? styleNumber(effectiveStyle, "sectionIsoSourceOpacity", 0, 0, 1)
+- src\scene\styles\seismicBrowserStyle.ts:297 — effectiveStyle.seismicIsoSource === "mt-resistivity"
+- src\scene\styles\seismicBrowserStyle.ts:301 — typeof effectiveStyle.sectionIsoTargetIds === "object" &&
+- src\scene\styles\seismicBrowserStyle.ts:302 — effectiveStyle.sectionIsoTargetIds !== null
+- src\scene\styles\seismicBrowserStyle.ts:303 — ? effectiveStyle.sectionIsoTargetIds
+- src\scene\styles\seismicBrowserStyle.ts:306 — styleNumber(effectiveStyle, "sectionIsoMin", amplitudeMin, 0, 1),
+- src\scene\styles\seismicBrowserStyle.ts:312 — styleNumber(effectiveStyle, "sectionIsoMax", amplitudeMax, 0, 1),
+- src\scene\styles\seismicBrowserStyle.ts:327 — linesVisible: effectiveStyle.sectionIsoLinesVisible !== false,
+- src\scene\styles\seismicBrowserStyle.ts:328 — bandsVisible: effectiveStyle.sectionIsoBandsVisible !== false,
+- src\scene\styles\seismicBrowserStyle.ts:333 — styleNumber(effectiveStyle, "sectionIsoLevelCount", 5, 2, 32),
+- src\scene\styles\seismicBrowserStyle.ts:335 — lineWidth: styleNumber(effectiveStyle, "sectionIsoLineWidth", 2.6, 0, 12),
+- src\scene\styles\seismicBrowserStyle.ts:337 — effectiveStyle.sectionIsoLineStyle === "dashed" ? "dashed" : "solid",
+- src\scene\styles\seismicBrowserStyle.ts:339 — effectiveStyle,
+- src\scene\styles\seismicBrowserStyle.ts:345 — fillOffset: styleNumber(effectiveStyle, "sectionIsoFillOffset", 0, -1, 1),
+- src\scene\styles\seismicBrowserStyle.ts:358 — effectiveStyle.seismicComparisonMode === "side-by-side"
+- src\scene\styles\seismicBrowserStyle.ts:362 — typeof effectiveStyle.seismicComparisonProductId === "string"
+- src\scene\styles\seismicBrowserStyle.ts:363 — ? effectiveStyle.seismicComparisonProductId
+- src\scene\styles\seismicBrowserStyle.ts:366 — effectiveStyle,
+- src\scene\styles\seismicBrowserStyle.ts:372 — const timeScale = styleNumber(effectiveStyle, "seismicTimeScale", 2, 0.25, 8);
+- src\scene\styles\seismicBrowserStyle.ts:373 — const navigationVisible = effectiveStyle.seismicNavigationVisible !== false;
+- src\scene\styles\seismicBrowserStyle.ts:375 — typeof effectiveStyle.seismicNavigationRoleVisibility === "object" &&
+- src\scene\styles\seismicBrowserStyle.ts:376 — effectiveStyle.seismicNavigationRoleVisibility !== null
+- src\scene\styles\seismicBrowserStyle.ts:377 — ? effectiveStyle.seismicNavigationRoleVisibility
+- src\scene\styles\seismicBrowserStyle.ts:386 — const sliceThroughVolume = effectiveStyle.seismicSliceThroughVolume === true;
+- src\scene\styles\seismicBrowserStyle.ts:791 — updateSeismicFigureAnnotations(obj, effectiveStyle);
+- src\scene\styles\seismicBrowserStyle.ts:797 — host.updateSeismicVolumeCutIsoOverlays(effectiveStyle);
+- src\scene\styles\seismicBrowserStyle.ts:798 — host.updateSeismicResistivityIsoOverlays(effectiveStyle);
+- src\scene\terrain\applyLakesToTerrain.ts:3 — import { effectiveStyle, effectiveVisibility } from "../../pages/effective";
+- src\scene\terrain\applyLakesToTerrain.ts:24 — const visibleSet = effectiveVisibility(environment, page);
+- src\scene\terrain\applyLakesToTerrain.ts:26 — const lakeStyle = effectiveStyle(environment, page, "hydrography-lakes");
+- src\scene\terrain\applyLakesToTerrain.ts:38 — const tfStyle = effectiveStyle(environment, page, "three-firs-target");
+- src\scene\terrain\applyLakesToTerrain.ts:44 — const gpStyle = effectiveStyle(environment, page, "great-plains-target");
+- src\scene\terrain\applyLakesToTerrain.ts:50 — const claimStyle = effectiveStyle(environment, page, "claim-boundary");
+- src\scene\terrain\applyLakesToTerrain.ts:56 — const geologyStyle = effectiveStyle(environment, page, "bedrock-geology");
+- src\scene\terrain\applyLakesToTerrain.ts:64 — const forestStyle = effectiveStyle(environment, page, "trees-vri");
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:2 — import { effectiveStyle, effectiveVisibility } from "../../pages/effective";
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:30 — type EffectiveLayerStyle = ReturnType<typeof effectiveStyle>;
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:116 — function sectionIsoOverlayVisible(style: ReturnType<typeof effectiveStyle>): boolean {
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:353 — const fromVisible = effectiveVisibility(fromEnvironment, fromPage);
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:354 — const toVisible = effectiveVisibility(toEnvironment, toPage);
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:357 — fromPage.layerOverrides,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:358 — toPage.layerOverrides,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:359 — fromPage.visibilityOverrides,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:360 — toPage.visibilityOverrides,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:413 — sourceState?.style ?? effectiveStyle(fromEnvironment, fromPage, id);
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:414 — const targetStyle = effectiveStyle(toEnvironment, toPage, id);
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:556 — fromStyle: ReturnType<typeof effectiveStyle>,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:557 — targetStyle: ReturnType<typeof effectiveStyle>,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:585 — fromStyle: ReturnType<typeof effectiveStyle>,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:586 — targetStyle: ReturnType<typeof effectiveStyle>,
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:614 — const fromSceneSectionStyle = effectiveStyle(
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:619 — const targetSceneSectionStyle = effectiveStyle(
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:694 — sourceState?.style ?? effectiveStyle(fromEnvironment, fromPage, id);
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:695 — const targetStyle = effectiveStyle(toEnvironment, toPage, id);
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:836 — const fromStyle = effectiveStyle(fromEnvironment, fromPage, id);
+- src\scene\transitions\transitionEffectiveLayersForPage.ts:837 — const targetStyle = effectiveStyle(toEnvironment, toPage, id);
+- src\scene\workingArea\workingAreaFocusController.ts:11 — import { effectiveStyle } from "../../pages/effective";
+- src\scene\workingArea\workingAreaFocusController.ts:374 — : effectiveStyle(
+- src\scene\workingArea\workingAreaFocusController.ts:379 — const toStyle = effectiveStyle(
+
+## Final commit / delayed async reapply
+
+Pattern: `finalizePageTransitionCommit|final commit|post-commit|lateReapply|deferred|target apply|overlay-end|tween-completion|commitTrace|final target|reassert|replay` 
+
+- src\pages\PageController.tsx:165 — lateReapply: NonNullable<SceneTransitionDebugState>["lateReapply"] | null;
+- src\pages\PageController.tsx:195 — lateReapplyTotalCount: number;
+- src\pages\PageController.tsx:196 — lateReapplyDuringTransitionCount: number;
+- src\pages\PageController.tsx:197 — latestLateReapplyAction: string | null;
+- src\pages\PageController.tsx:198 — latestLateReapplyReason: string | null;
+- src\pages\PageController.tsx:199 — latestLateReapplyProgress: number | null;
+- src\pages\PageController.tsx:459 — const latestEvents = sceneTransition?.lateReapply?.events ?? [];
+- src\pages\PageController.tsx:484 — lateReapplyTotalCount: sceneTransition?.lateReapply?.totalCount ?? 0,
+- src\pages\PageController.tsx:485 — lateReapplyDuringTransitionCount:
+- src\pages\PageController.tsx:486 — sceneTransition?.lateReapply?.duringTransitionCount ?? 0,
+- src\pages\PageController.tsx:487 — latestLateReapplyAction: latestEvent?.action ?? null,
+- src\pages\PageController.tsx:488 — latestLateReapplyReason: latestEvent?.reason ?? null,
+- src\pages\PageController.tsx:489 — latestLateReapplyProgress: traceOptionalNumber(
+- src\pages\PageController.tsx:1257 — lateReapply: sceneTransition?.lateReapply ?? null,
+- src\pages\PageController.tsx:2737 — sceneHandle.manager.finalizePageTransitionCommit(
+- src\pages\types.ts:1627 — // (figure 4) but rendering for that case is deferred.
+- src\scene\SceneManager.ts:105 — type TransitionCommitTrace,
+- src\scene\SceneManager.ts:495 — interface LateReapplyDebugEvent {
+- src\scene\SceneManager.ts:511 — interface LateReapplyDebugState {
+- src\scene\SceneManager.ts:514 — events: LateReapplyDebugEvent[];
+- src\scene\SceneManager.ts:762 — // resolve after the initial visibility/style pass; replaying this state keeps
+- src\scene\SceneManager.ts:802 — private lateReapplyDebugSequence = 0;
+- src\scene\SceneManager.ts:803 — private lateReapplyDebugDuringTransitionCount = 0;
+- src\scene\SceneManager.ts:804 — private readonly lateReapplyDebugEvents: LateReapplyDebugEvent[] = [];
+- src\scene\SceneManager.ts:2737 — lateReapply: LateReapplyDebugState;
+- src\scene\SceneManager.ts:2746 — commitTraces: TransitionCommitTrace[];
+- src\scene\SceneManager.ts:2775 — lateReapply: this.getLateReapplyDebugState(),
+- src\scene\SceneManager.ts:2787 — commitTraces: commitState?.commitTraces.slice() ?? [],
+- src\scene\SceneManager.ts:2795 — getLateReapplyDebugState(): LateReapplyDebugState {
+- src\scene\SceneManager.ts:2797 — totalCount: this.lateReapplyDebugSequence,
+- src\scene\SceneManager.ts:2798 — duringTransitionCount: this.lateReapplyDebugDuringTransitionCount,
+- src\scene\SceneManager.ts:2799 — events: this.lateReapplyDebugEvents.slice(),
+- src\scene\SceneManager.ts:2803 — private recordLateReapplyDebugEvent(
+- src\scene\SceneManager.ts:2804 — reason: LateReapplyDebugEvent["reason"],
+- src\scene\SceneManager.ts:2805 — action: LateReapplyDebugEvent["action"],
+- src\scene\SceneManager.ts:2809 — if (duringTransition) this.lateReapplyDebugDuringTransitionCount += 1;
+- src\scene\SceneManager.ts:2813 — this.lateReapplyDebugEvents.push({
+- src\scene\SceneManager.ts:2814 — sequence: ++this.lateReapplyDebugSequence,
+- src\scene\SceneManager.ts:2825 — if (this.lateReapplyDebugEvents.length > 25) {
+- src\scene\SceneManager.ts:2826 — this.lateReapplyDebugEvents.shift();
+- src\scene\SceneManager.ts:2874 — | "overlay-end-application"
+- src\scene\SceneManager.ts:2875 — | "editor-deferred-reapply"
+- src\scene\SceneManager.ts:2876 — | "tween-completion"
+- src\scene\SceneManager.ts:2877 — | "post-commit-graph-check";
+- src\scene\SceneManager.ts:2883 — }): TransitionCommitTrace | null {
+- src\scene\SceneManager.ts:2918 — reason: "post-transition target assertion suppressed after final commit",
+- src\scene\SceneManager.ts:2934 — phase: "editor-deferred-reapply",
+- src\scene\SceneManager.ts:2936 — reason: "post-transition target reapply suppressed after final commit",
+- src\scene\SceneManager.ts:2966 — finalizePageTransitionCommit(
+- src\scene\SceneManager.ts:2969 — ): TransitionCommitTrace | null {
+- src\scene\SceneManager.ts:2982 — attemptedBy: "SceneManager.finalizePageTransitionCommit",
+- src\scene\SceneManager.ts:2985 — reason: "terminal graph captured before final commit owner runs",
+- src\scene\SceneManager.ts:2989 — attemptedBy: "SceneManager.finalizePageTransitionCommit",
+- src\scene\SceneManager.ts:2993 — reason: "SceneManager owns page-transition final commit",
+- src\scene\SceneManager.ts:3009 — phase: "post-commit-graph-check",
+- src\scene\SceneManager.ts:3010 — attemptedBy: "SceneManager.finalizePageTransitionCommit",
+- src\scene\SceneManager.ts:3014 — reason: "post-commit graph comparison is observational only",
+- src\scene\SceneManager.ts:4108 — this.recordLateReapplyDebugEvent(
+- src\scene\SceneManager.ts:4343 — this.recordLateReapplyDebugEvent(
+- src\scene\SceneManager.ts:4348 — phase: "editor-deferred-reapply",
+- src\scene\SceneManager.ts:4350 — reason: "active transition reapply suppressed after final commit",
+- src\scene\SceneManager.ts:4359 — this.recordLateReapplyDebugEvent(
+- src\scene\SceneManager.ts:4371 — this.recordLateReapplyDebugEvent(
+- src\scene\SceneManager.ts:4379 — this.recordLateReapplyDebugEvent(
+- src\scene\SceneManager.ts:4388 — this.recordLateReapplyDebugEvent(
+- src\scene\SceneManager.ts:4874 — phase: "overlay-end-application",
+- src\scene\overlays\SceneOverlaysController.ts:90 — // Replay any apply that landed before the loader resolved. Without
+- src\scene\overlays\SceneOverlaysController.ts:214 — // before the loader resolves still gets replayed once handles
+- src\scene\overlays\SceneOverlaysController.ts:228 — `[applySceneOverlaysForPage:${page.id}] no handles registered yet, caching for later replay`,
+- src\scene\overlays\SceneOverlaysController.ts:255 — // Cache the target page so a registration during the tween replays
+- src\scene\transitions\layerTweenRuntime.ts:352 — phase: "tween-completion",
+- src\scene\transitions\transitionCommitGate.ts:5 — | "overlay-end-application"
+- src\scene\transitions\transitionCommitGate.ts:6 — | "editor-deferred-reapply"
+- src\scene\transitions\transitionCommitGate.ts:7 — | "tween-completion"
+- src\scene\transitions\transitionCommitGate.ts:8 — | "post-commit-graph-check";
+- src\scene\transitions\transitionCommitGate.ts:52 — export interface TransitionCommitTrace {
+- src\scene\transitions\transitionCommitGate.ts:84 — commitTraces: TransitionCommitTrace[];
+- src\scene\transitions\transitionCommitGate.ts:112 — recordCommitAttempt(attempt: TransitionCommitAttempt): TransitionCommitTrace;
+- src\scene\transitions\transitionCommitGate.ts:124 — "overlay-end-application",
+- src\scene\transitions\transitionCommitGate.ts:125 — "editor-deferred-reapply",
+- src\scene\transitions\transitionCommitGate.ts:126 — "tween-completion",
+- src\scene\transitions\transitionCommitGate.ts:364 — ): TransitionCommitTrace {
+- src\scene\transitions\transitionCommitGate.ts:406 — commitTraces: [],
+- src\scene\transitions\transitionCommitGate.ts:411 — recordCommitAttempt(attempt: TransitionCommitAttempt): TransitionCommitTrace {
+- src\scene\transitions\transitionCommitGate.ts:420 — ): TransitionCommitTrace {
+- src\scene\transitions\transitionCommitGate.ts:430 — ? "final commit owner accepted target assertion"
+- src\scene\transitions\transitionCommitGate.ts:441 — state.commitTraces.push(trace);
+- src\editor\EditorChrome.tsx:301 — const { setLiveApplyTransitionActive, flushDeferredLiveSceneEdits } =
+- src\editor\EditorChrome.tsx:306 — if (!active && flushDeferredLiveSceneEdits()) {
+- src\editor\EditorChrome.tsx:312 — flushDeferredLiveSceneEdits,
+- src\editor\EditorContext.tsx:207 — flushDeferredLiveSceneEdits: () => boolean;
+- src\editor\EditorContext.tsx:2289 — const deferredLiveSceneApplyRef = useRef(false);
+- src\editor\EditorContext.tsx:2302 — deferredLiveSceneApplyRef.current = true;
+- src\editor\EditorContext.tsx:2308 — const flushDeferredLiveSceneEdits = useCallback(() => {
+- src\editor\EditorContext.tsx:2310 — if (!deferredLiveSceneApplyRef.current) return false;
+- src\editor\EditorContext.tsx:2311 — deferredLiveSceneApplyRef.current = false;
+- src\editor\EditorContext.tsx:3043 — deferredLiveSceneApplyRef.current = true;
+- src\editor\EditorContext.tsx:3164 — deferredLiveSceneApplyRef.current = true;
+- src\editor\EditorContext.tsx:3270 — deferredLiveSceneApplyRef.current = true;
+- src\editor\EditorContext.tsx:3315 — deferredLiveSceneApplyRef.current = true;
+- src\editor\EditorContext.tsx:3367 — deferredLiveSceneApplyRef.current = true;
+- src\editor\EditorContext.tsx:3409 — deferredLiveSceneApplyRef.current = true;
+- src\editor\EditorContext.tsx:3796 — flushDeferredLiveSceneEdits,
+- src\editor\EditorContext.tsx:3854 — flushDeferredLiveSceneEdits,
+
+## First Runtime Patch Candidate
+
+Pending human review of this audit, the first code patch should be narrow:
+
+Patch target:
+- Section ISO / scene-section / working-area derived-root lifecycle.
+
+Patch intent:
+- Prevent active-to-inactive and active-to-unrelated transitions from carrying source section masks, helpers, ground traces, frame controls, axes, or Section ISO roots.
+- Ensure late-created target Section ISO roots attach at current transition opacity, never full opacity.
+- Ensure Section ISO opacity composes with authored opacity, transition opacity, working-area focus, section mask, and attenuation.
+- Ensure final commit does not visibly rebuild Section ISO roots at full opacity.
+- Preserve MT full-density / scalar cloud transition behavior.
+
+Do not implement in this audit commit.

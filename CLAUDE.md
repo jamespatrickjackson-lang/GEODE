@@ -1,4 +1,4 @@
-# GeoSee Agent Operating Contract
+﻿# GeoSee Agent Operating Contract
 
 This file is the agent operating contract. `README.md` is the human repo
 landing page, `docs/START-HERE.md` is stable product/system orientation, and
@@ -93,11 +93,12 @@ copy under review, and required wording from tools, tests, or external APIs.
   the full-density target style to rebuild page-load Log10 Resistivity Window
   isolines. Skip that narrow refresh while a scalar tween is active, and never
   replace it with broad page visibility/style replay.
-- MT threshold boundary all-off maps are treated as empty/stale visibility
-  state. If the threshold-boundary layer is visible and no canonical or legacy
-  boundary is active, the resolver inherits default boundary visibility. Hide
-  the threshold-boundary layer to hide all boundary lines; do not repair this
-  with page-level fixture edits.
+- MT threshold boundary visibility maps carrying any explicit `visible` flag
+  are authoritative, including deliberate all-off maps ("show no
+  isosurfaces"). Only maps with no explicit visibility flags at all are
+  empty/stale and inherit default boundary visibility (DEC-145, supersedes
+  the earlier all-off-is-stale rule). Do not repair boundary visibility with
+  page-level fixture edits.
 - No page-id, page-index, fixture-title, project page, or environment fixture
   special cases are allowed for viewport quick legends. Do not edit
   `projects/*/pages/**`, `projects/*/overlays/**`, `projects/*/project.json`,
@@ -109,18 +110,18 @@ Default search scope is `src/`, `docs/` (top level only), `tools/`,
 `tests/`, and root config files. Do not `Grep` or `Glob` into the
 following paths unless the task explicitly requires them:
 
-- `projects/*/data/**` — large GeoJSON, .bin scalar/position tiles, WebP,
+- `projects/*/data/**` â€” large GeoJSON, .bin scalar/position tiles, WebP,
   raster manifests. Single search can stream tens of MB of vector text.
-- `data/**` — root vector data (includes `hydrography_streams.geojson`
+- `data/**` â€” root vector data (includes `hydrography_streams.geojson`
   at 17 MB).
-- `dist/**`, `dist-tsbuild/**`, `node_modules/**` — build output and
+- `dist/**`, `dist-tsbuild/**`, `node_modules/**` â€” build output and
   dependencies; gitignored but reachable by Glob.
 - `docs/dev-context/Archive/**`,
   `docs/dev-context/Change-Receipts/**`,
   `docs/dev-context/Verification-Receipts/**`,
   `docs/dev-context/Generated-Reports/**`,
-  `docs/dev-context/Audits/**` — historical receipts and audit evidence.
-- `playwright-report/**`, `test-results/**` — Playwright artefacts.
+  `docs/dev-context/Audits/**` â€” historical receipts and audit evidence.
+- `playwright-report/**`, `test-results/**` â€” Playwright artefacts.
 
 When a search must hit those paths, scope it: pass `glob` or `path`
 arguments narrowed to the specific subtree.
@@ -159,3 +160,27 @@ the user explicitly asks for a persistence architecture change.
 - Treat old repo-relative source paths in provenance as historical identifiers
   and resolve them through `docs/archive-map.md` and
   `docs/archive-manifest.json`.
+
+
+## Disposable Page Fixture Rule
+
+Utah FORGE pages are disposable authoring state. App-behavior tests must not use live Utah pageOrder, current deck page files, page ids, page titles, page indexes, or page-to-page pairs as proof of generic behavior. Use synthetic fixtures or fixture builders for app behavior. Deck snapshot or deck integration checks must be explicitly named as deck-state checks and kept out of app-health verification.
+
+## Page-to-page false-fix ban
+
+Utah FORGE pages are disposable authoring state. App behavior, runtime behavior, editor behavior, tests that claim app behavior, and agent fixes must not depend on current page IDs, page filenames, page numbers, page titles, page order positions, live pageOrder discovery, or source/target page pairs.
+
+App-behavior tests must use synthetic in-memory fixtures or fixture builders. Dynamic selection from live project.json pageOrder is deck-state coupling, not app-behavior proof.
+
+Deck snapshot, deck matrix, and presentation audit tools may inspect live pageOrder only when explicitly named as deck-state tools and excluded from app-health verification.
+
+If a failing behavior is observed on a page pair, the fix must be filed against the reusable behavior family: transition entity matching, effective-state resolution, layer style composition, visibility resolution, camera policy, legend state, save/persistence, or validation. Never fix by targeting the observed page pair.
+
+## Transition Runtime Operating Spec
+
+Before transition runtime, editor/save transition gating, scene-section, Section ISO, working-area focus, opacity, or page-navigation work, read:
+
+docs/dev-context/Transition-Runtime-Operating-Spec.md
+
+This spec is the active operating contract for current transition work. Older audits and matrix logs are evidence only.
+

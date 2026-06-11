@@ -44,7 +44,10 @@ function copyRuntimeDataPlugin(): Plugin {
 }
 
 const FFMPEG_CORE_PACKAGE = "@ffmpeg/core";
-const FFMPEG_CORE_ASSET_DIR = ["node_modules", "@ffmpeg", "core", "dist", "umd"];
+// @ffmpeg/ffmpeg 0.12.x runs a module worker (`type=module`) that loads the
+// core with dynamic `import()`. The UMD build is not an ES module and fails to
+// import ("failed to import ffmpeg-core.js"), so the ESM core build is served.
+const FFMPEG_CORE_ASSET_DIR = ["node_modules", "@ffmpeg", "core", "dist", "esm"];
 const FFMPEG_CORE_ASSET_OUTPUT_DIR = ["runtime", "ffmpeg"];
 const FFMPEG_CORE_ASSET_FILES = [
   "ffmpeg-core.js",
@@ -86,7 +89,12 @@ function copyFfmpegCoreAssetsPlugin(): Plugin {
           filename,
         );
         if (!(await fileExists(sourcePath))) {
-          next();
+          // Known FFmpeg core filename but no file on disk (e.g. the
+          // single-threaded core ships no ffmpeg-core.worker.js). Return 404
+          // rather than falling through to the SPA index.html, which would hand
+          // the loader a misleading 200 text/html response.
+          res.statusCode = 404;
+          res.end();
           return;
         }
         res.setHeader("Cache-Control", "no-store, max-age=0");
@@ -268,6 +276,14 @@ function sourceManualChunk(id: string): string | undefined {
 
 export default defineConfig(({ command }) => ({
   base: "./",
+  // @ffmpeg/ffmpeg 0.12.x loads its class worker via
+  // `new Worker(new URL("./worker.js", import.meta.url))`. Vite's esbuild dep
+  // optimizer cannot emit that worker, so the optimized build references a
+  // missing `.vite/deps/worker.js` and `ffmpeg.load()` hangs forever. Excluding
+  // the package keeps it un-prebundled so the worker URL resolves correctly.
+  optimizeDeps: {
+    exclude: ["@ffmpeg/ffmpeg"],
+  },
   plugins: [
     react(),
     authorWritePlugin(),

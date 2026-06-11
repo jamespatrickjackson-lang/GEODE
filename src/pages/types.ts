@@ -147,21 +147,77 @@ export interface DemoOrientationBlockStyle {
   labelLiftM?: number;
 }
 
+export type DemoBoreholeIconOrientation = "axis" | "billboard";
+
+// Per-element placement offset in scene metres, relative to the borehole
+// surface location. Any axis left undefined resolves to 0.
+export interface DemoBoreholeElementOffset {
+  x?: number;
+  y?: number;
+  z?: number;
+}
+
+// Loadable SVG (or raster) icon shown on top of a borehole, on its axis.
+export interface DemoBoreholeIconStyle {
+  visible?: boolean;
+  src?: string;
+  sizeM?: number;
+  opacity?: number;
+  color?: string;
+  orientation?: DemoBoreholeIconOrientation;
+  offsetM?: DemoBoreholeElementOffset;
+}
+
+// Shared, composable visual-element kit for every borehole. Element styling is
+// shared across all boreholes; show/hide is per borehole via `items`. The
+// legacy exclusive `mode` is retained for back-compat and migrated to the
+// per-element `*Visible` flags by the resolver when those flags are absent.
 export interface DemoBoreholeSourceLocationStyle {
   visible?: boolean;
   mode?: DemoBoreholeSourceLocationMode;
+  // Shared fallbacks (per-element color/opacity inherit these when unset).
   color?: string;
   opacity?: number;
+  labelVisible?: boolean;
+  labelLiftM?: number;
+  // Line element (location / trajectory / depth).
+  lineVisible?: boolean;
+  lineColor?: string;
+  lineOpacity?: number;
+  lineWidth?: number;
+  lineDashed?: boolean;
+  lineDashLengthM?: number;
+  lineDashGapM?: number;
+  depthM?: number;
+  // Depth trace (rounded cylinder). `diameterM`/`lengthM` are legacy names kept
+  // as the trace diameter and fallback depth.
+  depthTraceVisible?: boolean;
+  depthTraceColor?: string;
+  depthTraceOpacity?: number;
   diameterM?: number;
   lengthM?: number;
-  lineWidth?: number;
+  // Ground ball (sphere at the collar/top).
+  groundBallVisible?: boolean;
+  groundBallRadiusM?: number;
+  groundBallColor?: string;
+  groundBallOpacity?: number;
+  groundBallOffsetM?: DemoBoreholeElementOffset;
+  // Ground torus (ring at ground level; backed by the legacy topRing fields).
   topRingVisible?: boolean;
   topRingRadiusM?: number;
   topRingTubeM?: number;
   topRingColor?: string;
   topRingOpacity?: number;
-  labelVisible?: boolean;
-  labelLiftM?: number;
+  topRingOffsetM?: DemoBoreholeElementOffset;
+  // Ground crosshair.
+  crosshairVisible?: boolean;
+  crosshairLengthM?: number;
+  crosshairWidth?: number;
+  crosshairColor?: string;
+  crosshairOpacity?: number;
+  // SVG icon on top.
+  icon?: DemoBoreholeIconStyle;
+  // Per-borehole show/hide (keyed by source-location id or well id).
   items?: Record<string, DemoBoreholeSourceLocationItemStyle>;
 }
 
@@ -390,6 +446,9 @@ export interface EditableStyle {
   sectionIsoMin?: number;
   sectionIsoMax?: number;
   sectionIsoLevelCount?: number;
+  // Selected iso-band indices shown as a 3D point cloud on the full-density MT
+  // cells (band index 0..levelCount). Empty/absent = no band isolation.
+  sectionIsoBandSelection?: number[];
   sectionIsoLineWidth?: number;
   sectionIsoLineStyle?: "solid" | "dashed";
   sectionIsoBandOpacity?: number;

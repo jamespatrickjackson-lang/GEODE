@@ -1000,10 +1000,10 @@
         },
         "notes": "Default editable visual cloud bank for Topo Environment. It is a local atmosphere impostor, not measured weather, plume, or geoscience data.",
         "crsRegistration": {
-          "horizontalCrs": "EPSG:26912",
-          "verticalDatum": "scene-local atmosphere volume bounds in metres above project scene datum",
+          "horizontalCrs": "scene-local",
+          "verticalDatum": "none",
           "units": "m",
-          "coordinateBasis": "utm",
+          "coordinateBasis": "model-origin",
           "origin": {
             "easting_m": 341467.35,
             "northing_m": 4273374.5,
@@ -1011,8 +1011,8 @@
           },
           "rotationDeg": 0,
           "registrationStatus": "unverified",
-          "accuracyClaimStatus": "CRS/datum review required",
-          "notes": "Local atmosphere visual volume inherits the project UTM scene frame for authoring only; exact weather or plume CRS is not claimed."
+          "accuracyClaimStatus": "not-applicable",
+          "notes": "Local atmosphere impostor positioned in scene-local model space; not a georeferenced data layer."
         }
       }
     },
@@ -1164,7 +1164,7 @@
         "notes": "Temporary diagnostic overlay for locating NAIP county-source seams and missing-tile artifacts. Rectangles show source raster bounds for the current 9-county regional overview, not a crop request.",
         "crsRegistration": {
           "horizontalCrs": "EPSG:26912",
-          "verticalDatum": "public terrain/vector source elevation or draped terrain context in metres",
+          "verticalDatum": "diagnostic-lift applied (700 m); not a terrain-elevation datum",
           "units": "m",
           "coordinateBasis": "utm",
           "origin": {
@@ -1175,7 +1175,7 @@
           "rotationDeg": 0,
           "registrationStatus": "unverified",
           "accuracyClaimStatus": "CRS/datum review required",
-          "notes": "NAIP county-source diagnostic bounds are derived from EPSG:26912 source rasters and remain review-gated for exact CRS/datum claims."
+          "notes": "NAIP county tile bounds in EPSG:26912; rendered as diagnostic overlay, not a data-accurate boundary."
         }
       }
     },
@@ -8268,6 +8268,21 @@
           "renderingRole": "topo-environment-cloud-impostor",
           "computationRole": "visual-context",
           "notes": "Authored from Topo > Environment > Clouds."
+        },
+        "crsRegistration": {
+          "horizontalCrs": "scene-local",
+          "verticalDatum": "none",
+          "units": "m",
+          "coordinateBasis": "model-origin",
+          "origin": {
+            "easting_m": 341467.35,
+            "northing_m": 4273374.5,
+            "elevation_m": 0
+          },
+          "rotationDeg": 0,
+          "registrationStatus": "unverified",
+          "accuracyClaimStatus": "not-applicable",
+          "notes": "Local atmosphere impostor positioned in scene-local model space; not a georeferenced data layer."
         }
       }
     },
@@ -8317,6 +8332,21 @@
           "renderingRole": "topo-environment-cloud-impostor",
           "computationRole": "visual-context",
           "notes": "Authored from Topo > Environment > Clouds."
+        },
+        "crsRegistration": {
+          "horizontalCrs": "scene-local",
+          "verticalDatum": "none",
+          "units": "m",
+          "coordinateBasis": "model-origin",
+          "origin": {
+            "easting_m": 341467.35,
+            "northing_m": 4273374.5,
+            "elevation_m": 0
+          },
+          "rotationDeg": 0,
+          "registrationStatus": "unverified",
+          "accuracyClaimStatus": "not-applicable",
+          "notes": "Local atmosphere impostor positioned in scene-local model space; not a georeferenced data layer."
         }
       }
     }
@@ -8330,13 +8360,9 @@
     "167_page",
     "160_page",
     "164_page",
-    "117_page",
     "45_resistivity_isosurfaces",
     "140_page",
     "143_page",
-    "06_mt_low_resistivity_seismic",
-    "05_mt_threshold_focus",
-    "120_page",
     "163_page",
     "137_page",
     "133_page",
@@ -8364,7 +8390,6 @@
     "46_tem_shallow_resistivity",
     "47_seismic_footprint_velocity_support",
     "48_basement_top_granite_surface",
-    "12_mt_volume_overview",
     "21_geophysics_product_overview",
     "109_page",
     "22_mt_station_network_footprint",
@@ -8378,9 +8403,7 @@
     "50_integrated_seismic_resistivity_context",
     "99_unresolved_missing_tools",
     "101_page",
-    "102_page",
     "104_page",
-    "103_page",
     "105_page",
     "110_page",
     "111_page",
@@ -8436,7 +8459,7 @@
     ]
   },
   "watermark": "GeoSee Utah FORGE - Phase 3 seismic + MT",
-  "modified": "2026-06-05T18:32:24.758Z",
+  "modified": "2026-06-08T21:18:31.476Z",
   "registrationFrame": {
     "horizontalCrs": "EPSG:26912",
     "verticalDatum": "layer-specific; terrain/wells use source elevation metres, seismic products record per-product datum, time-domain seismic uses display-derived vertical scale",

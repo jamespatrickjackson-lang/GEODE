@@ -25,9 +25,35 @@ interface CaptureVideoEncodePresetDefinition {
 
 export interface FfmpegFrameSequenceRuntime {
   writeFile(path: string, data: Uint8Array): Promise<void>;
-  exec(args: string[]): Promise<void>;
+  exec(
+    args: string[],
+    options?: FfmpegFrameSequenceRuntimeExecOptions,
+  ): Promise<void>;
   readFile(path: string): Promise<Uint8Array>;
   deleteFile?(path: string): Promise<void>;
+}
+
+export type CaptureVideoEncodeProgressPhase =
+  | "writing-frames"
+  | "encoding"
+  | "finalizing"
+  | "complete";
+
+export interface CaptureVideoEncodeProgress {
+  phase: CaptureVideoEncodeProgressPhase;
+  framesWritten?: number;
+  totalFrames?: number;
+  percent?: number;
+  message?: string;
+  ffmpegProgress?: number;
+  ffmpegTimeSeconds?: number;
+  log?: string;
+}
+
+export interface FfmpegFrameSequenceRuntimeExecOptions {
+  signal?: AbortSignal;
+  timeoutMs?: number;
+  onProgress?: (progress: CaptureVideoEncodeProgress) => void;
 }
 
 export interface CaptureVideoEncodeValidationResult {
@@ -76,6 +102,9 @@ export interface CaptureVideoEncodeOptions extends CaptureVideoEncodePlanOptions
   runtime: FfmpegFrameSequenceRuntime;
   signal?: AbortSignal;
   cleanupInputFrames?: boolean;
+  execTimeoutMs?: number;
+  stallTimeoutMs?: number;
+  onProgress?: (progress: CaptureVideoEncodeProgress) => void;
 }
 
 export interface CaptureVideoEncodeResult {
@@ -113,6 +142,8 @@ const ALLOWED_FRAME_MIME_TYPES = new Set<DeterministicFrameMimeType>([
   "image/png",
   "image/webp",
 ]);
+const DEFAULT_ENCODE_EXEC_TIMEOUT_MS = 10 * 60 * 1000;
+const DEFAULT_ENCODE_STALL_TIMEOUT_MS = 2 * 60 * 1000;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return !!value && typeof value === "object" && !Array.isArray(value);
@@ -164,6 +195,107 @@ function paddedFrameIndex(frameIndex: number): string {
 function throwIfAborted(signal: AbortSignal | undefined): void {
   if (!signal?.aborted) return;
   throw new DOMException("Frame-sequence video encoding was aborted.", "AbortError");
+}
+
+function formatEncodeTimeout(ms: number): string {
+  const seconds = Math.max(1, Math.round(ms / 1000));
+  return `${seconds}s`;
+}
+
+function normalizeEncodeTimeout(value: number | undefined, fallback: number): number {
+  if (typeof value === "number" && Number.isFinite(value) && value > 0) {
+    return value;
+  }
+  return fallback;
+}
+
+async function runEncodingWithWatchdog<T>({
+  operation,
+  signal,
+  execTimeoutMs,
+  stallTimeoutMs,
+  onProgress,
+}: {
+  operation: (markProgress: () => void) => Promise<T>;
+  signal?: AbortSignal;
+  execTimeoutMs: number;
+  stallTimeoutMs: number;
+  onProgress?: (progress: CaptureVideoEncodeProgress) => void;
+}): Promise<T> {
+  throwIfAborted(signal);
+  let settled = false;
+  let stallTimer: ReturnType<typeof setTimeout> | null = null;
+  let timeoutTimer: ReturnType<typeof setTimeout> | null = null;
+  let rejectWatchdog: ((error: Error) => void) | null = null;
+
+  const clearTimers = () => {
+    if (stallTimer) {
+      clearTimeout(stallTimer);
+      stallTimer = null;
+    }
+    if (timeoutTimer) {
+      clearTimeout(timeoutTimer);
+      timeoutTimer = null;
+    }
+  };
+
+  const watchdogPromise = new Promise<never>((_resolve, reject) => {
+    rejectWatchdog = reject;
+    const failStalled = () => {
+      if (settled) return;
+      reject(
+        new Error(
+          `Encoding stalled after ${formatEncodeTimeout(
+            stallTimeoutMs,
+          )} without FFmpeg progress. Cancel and use external render for 4K/page sequences.`,
+        ),
+      );
+    };
+    const failTimedOut = () => {
+      if (settled) return;
+      reject(
+        new Error(
+          `Encoding exceeded ${formatEncodeTimeout(
+            execTimeoutMs,
+          )}. Use external render for final 4K/page-sequence output.`,
+        ),
+      );
+    };
+    stallTimer = setTimeout(failStalled, stallTimeoutMs);
+    timeoutTimer = setTimeout(failTimedOut, execTimeoutMs);
+  });
+
+  const markProgress = () => {
+    if (settled) return;
+    if (stallTimer) {
+      clearTimeout(stallTimer);
+    }
+    stallTimer = setTimeout(() => {
+      if (settled || !rejectWatchdog) return;
+      rejectWatchdog(
+        new Error(
+          `Encoding stalled after ${formatEncodeTimeout(
+            stallTimeoutMs,
+          )} without FFmpeg progress. Cancel and use external render for 4K/page sequences.`,
+        ),
+      );
+    }, stallTimeoutMs);
+  };
+
+  try {
+    return await Promise.race([
+      operation(markProgress),
+      watchdogPromise,
+    ]);
+  } finally {
+    settled = true;
+    clearTimers();
+    onProgress?.({
+      phase: "finalizing",
+      percent: 0.99,
+      message: "Finalizing encoded video.",
+    });
+  }
 }
 
 async function deleteVirtualFiles(
@@ -411,20 +543,90 @@ export async function encodeDeterministicFrameSequenceWithFfmpeg({
   runtime,
   signal,
   cleanupInputFrames = false,
+  execTimeoutMs,
+  stallTimeoutMs,
+  onProgress,
   ...planOptions
 }: CaptureVideoEncodeOptions): Promise<CaptureVideoEncodeResult> {
   let plan: FfmpegFrameSequenceEncodePlan | null = null;
 
   try {
     plan = createFfmpegFrameSequenceEncodePlan(sequence, planOptions);
+    onProgress?.({
+      phase: "writing-frames",
+      framesWritten: 0,
+      totalFrames: plan.totalFrames,
+      percent: 0,
+      message: "Writing frames to encoder.",
+    });
     for (const inputFile of plan.inputFiles) {
       throwIfAborted(signal);
       const data = new Uint8Array(await inputFile.frame.blob.arrayBuffer());
       await runtime.writeFile(inputFile.path, data);
+      onProgress?.({
+        phase: "writing-frames",
+        framesWritten: inputFile.frameIndex + 1,
+        totalFrames: plan.totalFrames,
+        percent: Math.min(0.2, ((inputFile.frameIndex + 1) / plan.totalFrames) * 0.2),
+        message: `Writing frame ${inputFile.frameIndex + 1}/${plan.totalFrames} to encoder.`,
+      });
     }
     throwIfAborted(signal);
-    await runtime.exec(plan.args);
+    onProgress?.({
+      phase: "encoding",
+      framesWritten: plan.totalFrames,
+      totalFrames: plan.totalFrames,
+      percent: 0.2,
+      message: "Encoding video. No file has been saved yet.",
+    });
+    const activePlan = plan;
+    await runEncodingWithWatchdog({
+      signal,
+      execTimeoutMs: normalizeEncodeTimeout(
+        execTimeoutMs,
+        DEFAULT_ENCODE_EXEC_TIMEOUT_MS,
+      ),
+      stallTimeoutMs: normalizeEncodeTimeout(
+        stallTimeoutMs,
+        DEFAULT_ENCODE_STALL_TIMEOUT_MS,
+      ),
+      onProgress,
+      operation: (markProgress) =>
+        runtime.exec(activePlan.args, {
+          signal,
+          timeoutMs: normalizeEncodeTimeout(
+            execTimeoutMs,
+            DEFAULT_ENCODE_EXEC_TIMEOUT_MS,
+          ),
+          onProgress: (progress) => {
+            markProgress();
+            onProgress?.({
+              ...progress,
+              phase: "encoding",
+              framesWritten: plan?.totalFrames,
+              totalFrames: plan?.totalFrames,
+              percent:
+                typeof progress.percent === "number"
+                  ? Math.max(0.2, Math.min(0.98, 0.2 + progress.percent * 0.78))
+                  : typeof progress.ffmpegProgress === "number"
+                    ? Math.max(
+                        0.2,
+                        Math.min(0.98, 0.2 + progress.ffmpegProgress * 0.78),
+                      )
+                    : progress.percent,
+              message: progress.message ?? "Encoding video. No file has been saved yet.",
+            });
+          },
+        }),
+    });
     throwIfAborted(signal);
+    onProgress?.({
+      phase: "finalizing",
+      framesWritten: plan.totalFrames,
+      totalFrames: plan.totalFrames,
+      percent: 0.99,
+      message: "Reading encoded video output.",
+    });
     const outputData = await runtime.readFile(plan.outputPath);
     const outputBuffer = new ArrayBuffer(outputData.byteLength);
     new Uint8Array(outputBuffer).set(outputData);
@@ -433,6 +635,13 @@ export async function encodeDeterministicFrameSequenceWithFfmpeg({
       throw new Error("Frame-sequence video encoder produced no video data.");
     }
     const url = URL.createObjectURL(blob);
+    onProgress?.({
+      phase: "complete",
+      framesWritten: plan.totalFrames,
+      totalFrames: plan.totalFrames,
+      percent: 1,
+      message: "Video encoding complete.",
+    });
 
     return {
       plan,

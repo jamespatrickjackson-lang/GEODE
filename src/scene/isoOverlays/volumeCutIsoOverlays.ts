@@ -34,6 +34,9 @@ import {
 export interface SectionIsoOverlayUpdateOptions {
   preserveExisting?: boolean;
   initialTransitionOpacity?: number;
+  // Height-sampler retries must replace untrimmed contours even while a
+  // Section ISO transition holds rebuilds of its registered target roots.
+  bypassTransitionHold?: boolean;
 }
 import type {
   ResolvedSceneSectionFrame,
@@ -1013,6 +1016,8 @@ export function updateMtVolumeCutIsoOverlaysImpl(
           this.styleForLayer(UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID),
           {
             ...options,
+            preserveExisting: false,
+            bypassTransitionHold: true,
             initialTransitionOpacity:
               this.currentSectionIsoOverlayTransitionOpacity?.() ?? 0,
           },
@@ -1587,6 +1592,8 @@ export function updateSeismicVolumeCutIsoOverlaysImpl(
           this.styleForLayer(UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID),
           {
             ...options,
+            preserveExisting: false,
+            bypassTransitionHold: true,
             initialTransitionOpacity:
               this.currentSectionIsoOverlayTransitionOpacity?.() ?? 0,
           },
@@ -1905,6 +1912,8 @@ export function updateSeismicResistivityIsoOverlaysImpl(
             this.styleForLayer(UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID),
             {
               ...options,
+              preserveExisting: false,
+              bypassTransitionHold: true,
               initialTransitionOpacity:
                 this.currentSectionIsoOverlayTransitionOpacity?.() ?? 0,
             },

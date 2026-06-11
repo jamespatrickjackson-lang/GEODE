@@ -30,6 +30,12 @@ import {
   resolveCaptureCameraPathBezierSegment,
   resolveCaptureCameraPathV3Timeline,
 } from "./captureCameraPathV3";
+import {
+  TECHNICAL_MONO_FONT,
+  vibrancyLabel,
+  vibrancySecondaryLabel,
+} from "../editor/styles";
+import { CaptureSectionIcon, type CaptureIconName } from "./CaptureSectionIcons";
 
 const CONTROL_BUTTON_SIZE_PX = 36;
 const CONTROL_BUTTON_GAP_PX = 8;
@@ -44,7 +50,7 @@ const launcherStyle: CSSProperties = {
   borderRadius: "50%",
   border: "1px solid rgba(255,255,255,0.24)",
   background: "rgba(18, 22, 26, 0.64)",
-  color: "rgba(255,255,255,0.94)",
+  color: vibrancyLabel,
   display: "inline-flex",
   alignItems: "center",
   justifyContent: "center",
@@ -67,9 +73,9 @@ const toolbarRootStyle: CSSProperties = {
   inset: 0,
   zIndex: 47,
   pointerEvents: "none",
-  fontFamily: "Inter, ui-sans-serif, system-ui, sans-serif",
+  fontFamily: TECHNICAL_MONO_FONT,
   fontSize: 12,
-  color: "rgba(245,248,250,0.94)",
+  color: vibrancyLabel,
 };
 
 const dockStyle: CSSProperties = {
@@ -85,12 +91,14 @@ const dockStyle: CSSProperties = {
   flexDirection: "column",
   gap: 8,
   padding: 10,
-  borderRadius: 8,
-  border: "1px solid rgba(255,255,255,0.18)",
-  background: "rgba(12, 15, 19, 0.64)",
-  boxShadow: "0 22px 68px rgba(0,0,0,0.34)",
-  backdropFilter: "blur(18px) saturate(150%)",
+  borderRadius: 14,
+  border: "1px solid rgba(255, 255, 255, 0.2)",
+  background: "rgba(18, 21, 24, 0.66)",
+  boxShadow: "0 24px 80px rgba(0, 0, 0, 0.34)",
+  backdropFilter: "blur(20px) saturate(145%)",
+  WebkitBackdropFilter: "blur(20px) saturate(145%)",
   pointerEvents: "auto",
+  color: vibrancyLabel,
 };
 
 const headerStyle: CSSProperties = {
@@ -111,10 +119,9 @@ const barStyle: CSSProperties = {
   minWidth: 0,
   display: "flex",
   flexDirection: "column",
-  borderRadius: 7,
-  border: "1px solid rgba(255,255,255,0.12)",
-  background:
-    "linear-gradient(180deg, rgba(22,26,31,0.76), rgba(12,15,19,0.58))",
+  borderRadius: 12,
+  border: "1px solid rgba(255, 255, 255, 0.1)",
+  background: "rgba(18, 21, 24, 0.45)",
   overflow: "hidden",
 };
 
@@ -124,14 +131,14 @@ const barHeaderButtonStyle: CSSProperties = {
   border: 0,
   borderRadius: 0,
   background: "rgba(255,255,255,0.05)",
-  color: "rgba(245,248,250,0.94)",
+  color: vibrancyLabel,
   display: "flex",
   alignItems: "center",
   justifyContent: "space-between",
   gap: 8,
   padding: "0 10px",
   fontSize: 12,
-  fontWeight: 760,
+  fontWeight: 600,
   letterSpacing: 0,
   cursor: "pointer",
 };
@@ -142,7 +149,7 @@ const barHeaderRowStyle: CSSProperties = {
   border: 0,
   borderRadius: 0,
   background: "rgba(255,255,255,0.05)",
-  color: "rgba(245,248,250,0.94)",
+  color: vibrancyLabel,
   display: "flex",
   alignItems: "center",
   justifyContent: "space-between",
@@ -158,14 +165,14 @@ const barHeaderToggleButtonStyle: CSSProperties = {
   border: 0,
   borderRadius: 0,
   background: "transparent",
-  color: "rgba(245,248,250,0.94)",
+  color: vibrancyLabel,
   display: "flex",
   alignItems: "center",
   justifyContent: "space-between",
   gap: 8,
   padding: 0,
   fontSize: 12,
-  fontWeight: 760,
+  fontWeight: 600,
   letterSpacing: 0,
   cursor: "pointer",
 };
@@ -205,9 +212,9 @@ const sectionStyle: CSSProperties = {
 };
 
 const sectionLabelStyle: CSSProperties = {
-  color: "rgba(236,242,246,0.84)",
+  color: vibrancySecondaryLabel,
   fontSize: 11,
-  fontWeight: 720,
+  fontWeight: 600,
   letterSpacing: 0,
   textTransform: "uppercase",
 };
@@ -217,7 +224,7 @@ const headingStyle: CSSProperties = {
   justifyContent: "space-between",
   alignItems: "center",
   gap: 8,
-  fontWeight: 760,
+  fontWeight: 600,
   letterSpacing: 0,
 };
 
@@ -225,56 +232,56 @@ const labelStyle: CSSProperties = {
   display: "inline-flex",
   alignItems: "center",
   gap: 6,
-  color: "rgba(220,228,232,0.74)",
+  color: vibrancySecondaryLabel,
   whiteSpace: "nowrap",
 };
 
 const fieldStyle: CSSProperties = {
   height: 30,
   minWidth: 74,
-  borderRadius: 6,
-  border: "1px solid rgba(255,255,255,0.16)",
-  background: "rgba(255,255,255,0.08)",
-  color: "rgba(255,255,255,0.94)",
+  borderRadius: 8,
+  border: "1px solid rgba(255, 255, 255, 0.1)",
+  background: "rgba(18, 21, 24, 0.4)",
+  color: vibrancyLabel,
   padding: "0 26px 0 9px",
   fontSize: 12,
+  fontFamily: TECHNICAL_MONO_FONT,
+  colorScheme: "dark",
 };
 
 const buttonStyle: CSSProperties = {
   height: 30,
-  borderRadius: 6,
-  border: "1px solid rgba(255,255,255,0.18)",
-  background: "rgba(255,255,255,0.1)",
-  color: "rgba(255,255,255,0.94)",
-  padding: "0 11px",
-  fontWeight: 680,
+  borderRadius: 999,
+  border: "1px solid rgba(255, 255, 255, 0.12)",
+  background: "rgba(255, 255, 255, 0.06)",
+  color: vibrancyLabel,
+  padding: "0 13px",
+  fontWeight: 600,
   fontSize: 12,
+  fontFamily: TECHNICAL_MONO_FONT,
   cursor: "pointer",
 };
 
 const primaryButtonStyle: CSSProperties = {
   ...buttonStyle,
-  borderColor: "rgba(120,218,196,0.5)",
-  background:
-    "linear-gradient(180deg, rgba(54,158,139,0.9), rgba(30,102,91,0.92))",
+  borderColor: "rgba(120, 218, 196, 0.5)",
+  background: "rgba(54, 158, 139, 0.32)",
 };
 
 const renderButtonStyle: CSSProperties = {
   ...buttonStyle,
-  borderColor: "rgba(147,197,253,0.42)",
-  background:
-    "linear-gradient(180deg, rgba(39,86,141,0.84), rgba(26,52,88,0.88))",
+  borderColor: "rgba(147, 197, 253, 0.42)",
+  background: "rgba(39, 86, 141, 0.34)",
 };
 
 const stopButtonStyle: CSSProperties = {
   ...buttonStyle,
-  borderColor: "rgba(255,131,112,0.52)",
-  background:
-    "linear-gradient(180deg, rgba(194,71,55,0.9), rgba(118,42,36,0.92))",
+  borderColor: "rgba(255, 131, 112, 0.52)",
+  background: "rgba(194, 71, 55, 0.34)",
 };
 
 const statusStyle: CSSProperties = {
-  color: "rgba(228,235,238,0.76)",
+  color: vibrancySecondaryLabel,
   fontVariantNumeric: "tabular-nums",
 };
 
@@ -337,9 +344,8 @@ const transportButtonStyle: CSSProperties = {
 
 const transportPrimaryButtonStyle: CSSProperties = {
   ...transportButtonStyle,
-  borderColor: "rgba(120,218,196,0.5)",
-  background:
-    "linear-gradient(180deg, rgba(54,158,139,0.9), rgba(30,102,91,0.92))",
+  borderColor: "rgba(120, 218, 196, 0.5)",
+  background: "rgba(54, 158, 139, 0.32)",
 };
 
 const playIconStyle: CSSProperties = {
@@ -444,6 +450,59 @@ function RecipeActionIcon({
   );
 }
 
+function captureSectionIconName(title: string): CaptureIconName {
+  const t = title.toLowerCase();
+  if (t.includes("realtime")) return "realtime";
+  if (t.includes("render")) return "render";
+  if (t.includes("still")) return "still";
+  if (t.includes("camera path") || t.includes("path")) return "camera-path";
+  if (t.includes("timeline")) return "timeline";
+  return "render";
+}
+
+const barHeadingStyle: CSSProperties = {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 8,
+  minWidth: 0,
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+  whiteSpace: "nowrap",
+  fontWeight: 600,
+};
+
+const barChevronStyle: CSSProperties = {
+  width: 7,
+  height: 7,
+  borderRight: "2px solid rgba(244, 240, 232, 0.7)",
+  borderBottom: "2px solid rgba(244, 240, 232, 0.7)",
+  transformOrigin: "center",
+  transition: "transform 160ms ease",
+  flex: "none",
+};
+
+function CaptureBarHeading({
+  title,
+  expanded,
+}: {
+  title: string;
+  expanded: boolean;
+}) {
+  return (
+    <span style={barHeadingStyle}>
+      <span
+        aria-hidden="true"
+        style={{
+          ...barChevronStyle,
+          transform: expanded ? "rotate(45deg)" : "rotate(-45deg)",
+        }}
+      />
+      <CaptureSectionIcon name={captureSectionIconName(title)} />
+      {title}
+    </span>
+  );
+}
+
 function CollapsibleCaptureSection({
   children,
   expanded,
@@ -474,7 +533,9 @@ function CollapsibleCaptureSection({
             onClick={onToggle}
             style={barHeaderToggleButtonStyle}
           >
-            <span style={barHeaderTitleStyle}>{expanded ? "v" : ">"} {title}</span>
+            <span style={barHeaderTitleStyle}>
+              <CaptureBarHeading title={title} expanded={expanded} />
+            </span>
             <span style={statusStyle}>{status}</span>
           </button>
           <div style={barHeaderActionsStyle}>{headerActions}</div>
@@ -487,7 +548,7 @@ function CollapsibleCaptureSection({
           onClick={onToggle}
           style={barHeaderButtonStyle}
         >
-          <span>{expanded ? "v" : ">"} {title}</span>
+          <CaptureBarHeading title={title} expanded={expanded} />
           <span style={statusStyle}>{status}</span>
         </button>
       )}
@@ -636,6 +697,10 @@ export function CaptureDirectorToolbar() {
     externalStillJobUrl,
     externalStillJobFilename,
     externalStillJobCommand,
+    externalVideoJobUrl,
+    externalVideoJobFilename,
+    externalVideoJobCommand,
+    captureJobs,
     pathRenderStatus,
     pathRenderOutputUrl,
     pathRenderOutputFilename,
@@ -678,6 +743,9 @@ export function CaptureDirectorToolbar() {
     !isRecording &&
     !isDeterministicExporting &&
     rangeValid;
+  const deterministicVideoJob = [...captureJobs]
+    .reverse()
+    .find((job) => job.kind === "deterministic-video");
   const pageRangeSummary =
     captureScope === "page-range"
       ? capturePageRange.valid
@@ -997,9 +1065,10 @@ export function CaptureDirectorToolbar() {
                 status={
                   <span data-testid="capture-export-state" style={statusStyle}>
                   {deterministicExportStatus === "rendering"
-                    ? `Rendering ${deterministicExportProgress.renderedFrames}/${deterministicExportProgress.totalFrames}`
+                    ? deterministicVideoJob?.progress.message ??
+                      `Rendering ${deterministicExportProgress.renderedFrames}/${deterministicExportProgress.totalFrames}`
                     : deterministicExportStatus === "encoding"
-                      ? "Encoding"
+                      ? deterministicVideoJob?.progress.message ?? "Encoding"
                       : deterministicExportStatus === "complete"
                         ? "Ready"
                         : "Idle"}
@@ -1233,6 +1302,30 @@ export function CaptureDirectorToolbar() {
                   >
                     {deterministicExportFormat === "webm" ? "Download WebM" : "Download MP4"}
                   </a>
+                )}
+                {externalVideoJobUrl && (
+                  <a
+                    data-testid="capture-external-video-job-download"
+                    href={externalVideoJobUrl}
+                    download={externalVideoJobFilename ?? "geosee-external-video-job.json"}
+                    style={outputLinkStyle}
+                  >
+                    External Video Job
+                  </a>
+                )}
+                {externalVideoJobCommand && (
+                  <code
+                    data-testid="capture-external-video-job-command"
+                    style={{
+                      maxWidth: 390,
+                      overflowWrap: "anywhere",
+                      color: "rgba(226, 232, 240, 0.82)",
+                      fontSize: 11,
+                      lineHeight: 1.45,
+                    }}
+                  >
+                    {externalVideoJobCommand}
+                  </code>
                 )}
               </div>
               </CollapsibleCaptureSection>
@@ -1605,11 +1698,14 @@ export function CaptureDirectorToolbar() {
                 </button>
                 <span data-testid="capture-path-render-status" style={statusStyle}>
                   {pathRenderStatus === "rendering"
-                    ? `Rendering ${pathRenderProgress.renderedFrames ?? 0}/${pathRenderProgress.totalFrames ?? 0}`
+                    ? pathRenderProgress.message ??
+                      `Rendering ${pathRenderProgress.renderedFrames ?? 0}/${pathRenderProgress.totalFrames ?? 0}`
                     : pathRenderStatus === "encoding"
                       ? pathRenderProgress.message ?? "Encoding path video. No file has been saved yet."
                       : pathRenderStatus === "complete"
-                        ? "Rendered path video ready"
+                        ? externalVideoJobUrl && !pathRenderOutputUrl
+                          ? "External path video job ready"
+                          : "Rendered path video ready"
                         : pathRenderStatus === "failed"
                           ? "Path render failed"
                           : pathRenderStatus === "cancelled"
@@ -1645,6 +1741,30 @@ export function CaptureDirectorToolbar() {
                     Download Rendered Path Video
                   </a>
                 )}
+                {externalVideoJobUrl && (
+                  <a
+                    data-testid="capture-path-render-external-job-download"
+                    href={externalVideoJobUrl}
+                    download={externalVideoJobFilename ?? "geosee-external-video-job.json"}
+                    style={outputLinkStyle}
+                  >
+                    External Path Video Job
+                  </a>
+                )}
+                {externalVideoJobCommand && (
+                  <code
+                    data-testid="capture-path-render-external-job-command"
+                    style={{
+                      maxWidth: 390,
+                      overflowWrap: "anywhere",
+                      color: "rgba(226, 232, 240, 0.82)",
+                      fontSize: 11,
+                      lineHeight: 1.45,
+                    }}
+                  >
+                    {externalVideoJobCommand}
+                  </code>
+                )}
                 {pathRenderSaveMessage && (
                   <span data-testid="capture-path-render-save-status" style={statusStyle}>
                     {pathRenderSaveMessage}
@@ -1656,7 +1776,7 @@ export function CaptureDirectorToolbar() {
                     {deterministicExportFormat === "webm"
                       ? "Rendered WebM"
                       : "Rendered MP4"}{" "}
-                    uses fixed frame time from the current Camera Path. Output is not written to disk during rendering or encoding; use Save Rendered Video or the download link after completion.
+                    uses fixed frame time from the current Camera Path. Browser output is not written to disk during rendering or encoding; for 4K final video, run the external job command to write the file outside the browser.
                   </span>
                 </details>
               </section>

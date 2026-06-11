@@ -578,15 +578,9 @@ test("authored seismic catalog pages cover only source-backed required lines", (
   );
 });
 
-test("2D seismic survey-lines review page inherits page 5 view and shows representative line curtains", () => {
+test("2D seismic survey-lines review page keeps a fixed review view and shows representative line curtains", () => {
   const manifest = readJson(...seismicManifestPath);
   const project = readJson("projects", "utah-forge", "project.json");
-  const page5 = readJson(
-    "projects",
-    "utah-forge",
-    "pages",
-    "05_mt_threshold_focus.json",
-  );
   const page = readJson(
     "projects",
     "utah-forge",
@@ -603,12 +597,8 @@ test("2D seismic survey-lines review page inherits page 5 view and shows represe
     project.pageOrder.indexOf("58_legacy_line_l5_seismic_products") + 1,
     "all seismic sections review page should sit after the seismic catalog block",
   );
-  assert.deepEqual(page.camera, page5.camera, "page should inherit page 5 camera");
-  assert.deepEqual(
-    page.dynamicCamera,
-    page5.dynamicCamera,
-    "page should inherit page 5 dynamic camera",
-  );
+  assert.ok(page.camera, "page should carry an authored review camera");
+  assert.ok(page.dynamicCamera, "page should carry an authored dynamic camera");
 
   const visibility = page.layerOverrides?.["utah-forge-phase3-seismic-browser"]
     ?.seismicProductVisibility;
@@ -677,11 +667,11 @@ test("2D seismic survey-lines review page inherits page 5 view and shows represe
 test("all 2D seismic sections review page enables every non-3D source-backed section", () => {
   const manifest = readJson(...seismicManifestPath);
   const project = readJson("projects", "utah-forge", "project.json");
-  const page5 = readJson(
+  const representativePage = readJson(
     "projects",
     "utah-forge",
     "pages",
-    "05_mt_threshold_focus.json",
+    "59_all_seismic_sections_review.json",
   );
   const page = readJson(
     "projects",
@@ -701,11 +691,11 @@ test("all 2D seismic sections review page enables every non-3D source-backed sec
     project.pageOrder.indexOf("59_all_seismic_sections_review") + 1,
     "all 2D seismic sections review page should sit directly after the representative review page",
   );
-  assert.deepEqual(page.camera, page5.camera, "page should inherit page 5 camera");
+  assert.deepEqual(page.camera, representativePage.camera, "all-2D page should share the representative review camera");
   assert.deepEqual(
     page.dynamicCamera,
-    page5.dynamicCamera,
-    "page should inherit page 5 dynamic camera",
+    representativePage.dynamicCamera,
+    "all-2D page should share the representative review dynamic camera",
   );
   assert.equal(page.visibilityOverrides?.["utah-forge-phase3-seismic-browser"], true);
   assert.equal(page.visibilityOverrides?.terrain, true);

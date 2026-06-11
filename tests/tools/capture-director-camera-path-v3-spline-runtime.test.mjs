@@ -644,11 +644,36 @@ test("V3.1 mixed continuity equations keep preview travel smooth through handoff
   );
   const distances = samples.slice(1).map((sample, index) => distance(sample, samples[index]));
   const largest = Math.max(...distances);
-  const smallest = Math.min(...distances.filter((entry) => entry > 0.000_001));
 
+  // Node b sits at timeline t = 2.0 (sample index 8, between steps 7 and 8).
+  // Authored ease-out into the node and ease-in out of it must read as one
+  // symmetric soft pause: continuous position, monotonic deceleration in,
+  // monotonic acceleration out, and no boundary speed spike or rewrite.
   assert.ok(
-    largest / smallest <= 2.1,
-    `mixed equation handoff should not create a visible travel-speed spike, got ratio ${largest / smallest}`,
+    distance(sampleCaptureCameraPathV3(path, 2).position, [12, 0, 0]) < 0.001,
+    "travel must pass exactly through the handoff node",
+  );
+  for (let index = 1; index <= 7; index += 1) {
+    assert.ok(
+      distances[index] < distances[index - 1],
+      `travel should decelerate monotonically into the handoff node, step ${index}`,
+    );
+  }
+  for (let index = 9; index <= 15; index += 1) {
+    assert.ok(
+      distances[index] > distances[index - 1],
+      `travel should accelerate monotonically out of the handoff node, step ${index}`,
+    );
+  }
+  const intoNode = distances[7];
+  const outOfNode = distances[8];
+  assert.ok(
+    intoNode < largest * 0.15 && outOfNode < largest * 0.15,
+    `authored boundary equations should meet in a soft pause, got ${intoNode} / ${outOfNode}`,
+  );
+  assert.ok(
+    Math.max(intoNode, outOfNode) / Math.min(intoNode, outOfNode) <= 1.5,
+    `boundary speeds should stay symmetric through the node, got ${intoNode} vs ${outOfNode}`,
   );
 });
 

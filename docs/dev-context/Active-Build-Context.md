@@ -1,4 +1,4 @@
-# Active Build Context
+﻿# Active Build Context
 
 Status: active entry point for software-build work
 
@@ -269,3 +269,22 @@ Receipt and audit subdirs (`Archive/`, `Change-Receipts/`,
   style, terrain/topo material authority, active texture URL/cache key, public
   clip, edge fade, edge outline, material/shader, and geometry.
 - Do not run `Launch GeoSee.bat`; use a scoped dev server on a free port if an agent needs one.
+
+## Page-to-page false-fix ban
+
+Utah FORGE pages are disposable authoring state. App behavior, runtime behavior, editor behavior, tests that claim app behavior, and agent fixes must not depend on current page IDs, page filenames, page numbers, page titles, page order positions, live pageOrder discovery, or source/target page pairs.
+
+App-behavior tests must use synthetic in-memory fixtures or fixture builders. Dynamic selection from live project.json pageOrder is deck-state coupling, not app-behavior proof.
+
+Deck snapshot, deck matrix, and presentation audit tools may inspect live pageOrder only when explicitly named as deck-state tools and excluded from app-health verification.
+
+If a failing behavior is observed on a page pair, the fix must be filed against the reusable behavior family: transition entity matching, effective-state resolution, layer style composition, visibility resolution, camera policy, legend state, save/persistence, or validation. Never fix by targeting the observed page pair.
+
+## Transition Runtime Operating Spec
+
+Before transition runtime, editor/save transition gating, scene-section, Section ISO, working-area focus, opacity, or page-navigation work, read:
+
+docs/dev-context/Transition-Runtime-Operating-Spec.md
+
+This spec is the active operating contract for current transition work. Older audits and matrix logs are evidence only.
+

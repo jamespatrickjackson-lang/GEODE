@@ -1,4 +1,20 @@
-import type { FfmpegFrameSequenceRuntime } from "./frameSequenceVideoEncoder";
+import type {
+  CaptureVideoEncodeProgress,
+  FfmpegFrameSequenceRuntime,
+  FfmpegFrameSequenceRuntimeExecOptions,
+} from "./frameSequenceVideoEncoder";
+
+export interface BrowserFfmpegProgressEvent {
+  progress?: number;
+  time?: number;
+  timeMs?: number;
+  message?: string;
+}
+
+export interface BrowserFfmpegLogEvent {
+  type?: string;
+  message?: string;
+}
 
 export interface BrowserFfmpegInstance {
   load(options?: unknown, runtimeOptions?: { signal?: AbortSignal }): Promise<unknown>;
@@ -18,6 +34,15 @@ export interface BrowserFfmpegInstance {
     runtimeOptions?: { signal?: AbortSignal },
   ): Promise<unknown>;
   deleteFile?(path: string, runtimeOptions?: { signal?: AbortSignal }): Promise<unknown>;
+  createDir?(path: string, runtimeOptions?: { signal?: AbortSignal }): Promise<unknown>;
+  on?(
+    event: "progress" | "log",
+    handler: (event: BrowserFfmpegProgressEvent | BrowserFfmpegLogEvent) => void,
+  ): void;
+  off?(
+    event: "progress" | "log",
+    handler: (event: BrowserFfmpegProgressEvent | BrowserFfmpegLogEvent) => void,
+  ): void;
   terminate?(): void;
 }
 
@@ -140,10 +165,62 @@ function normalizeReadFileData(path: string, data: unknown): Uint8Array {
   throw new Error(`Browser FFmpeg readFile did not return bytes for ${path}.`);
 }
 
+function normalizeProgressEvent(
+  event: BrowserFfmpegProgressEvent,
+): CaptureVideoEncodeProgress {
+  const rawProgress =
+    typeof event.progress === "number" && Number.isFinite(event.progress)
+      ? event.progress
+      : undefined;
+  return {
+    phase: "encoding",
+    ...(rawProgress === undefined ? {} : { ffmpegProgress: rawProgress }),
+    ...(typeof event.time === "number" && Number.isFinite(event.time)
+      ? { ffmpegTimeSeconds: event.time }
+      : typeof event.timeMs === "number" && Number.isFinite(event.timeMs)
+        ? { ffmpegTimeSeconds: event.timeMs / 1000 }
+        : {}),
+    ...(typeof event.message === "string" && event.message
+      ? { message: event.message }
+      : {}),
+  };
+}
+
+function normalizeLogEvent(event: BrowserFfmpegLogEvent): CaptureVideoEncodeProgress {
+  return {
+    phase: "encoding",
+    ...(typeof event.message === "string" && event.message
+      ? {
+          log: event.message,
+          message: event.message,
+        }
+      : {}),
+  };
+}
+
+// FFmpeg core runs on an Emscripten MEMFS where `writeFile` does not create
+// missing parent directories. Frame encoders write into virtual subdirectories
+// (e.g. `/geosee-capture/frame-000000.png`), so the directory must be created
+// first or the write fails with "FS error". Returns each ancestor directory of
+// a file path, shallowest first, excluding the root.
+function ancestorDirectories(path: string): string[] {
+  const normalized = path.replace(/\\/g, "/");
+  const segments = normalized.split("/").filter(Boolean);
+  segments.pop(); // drop the filename
+  const directories: string[] = [];
+  let current = "";
+  for (const segment of segments) {
+    current += `/${segment}`;
+    directories.push(current);
+  }
+  return directories;
+}
+
 export function createBrowserFfmpegFrameSequenceRuntime(
   options: BrowserFfmpegRuntimeOptions = {},
 ): BrowserFfmpegRuntimeHandle {
   let disposed = false;
+  const ensuredDirectories = new Set<string>();
   let ffmpeg: BrowserFfmpegInstance | null = options.ffmpeg ?? null;
   let ffmpegPromise: Promise<BrowserFfmpegInstance> | null = null;
 
@@ -182,16 +259,51 @@ export function createBrowserFfmpegFrameSequenceRuntime(
     return ffmpegPromise;
   }
 
+  async function ensureParentDirectories(
+    activeFfmpeg: BrowserFfmpegInstance,
+    path: string,
+  ): Promise<void> {
+    if (!activeFfmpeg.createDir) return;
+    for (const directory of ancestorDirectories(path)) {
+      if (ensuredDirectories.has(directory)) continue;
+      try {
+        await activeFfmpeg.createDir(directory, runtimeOptions());
+      } catch {
+        // The directory already exists, which MEMFS reports as an error.
+      }
+      ensuredDirectories.add(directory);
+    }
+  }
+
   const runtime: FfmpegFrameSequenceRuntime = {
     async writeFile(path, data) {
       const activeFfmpeg = await resolveFfmpeg();
+      await ensureParentDirectories(activeFfmpeg, path);
       await activeFfmpeg.writeFile(path, data, runtimeOptions());
     },
-    async exec(args) {
+    async exec(args, execOptions?: FfmpegFrameSequenceRuntimeExecOptions) {
       const activeFfmpeg = await resolveFfmpeg();
-      const code = await activeFfmpeg.exec(args, undefined, runtimeOptions());
-      if (typeof code === "number" && code !== 0) {
-        throw new Error(`FFmpeg exited with code ${code}.`);
+      const onProgress = execOptions?.onProgress;
+      const progressHandler = (event: BrowserFfmpegProgressEvent | BrowserFfmpegLogEvent) => {
+        onProgress?.(normalizeProgressEvent(event as BrowserFfmpegProgressEvent));
+      };
+      const logHandler = (event: BrowserFfmpegProgressEvent | BrowserFfmpegLogEvent) => {
+        onProgress?.(normalizeLogEvent(event as BrowserFfmpegLogEvent));
+      };
+      activeFfmpeg.on?.("progress", progressHandler);
+      activeFfmpeg.on?.("log", logHandler);
+      try {
+        const code = await activeFfmpeg.exec(
+          args,
+          execOptions?.timeoutMs,
+          runtimeOptions(),
+        );
+        if (typeof code === "number" && code !== 0) {
+          throw new Error(`FFmpeg exited with code ${code}.`);
+        }
+      } finally {
+        activeFfmpeg.off?.("progress", progressHandler);
+        activeFfmpeg.off?.("log", logHandler);
       }
     },
     async readFile(path) {

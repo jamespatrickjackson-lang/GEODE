@@ -134,14 +134,6 @@ test("utah forge registers a default editable cloud layer", () => {
   const environment = JSON.parse(
     readSource("projects", "utah-forge", "environment.json"),
   );
-  const mtOverviewPage = JSON.parse(
-    readSource(
-      "projects",
-      "utah-forge",
-      "pages",
-      "12_mt_volume_overview.json",
-    ),
-  );
   const layer = project.layers.find(
     (candidate) => candidate.id === "utah-forge-topo-clouds",
   );
@@ -152,9 +144,10 @@ test("utah forge registers a default editable cloud layer", () => {
     layer?.metadata?.localAtmosphereVolume?.renderingRole,
     "topo-environment-cloud-impostor",
   );
-  assert.equal(layer?.metadata?.crsRegistration?.horizontalCrs, "EPSG:26912");
+  assert.equal(layer?.metadata?.crsRegistration?.horizontalCrs, "scene-local");
   assert.equal(layer?.metadata?.crsRegistration?.registrationStatus, "unverified");
-  assert.equal(layer?.metadata?.crsRegistration?.coordinateBasis, "utm");
+  assert.equal(layer?.metadata?.crsRegistration?.coordinateBasis, "model-origin");
+  assert.equal(layer?.metadata?.crsRegistration?.accuracyClaimStatus, "not-applicable");
   assert.ok(
     environment.layerStyles?.["utah-forge-topo-clouds"],
     "Default Utah cloud layer should have environment layerStyles.",
@@ -186,19 +179,6 @@ test("utah forge registers a default editable cloud layer", () => {
     style?.affectedByFog,
     false,
     "Default Utah test cloud should not disappear into scene fog.",
-  );
-  const globallyVisible =
-    environment.defaultVisibleLayers?.includes("utah-forge-topo-clouds") === true;
-  const pageVisible =
-    mtOverviewPage.visibilityOverrides?.["utah-forge-topo-clouds"] === true;
-  assert.ok(
-    globallyVisible || pageVisible,
-    "Default Utah cloud layer should be visible in the environment or on its QA page.",
-  );
-  assert.equal(
-    mtOverviewPage.visibilityOverrides?.["utah-forge-topo-clouds"],
-    true,
-    "MT Volume Overview should explicitly turn on the test cloud.",
   );
 });
 

@@ -1,4 +1,4 @@
-# Transition Guardrails
+﻿# Transition Guardrails
 
 Status: draft operational guardrails.
 
@@ -76,3 +76,12 @@ captures, or video capture unless explicitly requested.
 Fixtures may be used to reproduce, observe, and record evidence. Fixture details
 must stay in evidence registers, generated artifacts, or content-regression
 tests. They must not become runtime branches or remediation criteria.
+
+## Transition Runtime Operating Spec
+
+Before transition runtime, editor/save transition gating, scene-section, Section ISO, working-area focus, opacity, or page-navigation work, read:
+
+docs/dev-context/Transition-Runtime-Operating-Spec.md
+
+This spec is the active operating contract for current transition work. Older audits and matrix logs are evidence only.
+

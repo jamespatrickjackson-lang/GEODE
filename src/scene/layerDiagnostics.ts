@@ -32,6 +32,7 @@ export interface GeovoxDiagnosticsHook {
   getSnapshot: () => LayerDiagnosticsSnapshot;
   logSnapshot: () => LayerDiagnosticsSnapshot;
   getLastSnapshot: () => LayerDiagnosticsSnapshot | null;
+  getSceneHandle: () => SceneHandle;
 }
 
 declare global {
@@ -243,6 +244,9 @@ export function installDevLayerDiagnostics(
       return snapshot;
     },
     getLastSnapshot: () => lastSnapshot,
+    // Dev-only inspection escape hatch for transition/style regressions.
+    // Read state through it; scene mutation stays with the app runtime.
+    getSceneHandle: () => handle,
   };
 
   window.__GEOVOX_DIAGNOSTICS__ = hook;
