@@ -4530,6 +4530,9 @@ export class SceneManager {
       "full-current-page-state",
     );
     const previousLayerOpacity = new Map<string, number>();
+    const previousEnterTweens = isAsyncLayerResolve
+      ? new Map(this.layerTweens)
+      : null;
     if (isAsyncLayerResolve && env && page) {
       for (const [id, group] of this.layers) {
         previousLayerOpacity.set(
@@ -4545,14 +4548,32 @@ export class SceneManager {
       this.applyPageScene(page);
       if (isAsyncLayerResolve) {
         // Readiness rule: a layer whose data resolves after the page landed
-        // must not flash to full opacity. Each late arrival popped at its
-        // own load moment ("things snap in at different paces"); enter it
-        // on the default layer fade instead.
+        // must not flash to full opacity. Async resolves arrive in bursts,
+        // and the full style apply above writes full target opacity and
+        // clears layerTweens — without restoring in-flight enter fades each
+        // burst snapped half-faded layers to full ("terrain snaps in") and
+        // restarted not-yet-visible ones. Restore running fades first, then
+        // start fades only for genuinely new arrivals.
         const now = performance.now();
         for (const [id, group] of this.layers) {
           if (!group.visible) continue;
           const target = this.targetOpacityForLayer(env, page, id);
           if (target <= 0.001) continue;
+          const preserved = previousEnterTweens?.get(id);
+          if (preserved) {
+            const t =
+              preserved.durationMs <= 0
+                ? 1
+                : (now - preserved.startMs) / preserved.durationMs;
+            if (t < 1) {
+              this.layerTweens.set(id, { ...preserved, to: target });
+              this.applyLayerRenderOpacity(
+                id,
+                previousLayerOpacity.get(id) ?? 0,
+              );
+              continue;
+            }
+          }
           if ((previousLayerOpacity.get(id) ?? 0) > 0.001) continue;
           this.applyLayerRenderOpacity(id, 0);
           this.layerTweens.set(id, {
