@@ -63,6 +63,12 @@ APIs.
 - Before changing editor sidebar bars, groups, subsections, controls, or
   backed editor fields, read the editor control manifest and policy. Add,
   move, rename, hide, or remove controls only through the manifest guard.
+- Cinematics render-preset authoring currently has one apparent mode.
+  `Camera Studio` -> `Render Preset` must show `Project preset` in every
+  authoring context and must show the selected page's `Page preset` override
+  beside it when a page is selected. Do not bury project presets behind Global
+  Settings-only paths or hide page/project preset selectors behind separate
+  Presentation Presets modes.
 - Before changing viewport quick legends, read
   `docs/dev-context/UI-Visual-Standards.md`; use the compact quick legend helpers
   in `src/ui/legendStyles.ts`; do not hand-tune local quick legend button

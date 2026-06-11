@@ -205,7 +205,7 @@ The first Utah FORGE preset should be treated as proposed review input, not fina
 Use this checklist to verify the existing editor selectors before treating render presets as complete:
 
 1. Open the app in editor mode.
-2. Global selector path: `Page Manager` -> `00. Global Settings` -> `Cinematic Render Preset` -> `Project preset`.
+2. Open `Cinematics` -> `Camera Studio` -> `Render Preset`; confirm `Cinematic Render Preset` -> `Project preset` is visible without selecting `00. Global Settings`.
 3. Confirm `Current / Custom` is selected for projects that should preserve their authored look.
 4. For Utah FORGE, confirm `Current / Custom` matches the existing visual appearance before preset preview.
 5. Change `Project preset` from `Current / Custom` to `Survey Daylight` and confirm a visible world-building preview/change.
@@ -213,7 +213,7 @@ Use this checklist to verify the existing editor selectors before treating rende
 7. Save only after confirming the chosen mode is intentional.
 8. Refresh and confirm the saved mode reloads.
 9. Confirm the project `environment.json` stores only the top-level `renderPreset` field when a preset is intentionally selected; `Current / Custom` means the field is absent.
-10. Page selector path: select a page in `Page Manager`, then use `Page Render Preset Override` -> `Page preset`.
+10. Select a presentation page and confirm the same `Render Preset` area shows both `Project preset` and `Page preset` together.
 11. Choose `Inherit project preset` to use the environment preset, or choose one of the five presets to save that page's `renderPreset` field.
 12. Confirm Phase 3 MT, scalar, seismic, voxel/slice/heat-map, contour computation, product files, scalar ranges, and color ramps are unchanged.
 
@@ -249,7 +249,7 @@ Custom user presets are project-local and live in `environment.json`:
 
 The GUI path for saving a custom preset is:
 
-`Page Manager` -> `00. Global Settings` -> `Cinematic Render Preset` -> `Save Custom Preset`.
+`Cinematics` -> `Camera Studio` -> `Render Preset` -> `Cinematic Render Preset` -> `Save Custom Preset`.
 
 The first saved custom preset is named `User 1`; later saves use `User 2`,
 `User 3`, and so on. Saved user presets appear in the same project and page
@@ -299,7 +299,7 @@ the previous thickness.
 
 1. Open Utah FORGE in editor mode.
 2. Confirm the project preset is `Current / Custom`.
-3. In `Page Manager` -> `00. Global Settings` -> `Cinematic Render Preset`, click `Save Custom Preset`.
+3. In `Cinematics` -> `Camera Studio` -> `Render Preset` -> `Cinematic Render Preset`, click `Save Custom Preset`.
 4. Confirm `User 1` appears in the `Project preset` dropdown and in the page-level `Page preset` dropdown.
 5. Select `Survey Daylight` and confirm a visible world-building preview.
 6. Select `User 1` and confirm the captured authored look returns.

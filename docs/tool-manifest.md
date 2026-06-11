@@ -18,7 +18,7 @@ Tools that define and manage the presentation sequence.
 | --- | --- |
 | **Pages** | Create, select, reorder, show/hide, duplicate, archive, restore, and delete pages. Active pages define presenter navigation; staff-archived pages stay editable draft/alternate pages outside that sequence and outside built client output. |
 | **Page Color** | Per-page accent hue/saturation, used in the presenter UI chrome. |
-| **Page Render Override** | Per-page cinematic quality preset inside Cinematics that overrides the project-wide default for that page only. |
+| **Page Render Override** | Per-page cinematic quality preset shown beside the project preset in `Cinematics` -> `Camera Studio` -> `Render Preset` when a presentation page is selected. |
 | **Cards** | Per-page text editor. Controls page title, subtitle, markdown body, inset images, and fade/gap/easing timing for the text animation. |
 
 ---
@@ -30,7 +30,7 @@ Tools that control how the 3D scene looks globally.
 | Tool | Description |
 | --- | --- |
 | **Cinematics** | Top-level container for global rendering, UI, and page camera controls. Houses the sub-tools below. |
-| **Cinematic Render Preset** | Project-wide render quality selector. Save and update named presets. Drives antialiasing, shadow quality, AO, bloom, and related passes. |
+| **Cinematic Render Preset** | Project-wide render quality selector shown in `Cinematics` -> `Camera Studio` -> `Render Preset` in every authoring context. Save and update named presets. Drives antialiasing, shadow quality, AO, bloom, and related passes. |
 | **Environment** | Cinematic scene atmosphere and world-building controls that are not owned by a more specific tool. Topo scene atmosphere, clouds, sun, and scene fog live under Topo Environment; map/topo fog lives under Topo Extents. |
 | **Local Atmosphere Volume** | Environmental `atmosphere-volume` layer model for local mist/fog/cloud volumes. In the editor, user-facing cloud authoring lives under `Topo > Environment > Clouds`. |
 | **Lighting Studio** | Sun azimuth and elevation, plus key/fill/rim light intensities. Supports movable source lights for accent and shadow control. |

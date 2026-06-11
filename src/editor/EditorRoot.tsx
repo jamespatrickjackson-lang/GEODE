@@ -4,7 +4,6 @@ import { LayerPanel } from "./LayerPanel";
 import {
   DynamicCameraPanel,
   PagePanel,
-  PageRenderPresetPanel,
   UiSettingsPanel,
   VisualStudioPanel,
 } from "./PagePanel";
@@ -1473,12 +1472,6 @@ export function EditorRoot({
               devModeEnabled={devModeEnabled}
               onDevModeChange={setDevModeEnabled}
             />
-            {selectedPage && (
-              <PageRenderPresetPanel
-                page={selectedPage}
-                accentColor={selectedPageAccent}
-              />
-            )}
             {selectedPage && (
               <DynamicCameraPanel
                 page={selectedPage}

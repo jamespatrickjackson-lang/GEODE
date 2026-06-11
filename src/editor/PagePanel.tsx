@@ -1573,7 +1573,7 @@ export function VisualStudioPanel({
         scene={cinematicsScene}
         setScene={setCinematicsScene}
         topSlot={
-          currentPage ? null : (
+          <>
             <RenderPresetContainer
               title="Cinematic Render Preset"
               label="Project preset"
@@ -1591,7 +1591,13 @@ export function VisualStudioPanel({
                 setEnvRenderPreset(value ? (value as RenderPresetId) : null)
               }
             />
-          )
+            {currentPage ? (
+              <PageRenderPresetPanel
+                page={currentPage}
+                accentColor={accentColor}
+              />
+            ) : null}
+          </>
         }
       />
       <PostProcessingPanel
@@ -1709,7 +1715,7 @@ function RenderPresetContainer({
   onUpdateCustom?: () => unknown;
   onChange: (value: RenderPresetId | "") => void;
 }) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(true);
 
   return (
     <section

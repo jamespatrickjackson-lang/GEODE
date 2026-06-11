@@ -46,6 +46,12 @@ contract and points to the owning source files. Durable rationale belongs in
   authored same-target zoom factor.
 - `Camera Studio` section order is: `Render Preset`, `Lens Types`,
   and `Camera Focus`.
+- `Render Preset` is one apparent authoring surface. It must show the project
+  `Project preset` selector in every authoring context and, when a
+  presentation page is selected, show that page's `Page preset` override
+  directly beside it. Do not hide either selector behind Global Settings-only,
+  page-only, or Presentation Presets modes. Preset bodies should open by
+  default.
 - `Post Processing` follows `Camera Studio` in Cinematics. Its section order is:
   `Depth of Field`, `Tilt-Shift`, `Post Production`, `Image finish`, `Glow`,
   `Film / Optics`, `Motion Trails`, `Composition Guides`,

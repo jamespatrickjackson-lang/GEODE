@@ -675,6 +675,7 @@
       "scope": "all-projects",
       "backedBy": "page.renderPreset",
       "setterRoute": "setPageField",
+      "visibilityGuard": "Render beside Project preset in Cinematics > Camera Studio > Render Preset whenever a presentation page is selected; do not hide behind a separate mode.",
       "status": "active"
     },
     {
@@ -687,6 +688,7 @@
       "scope": "all-projects",
       "backedBy": "environment.renderPreset",
       "setterRoute": "setEnvRenderPreset",
+      "visibilityGuard": "Render in Cinematics > Camera Studio > Render Preset for every authoring context, including selected presentation pages; do not restrict to Global Settings only.",
       "status": "active"
     },
     {

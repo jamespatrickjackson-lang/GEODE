@@ -71,6 +71,12 @@ structure. It is not a shipped endpoint. Preserve current behavior while moving
 tool defaults, runtime behavior, editor panels, and style tokens out of
 project-specific branches when each toolset is touched.
 
+Current Cinematics render-preset authoring has one apparent mode:
+`Camera Studio` -> `Render Preset` shows project render preset controls in
+every authoring context and shows the selected page override alongside it when
+a page is selected. Do not reintroduce a Global Settings-only project preset
+path or hide page/project presets behind separate Presentation Presets modes.
+
 Current MT resistivity work follows the same rule: all slices, sections,
 volumes, and threshold surfaces must trace back to the full authoritative MT
 cell-center model unless they are explicitly labeled presentation crops.

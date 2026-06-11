@@ -234,6 +234,34 @@ test("Cinematic scene preset sync keeps light-mode background edits", () => {
   );
 });
 
+test("Cinematics keeps render preset controls apparent in page authoring mode", () => {
+  const visualStudioPanel = functionBody(pagePanel, "VisualStudioPanel");
+  const renderPresetStart = pagePanel.indexOf("function RenderPresetContainer");
+  assert.notEqual(renderPresetStart, -1, "RenderPresetContainer should exist");
+  const renderPresetContainer = pagePanel.slice(renderPresetStart);
+
+  assert.doesNotMatch(
+    visualStudioPanel,
+    /currentPage\s*\?\s*null\s*:/,
+    "Project render preset controls should not disappear when a presentation page is selected.",
+  );
+  assert.match(
+    visualStudioPanel,
+    /title=["']Cinematic Render Preset["'][\s\S]*label=["']Project preset["']/,
+    "Cinematics should always render the project preset selector.",
+  );
+  assert.match(
+    visualStudioPanel,
+    /<PageRenderPresetPanel[\s\S]*page=\{currentPage\}/,
+    "Cinematics should keep the page render preset selector visible for selected pages.",
+  );
+  assert.match(
+    renderPresetContainer,
+    /const \[open, setOpen\] = useState\(true\)/,
+    "Render preset containers should open by default so preset selectors are immediately apparent.",
+  );
+});
+
 test("Camera Studio and Post Processing split cinematic control sections", () => {
   const visualStudioPanel = functionBody(pagePanel, "VisualStudioPanel");
   const cameraSetupPanel = functionBody(environmentPanel, "CameraSetupPanel");
