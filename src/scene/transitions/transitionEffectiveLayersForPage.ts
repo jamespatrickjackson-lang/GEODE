@@ -748,13 +748,29 @@ export function transitionEffectiveLayersForPage(
           targetStyle,
           this.layerSpecFor(id),
         );
+      // A discrete section change alone must not crossfade a layer whose own
+      // resolved state is unchanged: crossfading two identical translucent
+      // copies dips composite alpha mid-fade and shimmers (threshold-surface
+      // "ghosting"). The TRD-010 dual-mask path owns the clip-difference fade
+      // on material uniforms; the layer snapshot crossfade is reserved for
+      // layers whose own presentation state also changes.
+      const sectionAffectedLayerStateUnchanged =
+        Math.abs(fromOpacity - toOpacity) < 0.001 &&
+        !forgeDiscreteDataStyleChanged(
+          id,
+          fromStyle,
+          targetStyle,
+          this.layerSpecFor(id),
+        ) &&
+        !scalarTransitionStyleChanged(fromStyle, targetStyle);
       const shouldCrossfadeSceneSection =
         !!group &&
         duration > 0 &&
         sceneSectionDiscreteChanged &&
         targetSceneSectionTransitionActive &&
         fromOpacity > 0.001 &&
-        SCENE_SECTION_AFFECTED_LAYER_IDS.has(id);
+        SCENE_SECTION_AFFECTED_LAYER_IDS.has(id) &&
+        !sectionAffectedLayerStateUnchanged;
       const shouldTweenFullDensityScalarStyle =
         id === UTAH_FORGE_MT_RESISTIVITY_FULL_DENSITY_LAYER_ID &&
         scalarTransitionStyleChanged(fromStyle, targetStyle);
