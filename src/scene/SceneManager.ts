@@ -3400,16 +3400,37 @@ export class SceneManager {
 
     return {
       ...(options ?? {}),
-      preserveExisting: options?.preserveExisting ?? true,
       initialTransitionOpacity:
         options?.initialTransitionOpacity ?? transition.targetOpacity,
     };
+  }
+
+  // Once a Section ISO transition has registered a populated target root,
+  // further rebuilds during the tween (mid-tween reapplies, the commit-time
+  // full section apply) duplicate the root or swap contour geometry at full
+  // opacity — the measured post-transition "iso pop". Hold those rebuilds;
+  // only the delayed height-sampler retry may pass with an explicit bypass
+  // because it must replace untrimmed contours (it clears first and attaches
+  // at the current transition envelope).
+  private sectionIsoOverlayUpdateHeldByTransition(
+    kind: SectionIsoOverlayTransitionRootKind,
+    options?: SectionIsoOverlayUpdateOptions,
+  ): boolean {
+    if (options?.bypassTransitionHold === true) return false;
+    const transition = this.sectionIsoOverlayTransition;
+    if (!transition) return false;
+    return transition.targetRoots.some(
+      (root) => root.kind === kind && root.group.children.length > 0,
+    );
   }
 
   updateMtVolumeCutIsoOverlays(
     style: EditableStyle,
     options?: SectionIsoOverlayUpdateOptions,
   ): void {
+    if (this.sectionIsoOverlayUpdateHeldByTransition("mt-volume", options)) {
+      return;
+    }
     return updateMtVolumeCutIsoOverlaysImpl.call(
       this,
       style,
@@ -3454,6 +3475,11 @@ export class SceneManager {
     style: EditableStyle,
     options?: SectionIsoOverlayUpdateOptions,
   ): void {
+    if (
+      this.sectionIsoOverlayUpdateHeldByTransition("seismic-volume", options)
+    ) {
+      return;
+    }
     return updateSeismicVolumeCutIsoOverlaysImpl.call(
       this,
       style,
@@ -3465,6 +3491,14 @@ export class SceneManager {
     style: EditableStyle,
     options?: SectionIsoOverlayUpdateOptions,
   ): void {
+    if (
+      this.sectionIsoOverlayUpdateHeldByTransition(
+        "seismic-resistivity",
+        options,
+      )
+    ) {
+      return;
+    }
     return updateSeismicResistivityIsoOverlaysImpl.call(
       this,
       style,

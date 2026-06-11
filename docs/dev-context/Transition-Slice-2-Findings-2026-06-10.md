@@ -58,15 +58,24 @@ threshold-ghosting commit referencing this doc)
 
 ## Open items, in priority order
 
-1. **Residual one-frame nudge on ISO enter** (~0.12 on the line-overlay
-   material at the very end of a sections-off → on enter, e.g. 158 → 159).
-   The band material ramps perfectly (verified via material
-   `userData.sectionIsoTransitionOpacity`); only the line overlay jumps in
-   the final frame. Suspect the delayed height-sampler rebuild path in
-   `updateMtVolumeCutIsoOverlaysImpl` (volumeCutIsoOverlays.ts ~line 1007)
-   attaching line geometry with a stale envelope. Instrument
-   `applySectionIsoOverlayMaterialOpacity` writes on the line material to
-   confirm.
+0. **FIXED in this slice (per-material instrumentation closed item 1):** the
+   terminal "iso pop" on enter was not an opacity lag. Material uuids showed
+   the ISO root was fully REBUILT twice after the tween: once by the
+   commit-time full `applySceneSectionPlanes` (the old
+   `preserveExisting ?? true` wrapper prevented the clear but not a duplicate
+   build), once ~300 ms later by the async-layer-resolve full reapply. Each
+   rebuild swapped contour geometry at full opacity. Fix:
+   `sectionIsoOverlayUpdateHeldByTransition` in `SceneManager.ts` holds
+   MT/seismic cut ISO rebuilds while the transition owns a populated
+   registered target root; only the height-sampler retries bypass
+   (`bypassTransitionHold: true` + `preserveExisting: false` in
+   `volumeCutIsoOverlays.ts`) because they must replace untrimmed contours,
+   and they attach at the current envelope. The
+   `section-iso-transition-smoothing-source` guard was updated from the
+   superseded preserve-existing pattern to the hold contract.
+   Not yet browser-re-measured — verify 158 → 159 enter shows a single
+   stable material set (record material uuids per frame; see "How the
+   evidence was gathered").
 2. **MT Resistivity Cells Log10 load behavior** ("have to click All Valid
    Cells then Log10 for full display"). One confirmed mechanism: with
    `00. Global Settings` selected (the editor default on load),

@@ -192,8 +192,20 @@ test("SceneManager injects non-destructive Section ISO options during active tar
 
   assert.match(
     sceneManager,
-    /preserveExisting:\s*options\?\.preserveExisting \?\? true/,
-    "Active target preparation should preserve existing source roots for crossfade.",
+    /private sectionIsoOverlayUpdateHeldByTransition\([\s\S]*?kind: SectionIsoOverlayTransitionRootKind,[\s\S]*?options\?: SectionIsoOverlayUpdateOptions/,
+    "SceneManager should hold ISO overlay rebuilds while a transition owns populated target roots; rebuilds duplicate roots or swap contours at full opacity.",
+  );
+
+  assert.match(
+    sceneManager,
+    /options\?\.bypassTransitionHold === true\) return false/,
+    "Height-sampler retries must be able to bypass the transition hold to replace untrimmed contours.",
+  );
+
+  assert.match(
+    sceneManager,
+    /root\.kind === kind && root\.group\.children\.length > 0/,
+    "The transition hold must apply only to registered, populated target roots.",
   );
 
   assert.match(
