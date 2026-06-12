@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "status": "active-guard",
   "lastReviewedAt": "2026-06-12",
-  "lastReviewNote": "SceneSectionPlanesContainer.tsx: Section object visibility groups repeated object targets by seismic/MT/station/reference category, with seismic volume and section-image targets split by representation-specific object ids.",
+  "lastReviewNote": "SceneSectionPlanesContainer.tsx keeps representation-specific seismic section targets, and SectionVisualsPanel exposes generic Section Visuals controls backed by SceneProperties.sectionVisuals.",
   "description": "Canonical editor sidebar control manifest. Any user-facing editor sidebar control, command, section, or persisted variable must be represented here before editor-bar source changes are accepted.",
   "approvalPolicy": {
     "removalStatuses": ["removed", "renamed", "hidden"],
