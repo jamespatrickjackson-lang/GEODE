@@ -14,11 +14,8 @@ import type { EditableStyle, PresentationPage, ProjectLayerSpec } from "../../..
 import type { SceneHandle } from "../../../scene";
 import { useEditor } from "../../EditorContext";
 import {
-  UTAH_FORGE_DEMO_BOREHOLES_LAYER_ID,
   UTAH_FORGE_MT_RESISTIVITY_FULL_DENSITY_LAYER_ID,
-  UTAH_FORGE_MT_THRESHOLD_SURFACES_LAYER_ID,
   UTAH_FORGE_SCENE_SECTION_LAYER_ID,
-  UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID,
 } from "../../../projectModules/utahForge/layerIds";
 import { IsobandControls } from "../mt/IsobandControls";
 import { SectionGraphOptionsControls } from "./SectionGraphOptionsControls";
@@ -265,12 +262,6 @@ export function SeismicCapabilityLayerContainers({
   const activeCapabilityPreset = capabilityPresets.find(
     (preset) => preset.id === currentCapabilityPresetId,
   );
-  const linkedSceneSectionPresets = capabilityPresets.filter(
-    (preset) =>
-      Boolean(
-        preset.linkedLayerStylePatches?.[UTAH_FORGE_SCENE_SECTION_LAYER_ID],
-      ),
-  );
   const controlOpacity = disabled ? 0.4 : 1;
   const liveSeismicStyleRef = useRef(style);
   const liveSceneSectionStyleRef = useRef(sceneSectionStyle);
@@ -348,6 +339,8 @@ export function SeismicCapabilityLayerContainers({
       }
     }
   };
+  const applyPsdm58_32DepthWindow = () =>
+    applyCapabilityPreset("psdm-mt-58-32-source-location-tie");
   const renderSourceGatedProductItem = (
     gate: SeismicRequiredProductSourceGate,
   ) => (
@@ -489,7 +482,6 @@ export function SeismicCapabilityLayerContainers({
         controlOpacity={controlOpacity}
         commit={commit}
         commitLayerStyle={commitLayerStyle}
-        onApplyPsdm58_32Tie={applyPsdm58_32DepthWindow}
       />
 
       <SeismicCapabilityLayerItem
