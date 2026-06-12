@@ -1,7 +1,7 @@
 {
   "id": "156_page",
-  "title": "GeoSee Intro",
-  "subtitle": "Who We Are",
+  "title": "Forge Utah",
+  "subtitle": "Phase 3",
   "camera": {
     "position": [
       -45834.60021580089,
@@ -148,10 +148,10 @@
     "utah-forge-phase3-demo-boreholes": true
   },
   "overlayLayout": {
-    "x": 0.6316646316646316,
-    "y": 0.09318178463355224,
-    "width": 0.1938135938135938,
-    "height": 0.32813442566487067
+    "x": 0.6523353476464169,
+    "y": 0.401023546900251,
+    "width": 0.3230453646469271,
+    "height": 0.31119590621694093
   },
   "cameraObjectFocus": {
     "targetId": "product:utah-forge-mt-stations:FRG19023",

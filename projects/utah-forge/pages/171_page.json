@@ -1,0 +1,316 @@
+{
+  "id": "171_page",
+  "title": "Resistivity Isobars",
+  "camera": {
+    "position": [
+      -14423.188240111198,
+      9942.014948103162,
+      4110.68550152541
+    ],
+    "target": [
+      -9107,
+      -3916,
+      1833
+    ],
+    "up": [
+      0,
+      0,
+      1
+    ],
+    "fov": 52
+  },
+  "transition": {
+    "duration": 3000,
+    "easing": "easeInOutCubic"
+  },
+  "holdDuration": 4000,
+  "dynamicCamera": {
+    "enabled": false,
+    "mode": "orbit",
+    "orbitEnabled": true,
+    "poi": [
+      -9107,
+      -3916,
+      1833
+    ],
+    "orbitSpeedDegPerSec": 4,
+    "orbitRadius": 14843,
+    "orbitHeight": 2278,
+    "orbitDirection": -1,
+    "zoomFov": 52,
+    "zoomEnabled": false,
+    "zoomDeltaFov": 0,
+    "zoomStartMs": 0,
+    "zoomEndMs": 2500,
+    "zoomCurve": "smooth",
+    "easeInMs": 1600,
+    "transitionLeadMs": 1600,
+    "transitionExitMs": 900,
+    "transitionBlendCurve": "smooth",
+    "pathAwareBlend": false,
+    "dollyEnabled": false,
+    "dollyDistanceM": 0,
+    "truckEnabled": false,
+    "truckDistanceM": 0,
+    "craneEnabled": false,
+    "craneHeightM": 0,
+    "shotStartMs": 0,
+    "shotEndMs": 2500,
+    "shotCurve": "smooth",
+    "handheldEnabled": false,
+    "handheldAmplitudeM": 0,
+    "handheldFrequencyHz": 0.35,
+    "rollDeg": 0
+  },
+  "visibilityOverrides": {
+    "utah-forge-mt-top-surface": true,
+    "utah-forge-mt-resistivity-volume": true,
+    "utah-forge-topo-graticule": false,
+    "utah-forge-mt-resistivity-full-density": true,
+    "utah-forge-mt-resistivity-threshold-surfaces": false
+  },
+  "layerOverrides": {
+    "utah-forge-scene-section-planes": {
+      "sceneSectionFrames": [
+        {
+          "id": "axis:z",
+          "label": "Z Section frame",
+          "axis": "z",
+          "plane": {
+            "enabled": false,
+            "positionM": -3347.3611248919174,
+            "invert": false
+          },
+          "frame": {
+            "maxBM": -9102.565781890298,
+            "maxAM": -3448.3514535923605,
+            "minBM": -40280.4376520034,
+            "minAM": -54750.83262365569,
+            "controlsVisible": true
+          }
+        },
+        {
+          "id": "axis:x",
+          "label": "X Section frame",
+          "axis": "x",
+          "plane": {
+            "enabled": false,
+            "positionM": -2353.6972244507606,
+            "invert": false
+          },
+          "frame": {
+            "axisAlignment": "cardinal",
+            "axisAHeading": "Latitude (°)",
+            "axisBHeading": "Elevation (km)",
+            "axisDatum": "latlon",
+            "minBM": -25000,
+            "maxBM": 12250.9622792674,
+            "maxAM": -8266.059897463416,
+            "controlsVisible": true,
+            "minAM": -61883.27347169986
+          }
+        },
+        {
+          "id": "axis:y",
+          "label": "Y Section frame",
+          "axis": "y",
+          "plane": {
+            "enabled": true,
+            "positionM": -8446.869727445148,
+            "invert": false
+          },
+          "frame": {
+            "minBM": -81700.93230541109,
+            "maxAM": 87657.1744165115,
+            "minAM": -95521.89648722504,
+            "groundTraceWidthM": 160,
+            "controlsVisible": false,
+            "axisAlignment": "cardinal",
+            "axisAHeading": "Easting (km)",
+            "axisBHeading": "Elevation (km)"
+          }
+        }
+      ],
+      "sceneSectionActiveFrameId": "axis:y",
+      "sceneSectionFrameEnabled": true,
+      "sceneSectionEnabled": true,
+      "sceneSectionMode": "cutaway",
+      "sceneSectionActiveAxis": "y",
+      "sceneSectionPlanes": {
+        "x": {
+          "enabled": false,
+          "positionM": -2353.6972244507606,
+          "invert": false
+        },
+        "y": {
+          "enabled": true,
+          "positionM": -8446.869727445148,
+          "invert": false
+        },
+        "z": {
+          "enabled": false,
+          "positionM": -3347.3611248919174,
+          "invert": false
+        }
+      },
+      "sceneSectionFrameByAxis": {
+        "x": {
+          "axisAlignment": "cardinal",
+          "axisAHeading": "Latitude (°)",
+          "axisBHeading": "Elevation (km)",
+          "axisDatum": "latlon",
+          "minBM": -25000,
+          "maxBM": 12250.9622792674,
+          "maxAM": -8266.059897463416,
+          "controlsVisible": true,
+          "minAM": -61883.27347169986
+        },
+        "y": {
+          "minBM": -81700.93230541109,
+          "maxAM": 87657.1744165115,
+          "minAM": -95521.89648722504,
+          "groundTraceWidthM": 160,
+          "controlsVisible": false,
+          "axisAlignment": "cardinal",
+          "axisAHeading": "Easting (km)",
+          "axisBHeading": "Elevation (km)"
+        },
+        "z": {
+          "maxBM": -9102.565781890298,
+          "maxAM": -3448.3514535923605,
+          "minBM": -40280.4376520034,
+          "minAM": -54750.83262365569
+        }
+      },
+      "sceneSectionHelperVisible": true,
+      "sceneSectionWindowEnabled": true,
+      "sceneSectionWindowActiveAxis": "y",
+      "sceneSectionWindowByAxis": {
+        "x": {
+          "minAlongM": -61883.27347169986,
+          "maxAlongM": -8266.059897463416,
+          "bottomElevationM": -25000
+        },
+        "y": {
+          "minAlongM": -95521.89648722504,
+          "maxAlongM": 87657.1744165115,
+          "bottomElevationM": -81700.93230541109
+        }
+      },
+      "sceneSectionTargetScope": "selected-targets",
+      "sceneSectionTargetLayerIds": [
+        "utah-forge-mt-resistivity-volume",
+        "utah-forge-mt-resistivity-slices",
+        "utah-forge-phase3-seismic-browser"
+      ],
+      "sceneSectionTargetProductIds": [
+        "gdr-1141-forge3d-ani-psdm-stack-unenh"
+      ],
+      "sceneSectionObjectVisibilityByFrameId": {
+        "axis:y": {
+          "layer:utah-forge-mt-top-surface": {
+            "outsideOpacity": 0
+          },
+          "layer:utah-forge-mt-stations": {
+            "outsideOpacity": 0
+          },
+          "layer:utah-forge-mt-resistivity-full-density": {
+            "outsideOpacity": 0
+          }
+        },
+        "axis:x": {
+          "layer:utah-forge-mt-top-surface": {
+            "outsideOpacity": 1
+          },
+          "layer:utah-forge-mt-stations": {
+            "outsideOpacity": 0
+          }
+        }
+      }
+    },
+    "utah-forge-phase3-demo-boreholes": {
+      "showLabels": true,
+      "demoBoreholeBlock": {
+        "visible": true,
+        "widthM": 118,
+        "depthM": 68,
+        "heightM": 34,
+        "liftM": 0,
+        "rotationDeg": -24.985,
+        "fillColor": "#f79c9c",
+        "opacity": 0.82,
+        "outlineVisible": true,
+        "outlineColor": "#ffffff",
+        "outlineThickness": 1.5,
+        "outlineOpacity": 0.92,
+        "labelVisible": true,
+        "labelText": "FORGE surface facility / orientation block",
+        "labelLiftM": 25.5
+      }
+    },
+    "utah-forge-mt-resistivity-full-density": {
+      "scalarLegendVisible": false,
+      "scalarInclusionMode": "all-valid"
+    },
+    "utah-forge-phase3-seismic-browser": {
+      "seismicProductVisibility": {
+        "gdr-1141-forge3d-poststack-time-migration-fxydecon-stack": false,
+        "gdr-1141-forge3d-ani-psdm-stack-unenh": false,
+        "gdr-1141-forge3d-pstm-stack-enh": false,
+        "gdr-1015-forge3d-velo5d-float-01312018": false,
+        "gdr-1141-line-301-pdm-enh": false,
+        "gdr-1141-line-301-psdm-unenh": false,
+        "gdr-1015-forge2d-301-migr-depth": false,
+        "gdr-1141-line-302-psdm-enh": false,
+        "gdr-1141-line-302-psdm-unenh": false,
+        "gdr-1141-line-l11-psdm-enh": false,
+        "gdr-1141-line-l11-psdm-enh-meters": false,
+        "gdr-1141-line-l11-psdm-unenh": false,
+        "gdr-1141-line-l5-psdm-enh": false,
+        "gdr-1141-line-l5-psdm-enh-meters": false,
+        "gdr-1141-line-l5-psdm-unenh": false,
+        "gdr-1141-line-l5-psdm-unenh-meters": false,
+        "gdr-1141-line-301-pstm-stack-enh": false,
+        "gdr-1141-line-301-pstm-stack-unenh": false,
+        "gdr-1141-line-301-unmigrated-stack": false,
+        "gdr-1141-line-302-pstm-stack-enh": false,
+        "gdr-1141-line-302-pstm-stack-unenh": false,
+        "gdr-1141-line-302-unmigrated-stack": false,
+        "gdr-1141-line-l11-pstm-enh": false,
+        "gdr-1141-line-l11-pstm-unenh": false,
+        "gdr-1141-line-l11-unmigrated-time-stack": false,
+        "gdr-1141-line-l5-pstm-enh": false,
+        "gdr-1141-line-l5-pstm-unenh": false,
+        "gdr-1141-line-l5-unmigrated-time-stack": false,
+        "gdr-1015-forge2d-301-stack-01312018": false,
+        "gdr-1015-forge2d-302-stack": false,
+        "gdr-1141-line-301-psdm-interval-velocity": false,
+        "gdr-1141-line-302-psdm-interval-velocity": false,
+        "gdr-1141-line-l11-psdm-interval-velocity": false,
+        "gdr-1141-line-l5-psdm-interval-velocity": false
+      }
+    },
+    "utah-forge-mt-top-surface": {
+      "opacity": 1
+    },
+    "utah-forge-mt-resistivity-volume": {
+      "sectionIsoEnabled": true,
+      "sectionIsoLinesVisible": true,
+      "sectionIsoTargetIds": {
+        "utah-forge-mt-resistivity-volume:mt-resistivity-forge-focused-volume:x": true,
+        "utah-forge-mt-resistivity-volume:mt-resistivity-forge-focused-volume:y": true,
+        "utah-forge-mt-resistivity-volume:mt-resistivity-full-extent-volume:y": true
+      },
+      "sectionIsoSourceOpacity": 0,
+      "sectionIsoBandsVisible": true
+    }
+  },
+  "hidden": false,
+  "overlayLayout": {
+    "x": 0.2517578125,
+    "y": 0.06383939774153073,
+    "width": 0.5073046875,
+    "height": 0.242848184506597
+  },
+  "subtitle": "Cross-Sections"
+}

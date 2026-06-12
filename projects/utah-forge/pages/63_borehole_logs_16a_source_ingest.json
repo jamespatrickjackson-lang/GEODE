@@ -4,21 +4,21 @@
   "subtitle": "GDR 1292 gamma tracks mapped onto the validated 16A trajectory",
   "camera": {
     "position": [
-      -16800,
-      -18400,
-      6400
+      -4479.277353625063,
+      -9203.60056225256,
+      1636.3656125345365
     ],
     "target": [
-      -6200,
-      -10100,
-      350
+      -6263.332667994729,
+      -10154.625986897383,
+      480.52023120631577
     ],
     "up": [
       0,
       0,
       1
     ],
-    "fov": 46
+    "fov": 70
   },
   "transition": {
     "duration": 3000,
@@ -26,9 +26,10 @@
   },
   "holdDuration": 6000,
   "overlayLayout": {
-    "x": 0.0130859375,
-    "y": 0.0618569636,
-    "width": 0.27
+    "x": 0.21875806887269267,
+    "y": 0.308974474125904,
+    "width": 0.25359214767067095,
+    "height": 0.26004778925871463
   },
   "overlay": {
     "position": "left",
@@ -42,7 +43,7 @@
   },
   "accentColor": "#ffe26d",
   "visibilityOverrides": {
-    "utah-forge-phase3-working-area": true,
+    "utah-forge-phase3-working-area": false,
     "utah-forge-site-boundary": false,
     "terrain": true,
     "transport-roads": false,
@@ -63,7 +64,7 @@
   },
   "layerOverrides": {
     "terrain": {
-      "opacity": 0.38
+      "opacity": 0.2
     },
     "utah-forge-phase3-seismic-browser": {
       "opacity": 0,
@@ -78,13 +79,52 @@
     },
     "utah-forge-phase3-demo-boreholes": {
       "opacity": 0.82,
-      "showLabels": true,
       "demoBoreholeWells": {
         "16A(78)-32": {
-          "visible": true
+          "visible": true,
+          "pipeDiameterM": 18,
+          "color": "#35d7ff",
+          "opacity": 0.92,
+          "lineStyle": "solid",
+          "dashLengthM": 260,
+          "dashGapM": 150,
+          "centerlineVisible": true,
+          "centerlineWidth": 2.2,
+          "centerlineOpacity": 0.82,
+          "centerlineColor": "#35d7ff",
+          "collarVisible": true,
+          "collarDiameterM": 32,
+          "pathTreatment": "survey",
+          "smoothingStrength": 0.35,
+          "collarLabelVisible": false,
+          "collarLabelText": "16A injection",
+          "collarLabelLiftM": 95,
+          "toeLabelVisible": false,
+          "toeLabelText": "Injection toe",
+          "toeLabelLiftM": 40
         },
         "16B(78)-32": {
-          "visible": false
+          "visible": false,
+          "pipeDiameterM": 16,
+          "color": "#ff7440",
+          "opacity": 0.92,
+          "lineStyle": "solid",
+          "dashLengthM": 260,
+          "dashGapM": 150,
+          "centerlineVisible": true,
+          "centerlineWidth": 2,
+          "centerlineOpacity": 0.82,
+          "centerlineColor": "#ff7440",
+          "collarVisible": true,
+          "collarDiameterM": 30,
+          "pathTreatment": "survey",
+          "smoothingStrength": 0.35,
+          "collarLabelVisible": true,
+          "collarLabelText": "16B production",
+          "collarLabelLiftM": 95,
+          "toeLabelVisible": false,
+          "toeLabelText": "Production toe",
+          "toeLabelLiftM": 40
         }
       },
       "demoBoreholeSourceLocations": {
@@ -109,11 +149,30 @@
             "visible": false
           }
         }
-      }
+      },
+      "demoBoreholeBlock": {
+        "visible": true,
+        "widthM": 118,
+        "depthM": 68,
+        "heightM": 34,
+        "liftM": 0,
+        "rotationDeg": -24.985,
+        "fillColor": "#f79c9c",
+        "opacity": 0.82,
+        "outlineVisible": true,
+        "outlineColor": "#ffffff",
+        "outlineThickness": 1.5,
+        "outlineOpacity": 0.92,
+        "labelVisible": false,
+        "labelText": "FORGE surface facility / orientation block",
+        "labelLiftM": 25.5
+      },
+      "showLabels": true,
+      "siteDetailsAlwaysOnTop": false,
+      "siteDetailsAlignToTopo": false
     },
     "utah-forge-borehole-logs": {
       "opacity": 1,
-      "showLabels": true,
       "affectedByFog": false,
       "boreholeLogActiveWell": "16A(78)-32",
       "boreholeLogTrackSelection": {
@@ -128,7 +187,7 @@
       "boreholeLogResistivityColor": "#4dd6ff",
       "boreholeLogBaselineColor": "#eef7f2",
       "boreholeLogLegendVisible": true,
-      "boreholeLogTrackOffsetM": 34,
+      "boreholeLogTrackOffsetM": 42,
       "boreholeLogTrackWidthM": 28,
       "boreholeLogGammaScaleApi": 150,
       "boreholeLogResistivityMinOhmM": 1,
@@ -142,7 +201,8 @@
       "boreholeLogLithologyOpacity": 0.3,
       "boreholeLogLithologyWidthPx": 12,
       "boreholeLogProvenanceVisible": true,
-      "boreholeLogReadoutVisible": true
+      "boreholeLogReadoutVisible": true,
+      "labelTextColor": "#e6e2dc"
     }
   }
 }

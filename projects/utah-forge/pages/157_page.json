@@ -1,7 +1,7 @@
 {
   "id": "157_page",
-  "title": "1 duplicate",
-  "subtitle": "Source-derived MT volume with focused Marching Cubes context",
+  "title": "Utah Forge Project Location",
+  "subtitle": "Overall Project Location & Footprint",
   "camera": {
     "position": [
       -19402.595004217284,
@@ -111,9 +111,30 @@
     },
     "utah-forge-phase3-demo-boreholes": {
       "opacity": 0.72,
-      "showLabels": false,
+      "showLabels": true,
       "siteDetailsAlwaysOnTop": true,
-      "siteDetailsAlignToTopo": false
+      "siteDetailsAlignToTopo": false,
+      "demoBoreholeSourceLocations": {
+        "items": {
+          "58-32-WELL": {
+            "visible": true
+          },
+          "BOR2": {
+            "visible": false
+          }
+        },
+        "mode": "line",
+        "lineVisible": true,
+        "opacity": 0.75,
+        "topRingVisible": true,
+        "color": "#ffffff",
+        "topRingTubeM": 27,
+        "topRingRadiusM": 195,
+        "lineWidth": 3,
+        "labelLiftM": 145,
+        "topRingOpacity": 0.63,
+        "visible": false
+      }
     },
     "utah-forge-working-area-focus": {
       "workingAreaFocusEnabled": false,
@@ -143,8 +164,8 @@
       "workingAreaFocusHelperVisible": true
     },
     "utah-forge-site-boundary": {
-      "color": "#4dfcff",
-      "fillOpacity": 0
+      "fillOpacity": 0,
+      "outlineColor": "#f06419"
     }
   },
   "visibilityOverrides": {
@@ -165,10 +186,10 @@
     "utah-forge-site-boundary": true
   },
   "overlayLayout": {
-    "x": 0.6710807291666667,
-    "y": 0.023061480552070204,
-    "width": 0.32891927083333333,
-    "height": 0.8960100376411544
+    "x": 0.5861197916666666,
+    "y": 0.10775407779171889,
+    "width": 0.3315234375,
+    "height": 0.2805771643663739
   },
   "cameraObjectFocus": {
     "targetId": "product:utah-forge-mt-stations:FRG19070",

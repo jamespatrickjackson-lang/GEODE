@@ -277,5 +277,6 @@
   },
   "sceneOverrides": {
     "lightMode": true
-  }
+  },
+  "hidden": true
 }

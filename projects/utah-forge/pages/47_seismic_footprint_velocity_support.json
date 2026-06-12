@@ -32,7 +32,7 @@
     "utah-forge-phase3-seismic-browser": true,
     "utah-forge-mt-stations": false,
     "utah-forge-mt-resistivity-preview": false,
-    "utah-forge-mt-resistivity-full-density": false,
+    "utah-forge-mt-resistivity-full-density": true,
     "utah-forge-mt-resistivity-volume": false,
     "utah-forge-mt-resistivity-threshold-surfaces": false,
     "utah-forge-mt-top-surface": false,
@@ -66,7 +66,8 @@
       "sectionIsoEnabled": false
     },
     "utah-forge-mt-resistivity-full-density": {
-      "scalarLegendVisible": false
+      "scalarLegendVisible": false,
+      "scalarInclusionMode": "all-valid"
     },
     "utah-forge-mt-resistivity-volume": {
       "scalarLegendVisible": false

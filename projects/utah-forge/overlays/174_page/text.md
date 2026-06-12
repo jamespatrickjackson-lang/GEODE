@@ -1,0 +1,3 @@
+Closed surfaces wrapped around every region of the model at or beyond a chosen log₁₀(ρ) value — a single continuous skin enclosing the conductive bodies (low-ρ) or the resistive bodies (high-ρ). Where the isolines trace a threshold as a contour, an isosurface seals it into a solid 3D shape, co-registered with terrain, footprint, and wells.
+
+In conventional reports a body of interest is outlined on each slice and the reader mentally stitches those outlines into a shape — its true volume and extent never shown directly.

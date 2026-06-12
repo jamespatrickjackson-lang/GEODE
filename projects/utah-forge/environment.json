@@ -1,6 +1,5 @@
 {
   "id": "environment",
-  "renderPreset": "user-3",
   "layerStyles": {
     "utah-forge-reference-stage": {
       "renderMode": "utah-forge-reference-stage",
@@ -377,7 +376,7 @@
       "showLabels": false
     },
     "utah-forge-mt-resistivity-full-density": {
-      "opacity": 0.48,
+      "opacity": 0.05,
       "pointSizePx": 1.25,
       "scalarInclusionMode": "all-valid",
       "scalarColorLow": "#2cc9ff",

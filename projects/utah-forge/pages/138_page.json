@@ -78,7 +78,7 @@
       "sceneSectionPlanes": {
         "x": {
           "enabled": true,
-          "positionM": -865.7873490670634,
+          "positionM": -4794.999298421379,
           "invert": false
         },
         "y": {
@@ -117,7 +117,7 @@
           "axis": "x",
           "plane": {
             "enabled": true,
-            "positionM": -865.7873490670634,
+            "positionM": -4794.999298421379,
             "invert": false
           },
           "frame": {
@@ -240,7 +240,7 @@
       "sectionIsoLineStyle": "dashed",
       "sectionIsoBandOpacity": 0.32,
       "sectionIsoFillOffset": 0,
-      "sectionIsoSourceOpacity": 0,
+      "sectionIsoSourceOpacity": 1,
       "scalarColorLow": "#2cc9ff",
       "scalarColorMid": "#f8dd6d",
       "scalarColorHigh": "#ff637a",
@@ -268,10 +268,16 @@
   },
   "visibilityOverrides": {
     "utah-forge-mt-resistivity-threshold-surfaces": true,
-    "utah-forge-phase3-seismic-browser": true,
+    "utah-forge-phase3-seismic-browser": false,
     "utah-forge-mt-resistivity-full-density": false,
     "utah-forge-topo-graticule": false,
     "utah-forge-mt-top-surface": false,
     "utah-forge-mt-resistivity-volume": true
+  },
+  "overlay": {
+    "position": "right",
+    "contentFile": "overlays/138_page/text.md",
+    "images": [],
+    "hidden": true
   }
 }

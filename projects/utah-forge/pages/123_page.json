@@ -82,7 +82,7 @@
           "invert": false
         },
         "y": {
-          "enabled": true,
+          "enabled": false,
           "positionM": -7879.77060984839,
           "invert": false
         },
@@ -125,7 +125,8 @@
             "axisBHeading": "Elevation (km)",
             "axisDatum": "latlon",
             "maxAM": 17869.36362149368,
-            "maxBM": 5259.487289179248
+            "maxBM": 5259.487289179248,
+            "controlsVisible": true
           }
         },
         {
@@ -133,13 +134,14 @@
           "label": "Y Section frame",
           "axis": "y",
           "plane": {
-            "enabled": true,
+            "enabled": false,
             "positionM": -7879.77060984839,
             "invert": false
           },
           "frame": {
             "maxAM": -64.77765328535315,
-            "minBM": -12493.451348062466
+            "minBM": -12493.451348062466,
+            "controlsVisible": true
           }
         },
         {
@@ -151,7 +153,9 @@
             "positionM": -2200,
             "invert": false
           },
-          "frame": {}
+          "frame": {
+            "controlsVisible": true
+          }
         }
       ],
       "sceneSectionMode": "cutaway"
@@ -238,7 +242,7 @@
       "sectionIsoLineStyle": "dashed",
       "sectionIsoBandOpacity": 0.32,
       "sectionIsoFillOffset": 0,
-      "sectionIsoSourceOpacity": 0,
+      "sectionIsoSourceOpacity": 1,
       "scalarColorLow": "#2cc9ff",
       "scalarColorMid": "#f8dd6d",
       "scalarColorHigh": "#ff637a",
@@ -266,7 +270,7 @@
   },
   "visibilityOverrides": {
     "utah-forge-mt-resistivity-threshold-surfaces": true,
-    "utah-forge-phase3-seismic-browser": true,
+    "utah-forge-phase3-seismic-browser": false,
     "utah-forge-mt-resistivity-full-density": false,
     "utah-forge-topo-graticule": false,
     "utah-forge-mt-top-surface": false,

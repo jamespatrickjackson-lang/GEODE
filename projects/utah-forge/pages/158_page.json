@@ -1,17 +1,17 @@
 {
   "id": "158_page",
-  "title": "1 duplicate duplicate",
-  "subtitle": "Source-derived MT volume with focused Marching Cubes context",
+  "title": "RESISTIVITY (MAGNETOTELLURIC) ",
+  "subtitle": "SURVEY FOOTPRINT & STATIONS",
   "camera": {
     "position": [
-      -29462.758932332155,
-      -2797.8316397091003,
-      10143.681719851355
+      4446.094400362959,
+      8749.495397717956,
+      9709.138371493173
     ],
     "target": [
-      -7335.477525207981,
-      -10850.895688263377,
-      1020.4014972835332
+      -6085.541105014097,
+      -9550.327177401972,
+      2384.174209191003
     ],
     "up": [
       0,
@@ -87,7 +87,7 @@
     "utah-forge-mt-stations": {
       "opacity": 0.9,
       "showLabels": false,
-      "mtStationQcSelectedStationId": "FRG19078",
+      "mtStationQcSelectedStationId": "FRG19068",
       "mtStationQcPanelOpen": true,
       "color": "#fd7244"
     },
@@ -113,7 +113,77 @@
     "utah-forge-phase3-demo-boreholes": {
       "opacity": 0.72,
       "showLabels": false,
-      "siteDetailsAlignToTopo": false
+      "siteDetailsAlignToTopo": false,
+      "demoBoreholeSourceLocations": {
+        "items": {
+          "58-32-WELL": {
+            "visible": true
+          },
+          "BOR2": {
+            "visible": false
+          }
+        },
+        "mode": "line",
+        "lineVisible": true,
+        "opacity": 0.75,
+        "topRingVisible": true,
+        "color": "#ffffff",
+        "topRingTubeM": 27,
+        "topRingRadiusM": 195,
+        "lineWidth": 3,
+        "labelLiftM": 145,
+        "topRingOpacity": 0.63,
+        "visible": false
+      },
+      "siteDetailsAlwaysOnTop": true,
+      "demoBoreholeWells": {
+        "16A(78)-32": {
+          "visible": true,
+          "pipeDiameterM": 18,
+          "color": "#35d7ff",
+          "opacity": 0.92,
+          "lineStyle": "solid",
+          "dashLengthM": 260,
+          "dashGapM": 150,
+          "centerlineVisible": true,
+          "centerlineWidth": 2.2,
+          "centerlineOpacity": 0.82,
+          "centerlineColor": "#35d7ff",
+          "collarVisible": true,
+          "collarDiameterM": 32,
+          "pathTreatment": "survey",
+          "smoothingStrength": 0.35,
+          "collarLabelVisible": false,
+          "collarLabelText": "16A injection",
+          "collarLabelLiftM": 95,
+          "toeLabelVisible": false,
+          "toeLabelText": "Injection toe",
+          "toeLabelLiftM": 40
+        },
+        "16B(78)-32": {
+          "visible": true,
+          "pipeDiameterM": 16,
+          "color": "#ff7440",
+          "opacity": 0.92,
+          "lineStyle": "solid",
+          "dashLengthM": 260,
+          "dashGapM": 150,
+          "centerlineVisible": true,
+          "centerlineWidth": 2,
+          "centerlineOpacity": 0.82,
+          "centerlineColor": "#ff7440",
+          "collarVisible": true,
+          "collarDiameterM": 30,
+          "pathTreatment": "survey",
+          "smoothingStrength": 0.35,
+          "collarLabelVisible": true,
+          "collarLabelText": "16B production",
+          "collarLabelLiftM": 95,
+          "toeLabelVisible": true,
+          "toeLabelText": "Production toe",
+          "toeLabelLiftM": 40
+        }
+      }
     },
     "utah-forge-site-boundary": {
       "color": "#4dfcff",
@@ -137,12 +207,20 @@
     "utah-forge-topo-graticule": false
   },
   "overlayLayout": {
-    "x": 0.692890625,
-    "y": 0,
-    "width": 0.307109375,
-    "height": 0.27681304893350067
+    "x": 0.21046874999999998,
+    "y": 0.25595984943538264,
+    "width": 0.2071744791666667,
+    "height": 0.14883312421580933
   },
   "sceneOverrides": {
     "lightMode": true
+  },
+  "cameraObjectFocus": {
+    "targetId": "product:utah-forge-mt-stations:FRG19068",
+    "worldPoint": [
+      -6085.541105014096,
+      -9550.327177401972,
+      2384.174209191003
+    ]
   }
 }

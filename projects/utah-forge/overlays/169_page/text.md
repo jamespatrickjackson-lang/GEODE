@@ -1,0 +1,3 @@
+The downhole monitoring footprint: rather than an areal surface grid, this acquisition is an aperture defined by the instrumented wells. Distributed Acoustic Sensing (DAS) fiber runs in wells 16B and 78B, a multi-level GES geophone string occupies well 78B, and a single geophone sits in well 56, complemented by surface and permanent borehole (PSS) stations. Microseismic location accuracy is highest within and around this well aperture and degrades with distance from it.
+
+Sources: Figure 3, Seismic DAS & Geophone Borehole Data Processing Report (GDR 1723); Orientation of Borehole and Surface Seismic Stations (GDR 1508)

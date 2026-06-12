@@ -54,7 +54,7 @@
     "y": 0.0481555834378921,
     "width": 0.27
   },
-  "hidden": false,
+  "hidden": true,
   "visibilityOverrides": {
     "utah-forge-mt-stations": false,
     "utah-forge-mt-resistivity-full-density": true

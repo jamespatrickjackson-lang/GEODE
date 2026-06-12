@@ -4,21 +4,21 @@
   "subtitle": "Source-derived interpreted survey-pick reference on the 58-32 IL-93 review slice",
   "camera": {
     "position": [
-      -73500,
-      -45400,
-      21800
+      -6624.390857421405,
+      -33250.624899621536,
+      10072.54621444345
     ],
     "target": [
-      -7200,
+      -7199.999999999999,
       -10380,
-      -820
+      -819.9999999999999
     ],
     "up": [
       0,
       0,
       1
     ],
-    "fov": 52
+    "fov": 70
   },
   "transition": {
     "duration": 3000,
@@ -26,8 +26,8 @@
   },
   "holdDuration": 5000,
   "overlayLayout": {
-    "x": 0.0130859375,
-    "y": 0.0618569636,
+    "x": 0.6641276041666666,
+    "y": 0.31468005017465495,
     "width": 0.25
   },
   "overlay": {
@@ -42,7 +42,7 @@
   },
   "accentColor": "#f8dd6d",
   "visibilityOverrides": {
-    "utah-forge-phase3-working-area": true,
+    "utah-forge-phase3-working-area": false,
     "utah-forge-site-boundary": false,
     "terrain": true,
     "transport-roads": false,
@@ -82,7 +82,7 @@
       "seismicAmplitudeMin": 0.08,
       "seismicAmplitudeMax": 0.92,
       "seismicAmplitudeGamma": 1.05,
-      "seismicColormap": "blue-white-red",
+      "seismicColormap": "grayscale",
       "seismicTimeScale": 2,
       "seismicSliceThroughVolume": false,
       "seismicVolumeSampleSteps": 112,
@@ -198,6 +198,23 @@
         "topRingOpacity": 0.72,
         "labelVisible": true,
         "labelLiftM": 145
+      },
+      "demoBoreholeBlock": {
+        "visible": false,
+        "widthM": 118,
+        "depthM": 68,
+        "heightM": 34,
+        "liftM": 0,
+        "rotationDeg": -24.985,
+        "fillColor": "#f79c9c",
+        "opacity": 0.82,
+        "outlineVisible": true,
+        "outlineColor": "#ffffff",
+        "outlineThickness": 1.5,
+        "outlineOpacity": 0.92,
+        "labelVisible": true,
+        "labelText": "FORGE surface facility / orientation block",
+        "labelLiftM": 25.5
       }
     },
     "utah-forge-scene-section-planes": {
@@ -233,6 +250,20 @@
       "sceneSectionActiveFrameId": "axis:y",
       "sceneSectionFrames": [
         {
+          "id": "axis:z",
+          "label": "Z Section",
+          "axis": "z",
+          "plane": {},
+          "frame": {}
+        },
+        {
+          "id": "axis:x",
+          "label": "X Section",
+          "axis": "x",
+          "plane": {},
+          "frame": {}
+        },
+        {
           "id": "axis:y",
           "label": "Top of Granite - 58-32 survey picks",
           "axis": "y",
@@ -242,7 +273,7 @@
           },
           "frame": {
             "enabled": true,
-            "controlsVisible": true,
+            "controlsVisible": false,
             "minAM": -18500,
             "maxAM": -2500,
             "minBM": -3600,
@@ -266,7 +297,7 @@
       "sceneSectionFrameByAxis": {
         "y": {
           "enabled": true,
-          "controlsVisible": true,
+          "controlsVisible": false,
           "minAM": -18500,
           "maxAM": -2500,
           "minBM": -3600,
@@ -284,6 +315,16 @@
           "axisDatum": "utm",
           "axisDatumOriginEastingM": 341467.35,
           "axisDatumOriginNorthingM": 4273374.5
+        }
+      },
+      "sceneSectionObjectVisibilityByFrameId": {
+        "axis:y": {
+          "product:utah-forge-phase3-seismic-browser:gdr-1141-forge3d-ani-psdm-stack-unenh:volume": {
+            "outsideOpacity": 1
+          },
+          "product:utah-forge-phase3-seismic-browser:gdr-1141-forge3d-ani-psdm-stack-unenh:section": {
+            "outsideOpacity": 1
+          }
         }
       }
     }

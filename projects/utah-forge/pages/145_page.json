@@ -1,43 +1,43 @@
 {
   "id": "145_page",
-  "title": "MT Volume Overview duplicate",
-  "subtitle": "Source-derived MT volume with focused Marching Cubes context",
+  "title": "MT Model ",
+  "subtitle": "Cell points",
   "camera": {
     "position": [
-      -15175.279571534375,
-      154140.43969197164,
-      158863.35300860292
+      -95605.58695784232,
+      98543.80252777519,
+      202222.74015104576
     ],
     "target": [
-      10844.11738335307,
-      -5098.606116313531,
-      -64366.201871915524
+      -8744,
+      -6254,
+      1962
     ],
     "up": [
       0,
       0,
       1
     ],
-    "fov": 52
+    "fov": 70
   },
   "transition": {
     "duration": 3000,
     "easing": "easeInOutSine"
   },
   "holdDuration": 4000,
-  "accentColor": "#42f236",
+  "accentColor": "#ed6002",
   "dynamicCamera": {
     "enabled": true,
     "mode": "orbit",
     "orbitEnabled": true,
     "poi": [
-      10844.11738335307,
-      -5098.606116313531,
-      -64366.201871915524
+      -8744,
+      -6254,
+      1962
     ],
     "orbitSpeedDegPerSec": 4,
-    "orbitRadius": 275129.9999999952,
-    "orbitHeight": 13000,
+    "orbitRadius": 136116,
+    "orbitHeight": 200261,
     "orbitDirection": 1,
     "zoomFov": 52,
     "zoomEnabled": false,
@@ -49,13 +49,27 @@
     "transitionLeadMs": 1600,
     "transitionExitMs": 900,
     "transitionBlendCurve": "smooth",
-    "pathAwareBlend": false
+    "pathAwareBlend": false,
+    "dollyEnabled": false,
+    "dollyDistanceM": 0,
+    "truckEnabled": false,
+    "truckDistanceM": 0,
+    "craneEnabled": false,
+    "craneHeightM": 0,
+    "shotStartMs": 0,
+    "shotEndMs": 2500,
+    "shotCurve": "smooth",
+    "handheldEnabled": false,
+    "handheldAmplitudeM": 0,
+    "handheldFrequencyHz": 0.35,
+    "rollDeg": 0
   },
   "layerOverrides": {
     "utah-forge-mt-resistivity-full-density": {
-      "opacity": 0.48,
+      "opacity": 0.05,
       "pointSizePx": 1.25,
-      "scalarInclusionMode": "all-valid"
+      "scalarInclusionMode": "all-valid",
+      "scalarLegendVisible": false
     },
     "utah-forge-mt-resistivity-volume": {
       "opacity": 0.28,
@@ -79,8 +93,8 @@
       "mtIsosurfaceProductId": "mt-isosurface-forge-focused",
       "mtThresholdSurfaceVisibility": {
         "conductive-le-10-ohm-m": false,
-        "conductive-le-30-ohm-m": true,
-        "resistive-ge-1000-ohm-m": true
+        "conductive-le-30-ohm-m": false,
+        "resistive-ge-1000-ohm-m": false
       },
       "mtThresholdSurfaceWireframe": false,
       "opacity": 0.82,
@@ -92,11 +106,51 @@
       "mtThresholdSurfaceSmoothNormals": true,
       "mtThresholdSurfaceEmissiveBoost": 0.08,
       "mtThresholdSurfaceWireframeColor": "#f8f4e8",
-      "mtThresholdSurfaceWireframeOpacity": 0.42
+      "mtThresholdSurfaceWireframeOpacity": 0.42,
+      "mtSurfaceBoundaryOrder": [
+        "conductive-le-10-ohm-m",
+        "conductive-le-30-ohm-m",
+        "resistive-ge-1000-ohm-m"
+      ],
+      "mtSurfaceBoundariesById": {
+        "conductive-le-10-ohm-m": {
+          "visible": false,
+          "label": "<=10 Ohm-m",
+          "color": "#2cc9ff",
+          "comparison": "<=",
+          "thresholdOhmM": 10,
+          "thresholdLog10": 1,
+          "opacity": 1,
+          "source": "precomputed"
+        },
+        "conductive-le-30-ohm-m": {
+          "visible": false,
+          "label": "<=30 Ohm-m",
+          "color": "#38f0b3",
+          "comparison": "<=",
+          "thresholdOhmM": 30,
+          "thresholdLog10": 1.477121,
+          "opacity": 1,
+          "source": "precomputed"
+        },
+        "resistive-ge-1000-ohm-m": {
+          "visible": false,
+          "label": ">=1000 Ohm-m",
+          "color": "#ff637a",
+          "comparison": ">=",
+          "thresholdOhmM": 1000,
+          "thresholdLog10": 3,
+          "opacity": 1,
+          "source": "precomputed"
+        }
+      }
     },
     "utah-forge-phase3-demo-boreholes": {
       "opacity": 0.72,
       "showLabels": false
+    },
+    "terrain": {
+      "opacity": 0
     }
   },
   "visibilityOverrides": {
@@ -113,8 +167,9 @@
     "utah-forge-phase3-demo-boreholes": true
   },
   "overlayLayout": {
-    "x": 0,
-    "y": 0.07513174404015056,
-    "width": 0.27
+    "x": 0.7027994791666666,
+    "y": 0.053174404015056465,
+    "width": 0.2071744791666667,
+    "height": 0.35363865257655663
   }
 }

@@ -1,6 +1,6 @@
 {
   "id": "140_page",
-  "title": "New page",
+  "title": "MT Model ",
   "camera": {
     "position": [
       -10188.531012538655,
@@ -53,7 +53,99 @@
       "scalarContrast": 1.05,
       "scalarNoiseThreshold": 0,
       "scalarDistanceLightStrength": 0.04,
-      "pointSizePx": 1
+      "pointSizePx": 1,
+      "scalarLegendVisible": false
+    },
+    "utah-forge-scene-section-planes": {
+      "sceneSectionFrames": [
+        {
+          "id": "axis:z",
+          "label": "Z Section frame",
+          "axis": "z",
+          "plane": {
+            "enabled": false,
+            "positionM": -2200,
+            "invert": false
+          },
+          "frame": {
+            "controlsVisible": true
+          }
+        },
+        {
+          "id": "axis:x",
+          "label": "X Section frame",
+          "axis": "x",
+          "plane": {
+            "enabled": false,
+            "positionM": -5753.338077166321,
+            "invert": false
+          },
+          "frame": {
+            "axisAlignment": "cardinal",
+            "axisAHeading": "Latitude (°)",
+            "axisBHeading": "Elevation (km)",
+            "axisDatum": "latlon",
+            "controlsVisible": true
+          }
+        },
+        {
+          "id": "axis:y",
+          "label": "Y Section frame",
+          "axis": "y",
+          "plane": {
+            "enabled": false,
+            "positionM": -14276.695748094688,
+            "invert": false
+          },
+          "frame": {
+            "controlsVisible": true
+          }
+        }
+      ],
+      "sceneSectionActiveFrameId": "axis:y",
+      "sceneSectionFrameEnabled": true,
+      "sceneSectionEnabled": false,
+      "sceneSectionMode": "cutaway",
+      "sceneSectionActiveAxis": "y",
+      "sceneSectionPlanes": {
+        "x": {
+          "enabled": false,
+          "positionM": -5753.338077166321,
+          "invert": false
+        },
+        "y": {
+          "enabled": false,
+          "positionM": -14276.695748094688,
+          "invert": false
+        },
+        "z": {
+          "enabled": false,
+          "positionM": -2200,
+          "invert": false
+        }
+      },
+      "sceneSectionFrameByAxis": {
+        "x": {
+          "axisAlignment": "cardinal",
+          "axisAHeading": "Latitude (°)",
+          "axisBHeading": "Elevation (km)",
+          "axisDatum": "latlon"
+        },
+        "y": {
+          "controlsVisible": true
+        }
+      },
+      "sceneSectionTargetScope": "selected-targets",
+      "sceneSectionTargetLayerIds": [
+        "utah-forge-mt-resistivity-volume",
+        "utah-forge-mt-resistivity-slices",
+        "utah-forge-phase3-seismic-browser"
+      ],
+      "sceneSectionTargetProductIds": [
+        "gdr-1141-forge3d-ani-psdm-stack-unenh"
+      ]
     }
-  }
+  },
+  "accentColor": "#ff6600",
+  "subtitle": "Cell Points"
 }
