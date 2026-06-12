@@ -425,6 +425,7 @@ export interface SceneHandle {
   setCaptureCameraPathInteraction(
     options: CaptureCameraPathInteractionOptions,
   ): () => void;
+  setCaptureNativeAnnotationsVisible(visible: boolean): void;
   renderCameraPathPreviewFrame(options: {
     pose: CaptureCameraPathSample;
     width: number;
@@ -663,6 +664,35 @@ export function mountScene(
     afterRenderCallbacks.add(callback);
     return () => afterRenderCallbacks.delete(callback);
   };
+  let captureNativeAnnotationsVisible = true;
+  const isCaptureNativeAnnotationNode = (node: THREE.Object3D): boolean => {
+    const data = node.userData as Record<string, unknown>;
+    return (
+      data.seismicFigureAnnotationRoot === true ||
+      data.seismicFigureAnnotation === true
+    );
+  };
+  const syncCaptureNativeAnnotationVisibility = () => {
+    scene.traverse((node) => {
+      if (!isCaptureNativeAnnotationNode(node)) return;
+      const data = node.userData as Record<string, unknown>;
+      if (!captureNativeAnnotationsVisible) {
+        if (data.captureNativeAnnotationBaseVisible === undefined) {
+          data.captureNativeAnnotationBaseVisible = node.visible;
+        }
+        node.visible = false;
+        return;
+      }
+      if (typeof data.captureNativeAnnotationBaseVisible === "boolean") {
+        node.visible = data.captureNativeAnnotationBaseVisible;
+        delete data.captureNativeAnnotationBaseVisible;
+      }
+    });
+  };
+  const setCaptureNativeAnnotationsVisible = (visible: boolean) => {
+    captureNativeAnnotationsVisible = visible;
+    syncCaptureNativeAnnotationVisibility();
+  };
   const getCameraPose = (): CaptureCameraPathKeyframeV1 => ({
     id: "current-camera",
     timeSeconds: 0,
@@ -768,6 +798,7 @@ export function mountScene(
       for (const ticker of tickers) {
         ticker.fn(timeMs);
       }
+      syncCaptureNativeAnnotationVisibility();
       controls.update();
       manager.frameUpdate(camera, timeMs);
       post.composer.render();
@@ -967,6 +998,9 @@ export function mountScene(
     const managerStartMs = performance.now();
     manager.frameUpdate(camera, timeMs);
     const managerEndMs = performance.now();
+    if (!captureNativeAnnotationsVisible) {
+      syncCaptureNativeAnnotationVisibility();
+    }
     const renderStartMs = performance.now();
     post.composer.render();
     notifyAfterRenderCallbacks();
@@ -1118,7 +1152,7 @@ export function mountScene(
       data.sceneSectionScaleLabel === true ||
       data.naipTileDiagnosticLabel === true ||
       typeof data.captureCameraPathEquationLabel === "string" ||
-      (data.seismicFigureAnnotation === true && node instanceof THREE.Sprite)
+      data.seismicFigureAnnotation === true
     );
   };
 
@@ -3595,6 +3629,7 @@ export function mountScene(
     setCaptureCameraPathOverlay,
     clearCaptureCameraPathOverlay,
     setCaptureCameraPathInteraction,
+    setCaptureNativeAnnotationsVisible,
     renderCameraPathPreviewFrame,
     getCaptureCapabilities,
     onTick,

@@ -76,16 +76,36 @@ export interface SeismicAudiencePresetOption {
   timeScale?: number;
   navigationVisible?: boolean;
   navigationRoleVisibility?: EditableStyle["seismicNavigationRoleVisibility"];
+  presentationBarVisible?: boolean;
   sliceThroughVolume?: boolean;
   comparisonProductId?: string;
   comparisonMode?: EditableStyle["seismicComparisonMode"];
   mtCoRender?: EditableStyle["seismicMtCoRender"];
   mtStylePatch?: Partial<EditableStyle>;
+  linkedLayerStylePatches?: Record<string, Partial<EditableStyle>>;
   exportLayoutId?: string;
   capabilityGroup?: string;
   cameraShot?: string;
   badges?: string[];
   caveats?: string[];
+  provenanceClassification?: string;
+  provenanceNote?: string;
+}
+
+function linkedLayerStylePatchesFromValue(
+  value: unknown,
+): Record<string, Partial<EditableStyle>> | undefined {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return undefined;
+  }
+  const patches: Record<string, Partial<EditableStyle>> = {};
+  for (const [layerId, patch] of Object.entries(value)) {
+    if (!patch || typeof patch !== "object" || Array.isArray(patch)) {
+      continue;
+    }
+    patches[layerId] = patch as Partial<EditableStyle>;
+  }
+  return Object.keys(patches).length > 0 ? patches : undefined;
 }
 
 export interface SeismicExportLayoutOption {
@@ -403,6 +423,9 @@ export function seismicAudiencePresets(
         !Array.isArray(preset.mtStylePatch)
           ? (preset.mtStylePatch as Partial<EditableStyle>)
           : undefined;
+      const linkedLayerStylePatches = linkedLayerStylePatchesFromValue(
+        preset.linkedLayerStylePatches,
+      );
       const navigationRoleVisibility =
         preset.navigationRoleVisibility &&
         typeof preset.navigationRoleVisibility === "object" &&
@@ -468,6 +491,10 @@ export function seismicAudiencePresets(
             ? preset.navigationVisible
             : undefined,
         navigationRoleVisibility,
+        presentationBarVisible:
+          typeof preset.presentationBarVisible === "boolean"
+            ? preset.presentationBarVisible
+            : undefined,
         sliceThroughVolume: preset.sliceThroughVolume === true,
         comparisonProductId:
           typeof preset.comparisonProductId === "string"
@@ -477,6 +504,7 @@ export function seismicAudiencePresets(
           preset.comparisonMode === "side-by-side" ? "side-by-side" : "overlay",
         mtCoRender,
         mtStylePatch,
+        linkedLayerStylePatches,
         exportLayoutId:
           typeof preset.exportLayoutId === "string"
             ? preset.exportLayoutId
@@ -497,6 +525,14 @@ export function seismicAudiencePresets(
               (caveat): caveat is string => typeof caveat === "string",
             )
           : undefined,
+        provenanceClassification:
+          typeof preset.provenanceClassification === "string"
+            ? preset.provenanceClassification
+            : undefined,
+        provenanceNote:
+          typeof preset.provenanceNote === "string"
+            ? preset.provenanceNote
+            : undefined,
       };
     })
     .filter((preset): preset is SeismicAudiencePresetOption => preset !== null);
@@ -622,6 +658,7 @@ export function seismicPresetPatch(
       receivers: true,
       lines: true,
     },
+    seismicPresentationBarVisible: preset.presentationBarVisible === true,
     seismicSliceThroughVolume:
       preset.sliceThroughVolume === true && product?.raymarchCapable === true,
     seismicComparisonProductId: preset.comparisonProductId,
@@ -631,6 +668,615 @@ export function seismicPresetPatch(
     seismicMtCoRender: preset.mtCoRender,
     opacity: typeof preset.opacity === "number" ? preset.opacity : 0.62,
   };
+}
+
+export const SEISMIC_SECTION_GRAPH_HEADINGS = [
+  "3D Volume",
+  "3D Section Plane",
+  "2D Section Line",
+  "Processing Comparison",
+  "Integrated Geophysics",
+  "Survey Geometry",
+  "Figure Annotation",
+] as const;
+
+export type SeismicSectionGraphHeading =
+  (typeof SEISMIC_SECTION_GRAPH_HEADINGS)[number];
+
+export interface SeismicSectionGraphOption {
+  id: string;
+  label: string;
+  heading: SeismicSectionGraphHeading;
+  patch: Partial<EditableStyle>;
+  mtStylePatch?: Partial<EditableStyle>;
+  linkedLayerStylePatches?: Record<string, Partial<EditableStyle>>;
+  disabled?: boolean;
+}
+
+export interface SeismicSectionGraphOptionGroup {
+  heading: SeismicSectionGraphHeading;
+  options: SeismicSectionGraphOption[];
+}
+
+export function seismicCapabilityPresetPatch(
+  preset: SeismicAudiencePresetOption,
+  products: SeismicProductOption[],
+  fallbackProductId: string,
+): Partial<EditableStyle> {
+  const sectionPatch = { ...seismicPresetPatch(preset, products, fallbackProductId) };
+  delete sectionPatch.seismicAudienceMode;
+  delete sectionPatch.seismicAudiencePresetId;
+  delete sectionPatch.seismicExportLayoutId;
+  return {
+    ...sectionPatch,
+    seismicCapabilityPresetId: preset.id,
+  };
+}
+
+function selectedProductVisibility(
+  products: SeismicProductOption[],
+  productId: string,
+): Record<string, boolean> {
+  return Object.fromEntries(
+    products.map((product) => [product.id, product.id === productId]),
+  );
+}
+
+function selectedProductIdForSectionOptions(
+  style: EditableStyle,
+  products: SeismicProductOption[],
+  fallbackProductId: string,
+): string {
+  const rawProductId = styleString(style, "seismicProductId", fallbackProductId);
+  return products.some((product) => product.id === rawProductId)
+    ? rawProductId
+    : fallbackProductId;
+}
+
+function productPatch(
+  products: SeismicProductOption[],
+  product: SeismicProductOption,
+  patch: Partial<EditableStyle> = {},
+): Partial<EditableStyle> {
+  const renderMode =
+    patch.seismicRenderMode ??
+    (product.raymarchCapable === true ? "raymarch" : "slice");
+  return {
+    visible: true,
+    seismicProductId: product.id,
+    seismicProductVisibility: selectedProductVisibility(products, product.id),
+    seismicRenderMode: renderMode,
+    seismicSliceAxis: product.surveyKind === "3d" ? "inline" : "line",
+    seismicSliceThroughVolume: false,
+    seismicColormap: isVelocityProduct(product) ? "velocity" : undefined,
+    ...patch,
+  };
+}
+
+function optionFromPreset(
+  heading: SeismicSectionGraphHeading,
+  label: string,
+  presetId: string,
+  presets: SeismicAudiencePresetOption[],
+  products: SeismicProductOption[],
+  fallbackProductId: string,
+): SeismicSectionGraphOption | null {
+  const preset = presets.find((candidate) => candidate.id === presetId);
+  if (!preset) return null;
+  return {
+    id: presetId,
+    label,
+    heading,
+    patch: seismicCapabilityPresetPatch(preset, products, fallbackProductId),
+    mtStylePatch: preset.mtStylePatch,
+    linkedLayerStylePatches: preset.linkedLayerStylePatches,
+  };
+}
+
+function firstProduct(
+  products: SeismicProductOption[],
+  predicate: (product: SeismicProductOption) => boolean,
+): SeismicProductOption | undefined {
+  return products.find(predicate);
+}
+
+function volumeOption(
+  heading: SeismicSectionGraphHeading,
+  label: string,
+  products: SeismicProductOption[],
+  predicate: (product: SeismicProductOption) => boolean,
+  capabilityPresetId: string,
+): SeismicSectionGraphOption | null {
+  const product = firstProduct(products, predicate);
+  if (!product) return null;
+  return {
+    id: capabilityPresetId,
+    label,
+    heading,
+    patch: productPatch(products, product, {
+      seismicCapabilityPresetId: capabilityPresetId,
+      seismicRenderMode: product.raymarchCapable ? "raymarch" : "slice",
+      seismicSliceAxis: "inline",
+      seismicSliceThroughVolume: false,
+    }),
+  };
+}
+
+function lineOption(
+  heading: SeismicSectionGraphHeading,
+  label: string,
+  lineId: string,
+  kind: "depth" | "time" | "velocity",
+  products: SeismicProductOption[],
+): SeismicSectionGraphOption | null {
+  const product = firstProduct(products, (candidate) => {
+    const candidateLine =
+      candidate.lineId ?? candidate.navigationPlacement?.lineId ?? "";
+    if (candidateLine !== lineId) return false;
+    if (kind === "velocity") return isVelocityProduct(candidate);
+    if (isVelocityProduct(candidate)) return false;
+    const stage = candidate.processingStage ?? "";
+    const domain = candidate.domainKind ?? "";
+    const unit = candidate.domainUnit ?? "";
+    if (kind === "depth") {
+      return (
+        domain === "depth" ||
+        unit === "m" ||
+        stage.includes("depth") ||
+        stage.includes("psdm")
+      );
+    }
+    return (
+      domain === "time" ||
+      unit === "ms" ||
+      stage.includes("time") ||
+      stage.includes("pstm") ||
+      stage.includes("unmigrated")
+    );
+  });
+  if (!product) return null;
+  return {
+    id: `line-${lineId.toLowerCase()}-${kind}-sections`,
+    label,
+    heading,
+    patch: productPatch(products, product, {
+      seismicCapabilityPresetId: `line-${lineId.toLowerCase()}-${kind}-sections`,
+      seismicRenderMode: "slice",
+      seismicSliceAxis: "line",
+      seismicSliceThroughVolume: false,
+      seismicNavigationVisible: true,
+    }),
+  };
+}
+
+function sectionPlaneProduct(
+  products: SeismicProductOption[],
+  selectedProductId: string,
+): SeismicProductOption | undefined {
+  const selected = products.find((product) => product.id === selectedProductId);
+  if (selected?.surveyKind === "3d") return selected;
+  return (
+    products.find((product) => product.surveyKind === "3d" && product.raymarchCapable) ??
+    products.find((product) => product.surveyKind === "3d")
+  );
+}
+
+const SECTION_LINE_OPTION_SPECS = [
+  {
+    lineId: "301",
+    kind: "depth",
+    label: "Line 301 depth sections",
+  },
+  {
+    lineId: "301",
+    kind: "time",
+    label: "Line 301 time sections",
+  },
+  {
+    lineId: "301",
+    kind: "velocity",
+    label: "Line 301 velocity section",
+  },
+  {
+    lineId: "302",
+    kind: "depth",
+    label: "Line 302 depth sections",
+  },
+  {
+    lineId: "302",
+    kind: "time",
+    label: "Line 302 time sections",
+  },
+  {
+    lineId: "302",
+    kind: "velocity",
+    label: "Line 302 velocity section",
+  },
+  {
+    lineId: "L5",
+    kind: "depth",
+    label: "Line L5 depth sections",
+  },
+  {
+    lineId: "L5",
+    kind: "time",
+    label: "Line L5 time sections",
+  },
+  {
+    lineId: "L5",
+    kind: "velocity",
+    label: "Line L5 velocity section",
+  },
+  {
+    lineId: "L11",
+    kind: "depth",
+    label: "Line L11 depth sections",
+  },
+  {
+    lineId: "L11",
+    kind: "time",
+    label: "Line L11 time sections",
+  },
+  {
+    lineId: "L11",
+    kind: "velocity",
+    label: "Line L11 velocity section",
+  },
+] as const satisfies readonly {
+  lineId: string;
+  kind: "depth" | "time" | "velocity";
+  label: string;
+}[];
+
+const SECTION_PROCESSING_COMPARISON_OPTION_SPECS = [
+  {
+    actionLabel: "301",
+    label: "Line 301 enhanced vs unenhanced",
+    capabilityPresetId: "enhanced-vs-unenhanced",
+  },
+  {
+    actionLabel: "302",
+    label: "Line 302 enhanced vs unenhanced",
+    capabilityPresetId: "enhanced-vs-unenhanced-302",
+  },
+  {
+    actionLabel: "L5",
+    label: "Line L5 enhanced vs unenhanced",
+    capabilityPresetId: "enhanced-vs-unenhanced-l5",
+  },
+  {
+    actionLabel: "L11",
+    label: "Line L11 enhanced vs unenhanced",
+    capabilityPresetId: "enhanced-vs-unenhanced-l11",
+  },
+] as const;
+
+const SECTION_SURVEY_GEOMETRY_ROLE_OPTION_SPECS = [
+  {
+    role: "sources",
+    label: "Sources",
+  },
+  {
+    role: "receivers",
+    label: "Receivers",
+  },
+  {
+    role: "lines",
+    label: "Navigation lines",
+  },
+] as const satisfies readonly {
+  role: "sources" | "receivers" | "lines";
+  label: string;
+}[];
+
+export function seismicSectionGraphOptionGroups(
+  layer: ProjectLayerSpec,
+  style: EditableStyle,
+): SeismicSectionGraphOptionGroup[] {
+  const products = seismicProductOptions(layer);
+  const presets = seismicCapabilityPresets(layer);
+  const fallbackProductId = seismicDefaultProductId(layer);
+  const selectedProductId = selectedProductIdForSectionOptions(
+    style,
+    products,
+    fallbackProductId,
+  );
+  const active3dProduct = sectionPlaneProduct(products, selectedProductId);
+  const selectedVisibility = active3dProduct
+    ? selectedProductVisibility(products, active3dProduct.id)
+    : {};
+  const groups = new Map<SeismicSectionGraphHeading, SeismicSectionGraphOption[]>(
+    SEISMIC_SECTION_GRAPH_HEADINGS.map((heading) => [heading, []]),
+  );
+  const push = (option: SeismicSectionGraphOption | null) => {
+    if (!option) return;
+    groups.get(option.heading)?.push(option);
+  };
+
+  push(
+    optionFromPreset(
+      "3D Volume",
+      "PSDM depth volume",
+      "3d-volume-psdm-depth",
+      presets,
+      products,
+      fallbackProductId,
+    ) ??
+      volumeOption(
+        "3D Volume",
+        "PSDM depth volume",
+        products,
+        (product) => product.processingStage === "psdm-depth-volume",
+        "3d-volume-psdm-depth",
+      ),
+  );
+  push(
+    optionFromPreset(
+      "3D Volume",
+      "Presentation-enhanced PSDM surrogate",
+      "psdm-depth-surrogate-showcase",
+      presets,
+      products,
+      fallbackProductId,
+    ),
+  );
+  push(
+    optionFromPreset(
+      "3D Volume",
+      "PSTM time volume",
+      "3d-volume-pstm-time",
+      presets,
+      products,
+      fallbackProductId,
+    ) ??
+      volumeOption(
+        "3D Volume",
+        "PSTM time volume",
+        products,
+        (product) => product.processingStage === "pstm-time-volume",
+        "3d-volume-pstm-time",
+      ),
+  );
+  push(
+    optionFromPreset(
+      "3D Volume",
+      "FXY decon time volume",
+      "3d-volume-fxydecon",
+      presets,
+      products,
+      fallbackProductId,
+    ) ??
+      volumeOption(
+        "3D Volume",
+        "FXY decon time volume",
+        products,
+        (product) => product.processingStage === "poststack-time-migration",
+        "3d-volume-fxydecon",
+      ),
+  );
+  push(
+    optionFromPreset(
+      "3D Volume",
+      "Velocity model",
+      "3d-velocity-volume",
+      presets,
+      products,
+      fallbackProductId,
+    ) ??
+      volumeOption(
+        "3D Volume",
+        "Velocity model",
+        products,
+        isVelocityProduct,
+        "3d-velocity-volume",
+      ),
+  );
+
+  if (active3dProduct) {
+    for (const option of [
+      {
+        id: "inline-slice",
+        label: "Inline slice",
+        patch: {
+          seismicSliceAxis: "inline" as const,
+          seismicSliceThroughVolume: false,
+        },
+      },
+      {
+        id: "crossline-slice",
+        label: "Crossline slice",
+        patch: {
+          seismicSliceAxis: "crossline" as const,
+          seismicSliceThroughVolume: false,
+        },
+      },
+      {
+        id: "time-depth-plane",
+        label: "Time/depth plane",
+        patch: {
+          seismicSliceAxis: "sample" as const,
+          seismicSliceThroughVolume: false,
+        },
+      },
+      {
+        id: "volume-slice-sync",
+        label: "Volume + synced slice",
+        patch: {
+          seismicRenderMode: "raymarch" as const,
+          seismicSliceAxis:
+            style.seismicSliceAxis === "crossline"
+              ? ("crossline" as const)
+              : ("inline" as const),
+          seismicSliceThroughVolume: true,
+        },
+      },
+    ]) {
+      push({
+        id: option.id,
+        label: option.label,
+        heading: "3D Section Plane",
+        patch: {
+          visible: true,
+          seismicCapabilityPresetId: option.id,
+          seismicProductId: active3dProduct.id,
+          seismicProductVisibility: selectedVisibility,
+          seismicRenderMode: "slice",
+          ...option.patch,
+        },
+      });
+    }
+  }
+
+  for (const option of SECTION_LINE_OPTION_SPECS) {
+    push(
+      lineOption(
+        "2D Section Line",
+        option.label,
+        option.lineId,
+        option.kind,
+        products,
+      ),
+    );
+  }
+
+  const comparisonActions = seismicComparisonActions(products);
+  for (const option of SECTION_PROCESSING_COMPARISON_OPTION_SPECS) {
+    const action = comparisonActions.find(
+      (candidate) => candidate.label === option.actionLabel,
+    );
+    if (!action) continue;
+    push({
+      id: `line-${action.label.toLowerCase()}-enhanced-vs-unenhanced`,
+      label: option.label,
+      heading: "Processing Comparison",
+      patch: {
+        visible: true,
+        seismicCapabilityPresetId: option.capabilityPresetId,
+        seismicProductId: action.primary,
+        seismicProductVisibility: Object.fromEntries(
+          products.map((product) => [
+            product.id,
+            product.id === action.primary || product.id === action.compare,
+          ]),
+        ),
+        seismicRenderMode: "slice",
+        seismicSliceAxis: "line",
+        seismicComparisonProductId: action.compare,
+        seismicComparisonMode:
+          style.seismicComparisonMode === "side-by-side"
+            ? "side-by-side"
+            : "overlay",
+      },
+    });
+  }
+
+  push({
+    id: "seismic-only",
+    label: "Seismic only",
+    heading: "Integrated Geophysics",
+    patch: {
+      seismicMtCoRender: "seismic",
+      seismicProductVisibility:
+        selectedProductId !== ""
+          ? { ...selectedProductVisibility(products, selectedProductId) }
+          : {},
+    },
+    mtStylePatch: { opacity: 0.06, scalarLegendVisible: false },
+  });
+  push({
+    id: "mt-only",
+    label: "MT only",
+    heading: "Integrated Geophysics",
+    patch: {
+      seismicMtCoRender: "mt",
+      seismicProductVisibility: Object.fromEntries(
+        products.map((product) => [product.id, false]),
+      ),
+    },
+    mtStylePatch: { opacity: 0.48, scalarLegendVisible: true },
+  });
+  push({
+    id: "seismic-mt",
+    label: "Seismic + MT",
+    heading: "Integrated Geophysics",
+    patch: {
+      visible: true,
+      seismicMtCoRender: "integrated",
+      seismicProductVisibility:
+        selectedProductId !== ""
+          ? { ...selectedProductVisibility(products, selectedProductId) }
+          : {},
+    },
+    mtStylePatch: { opacity: 0.36, scalarLegendVisible: true },
+  });
+  push(
+    optionFromPreset(
+      "Integrated Geophysics",
+      "PSDM + MT + 58-32 tie",
+      "psdm-mt-58-32-source-location-tie",
+      presets,
+      products,
+      fallbackProductId,
+    ),
+  );
+  push({
+    id: "isoband-source-seismic-amplitude",
+    label: "Isoband source: seismic amplitude",
+    heading: "Integrated Geophysics",
+    patch: { seismicIsoSource: "seismic-amplitude" },
+  });
+  push({
+    id: "isoband-source-mt-resistivity",
+    label: "Isoband source: MT resistivity",
+    heading: "Integrated Geophysics",
+    patch: { seismicIsoSource: "mt-resistivity" },
+  });
+
+  for (const option of SECTION_SURVEY_GEOMETRY_ROLE_OPTION_SPECS) {
+    push({
+      id: `survey-geometry-${option.role}`,
+      label: option.label,
+      heading: "Survey Geometry",
+      patch: {
+        seismicNavigationVisible: true,
+        seismicNavigationRoleVisibility: {
+          ...(typeof style.seismicNavigationRoleVisibility === "object" &&
+          style.seismicNavigationRoleVisibility !== null
+            ? style.seismicNavigationRoleVisibility
+            : {}),
+          [option.role]: true,
+        },
+      },
+    });
+  }
+
+  push(
+    optionFromPreset(
+      "Survey Geometry",
+      "Show survey geometry",
+      "survey-geometry",
+      presets,
+      products,
+      fallbackProductId,
+    ) ?? {
+      id: "show-survey-geometry",
+      label: "Show survey geometry",
+      heading: "Survey Geometry",
+      patch: {
+        seismicNavigationVisible: true,
+        seismicNavigationRoleVisibility: {
+          sources: true,
+          receivers: true,
+          lines: true,
+        },
+      },
+    },
+  );
+
+  return SEISMIC_SECTION_GRAPH_HEADINGS.map((heading) => ({
+    heading,
+    options: groups.get(heading) ?? [],
+  }));
 }
 
 export function seismicDefaultProductId(layer: ProjectLayerSpec): string {
@@ -826,6 +1472,90 @@ export function seismicBrowserPatchFromStyle(
         ? style.seismicMtCoRender
         : "seismic",
     seismicLegendVisible: styleBoolean(style, "seismicLegendVisible", true),
+    seismicPresentationBarVisible: styleBoolean(
+      style,
+      "seismicPresentationBarVisible",
+      false,
+    ),
+    seismicFigureAnnotationsVisible: styleBoolean(
+      style,
+      "seismicFigureAnnotationsVisible",
+      false,
+    ),
+    seismicFigureTitle:
+      typeof style.seismicFigureTitle === "string"
+        ? style.seismicFigureTitle
+        : undefined,
+    seismicFigureCaption:
+      typeof style.seismicFigureCaption === "string"
+        ? style.seismicFigureCaption
+        : undefined,
+    seismicFigureScaleLabel:
+      typeof style.seismicFigureScaleLabel === "string"
+        ? style.seismicFigureScaleLabel
+        : undefined,
+    seismicFigureTextColor: styleString(
+      style,
+      "seismicFigureTextColor",
+      "#f7f7f2",
+    ),
+    seismicFigureAxisColor: styleString(
+      style,
+      "seismicFigureAxisColor",
+      "#f7f7f2",
+    ),
+    seismicFigureCaptionBoxColor: styleString(
+      style,
+      "seismicFigureCaptionBoxColor",
+      "#050505",
+    ),
+    seismicFigureCaptionBoxOpacity: styleNumber(
+      style,
+      "seismicFigureCaptionBoxOpacity",
+      0.54,
+    ),
+    seismicFigureOutsideOffsetM: styleNumber(
+      style,
+      "seismicFigureOutsideOffsetM",
+      240,
+    ),
+    seismicFigureLabelSizeM: styleNumber(
+      style,
+      "seismicFigureLabelSizeM",
+      140,
+    ),
+    seismicFigureWellVisible: styleBoolean(
+      style,
+      "seismicFigureWellVisible",
+      false,
+    ),
+    seismicFigureWellLabel:
+      typeof style.seismicFigureWellLabel === "string"
+        ? style.seismicFigureWellLabel
+        : undefined,
+    seismicFigureWellPosition: styleNumber(
+      style,
+      "seismicFigureWellPosition",
+      0.5,
+    ),
+    seismicFigureWellColor: styleString(
+      style,
+      "seismicFigureWellColor",
+      "#5875ff",
+    ),
+    seismicFigureHorizonVisible: styleBoolean(
+      style,
+      "seismicFigureHorizonVisible",
+      false,
+    ),
+    seismicFigureHorizonPoints: Array.isArray(style.seismicFigureHorizonPoints)
+      ? style.seismicFigureHorizonPoints
+      : undefined,
+    seismicFigureHorizonColor: styleString(
+      style,
+      "seismicFigureHorizonColor",
+      "#ffcc33",
+    ),
     sectionIsoMin: styleNumber(
       style,
       "sectionIsoMin",

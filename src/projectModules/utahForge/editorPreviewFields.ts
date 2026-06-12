@@ -132,6 +132,7 @@ const SEISMIC_BROWSER_PREVIEW_FIELDS = [
   "seismicNavigationVisible",
   "seismicNavigationRoleVisibility",
   "seismicLegendVisible",
+  "seismicPresentationBarVisible",
   "sectionIsoEnabled",
   "sectionIsoLinesVisible",
   "sectionIsoBandsVisible",

@@ -289,6 +289,22 @@ export function WorkingAreaFocusContainer({
       type="clip"
       testId="working-area-focus-container"
       inactive={!enabled}
+      visible={enabled}
+      visibilityDisabled={disabled}
+      onVisibleChange={(visible) =>
+        commit({
+          workingAreaFocusEnabled: visible,
+          workingAreaFocusMode: mode,
+          workingAreaFocusBoundsLayerId:
+            UTAH_FORGE_PHASE3_WORKING_AREA_LAYER_ID,
+          workingAreaFocusTargetLayerIds: Array.from(targetLayerIds),
+          workingAreaFocusOutsideOpacityByLayerId:
+            completeWorkingAreaFocusOpacityMap(
+              liveStyleRef.current,
+              layerOptions,
+            ),
+        })
+      }
     >
       <div style={detailsContentStyle}>
         <label style={{ ...nestedControlRowStyle, cursor: "pointer" }}>

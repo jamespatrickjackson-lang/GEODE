@@ -2,6 +2,7 @@ import type { SceneHandle } from "../scene";
 import { applyPose, capturePose } from "../pages/capturePose";
 import { getCaptureFrameTime } from "./captureRecipe";
 import { renderCaptureOverlay } from "./captureOverlayRenderer";
+import { captureVisibilityProfileForMode } from "./captureProfiles";
 import {
   applyRecipeLayerState,
   restoreRecipeLayerState,
@@ -102,6 +103,9 @@ export async function exportDeterministicStillTile({
 
   try {
     layerSnapshot = applyRecipeLayerState(sceneHandle, recipe);
+    sceneHandle.setCaptureNativeAnnotationsVisible?.(
+      captureVisibilityProfileForMode(recipe.mode).captureNativeAnnotations,
+    );
     fidelitySnapshot = sceneHandle.beginCaptureFidelityLock({
       reason: "external-still",
       width: tile.width,
@@ -184,6 +188,7 @@ export async function exportDeterministicStillTile({
     };
   } finally {
     try {
+      sceneHandle.setCaptureNativeAnnotationsVisible?.(true);
       sceneHandle.camera.clearViewOffset();
       sceneHandle.camera.aspect = originalAspect;
       sceneHandle.camera.updateProjectionMatrix();

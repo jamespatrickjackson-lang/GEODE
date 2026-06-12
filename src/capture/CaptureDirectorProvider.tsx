@@ -182,6 +182,7 @@ import {
   capturePathJobDiagnostics,
   captureVideoOutputDiagnostics,
 } from "./captureJobDiagnostics";
+import { captureVisibilityProfileForMode } from "./captureProfiles";
 import {
   cancelCaptureJob,
   canStartCaptureJob,
@@ -901,6 +902,12 @@ export function CaptureDirectorProvider({
   const isDeterministicExporting =
     deterministicExportStatus === "rendering" ||
     deterministicExportStatus === "encoding";
+  useEffect(() => {
+    sceneHandle.setCaptureNativeAnnotationsVisible(captureVisibilityProfileForMode(captureMode).captureNativeAnnotations);
+    return () => {
+      sceneHandle.setCaptureNativeAnnotationsVisible(true);
+    };
+  }, [captureMode, sceneHandle]);
   const previewResolution =
     capturePreviewResolutionPresetById(previewResolutionPresetId);
   const renderResolution =

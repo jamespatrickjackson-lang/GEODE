@@ -48,9 +48,18 @@ import {
   utmToLatLon,
   utmZoneFromSourceCrs,
 } from "../../loaders/utmProjection";
+import {
+  sectionFaceFrameFromGraphBasis,
+  type SeismicSectionGraphBasis,
+  type SectionFaceFrameBasis,
+} from "../../geophysics/seismicSectionGraphBasis";
 
 type SceneSectionApplyTransitionFrameOptions = SceneSectionApplyOptions & {
   transitionFrame?: boolean;
+};
+
+type SceneSectionSourceFaceFrame = SectionFaceFrameBasis & {
+  axis: SceneSectionAxis;
 };
 
 const SCENE_SECTION_AXIS_NORMALS = {
@@ -1266,6 +1275,59 @@ function sceneSectionFrameCenterFromRanges(
   return center;
 }
 
+function sceneSectionVec3(value: readonly number[]): THREE.Vector3 {
+  return new THREE.Vector3(value[0] ?? 0, value[1] ?? 0, value[2] ?? 0);
+}
+
+function sceneSectionSourceFaceFrame(
+  this: any,
+  style: EditableStyle,
+  entryId: string,
+  axis: SceneSectionAxis,
+): SceneSectionSourceFaceFrame | null {
+  const activeFrameId =
+    typeof style.sceneSectionActiveFrameId === "string" &&
+    style.sceneSectionActiveFrameId.trim()
+      ? style.sceneSectionActiveFrameId
+      : sceneSectionBuiltInFrameId(style.sceneSectionActiveAxis ?? axis);
+  const activeAxis = sceneSectionValidAxis(style.sceneSectionActiveAxis)
+    ? style.sceneSectionActiveAxis
+    : axis;
+  if (entryId !== activeFrameId && axis !== activeAxis) return null;
+  const layerTargets = this.sceneSectionLayerIds(style) as Set<string>;
+  if (!layerTargets.has(UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID)) return null;
+  const productTargets = this.sceneSectionProductIds(style) as Set<string>;
+  const seismicLayer = this.layers.get(
+    UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID,
+  ) as THREE.Group | undefined;
+  if (!seismicLayer) return null;
+
+  let selectedBasis: SeismicSectionGraphBasis | null = null;
+  let fallbackBasis: SeismicSectionGraphBasis | null = null;
+  seismicLayer.traverse((obj: THREE.Object3D) => {
+    const basis = obj.userData?.seismicSectionGraphBasis as
+      | SeismicSectionGraphBasis
+      | undefined;
+    if (!basis || selectedBasis) return;
+    const productId =
+      typeof obj.userData?.seismicProductId === "string"
+        ? obj.userData.seismicProductId
+        : "";
+    if (productTargets.size > 0 && !productTargets.has(productId)) return;
+    if (obj.userData?.seismicSectionSelectedForFace === true) {
+      selectedBasis = basis;
+      return;
+    }
+    if (!fallbackBasis && obj.visible) fallbackBasis = basis;
+  });
+  const basis = selectedBasis ?? fallbackBasis;
+  if (!basis) return null;
+  return {
+    ...sectionFaceFrameFromGraphBasis(basis),
+    axis,
+  };
+}
+
 function sceneSectionResolvedFrameBasis(
   axis: SceneSectionAxis,
   frame: NonNullable<EditableStyle["sceneSectionFrameByAxis"]>[SceneSectionAxis] | undefined,
@@ -1658,6 +1720,12 @@ export function resolveSceneSectionFrames(this: any,
     const axis = entry.axis;
     const spec = SCENE_SECTION_AXIS_SPECS[axis];
     const frame = entry.frame;
+    const sourceFaceFrame = sceneSectionSourceFaceFrame.call(
+      this,
+      style,
+      entry.id,
+      axis,
+    );
     const legacyWindow =
       axis === "x" || axis === "y" ? windowByAxis[axis] : undefined;
     const hasFrameConfig = !!frame && Object.keys(frame).length > 0;
@@ -1666,52 +1734,84 @@ export function resolveSceneSectionFrames(this: any,
         ? frame.enabled
         : entry.id.startsWith("custom:")
           ? hasFrameConfig
-          : legacyFrameEnabled || hasFrameConfig || Boolean(legacyWindow);
+          : legacyFrameEnabled ||
+            hasFrameConfig ||
+            Boolean(legacyWindow) ||
+            Boolean(sourceFaceFrame);
     if (!frameEnabled) continue;
     const minABound = bounds.min.getComponent(spec.frameAIndex);
     const maxABound = bounds.max.getComponent(spec.frameAIndex);
     const minBBound = bounds.min.getComponent(spec.frameBIndex);
     const maxBBound = bounds.max.getComponent(spec.frameBIndex);
     const rawMinA =
+      sourceFaceFrame?.minAM ??
       finiteNumber(frame?.minAM) ??
       finiteNumber(legacyWindow?.minAlongM) ??
       minABound;
     const rawMaxA =
+      sourceFaceFrame?.maxAM ??
       finiteNumber(frame?.maxAM) ??
       finiteNumber(legacyWindow?.maxAlongM) ??
       maxABound;
     const rawMinB =
+      sourceFaceFrame?.minBM ??
       finiteNumber(frame?.minBM) ??
       finiteNumber(legacyWindow?.bottomElevationM) ??
       minBBound;
-    const rawMaxB = finiteNumber(frame?.maxBM) ?? maxBBound;
-    const [minAM, maxAM] = sortedClampedRange(
-      rawMinA,
-      rawMaxA,
-      minABound,
-      maxABound,
-    );
-    const [minBM, maxBM] = sortedClampedRange(
-      rawMinB,
-      rawMaxB,
-      minBBound,
-      maxBBound,
-    );
+    const rawMaxB =
+      sourceFaceFrame?.maxBM ?? finiteNumber(frame?.maxBM) ?? maxBBound;
+    const [minAM, maxAM] = sourceFaceFrame
+      ? [rawMinA, rawMaxA]
+      : sortedClampedRange(
+          rawMinA,
+          rawMaxA,
+          minABound,
+          maxABound,
+        );
+    const [minBM, maxBM] = sourceFaceFrame
+      ? [rawMinB, rawMaxB]
+      : sortedClampedRange(
+          rawMinB,
+          rawMaxB,
+          minBBound,
+          maxBBound,
+        );
     const position =
-      typeof entry.plane?.positionM === "number" &&
+      sourceFaceFrame?.signedDistanceM ??
+      (typeof entry.plane?.positionM === "number" &&
       Number.isFinite(entry.plane.positionM)
         ? clampRange(entry.plane.positionM, -250_000, 250_000)
-        : SCENE_SECTION_DEFAULT_POSITIONS[axis];
-    const basis = sceneSectionResolvedFrameBasis(
-      axis,
-      frame,
-      position,
-      minAM,
-      maxAM,
-      minBM,
-      maxBM,
-      geo,
-    );
+        : SCENE_SECTION_DEFAULT_POSITIONS[axis]);
+    const basis = sourceFaceFrame
+      ? {
+          alignment: sceneSectionAlignment(frame?.axisAlignment),
+          datum: sceneSectionDatum(frame?.axisDatum),
+          datumLatLonDecimals: 5,
+          datumOriginEastingM:
+            finiteNumber(frame?.axisDatumOriginEastingM) ?? 0,
+          datumOriginNorthingM:
+            finiteNumber(frame?.axisDatumOriginNorthingM) ?? 0,
+          utmZone: geo.utmZone,
+          minAM,
+          maxAM,
+          minBM,
+          maxBM,
+          signedDistanceM: sourceFaceFrame.signedDistanceM,
+          center: sceneSectionVec3(sourceFaceFrame.center),
+          normal: sceneSectionVec3(sourceFaceFrame.normal).normalize(),
+          axisAVector: sceneSectionVec3(sourceFaceFrame.axisAVector).normalize(),
+          axisBVector: sceneSectionVec3(sourceFaceFrame.axisBVector).normalize(),
+        }
+      : sceneSectionResolvedFrameBasis(
+          axis,
+          frame,
+          position,
+          minAM,
+          maxAM,
+          minBM,
+          maxBM,
+          geo,
+        );
     const axisIntervalM = clampRange(
       finiteNumber(frame?.axisIntervalM) ??
         finiteNumber(style.sceneSectionAxisIntervalM) ??
@@ -1793,10 +1893,14 @@ export function resolveSceneSectionFrames(this: any,
       axisAHeading:
         typeof frame?.axisAHeading === "string" && frame.axisAHeading.trim()
           ? frame.axisAHeading
+          : sourceFaceFrame?.axisAHeading
+            ? sourceFaceFrame.axisAHeading
           : sceneSectionDefaultAxisHeading(basis.datum, basis.axisAVector),
       axisBHeading:
         typeof frame?.axisBHeading === "string" && frame.axisBHeading.trim()
           ? frame.axisBHeading
+          : sourceFaceFrame?.axisBHeading
+            ? sourceFaceFrame.axisBHeading
           : sceneSectionDefaultAxisHeading(basis.datum, basis.axisBVector),
       axisHeadingPaddingM,
       axisHeadingColor,

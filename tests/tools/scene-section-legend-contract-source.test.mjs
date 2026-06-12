@@ -108,7 +108,14 @@ test("compact quick legend geometry is shared and guarded", () => {
   }
 });
 
-test("section legend exposes the same per-axis controls as the editor header", () => {
+test("section legend exposes per-axis controls and Section Options popout", () => {
+  const firstReturnIndex = legendSource.indexOf("return null");
+  const popoverEffectIndex = legendSource.indexOf("useEffect(() =>");
+  assert.ok(
+    popoverEffectIndex >= 0 &&
+      (firstReturnIndex < 0 || popoverEffectIndex < firstReturnIndex),
+    "SceneSectionLegend hooks should run before conditional null returns",
+  );
   assert.match(
     legendSource,
     /scene-section-legend-\$\{axis\}-show/,
@@ -121,8 +128,8 @@ test("section legend exposes the same per-axis controls as the editor header", (
   );
   assert.match(
     legendSource,
-    /scene-section-legend-\$\{axis\}-controls/,
-    "Quick legend should expose a per-axis Controls button.",
+    /scene-section-legend-\$\{axis\}-section-options/,
+    "Quick legend should expose a per-axis Section Options popout button.",
   );
   assert.match(
     legendSource,
@@ -141,13 +148,55 @@ test("section legend exposes the same per-axis controls as the editor header", (
   );
   assert.match(
     legendSource,
-    /scene-section-legend-\$\{axis\}-show[\s\S]*scene-section-legend-\$\{axis\}-controls[\s\S]*scene-section-legend-\$\{axis\}-flip[\s\S]*scene-section-legend-\$\{axis\}-axes-visible[\s\S]*scene-section-legend-\$\{axis\}-ground-trace-visible/,
-    "Quick legend should order controls as Show, Controls, Flip, Scale axes, Ground trace.",
+    /scene-section-legend-\$\{axis\}-show[\s\S]*scene-section-legend-\$\{axis\}-section-options[\s\S]*scene-section-legend-\$\{axis\}-flip[\s\S]*scene-section-legend-\$\{axis\}-axes-visible[\s\S]*scene-section-legend-\$\{axis\}-ground-trace-visible/,
+    "Quick legend should order controls as Show, Section Options, Flip, Scale axes, Ground trace.",
   );
   assert.match(
     legendSource,
     /<LegendToggleIcon kind="controls" \/>[\s\S]{0,120}<\/button>/,
-    "Quick legend should render icon-only Controls controls.",
+    "Quick legend should render icon-only Section Options controls.",
+  );
+  assert.match(
+    legendSource,
+    /createPortal/,
+    "Quick legend should use the same portal popout pattern as Section ISO.",
+  );
+  assert.match(
+    legendSource,
+    /data-testid="scene-section-options-popout"/,
+    "Quick legend should render a Section Options popout.",
+  );
+  assert.match(
+    legendSource,
+    /<SectionGraphOptionsControls/,
+    "Section Options popout should reuse the shared seismic graph controls.",
+  );
+  assert.match(
+    legendSource,
+    /scene-section-face-channel-controls/,
+    "Section Options popout should expose section-face display channel controls.",
+  );
+  for (const channel of ["seismic", "volume", "isobars", "mtScalar"]) {
+    assert.match(
+      legendSource,
+      new RegExp(`scene-section-face-channel-\\$\\{channel\\.key\\}`),
+      `Section face channel ${channel} should use compact generated controls.`,
+    );
+  }
+  assert.match(
+    typesSource,
+    /export interface SceneSectionFaceChannelState[\s\S]*seismic\?: boolean[\s\S]*volume\?: boolean[\s\S]*isobars\?: boolean[\s\S]*mtScalar\?: boolean/,
+    "Scene section face channels should be typed as reusable app-level state.",
+  );
+  assert.match(
+    legendSource,
+    /commitRuntimeLayerStyle\(SCENE_SECTION_LAYER_ID[\s\S]*sceneSectionFaceChannels/,
+    "Face channel toggles should apply scene-section state through live runtime style.",
+  );
+  assert.doesNotMatch(
+    legendSource,
+    /setPageLayerOverride\(writePage\.id,\s*SCENE_SECTION_LAYER_ID[\s\S]*sceneSectionFaceChannels/,
+    "Face channel toggles should not persist computed display state into page fixtures.",
   );
   assert.match(
     legendSource,
@@ -166,7 +215,7 @@ test("section legend exposes the same per-axis controls as the editor header", (
   );
   assert.doesNotMatch(
     legendSource,
-    /<span>Flip<\/span>|<span>Controls<\/span>|<span>Ground trace<\/span>|<span>Scale axes<\/span>/,
+    /<span>Flip<\/span>|<span>Controls<\/span>|<span>Ground trace<\/span>|<span>Scale axes<\/span>|<span>Section Options<\/span>/,
     "Quick legend action controls should not render crowding text labels.",
   );
   assert.doesNotMatch(
@@ -201,7 +250,7 @@ test("section legend exposes the same per-axis controls as the editor header", (
   );
   assert.doesNotMatch(
     legendSource,
-    /P Controle|scene-section-legend-helper-visible/,
+    /P Controle|scene-section-legend-helper-visible|scene-section-legend-\$\{axis\}-controls/,
     "Quick legend should not keep the global P Controle helper toggle.",
   );
 });

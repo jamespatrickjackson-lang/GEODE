@@ -127,14 +127,16 @@ test("Utah FORGE seismic manifest and capability containers render", async ({
 
   await expect(page.locator("body")).toContainText("Source and registration");
   await expect(page.locator("body")).toContainText("Seismic analysis");
-  await expect(page.locator("body")).toContainText("Product");
-  await expect(page.locator("body")).toContainText("Product and display");
+  await expect(page.locator("body")).toContainText("Product visibility");
+  await expect(page.locator("body")).toContainText("3D products");
+  await expect(page.locator("body")).toContainText("2D product details");
   await expect(page.locator("body")).toContainText("Render mode");
   await expect(page.locator("body")).toContainText(/(Amp|Vel) min/);
   await expect(page.locator("body")).toContainText("Gain curve");
   await expect(page.locator("body")).toContainText("Zero mute");
   await expect(page.locator("body")).toContainText("Ray steps");
-  await expect(page.locator("body")).toContainText("Navigation");
+  await expect(page.locator("body")).toContainText("Seismic survey geometry");
+  await expect(page.locator("body")).toContainText("Shot/source points");
   await expect(page.locator("body")).toContainText(
     "3D anisotropic PSDM depth stack (unenhanced)",
   );
@@ -157,8 +159,8 @@ test("Utah FORGE seismic manifest and capability containers render", async ({
     "Forge3d_ANI_PSDM_Stack_Enh.segy",
   );
   await expect(page.locator("body")).toContainText("Processing comparison");
-  await expect(page.locator("body")).toContainText("Display");
-  await expect(page.locator("body")).toContainText("Survey geometry");
+  await expect(page.locator("body")).toContainText("Seismic rendering");
+  await expect(page.locator("body")).toContainText("Isobands");
   await expect(page.locator("body")).toContainText("Integrated geophysics");
   await expect(page.locator("body")).toContainText("Scene section planes");
   await expect(page.getByTestId("scene-section-enabled")).toBeVisible();

@@ -8,6 +8,7 @@ import {
 } from "./captureRecipe";
 import { validateRenderResolutionRequest } from "./captureResolution";
 import { renderCaptureOverlay } from "./captureOverlayRenderer";
+import { captureVisibilityProfileForMode } from "./captureProfiles";
 import type { CaptureOverlayFrameContext } from "./captureTypes";
 import {
   applyRecipeLayerState,
@@ -154,6 +155,9 @@ export async function exportDeterministicStill({
 
   try {
     snapshot = useCurrentSceneState ? null : applyRecipeLayerState(sceneHandle, recipe);
+    sceneHandle.setCaptureNativeAnnotationsVisible?.(
+      captureVisibilityProfileForMode(recipe.mode).captureNativeAnnotations,
+    );
     fidelitySnapshot =
       typeof sceneHandle.beginCaptureFidelityLock === "function"
         ? sceneHandle.beginCaptureFidelityLock({
@@ -222,6 +226,7 @@ export async function exportDeterministicStill({
     };
   } finally {
     try {
+      sceneHandle.setCaptureNativeAnnotationsVisible?.(true);
       if (snapshot) {
         restoreRecipeLayerState(sceneHandle, snapshot);
       }

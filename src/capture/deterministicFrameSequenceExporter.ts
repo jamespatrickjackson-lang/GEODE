@@ -13,6 +13,7 @@ import { sampleCaptureCameraPathV2 } from "./captureCameraPathV2";
 import { sampleCaptureCameraPathV3 } from "./captureCameraPathV3";
 import { validateRenderResolutionRequest } from "./captureResolution";
 import { renderCaptureOverlay } from "./captureOverlayRenderer";
+import { captureVisibilityProfileForMode } from "./captureProfiles";
 import type { CaptureOverlayFrameContext } from "./captureTypes";
 
 export type DeterministicFrameMimeType = "image/png" | "image/webp";
@@ -354,6 +355,9 @@ export async function exportDeterministicFrameSequence({
 
   try {
     snapshot = applyRecipeLayerState(sceneHandle, recipe);
+    sceneHandle.setCaptureNativeAnnotationsVisible?.(
+      captureVisibilityProfileForMode(recipe.mode).captureNativeAnnotations,
+    );
     fidelitySnapshot =
       typeof sceneHandle.beginCaptureFidelityLock === "function"
         ? sceneHandle.beginCaptureFidelityLock({
@@ -418,6 +422,7 @@ export async function exportDeterministicFrameSequence({
     completed = true;
   } finally {
     try {
+      sceneHandle.setCaptureNativeAnnotationsVisible?.(true);
       if (snapshot) {
         restoreRecipeLayerState(sceneHandle, snapshot);
       }

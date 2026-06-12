@@ -38,8 +38,6 @@ export function SeismicBrowserControls({
   currentPage,
   layerId,
   overridden,
-  sceneSectionStyle,
-  sceneHandle,
   onToggleOverride,
   ensureLayerVisible,
   setEnvLayerStyle,
@@ -118,11 +116,6 @@ export function SeismicBrowserControls({
     0.25,
     Math.min(8, styleNumber(style, "seismicTimeScale", 2)),
   );
-  const navigationVisible = styleBoolean(
-    style,
-    "seismicNavigationVisible",
-    true,
-  );
   const colormap = seismicColormapFromValue(style.seismicColormap);
   const removeBackground = styleBoolean(
     style,
@@ -130,6 +123,11 @@ export function SeismicBrowserControls({
     false,
   );
   const legendVisible = styleBoolean(style, "seismicLegendVisible", true);
+  const presentationBarVisible = styleBoolean(
+    style,
+    "seismicPresentationBarVisible",
+    false,
+  );
   const verticalDatumMode = seismicVerticalDatumModeFromStyle(style);
   const sliceThroughVolume =
     selectedProduct?.raymarchCapable === true &&
@@ -514,29 +512,20 @@ export function SeismicBrowserControls({
           </div>
 
           <SeismicDisplayTuningControls
-            style={style}
             disabled={disabled}
-            isEnv={isEnv}
-            currentPage={currentPage}
-            layerId={layerId}
-            sceneSectionStyle={sceneSectionStyle}
-            sceneHandle={sceneHandle}
             selectedProduct={selectedProduct}
-            renderMode={renderMode}
             amplitudeMin={amplitudeMin}
             amplitudeMax={amplitudeMax}
             amplitudeGamma={amplitudeGamma}
             colormap={colormap}
             legendVisible={legendVisible}
+            presentationBarVisible={presentationBarVisible}
             removeBackground={removeBackground}
             backgroundCutoff={backgroundCutoff}
             volumeSampleSteps={volumeSampleSteps}
             timeScale={timeScale}
-            navigationVisible={navigationVisible}
             controlOpacity={controlOpacity}
             commit={commit}
-            setEnvLayerStyle={setEnvLayerStyle}
-            setPageLayerOverride={setPageLayerOverride}
           />
         </div>
       </details>

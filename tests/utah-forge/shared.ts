@@ -365,6 +365,7 @@ export async function openForgeDataEditorContainers(page: Page): Promise<void> {
   await openEditorSection(page, "Working area", 3000, "Phase 3 working area");
   await openEditorSection(page, "Scene section planes", 10_000, "section plane");
   await openEditorSection(page, "Forge", 30_000, "Seismic analysis");
+  await openEditorSection(page, "Site Details", 10_000, "Seismic survey geometry");
   await openEditorSection(page, "Seismic analysis", 10_000, "Seismic browser");
   await openEditorSection(page, "MT resistivity", 30_000, "3D MT top surface");
   await openEditorSection(page, "Other", 5_000, "Foundation");

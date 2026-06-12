@@ -6,6 +6,7 @@ import { pathToFileURL } from "node:url";
 
 const repoRoot = process.cwd();
 const outDir = path.join(repoRoot, ".tmp", "test-seismic-figure-annotations");
+const tscBin = path.join(repoRoot, "node_modules", "typescript", "bin", "tsc");
 
 function readSource(...parts) {
   return readFileSync(path.join(repoRoot, ...parts), "utf8");
@@ -14,7 +15,8 @@ function readSource(...parts) {
 async function loadAnnotationModelModule() {
   execSync(
     [
-      "npx tsc",
+      JSON.stringify(process.execPath),
+      JSON.stringify(tscBin),
       "src/geophysics/seismicFigureAnnotationModel.ts",
       "--target ES2022",
       "--module ES2022",
@@ -47,6 +49,7 @@ async function loadAnnotationModelModule() {
       max: 8165.080078,
       verticalScaleMPerUnit: 1,
     },
+    datumM: 1800,
     sectionStart: [-8343.049999999988, -8986.299999999814, 1590.9],
     sectionEnd: [-12187.449999999953, -8059.5, 1512.6],
     navigationStatus:
@@ -54,9 +57,11 @@ async function loadAnnotationModelModule() {
   });
 
   assert.equal(model.title, "2D Line 301 migrated depth section");
-  assert.equal(model.axis.heading, "Depth (m)");
+  assert.equal(model.axis.heading, "Depth below seismic datum (m)");
+  assert.equal(model.axis.sideHeading, "Elevation (m ASL)");
   assert.equal(model.axis.unit, "m");
   assert.equal(model.axis.ticks[0].value, 0);
+  assert.equal(model.axis.ticks[0].secondaryLabel, "Elevation 1,800 m ASL");
   assert.equal(model.axis.ticks.at(-1).value, 8165.080078);
   assert.equal(model.scaleBar.label, "1 km");
   assert.deepEqual(model.directionLabels, { start: "E", end: "W" });
@@ -86,7 +91,7 @@ async function loadAnnotationModelModule() {
     sectionEnd: [3200, 0, 1800],
   });
 
-  assert.equal(model.axis.heading, "Two-way travel time (ms)");
+  assert.equal(model.axis.heading, "Two-way travel time (TWT, ms)");
   assert.equal(model.axis.unit, "ms");
   assert.equal(model.axis.ticks[0].label, "0");
   assert.equal(model.axis.ticks.at(-1).label, "2100");
@@ -105,7 +110,7 @@ async function loadAnnotationModelModule() {
     "editor",
     "layerControls",
     "seismic",
-    "SeismicCapabilityLayerContainers.tsx",
+    "SectionGraphOptionsControls.tsx",
   );
   assert.match(editorSource, /seismic-figure-annotations-visible/);
   assert.match(editorSource, /seismic-figure-title/);
@@ -122,4 +127,49 @@ async function loadAnnotationModelModule() {
   assert.match(styleSource, /updateSeismicFigureAnnotations/);
   assert.match(styleSource, /disposeSeismicFigureAnnotations/);
   assert.doesNotMatch(styleSource, /Inline 93|1 KILOMETER/);
+}
+
+{
+  const figureStyleSource = readSource(
+    "src",
+    "scene",
+    "styles",
+    "seismicFigureAnnotations.ts",
+  );
+
+  assert.match(
+    figureStyleSource,
+    /function makeTextPlane[\s\S]*\): THREE\.Mesh/,
+    "figure text should render as mesh planes, not camera-facing sprites",
+  );
+  assert.match(
+    figureStyleSource,
+    /const geometry = makePlaneGeometry\(center, widthVec, heightVec\)/,
+    "figure text should use the same section-plane basis as axes and caption boxes",
+  );
+  assert.doesNotMatch(
+    figureStyleSource,
+    /new THREE\.SpriteMaterial|new THREE\.Sprite/,
+    "figure text must not billboard toward the camera",
+  );
+  assert.match(
+    figureStyleSource,
+    /gl_FrontFacing[\s\S]*1\.0 - vUv\.x/,
+    "back-facing figure text should flip its U coordinate so the camera never sees reversed text",
+  );
+  assert.match(
+    figureStyleSource,
+    /seismicFigureBaseOpacity/,
+    "figure materials should preserve their base opacity under layer transitions",
+  );
+  assert.match(
+    figureStyleSource,
+    /seismicGraphEntityKey/,
+    "figure roots and materials should carry stable graph entity identity metadata",
+  );
+  assert.match(
+    figureStyleSource,
+    /seismicGraphBasisKind/,
+    "figure roots and materials should expose the basis kind used to construct axes",
+  );
 }

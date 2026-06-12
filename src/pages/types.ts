@@ -539,6 +539,7 @@ export interface EditableStyle {
     lines?: boolean;
   };
   seismicLegendVisible?: boolean;
+  seismicPresentationBarVisible?: boolean;
   seismicFigureAnnotationsVisible?: boolean;
   seismicFigureTextColor?: string;
   seismicFigureAxisColor?: string;
@@ -585,6 +586,7 @@ export interface EditableStyle {
     y?: SceneSectionFrameState;
     z?: SceneSectionFrameState;
   };
+  sceneSectionFaceChannels?: SceneSectionFaceChannelState;
   sceneSectionObjectVisibilityByAxis?: {
     x?: Record<string, SceneSectionObjectVisibilityState>;
     y?: Record<string, SceneSectionObjectVisibilityState>;
@@ -780,6 +782,13 @@ export interface SceneSectionFrameState {
   axisDatumOriginEastingM?: number;
   axisDatumOriginNorthingM?: number;
   axisDatumLatLonDecimals?: number;
+}
+
+export interface SceneSectionFaceChannelState {
+  seismic?: boolean;
+  volume?: boolean;
+  isobars?: boolean;
+  mtScalar?: boolean;
 }
 
 export interface SceneSectionObjectVisibilityState {

@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { buildSeismicSectionGraphBasis } from "../geophysics/seismicSectionGraphBasis";
 import { appAssetUrl } from "../projects/projectPathsRuntime";
 
 const SCENE_SECTION_SHADER_SLOT_COUNT = 8;
@@ -841,6 +842,10 @@ async function buildSectionMesh(
     seismicValueEncoding: section.valueEncoding ?? product.valueEncoding,
     seismicNavigationPlacement:
       section.navigationPlacement ?? product.navigationPlacement,
+    seismicSectionGraphBasis: buildSeismicSectionGraphBasis(section, product, {
+      layerId: "seismic-browser",
+      objectId: section.id,
+    }),
   };
   return mesh;
 }

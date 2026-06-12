@@ -2,13 +2,9 @@ import { vibrancyTertiaryLabel } from "../../styles";
 import {
   nestedControlRowStyle,
   nestedFieldLabelStyle,
-  type LayerStyleSetter,
-  type PageStyleSetter,
 } from "../../styleControls";
 import { TransientSlider } from "../../TransientSlider";
-import type { EditableStyle, PresentationPage } from "../../../pages/types";
-import type { SceneHandle } from "../../../scene";
-import { IsobandControls } from "../mt/IsobandControls";
+import type { EditableStyle } from "../../../pages/types";
 import {
   isVelocityProduct,
   seismicColormapFromValue,
@@ -17,72 +13,38 @@ import {
 } from "./seismicModel";
 
 export function SeismicDisplayTuningControls({
-  style,
   disabled,
-  isEnv,
-  currentPage,
-  layerId,
-  sceneSectionStyle,
-  sceneHandle,
   selectedProduct,
-  renderMode,
   amplitudeMin,
   amplitudeMax,
   amplitudeGamma,
   colormap,
   legendVisible,
+  presentationBarVisible,
   removeBackground,
   backgroundCutoff,
   volumeSampleSteps,
   timeScale,
-  navigationVisible,
   controlOpacity,
   commit,
-  setEnvLayerStyle,
-  setPageLayerOverride,
 }: {
-  style: EditableStyle;
   disabled: boolean;
-  isEnv: boolean;
-  currentPage: PresentationPage | null;
-  layerId: string;
-  sceneSectionStyle: EditableStyle;
-  sceneHandle: SceneHandle;
   selectedProduct: SeismicProductOption | undefined;
-  renderMode: "slice" | "raymarch";
   amplitudeMin: number;
   amplitudeMax: number;
   amplitudeGamma: number;
   colormap: NonNullable<EditableStyle["seismicColormap"]>;
   legendVisible: boolean;
+  presentationBarVisible: boolean;
   removeBackground: boolean;
   backgroundCutoff: number;
   volumeSampleSteps: number;
   timeScale: number;
-  navigationVisible: boolean;
   controlOpacity: number;
   commit: (patch: Partial<EditableStyle>) => void;
-  setEnvLayerStyle: LayerStyleSetter;
-  setPageLayerOverride: PageStyleSetter;
 }) {
   return (
     <>
-      <IsobandControls
-        style={style}
-        disabled={disabled}
-        isEnv={isEnv}
-        currentPage={currentPage}
-        layerId={layerId}
-        rangeKind="seismic"
-        volumePlanes={
-          selectedProduct?.raymarchCapable === true && renderMode === "raymarch"
-        }
-        sceneSectionStyle={sceneSectionStyle}
-        sceneHandle={sceneHandle}
-        setEnvLayerStyle={setEnvLayerStyle}
-        setPageLayerOverride={setPageLayerOverride}
-      />
-
       <div style={nestedControlRowStyle}>
         <label style={nestedFieldLabelStyle}>
           {isVelocityProduct(selectedProduct) ? "Vel min" : "Amp min"}
@@ -174,6 +136,30 @@ export function SeismicDisplayTuningControls({
       </label>
 
       <label style={{ ...nestedControlRowStyle, cursor: "pointer" }}>
+        <span style={nestedFieldLabelStyle}>Presentation bar</span>
+        <input
+          data-testid="seismic-presentation-bar-visible"
+          type="checkbox"
+          checked={presentationBarVisible}
+          disabled={disabled}
+          onChange={(e) =>
+            commit({ seismicPresentationBarVisible: e.target.checked })
+          }
+          style={{ opacity: controlOpacity }}
+        />
+        <span
+          style={{
+            flex: 1,
+            color: vibrancyTertiaryLabel,
+            fontSize: 11,
+            opacity: controlOpacity,
+          }}
+        >
+          claim-safe readouts
+        </span>
+      </label>
+
+      <label style={{ ...nestedControlRowStyle, cursor: "pointer" }}>
         <span style={nestedFieldLabelStyle}>White bg</span>
         <input
           data-testid="seismic-remove-background"
@@ -241,28 +227,6 @@ export function SeismicDisplayTuningControls({
           style={{ flex: 1, opacity: controlOpacity }}
         />
       </div>
-
-      <label style={{ ...nestedControlRowStyle, cursor: "pointer" }}>
-        <span style={nestedFieldLabelStyle}>Navigation</span>
-        <input
-          data-testid="seismic-navigation-visible"
-          type="checkbox"
-          checked={navigationVisible}
-          disabled={disabled}
-          onChange={(e) => commit({ seismicNavigationVisible: e.target.checked })}
-          style={{ opacity: controlOpacity }}
-        />
-        <span
-          style={{
-            flex: 1,
-            color: vibrancyTertiaryLabel,
-            fontSize: 11,
-            opacity: controlOpacity,
-          }}
-        >
-          source/receiver lines
-        </span>
-      </label>
     </>
   );
 }

@@ -11,8 +11,10 @@ export interface SeismicFigureAnnotationInput {
   lineLabel?: string;
   sourceSubmission?: string;
   sampleDomain: SeismicFigureSampleDomain;
+  datumM?: number;
   sectionStart: readonly [number, number, number];
   sectionEnd: readonly [number, number, number];
+  sectionLengthMOverride?: number;
   navigationStatus?: string;
   titleOverride?: string;
   captionOverride?: string;
@@ -25,6 +27,7 @@ export interface SeismicFigureAnnotationInput {
 export interface SeismicFigureTick {
   value: number;
   label: string;
+  secondaryLabel?: string;
   t: number;
 }
 
@@ -33,6 +36,7 @@ export interface SeismicFigureAnnotationModel {
   caption: string;
   axis: {
     heading: string;
+    sideHeading?: string;
     unit: string;
     ticks: SeismicFigureTick[];
   };
@@ -87,9 +91,10 @@ function niceStep(rawStep: number): number {
 }
 
 function buildAxisTicks(min: number, max: number): SeismicFigureTick[] {
-  if (!Number.isFinite(min) || !Number.isFinite(max) || max <= min) {
+  if (!Number.isFinite(min) || !Number.isFinite(max) || max < min) {
     return [];
   }
+  if (max === min) return [{ value: min, label: formatSampleValue(min), t: 0 }];
   const range = max - min;
   const step = niceStep(range / 8);
   const ticks: SeismicFigureTick[] = [
@@ -112,18 +117,23 @@ function buildAxisTicks(min: number, max: number): SeismicFigureTick[] {
 
 function axisHeading(domain: SeismicFigureSampleDomain): {
   heading: string;
+  sideHeading?: string;
   unit: string;
 } {
   const unit = cleanText(domain.unit) || "unit";
   const kind = cleanText(domain.kind).toLowerCase();
   if (kind.includes("time") || unit.toLowerCase() === "ms") {
-    return { heading: `Two-way travel time (${unit})`, unit };
+    return { heading: `Two-way travel time (TWT, ${unit})`, unit };
   }
   if (kind.includes("velocity")) {
     return { heading: `Velocity sample (${unit})`, unit };
   }
   if (kind.includes("depth") || unit.toLowerCase() === "m") {
-    return { heading: `Depth (${unit})`, unit };
+    return {
+      heading: `Depth below seismic datum (${unit})`,
+      sideHeading: "Elevation (m ASL)",
+      unit,
+    };
   }
   return { heading: `Sample (${unit})`, unit };
 }
@@ -200,7 +210,11 @@ export function buildSeismicFigureAnnotationModel(
     cleanText(input.titleOverride) || cleanText(input.productLabel) || "Seismic section";
   const caption = cleanText(input.captionOverride) || defaultCaption(input);
   const axis = axisHeading(input.sampleDomain);
-  const lengthM = sectionLengthM(input.sectionStart, input.sectionEnd);
+  const lengthM =
+    finiteNumber(input.sectionLengthMOverride) &&
+    input.sectionLengthMOverride > 0
+      ? input.sectionLengthMOverride
+      : sectionLengthM(input.sectionStart, input.sectionEnd);
   const scaleLengthM = niceScaleBarLength(lengthM);
   const scaleLabel =
     cleanText(input.scaleLabelOverride) || formatScaleLength(scaleLengthM);
@@ -216,7 +230,20 @@ export function buildSeismicFigureAnnotationModel(
     caption,
     axis: {
       ...axis,
-      ticks: buildAxisTicks(input.sampleDomain.min, input.sampleDomain.max),
+      ticks: buildAxisTicks(input.sampleDomain.min, input.sampleDomain.max).map(
+        (tick) => {
+          if (!finiteNumber(input.datumM)) return tick;
+          const kind = cleanText(input.sampleDomain.kind).toLowerCase();
+          const unit = cleanText(input.sampleDomain.unit).toLowerCase();
+          if (!kind.includes("depth") && unit !== "m") return tick;
+          return {
+            ...tick,
+            secondaryLabel: `Elevation ${Math.round(
+              input.datumM - tick.value,
+            ).toLocaleString("en-US")} m ASL`,
+          };
+        },
+      ),
     },
     directionLabels: {
       start: compassLabel(-axisDx, -axisDy),

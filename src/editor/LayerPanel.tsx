@@ -2739,7 +2739,7 @@ export function LayerPanel({
               ) : null}
 
               {boreholeEntries.length > 0 ? (
-                <details style={nestedDetailsStyle} open>
+                <details style={nestedDetailsStyle}>
                   <summary style={panelStyles.summary}>Bore Holes</summary>
                   <div style={detailsContentStyle}>
                     {boreholeEntries.map((entry, entryIndex) => {

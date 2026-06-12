@@ -3,6 +3,7 @@ import {
   EditorCompactSegmentedRow,
   nestedControlRowStyle,
   nestedFieldLabelStyle,
+  OverrideStateIndicator,
 } from "../../styleControls";
 import type { EditableStyle } from "../../../pages/types";
 import { SeismicCapabilityLayerItem } from "./SeismicCapabilityLayerItem";
@@ -11,6 +12,12 @@ import type {
   SeismicRequiredProductSourceGate,
 } from "./seismicModel";
 import { SEISMIC_VERTICAL_DATUM_MODE_OPTIONS } from "./seismicModel";
+
+type ActiveSeismicPreset = {
+  label?: string;
+  provenanceClassification?: string;
+  provenanceNote?: string;
+};
 
 function countBySurveyKind(products: SeismicProductOption[]): string {
   const counts = products.reduce<Record<string, number>>((acc, product) => {
@@ -49,9 +56,15 @@ export function SeismicSourceAndRegistrationControls({
   raymarchProductCount,
   sourceGatedProducts,
   currentCapabilityPresetId,
+  activePreset,
   renderMode,
   verticalDatumMode,
   onSetVerticalDatumMode,
+  layerVisible,
+  onSetLayerVisible,
+  isEnv,
+  overridden,
+  onToggleOverride,
   disabled,
   controlOpacity,
 }: {
@@ -61,11 +74,17 @@ export function SeismicSourceAndRegistrationControls({
   raymarchProductCount: number;
   sourceGatedProducts: SeismicRequiredProductSourceGate[];
   currentCapabilityPresetId: string;
+  activePreset?: ActiveSeismicPreset;
   renderMode: "slice" | "raymarch";
   verticalDatumMode: NonNullable<EditableStyle["seismicVerticalDatumMode"]>;
   onSetVerticalDatumMode: (
     value: NonNullable<EditableStyle["seismicVerticalDatumMode"]>,
   ) => void;
+  layerVisible: boolean;
+  onSetLayerVisible: (visible: boolean) => void;
+  isEnv: boolean;
+  overridden: boolean;
+  onToggleOverride?: (enabled: boolean) => void;
   disabled: boolean;
   controlOpacity: number;
 }) {
@@ -74,6 +93,9 @@ export function SeismicSourceAndRegistrationControls({
       testId="seismic-source-registration"
       title="Source and registration"
       type="metadata"
+      visible={layerVisible}
+      visibilityDisabled={disabled}
+      onVisibleChange={onSetLayerVisible}
     >
       <div
         style={{
@@ -83,6 +105,21 @@ export function SeismicSourceAndRegistrationControls({
           opacity: controlOpacity,
         }}
       >
+        {!isEnv ? (
+          <div style={nestedControlRowStyle}>
+            <span style={nestedFieldLabelStyle}>Controls</span>
+            <input
+              type="checkbox"
+              checked={overridden}
+              onChange={(e) => onToggleOverride?.(e.target.checked)}
+              title="Override environment seismic browser variables for this page"
+            />
+            <span style={{ flex: 1 }}>
+              {overridden ? "page override active" : "using environment defaults"}
+            </span>
+            <OverrideStateIndicator active={overridden} />
+          </div>
+        ) : null}
         <div style={nestedControlRowStyle}>
           <span style={nestedFieldLabelStyle}>Products</span>
           <span style={{ flex: 1 }}>
@@ -127,6 +164,26 @@ export function SeismicSourceAndRegistrationControls({
             {renderMode} / {currentCapabilityPresetId || "manual controls"}
           </span>
         </div>
+        {activePreset?.label ? (
+          <div style={nestedControlRowStyle}>
+            <span style={nestedFieldLabelStyle}>Preset</span>
+            <span style={{ flex: 1 }}>{activePreset?.label}</span>
+          </div>
+        ) : null}
+        {activePreset?.provenanceClassification ? (
+          <div style={nestedControlRowStyle}>
+            <span style={nestedFieldLabelStyle}>Provenance</span>
+            <span style={{ flex: 1 }}>
+              {activePreset.provenanceClassification}
+            </span>
+          </div>
+        ) : null}
+        {activePreset?.provenanceNote ? (
+          <div style={nestedControlRowStyle}>
+            <span style={nestedFieldLabelStyle}>Note</span>
+            <span style={{ flex: 1 }}>{activePreset?.provenanceNote}</span>
+          </div>
+        ) : null}
         <div style={nestedControlRowStyle}>
           <span style={nestedFieldLabelStyle}>Gate</span>
           <span style={{ flex: 1 }}>{sourceGateLabel(sourceGatedProducts)}</span>

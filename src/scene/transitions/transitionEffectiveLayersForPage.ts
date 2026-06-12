@@ -53,6 +53,11 @@ const COLOR_STYLE_FIELDS: readonly StyleField[] = [
   "labelTextColor",
   "labelOutlineColor",
   "labelFillColor",
+  "seismicFigureTextColor",
+  "seismicFigureAxisColor",
+  "seismicFigureCaptionBoxColor",
+  "seismicFigureHorizonColor",
+  "seismicFigureWellColor",
 ];
 
 const CATEGORICAL_STYLE_FIELDS: readonly StyleField[] = [
@@ -82,6 +87,11 @@ const CATEGORICAL_STYLE_FIELDS: readonly StyleField[] = [
   "seismicCapabilityPresetId",
   "seismicDisplayRecipeId",
   "seismicLegendVisible",
+  "seismicPresentationBarVisible",
+  "seismicVerticalDatumMode",
+  "seismicFigureAnnotationsVisible",
+  "seismicFigureWellVisible",
+  "seismicFigureHorizonVisible",
   "sceneSectionEnabled",
   "sceneSectionMode",
   "sceneSectionTargetScope",
@@ -97,6 +107,21 @@ const CATEGORICAL_STYLE_FIELDS: readonly StyleField[] = [
   "atmosphereDriftEnabled",
   "atmosphereDepthTest",
   "atmosphereBoundsHelperVisible",
+];
+
+const SEISMIC_GRAPH_SCALAR_STYLE_FIELDS: readonly StyleField[] = [
+  "seismicSliceFraction",
+  "seismicFigureCaptionBoxOpacity",
+  "seismicFigureOutsideOffsetM",
+  "seismicFigureLabelSizeM",
+  "seismicFigureWellPosition",
+];
+
+const SEISMIC_GRAPH_CROSSFADE_STYLE_FIELDS: readonly StyleField[] = [
+  "seismicFigureTitle",
+  "seismicFigureCaption",
+  "seismicFigureScaleLabel",
+  "seismicFigureHorizonPoints",
 ];
 
 const SPATIAL_STYLE_FIELDS: readonly StyleField[] = [
@@ -335,6 +360,193 @@ function sceneSectionDerivedEntities(input: {
   ];
 }
 
+function styleStringValue(style: EffectiveLayerStyle, field: StyleField): string | null {
+  const value = style[field];
+  return typeof value === "string" && value.trim() ? value : null;
+}
+
+function seismicGraphEntityKey(input: {
+  layerId: string;
+  productId: string;
+  objectKind: string;
+  objectId: string;
+}): string {
+  return `layer:${input.layerId}:product:${input.productId}:object:${input.objectKind}:${input.objectId}`;
+}
+
+function seismicGraphObjectState(style: EffectiveLayerStyle): {
+  productId: string;
+  objectKind: "2d-section-line" | "3d-section-plane" | "3d-volume";
+  objectId: string;
+  representationKey:
+    | "seismic:2d-section-line"
+    | "seismic:3d-section-plane"
+    | "seismic:3d-volume";
+} {
+  const productId = styleStringValue(style, "seismicProductId") ?? "default-product";
+  const renderMode = style.seismicRenderMode === "raymarch" ? "raymarch" : "slice";
+  const sliceAxis =
+    style.seismicSliceAxis === "crossline" ||
+    style.seismicSliceAxis === "sample" ||
+    style.seismicSliceAxis === "line"
+      ? style.seismicSliceAxis
+      : "inline";
+  if (renderMode === "raymarch") {
+    return {
+      productId,
+      objectKind: "3d-volume",
+      objectId: "volume",
+      representationKey: "seismic:3d-volume",
+    };
+  }
+  const objectKind = sliceAxis === "line" ? "2d-section-line" : "3d-section-plane";
+  const fraction =
+    typeof style.seismicSliceFraction === "number" &&
+    Number.isFinite(style.seismicSliceFraction)
+      ? style.seismicSliceFraction
+      : 0.5;
+  return {
+    productId,
+    objectKind,
+    objectId: `${sliceAxis}:${fraction.toFixed(3)}`,
+    representationKey:
+      objectKind === "2d-section-line"
+        ? "seismic:2d-section-line"
+        : "seismic:3d-section-plane",
+  };
+}
+
+function seismicGraphDerivedEntities(input: {
+  layerId: string;
+  style: EffectiveLayerStyle;
+  ownerKey: string;
+  ownerPriority: number;
+  readinessState: TransitionRenderGraphLayerState["readinessState"];
+  sourceStateOrigin: TransitionRenderGraphLayerState["sourceStateOrigin"];
+}): TransitionRenderGraphDerivedEntityState[] {
+  if (input.layerId !== UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID) return [];
+  const objectState = seismicGraphObjectState(input.style);
+  const objectEntityKey = seismicGraphEntityKey({
+    layerId: input.layerId,
+    productId: objectState.productId,
+    objectKind: objectState.objectKind,
+    objectId: objectState.objectId,
+  });
+  const figureEntityKey = seismicGraphEntityKey({
+    layerId: input.layerId,
+    productId: objectState.productId,
+    objectKind: "figure-annotation",
+    objectId: objectState.objectId,
+  });
+  const surveyEntityKey = seismicGraphEntityKey({
+    layerId: input.layerId,
+    productId: objectState.productId,
+    objectKind: "survey-geometry",
+    objectId: "navigation",
+  });
+  const comparisonEntityKey = seismicGraphEntityKey({
+    layerId: input.layerId,
+    productId: objectState.productId,
+    objectKind: "comparison",
+    objectId:
+      styleStringValue(input.style, "seismicComparisonProductId") ??
+      "single-product",
+  });
+  const base = {
+    readinessState: input.readinessState,
+    sourceStateOrigin: input.sourceStateOrigin,
+    channelOwnerKey: input.ownerKey,
+    channelOwnerPriority: input.ownerPriority,
+  };
+  const categoricalChannels = channelRecordFromStyle(
+    input.style,
+    CATEGORICAL_STYLE_FIELDS,
+    "style",
+  );
+  const scalarChannels = {
+    ...channelRecordFromStyle(
+      input.style,
+      SCALAR_TRANSITION_STYLE_FIELDS,
+      "style",
+    ),
+    ...channelRecordFromStyle(
+      input.style,
+      SEISMIC_GRAPH_SCALAR_STYLE_FIELDS,
+      "style",
+    ),
+  };
+  const colorChannels = channelRecordFromStyle(
+    input.style,
+    COLOR_STYLE_FIELDS,
+    "style",
+  );
+  const crossfadeChannels = channelRecordFromStyle(
+    input.style,
+    SEISMIC_GRAPH_CROSSFADE_STYLE_FIELDS,
+    "style",
+  );
+  return [
+    {
+      ...base,
+      entityKey: objectEntityKey,
+      representationKey: objectState.representationKey,
+      presenceState: derivedPresence(true),
+      categoricalChannels,
+      scalarChannels,
+      colorChannels,
+      metadata: {
+        productId: objectState.productId,
+        objectKind: objectState.objectKind,
+        objectId: objectState.objectId,
+      },
+    },
+    {
+      ...base,
+      entityKey: figureEntityKey,
+      representationKey: "seismic:figure-annotation",
+      derivedFromEntityKey: objectEntityKey,
+      presenceState: derivedPresence(input.style.seismicFigureAnnotationsVisible === true),
+      categoricalChannels,
+      scalarChannels,
+      colorChannels,
+      crossfadeChannels,
+      metadata: {
+        productId: objectState.productId,
+        objectKind: "figure-annotation",
+        objectId: objectState.objectId,
+      },
+    },
+    {
+      ...base,
+      entityKey: surveyEntityKey,
+      representationKey: "seismic:survey-geometry",
+      presenceState: derivedPresence(input.style.seismicNavigationVisible !== false),
+      categoricalChannels,
+      colorChannels,
+      metadata: {
+        productId: objectState.productId,
+        objectKind: "survey-geometry",
+        objectId: "navigation",
+      },
+    },
+    {
+      ...base,
+      entityKey: comparisonEntityKey,
+      representationKey: "seismic:comparison",
+      presenceState: derivedPresence(
+        input.style.seismicComparisonMode === "side-by-side" ||
+          !!styleStringValue(input.style, "seismicComparisonProductId"),
+      ),
+      categoricalChannels,
+      scalarChannels,
+      metadata: {
+        productId: objectState.productId,
+        objectKind: "comparison",
+      },
+    },
+  ];
+}
+
 export function transitionEffectiveLayersForPage(
   this: any,
   fromEnvironment: EnvironmentSetup,
@@ -460,14 +672,24 @@ export function transitionEffectiveLayersForPage(
         CATEGORICAL_STYLE_FIELDS,
         "style",
       ),
-      derivedEntities: sceneSectionDerivedEntities({
-        layerId: id,
-        style: fromStyle,
-        ownerKey: sourceOwnerKey,
-        ownerPriority: sourceOwnerPriority,
-        readinessState: sourceReadiness,
-        sourceStateOrigin: sourceOwnerKey,
-      }),
+      derivedEntities: [
+        ...sceneSectionDerivedEntities({
+          layerId: id,
+          style: fromStyle,
+          ownerKey: sourceOwnerKey,
+          ownerPriority: sourceOwnerPriority,
+          readinessState: sourceReadiness,
+          sourceStateOrigin: sourceOwnerKey,
+        }),
+        ...seismicGraphDerivedEntities({
+          layerId: id,
+          style: fromStyle,
+          ownerKey: sourceOwnerKey,
+          ownerPriority: sourceOwnerPriority,
+          readinessState: sourceReadiness,
+          sourceStateOrigin: sourceOwnerKey,
+        }),
+      ],
       metadata: {
         layerType: layerSpec?.type ?? null,
       },
@@ -507,14 +729,24 @@ export function transitionEffectiveLayersForPage(
         CATEGORICAL_STYLE_FIELDS,
         "style",
       ),
-      derivedEntities: sceneSectionDerivedEntities({
-        layerId: id,
-        style: targetStyle,
-        ownerKey: targetOwnerKey,
-        ownerPriority: targetOwnerPriority,
-        readinessState: targetReadiness,
-        sourceStateOrigin: "persisted-effective",
-      }),
+      derivedEntities: [
+        ...sceneSectionDerivedEntities({
+          layerId: id,
+          style: targetStyle,
+          ownerKey: targetOwnerKey,
+          ownerPriority: targetOwnerPriority,
+          readinessState: targetReadiness,
+          sourceStateOrigin: "persisted-effective",
+        }),
+        ...seismicGraphDerivedEntities({
+          layerId: id,
+          style: targetStyle,
+          ownerKey: targetOwnerKey,
+          ownerPriority: targetOwnerPriority,
+          readinessState: targetReadiness,
+          sourceStateOrigin: "persisted-effective",
+        }),
+      ],
       metadata: {
         layerType: layerSpec?.type ?? null,
       },

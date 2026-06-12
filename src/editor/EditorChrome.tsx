@@ -17,6 +17,7 @@ import { AssayLegend } from "../ui/AssayLegend";
 import { ResistivityLegend } from "../ui/ResistivityLegend";
 import { MtSurfaceBoundaryLegend } from "../ui/MtSurfaceBoundaryLegend";
 import { SectionIsoLegend } from "../ui/SectionIsoLegend";
+import { SeismicPresentationLegendBar } from "../ui/SeismicPresentationLegendBar";
 import { SeismicVolumeLegend } from "../ui/SeismicVolumeLegend";
 import { SurfaceElevationLegend } from "../ui/SurfaceElevationLegend";
 import { SceneSectionLegend } from "../ui/SceneSectionLegend";
@@ -261,7 +262,10 @@ export function EditorChrome({
         <CaptureChromeGate group="legends">
           <AssayLegend sceneHandle={sceneHandle} />
           {state.projectSlug === "utah-forge" ? (
-            <UtahForgeLegendStack sceneHandle={sceneHandle} />
+            <>
+              <UtahForgeLegendStack sceneHandle={sceneHandle} />
+              <SeismicPresentationLegendBar sceneHandle={sceneHandle} />
+            </>
           ) : (
             <>
               <ResistivityLegend />
@@ -269,6 +273,7 @@ export function EditorChrome({
               <SceneSectionLegend />
               <SectionIsoLegend />
               <SeismicVolumeLegend />
+              <SeismicPresentationLegendBar sceneHandle={sceneHandle} />
               <SurfaceElevationLegend />
             </>
           )}

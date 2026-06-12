@@ -2402,3 +2402,138 @@ complete CRC-valid source is available. L5/L11 trace-header paths may be used
 for placement after plausible State Plane-to-UTM transformation, but must keep
 `canClaimPreciseRegistration: false` and non-validated placement language until
 control-point validation exists.
+
+## DEC-148 - Approved ANI PSDM surrogate uses source-derived unenhanced volume
+
+Extends DEC-146 for the Utah FORGE demo case where the published enhanced 3D
+ANI PSDM SEG-Y remains corrupt in the official GDR 1141 zip.
+
+**Considered:** wait for a corrected `Forge3d_ANI_PSDM_Stack_Enh.segy`, render
+the corrupt enhanced member from partial bytes, hide the enhanced deliverable
+entirely, or render the complete unenhanced ANI PSDM product with explicit
+presentation-enhancement disclosure.
+
+**Chose:** the demo may render `gdr-1141-forge3d-ani-psdm-stack-unenh` through
+the `psdm-depth-surrogate-showcase` preset as
+`Presentation-enhanced PSDM surrogate - GDR 1141, unenhanced source`. The
+surrogate provenance classification is `source-derived` because the geometry
+and amplitudes are the real unenhanced GDR 1141 ANI PSDM depth volume. The
+presentation transform must remain disclosed as in-app contrast/display tuning,
+not as possession or reconstruction of the enhanced SEG-Y.
+
+**Why:** the enhanced and unenhanced 3D ANI PSDM headers share the same CRS,
+datum, sample interval, trace length, CMP bin size, and trace-coordinate header
+fields, and the official zip central directory lists both delivered SEG-Y
+members at `153,678,840` bytes. The enhanced header records post-stack
+display-processing additions such as bilateral filtering on offbins and FXY
+decon, while the unenhanced source is complete and renderable. This supports a
+spatially faithful presentation surrogate without creating a false source
+claim. Byte size is not treated as proof of identical amplitudes.
+
+**Guard:** `gdr-1141-forge3d-ani-psdm-stack-enh` remains source-gated,
+non-renderable, and `source-member-corrupt` until a complete CRC-valid source
+member exists. The app must not claim a complete
+`Forge3d_ANI_PSDM_Stack_Enh.segy`, construct direct GDR download URLs, render
+time-domain products in the PSDM surrogate view, or label the surrogate as
+`preview`, `synthetic-illustrative`, or recovered enhanced SEG-Y.
+
+## DEC-149 - Seismic presentation bar separates PSDM amplitude from velocity reference
+
+Extends DEC-148 for the Utah FORGE presentation view and the
+`PSDM + MT + 58-32 Source-Location Tie` page.
+
+**Considered:** reuse the technical seismic volume legend, relabel PSDM
+amplitude as velocity, add page-specific overlay text, or add an opt-in
+viewport presentation bar backed by normal seismic style fields.
+
+**Chose:** the app may show a read-mostly `SeismicPresentationLegendBar` when
+`EditableStyle.seismicPresentationBarVisible` is explicitly true. The bar
+consolidates PSDM amplitude min/max and colormap, a separate velocity
+companion reference from `gdr-1015-forge3d-velo5d-float-01312018` labeled
+`2,000-5,000 m/s`, depth metres referenced to the `1,800 m` seismic datum, a
+`source-derived` provenance chip, scale and compass context, vertical
+exaggeration, and IL / XL / depth slice scrub controls that write only
+`seismicSliceAxis` and `seismicSliceFraction`.
+
+**Why:** presentation mode needs a compact, claim-safe readout that gathers the
+items reviewers asked for without weakening source fidelity. PSDM amplitude is
+not a velocity model, so m/s appears only as a companion reference. The
+separate style flag keeps the bar out of general runtime behavior and makes
+its use auditable through presets, page authoring, and editor controls.
+
+**Guard:** do not enable the presentation bar through page-id, page-index, or
+title runtime special cases. Do not use it to imply possession of a complete
+`Forge3d_ANI_PSDM_Stack_Enh.segy`, to render the source-gated enhanced product,
+or to relabel PSDM amplitude as velocity. New slice scrub behavior must keep
+using the existing seismic slice style fields.
+
+## DEC-150 - Seismic figure graphs use data/datum basis
+
+Extends DEC-147 and DEC-149 for seismic figure annotations, transition graph
+identity, and capture-mode visibility.
+
+**Considered:** keep deriving graph axes from the first four mesh vertices,
+attach all graph overlays to the visible section mesh as a child effect, attach
+depth labels to terrain/ground, or add an explicit graph-basis model owned by
+the seismic product/object.
+
+**Chose:** seismic figure annotations use an explicit
+`SeismicSectionGraphBasis` derived from the section metadata, product metadata,
+and active display state. Path curtains use the full trace path, sample domain,
+datum, vertical datum mode, and sample-to-scene transform for distance and
+depth/time axes. Sample planes use their surface-grid footprint and fixed
+sample/elevation state; they do not fabricate a vertical depth axis when
+`min === max`. Ground attachment is reserved for terrain/source-location traces
+and survey geometry that truly lives on ground. Stable graph identity is
+`layerId + productId + objectKind + objectId`, not page id, page index, page
+title, or page order.
+
+**Why:** section graphs communicate product and datum coordinates, not mesh
+corner order. First-four-vertex logic breaks on trace-path curtains,
+trace-header tessellation, fixed-depth planes, and 3D inline/crossline slices.
+Page-derived identity causes disposable deck state to leak into app behavior
+and transition matching. Datum-based axes keep depth-domain products labelled
+as metres below the seismic datum with elevation side labels, while
+time-domain products keep TWT semantics.
+
+**Guard:** runtime meshes must carry `userData.seismicSectionGraphBasis`, and
+figure annotation roots/materials must carry stable seismic graph metadata and
+base opacity. Transition render graphs model seismic figure annotations as
+derived entities with their own representation key and opacity channels, so
+source-only graphs exit, target-only graphs enter when ready, and preserved
+graphs update without a full-opacity rebuild. Capture modes use the shared
+native-annotation gate: `scene-only` hides presentation/authoring seismic graph
+annotations by default, while `scene-annotations` and `presentation-ui` include
+them according to capture visibility profiles. Deterministic still/frame export
+must use the same native annotation semantics as realtime capture.
+
+## DEC-151 - Scene section faces derive from source geometry and runtime channels
+
+Extends DEC-147 and DEC-150 for Scene Section face display, helper geometry,
+and quick legend controls.
+
+**Considered:** continue authoring hard-coded X/Y/Z scene-section frames,
+repair individual Utah FORGE pages, or make the scene-section face reuse the
+active source graph basis when a targeted seismic product exposes one.
+
+**Chose:** Scene Section keeps X/Y/Z axis-aligned fallback behavior, but the
+active source-targeted face may resolve its frame and plane basis from
+`SeismicSectionGraphBasis`. Trace-path curtains derive trace-distance and
+elevation axes from the full path and sample domain. Sample planes derive
+horizontal face axes from their source surface grid. The quick legend Section
+Options popout owns runtime-only face display channels for seismic, volume,
+isobars, and MT scalar overlays so more than one source can be compared on the
+same face.
+
+**Why:** the Y-frame regression came from coupling a generic axis-aligned
+scene-section box to a separate seismic slice selection. Source-derived faces
+make the helper frame, clipping plane, and face content share the same product
+geometry. Runtime channels let authors compare overlays without baking
+temporary face display state into disposable page fixtures.
+
+**Guard:** do not fix section-face alignment by editing `projects/*/pages/**`,
+`projects/*/overlays/**`, `projects/*/project.json`, or
+`projects/*/environment.json`, and do not add page-id, page-title, page-index,
+or page-order conditionals. Face display channel toggles are runtime UI state;
+computed source frame coordinates must come from product/object basis metadata,
+not persisted page geometry.

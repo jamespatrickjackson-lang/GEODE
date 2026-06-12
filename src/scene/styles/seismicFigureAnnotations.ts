@@ -3,12 +3,22 @@ import {
   buildSeismicFigureAnnotationModel,
   type SeismicFigureSampleDomain,
 } from "../../geophysics/seismicFigureAnnotationModel";
+import type {
+  SeismicSectionGraphBasis,
+  TracePathCurtainGraphBasis,
+} from "../../geophysics/seismicSectionGraphBasis";
 import type { EditableStyle } from "../../pages/types";
 
 const FIGURE_RENDER_ORDER = 4688;
 
 type SectionSpecRecord = {
   sampleDomain?: Partial<SeismicFigureSampleDomain>;
+};
+
+type FigureGraphMetadata = {
+  entityKey: string;
+  representationKey: string;
+  basisKind: string;
 };
 
 function styleColor(
@@ -31,6 +41,72 @@ function styleNumber(
 
 function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));
+}
+
+function graphMetadataFromBasis(
+  basis: SeismicSectionGraphBasis,
+): FigureGraphMetadata {
+  return {
+    entityKey: `${basis.entityKey}:figure-annotation`,
+    representationKey: "seismic:figure-annotation",
+    basisKind: basis.kind,
+  };
+}
+
+function tagFigureObject(
+  object: THREE.Object3D,
+  metadata: FigureGraphMetadata,
+): void {
+  object.userData.seismicFigureAnnotation = true;
+  object.userData.seismicGraphEntityKey = metadata.entityKey;
+  object.userData.seismicGraphRepresentationKey = metadata.representationKey;
+  object.userData.seismicGraphBasisKind = metadata.basisKind;
+  object.userData.geoseePickIgnore = true;
+}
+
+function materialBaseOpacity(material: THREE.Material): number {
+  if (
+    material instanceof THREE.ShaderMaterial &&
+    typeof material.uniforms.uOpacity?.value === "number" &&
+    Number.isFinite(material.uniforms.uOpacity.value)
+  ) {
+    return clamp(material.uniforms.uOpacity.value, 0, 1);
+  }
+  return typeof material.opacity === "number" && Number.isFinite(material.opacity)
+    ? clamp(material.opacity, 0, 1)
+    : 1;
+}
+
+function tagFigureMaterial(
+  material: THREE.Material,
+  metadata: FigureGraphMetadata,
+): void {
+  const baseOpacity = materialBaseOpacity(material);
+  material.userData.forceTransparent = true;
+  material.userData.preserveMaterialOpacity = true;
+  material.userData.preserveMaterialOpacityBase = baseOpacity;
+  material.userData.seismicFigureAnnotation = true;
+  material.userData.seismicFigureBaseOpacity = baseOpacity;
+  material.userData.seismicGraphEntityKey = metadata.entityKey;
+  material.userData.seismicGraphRepresentationKey = metadata.representationKey;
+  material.userData.seismicGraphBasisKind = metadata.basisKind;
+}
+
+function tagFigureTree(
+  root: THREE.Object3D,
+  metadata: FigureGraphMetadata,
+): void {
+  root.traverse((object) => {
+    tagFigureObject(object, metadata);
+    const material = (
+      object as THREE.Object3D & {
+        material?: THREE.Material | THREE.Material[];
+      }
+    ).material;
+    if (!material) return;
+    const materials = Array.isArray(material) ? material : [material];
+    for (const item of materials) tagFigureMaterial(item, metadata);
+  });
 }
 
 function pointFromAttribute(
@@ -58,6 +134,9 @@ function disposeObjectTree(root: THREE.Object3D): void {
         map?: THREE.Texture | null;
       };
       mapped.map?.dispose();
+      const figureTexture = material.userData
+        .seismicFigureTextTexture as THREE.Texture | undefined;
+      figureTexture?.dispose();
       material.dispose();
     }
   });
@@ -193,6 +272,47 @@ function makeTextTexture(
   return texture;
 }
 
+function makeReadableTextMaterial(
+  texture: THREE.Texture,
+  color: string,
+): THREE.ShaderMaterial {
+  const material = new THREE.ShaderMaterial({
+    uniforms: {
+      uMap: { value: texture },
+      uColor: { value: new THREE.Color(color) },
+      uOpacity: { value: 0.96 },
+    },
+    vertexShader: `
+      varying vec2 vUv;
+
+      void main() {
+        vUv = uv;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `,
+    fragmentShader: `
+      uniform sampler2D uMap;
+      uniform vec3 uColor;
+      uniform float uOpacity;
+      varying vec2 vUv;
+
+      void main() {
+        vec2 readableUv = gl_FrontFacing ? vUv : vec2(1.0 - vUv.x, vUv.y);
+        vec4 textSample = texture2D(uMap, readableUv);
+        gl_FragColor = vec4(uColor * textSample.rgb, textSample.a * uOpacity);
+      }
+    `,
+    transparent: true,
+    depthTest: false,
+    depthWrite: false,
+    side: THREE.DoubleSide,
+  });
+  material.toneMapped = false;
+  material.userData.forceTransparent = true;
+  material.userData.seismicFigureTextTexture = texture;
+  return material;
+}
+
 function makeTextPlane(
   name: string,
   text: string,
@@ -205,29 +325,16 @@ function makeTextPlane(
     fontPx?: number;
     weight?: number;
   } = {},
-): THREE.Sprite {
+): THREE.Mesh {
   const texture = makeTextTexture(text, options);
-  const material = new THREE.SpriteMaterial({
-    color,
-    map: texture,
-    transparent: true,
-    opacity: 0.96,
-    depthTest: false,
-    depthWrite: false,
-  });
-  material.toneMapped = false;
-  material.userData.forceTransparent = true;
-  const sprite = new THREE.Sprite(material);
-  sprite.name = name;
-  sprite.position.copy(center);
-  sprite.scale.set(
-    Math.max(1, widthVec.length()),
-    Math.max(1, heightVec.length()),
-    1,
-  );
-  sprite.renderOrder = FIGURE_RENDER_ORDER + 2;
-  sprite.userData.seismicFigureAnnotation = true;
-  return sprite;
+  const geometry = makePlaneGeometry(center, widthVec, heightVec);
+  const material = makeReadableTextMaterial(texture, color);
+  const mesh = new THREE.Mesh(geometry, material);
+  mesh.name = name;
+  mesh.renderOrder = FIGURE_RENDER_ORDER + 2;
+  mesh.userData.seismicFigureAnnotation = true;
+  mesh.userData.seismicFigureTextPlane = true;
+  return mesh;
 }
 
 function makeBoxPlane(
@@ -257,6 +364,26 @@ function makeBoxPlane(
 }
 
 function sampleDomainFromMesh(mesh: THREE.Mesh): SeismicFigureSampleDomain | null {
+  const basis = mesh.userData
+    .seismicSectionGraphBasis as SeismicSectionGraphBasis | undefined;
+  if (basis?.sampleDomain) {
+    const sampleDomain = basis.sampleDomain;
+    if (
+      typeof sampleDomain.min === "number" &&
+      typeof sampleDomain.max === "number" &&
+      Number.isFinite(sampleDomain.min) &&
+      Number.isFinite(sampleDomain.max) &&
+      sampleDomain.max >= sampleDomain.min
+    ) {
+      return {
+        kind: sampleDomain.kind,
+        unit: sampleDomain.unit,
+        min: sampleDomain.min,
+        max: sampleDomain.max,
+        verticalScaleMPerUnit: sampleDomain.verticalScaleMPerUnit,
+      };
+    }
+  }
   const section = mesh.geometry.userData.seismicSection as
     | SectionSpecRecord
     | undefined;
@@ -266,7 +393,7 @@ function sampleDomainFromMesh(mesh: THREE.Mesh): SeismicFigureSampleDomain | nul
     typeof sampleDomain.max !== "number" ||
     !Number.isFinite(sampleDomain.min) ||
     !Number.isFinite(sampleDomain.max) ||
-    sampleDomain.max <= sampleDomain.min
+    sampleDomain.max < sampleDomain.min
   ) {
     return null;
   }
@@ -305,6 +432,162 @@ function normalizedSectionPoint(
   return top.lerp(bottom, t);
 }
 
+type AnnotationFrame = {
+  topLeft: THREE.Vector3;
+  topRight: THREE.Vector3;
+  bottomLeft: THREE.Vector3;
+  bottomRight: THREE.Vector3;
+  widthM: number;
+  heightM: number;
+  drawVerticalAxis: boolean;
+};
+
+function vecToThree(point: readonly [number, number, number]): THREE.Vector3 {
+  return new THREE.Vector3(point[0], point[1], point[2]);
+}
+
+function frameFromTraceBasis(
+  basis: TracePathCurtainGraphBasis,
+): AnnotationFrame | null {
+  const topLeftRaw = basis.topPolyline[0];
+  const topRightRaw = basis.topPolyline[basis.topPolyline.length - 1];
+  const bottomLeftRaw = basis.bottomPolyline[0];
+  const bottomRightRaw = basis.bottomPolyline[basis.bottomPolyline.length - 1];
+  if (!topLeftRaw || !topRightRaw || !bottomLeftRaw || !bottomRightRaw) {
+    return null;
+  }
+  const topLeft = vecToThree(topLeftRaw);
+  const topRight = vecToThree(topRightRaw);
+  const bottomLeft = vecToThree(bottomLeftRaw);
+  const bottomRight = vecToThree(bottomRightRaw);
+  return {
+    topLeft,
+    topRight,
+    bottomLeft,
+    bottomRight,
+    widthM: Math.max(basis.pathDistanceM, topLeft.distanceTo(topRight)),
+    heightM: topLeft.distanceTo(bottomLeft),
+    drawVerticalAxis: true,
+  };
+}
+
+function frameFromSamplePlaneBasis(
+  basis: SeismicSectionGraphBasis,
+): AnnotationFrame | null {
+  if (basis.kind !== "sample-plane") return null;
+  const points = basis.surfacePoints;
+  const sw = points[0];
+  const nw = points[1];
+  const ne = points[2];
+  const se = points[3];
+  if (!sw || !nw || !ne || !se) return null;
+  const topLeft = vecToThree(nw);
+  const topRight = vecToThree(ne);
+  const bottomLeft = vecToThree(sw);
+  const bottomRight = vecToThree(se);
+  return {
+    topLeft,
+    topRight,
+    bottomLeft,
+    bottomRight,
+    widthM: Math.max(
+      topLeft.distanceTo(topRight),
+      bottomLeft.distanceTo(bottomRight),
+    ),
+    heightM: Math.max(
+      topLeft.distanceTo(bottomLeft),
+      topRight.distanceTo(bottomRight),
+    ),
+    drawVerticalAxis: false,
+  };
+}
+
+function legacyFrameFromGeometry(mesh: THREE.Mesh): AnnotationFrame | null {
+  const position = mesh.geometry.getAttribute("position");
+  if (!(position instanceof THREE.BufferAttribute) || position.count < 4) {
+    return null;
+  }
+  const legacyCorners = [0, 1, 2, 3].map((index) =>
+    pointFromAttribute(position, index),
+  );
+  return {
+    topLeft: legacyCorners[0],
+    topRight: legacyCorners[1],
+    bottomLeft: legacyCorners[2],
+    bottomRight: legacyCorners[3],
+    widthM: legacyCorners[0].distanceTo(legacyCorners[1]),
+    heightM: legacyCorners[0].distanceTo(legacyCorners[2]),
+    drawVerticalAxis: true,
+  };
+}
+
+function frameFromBasisOrGeometry(mesh: THREE.Mesh): AnnotationFrame | null {
+  const basis = mesh.userData
+    .seismicSectionGraphBasis as SeismicSectionGraphBasis | undefined;
+  if (basis?.kind === "trace-path-curtain" || basis?.kind === "legacy-rectangular") {
+    return frameFromTraceBasis(basis);
+  }
+  if (basis?.kind === "sample-plane") {
+    return frameFromSamplePlaneBasis(basis);
+  }
+  return legacyFrameFromGeometry(mesh);
+}
+
+function pointOnTracePathCurtain(
+  basis: TracePathCurtainGraphBasis,
+  u: number,
+  t: number,
+): THREE.Vector3 | null {
+  if (basis.topPolyline.length === 0 || basis.bottomPolyline.length === 0) {
+    return null;
+  }
+  const distance = clamp(u, 0, 1) * Math.max(0, basis.pathDistanceM);
+  const distances = basis.pathDistancesM;
+  let segmentIndex = 0;
+  while (
+    segmentIndex < distances.length - 2 &&
+    distances[segmentIndex + 1] < distance
+  ) {
+    segmentIndex += 1;
+  }
+  const startDistance = distances[segmentIndex] ?? 0;
+  const endDistance = distances[segmentIndex + 1] ?? startDistance;
+  const segmentT =
+    endDistance > startDistance
+      ? (distance - startDistance) / (endDistance - startDistance)
+      : 0;
+  const topStart = basis.topPolyline[segmentIndex];
+  const topEnd = basis.topPolyline[segmentIndex + 1] ?? topStart;
+  const bottomStart = basis.bottomPolyline[segmentIndex];
+  const bottomEnd = basis.bottomPolyline[segmentIndex + 1] ?? bottomStart;
+  if (!topStart || !topEnd || !bottomStart || !bottomEnd) return null;
+  const top = vecToThree(topStart).lerp(vecToThree(topEnd), segmentT);
+  const bottom = vecToThree(bottomStart).lerp(vecToThree(bottomEnd), segmentT);
+  return top.lerp(bottom, clamp(t, 0, 1));
+}
+
+function normalizedBasisPoint(
+  mesh: THREE.Mesh,
+  frame: AnnotationFrame,
+  u: number,
+  t: number,
+): THREE.Vector3 {
+  const basis = mesh.userData
+    .seismicSectionGraphBasis as SeismicSectionGraphBasis | undefined;
+  if (basis?.kind === "trace-path-curtain" || basis?.kind === "legacy-rectangular") {
+    const point = pointOnTracePathCurtain(basis, u, t);
+    if (point) return point;
+  }
+  return normalizedSectionPoint(
+    frame.topLeft,
+    frame.topRight,
+    frame.bottomLeft,
+    frame.bottomRight,
+    u,
+    t,
+  );
+}
+
 function vectorBetween(a: THREE.Vector3, b: THREE.Vector3): THREE.Vector3 {
   return b.clone().sub(a);
 }
@@ -321,29 +604,25 @@ export function updateSeismicFigureAnnotations(
     disposeSeismicFigureAnnotations(mesh);
     return;
   }
-  const position = mesh.geometry.getAttribute("position");
-  if (!(position instanceof THREE.BufferAttribute) || position.count < 4) {
-    disposeSeismicFigureAnnotations(mesh);
-    return;
-  }
+  const frame = frameFromBasisOrGeometry(mesh);
   const sampleDomain = sampleDomainFromMesh(mesh);
-  if (!sampleDomain) {
+  if (!frame || !sampleDomain) {
     disposeSeismicFigureAnnotations(mesh);
     return;
   }
 
   disposeSeismicFigureAnnotations(mesh);
 
-  const topLeft = pointFromAttribute(position, 0);
-  const topRight = pointFromAttribute(position, 1);
-  const bottomLeft = pointFromAttribute(position, 2);
-  const bottomRight = pointFromAttribute(position, 3);
+  const topLeft = frame.topLeft;
+  const topRight = frame.topRight;
+  const bottomLeft = frame.bottomLeft;
+  const bottomRight = frame.bottomRight;
   const across = vectorBetween(topLeft, topRight).normalize();
   const down = vectorBetween(topLeft, bottomLeft).normalize();
   if (across.lengthSq() < 1e-6 || down.lengthSq() < 1e-6) return;
   const normal = new THREE.Vector3().crossVectors(across, down).normalize();
-  const widthM = topLeft.distanceTo(topRight);
-  const heightM = topLeft.distanceTo(bottomLeft);
+  const widthM = frame.widthM;
+  const heightM = frame.heightM;
   const offsetM = clamp(
     styleNumber(style, "seismicFigureOutsideOffsetM", Math.max(160, widthM * 0.06)),
     40,
@@ -371,6 +650,8 @@ export function updateSeismicFigureAnnotations(
   const navigation = mesh.userData.seismicNavigationPlacement as
     | { statusLabel?: unknown; reason?: unknown }
     | undefined;
+  const basis = mesh.userData
+    .seismicSectionGraphBasis as SeismicSectionGraphBasis | undefined;
   const model = buildSeismicFigureAnnotationModel({
     productLabel:
       typeof mesh.userData.seismicProductLabel === "string"
@@ -385,8 +666,13 @@ export function updateSeismicFigureAnnotations(
         ? mesh.userData.seismicProductSourceSubmission
         : undefined,
     sampleDomain,
+    datumM: basis?.datumM,
     sectionStart: [topLeft.x, topLeft.y, topLeft.z],
     sectionEnd: [topRight.x, topRight.y, topRight.z],
+    sectionLengthMOverride:
+      basis?.kind === "trace-path-curtain" || basis?.kind === "legacy-rectangular"
+        ? basis.pathDistanceM
+        : widthM,
     navigationStatus:
       typeof navigation?.statusLabel === "string"
         ? navigation.statusLabel
@@ -412,6 +698,16 @@ export function updateSeismicFigureAnnotations(
   root.name = `${mesh.name} figure annotations`;
   root.renderOrder = FIGURE_RENDER_ORDER;
   root.userData.seismicFigureAnnotationRoot = true;
+  const graphMetadata = basis
+    ? graphMetadataFromBasis(basis)
+    : {
+        entityKey: `mesh:${mesh.uuid}:figure-annotation`,
+        representationKey: "seismic:figure-annotation",
+        basisKind: "legacy-geometry",
+      };
+  root.userData.seismicGraphEntityKey = graphMetadata.entityKey;
+  root.userData.seismicGraphRepresentationKey = graphMetadata.representationKey;
+  root.userData.seismicGraphBasisKind = graphMetadata.basisKind;
 
   const leftOffset = across.clone().multiplyScalar(-offsetM);
   const rightOffset = across.clone().multiplyScalar(offsetM);
@@ -482,91 +778,93 @@ export function updateSeismicFigureAnnotations(
     ),
   );
 
-  const leftAxisTop = topLeft.clone().add(leftOffset);
-  const leftAxisBottom = bottomLeft.clone().add(leftOffset);
-  const rightAxisTop = topRight.clone().add(rightOffset);
-  const rightAxisBottom = bottomRight.clone().add(rightOffset);
-  root.add(
-    makeLine("seismic figure left axis", [
-      addNormalLift(leftAxisTop, normalLift),
-      addNormalLift(leftAxisBottom, normalLift),
-    ], axisColor),
-  );
-  root.add(
-    makeLine("seismic figure right axis", [
-      addNormalLift(rightAxisTop, normalLift),
-      addNormalLift(rightAxisBottom, normalLift),
-    ], axisColor),
-  );
-  for (const tick of model.axis.ticks) {
-    const leftTick = leftAxisTop.clone().lerp(leftAxisBottom, tick.t);
-    const rightTick = rightAxisTop.clone().lerp(rightAxisBottom, tick.t);
-    const leftOut = across.clone().multiplyScalar(-labelSizeM * 0.32);
-    const rightOut = across.clone().multiplyScalar(labelSizeM * 0.32);
+  if (frame.drawVerticalAxis) {
+    const leftAxisTop = topLeft.clone().add(leftOffset);
+    const leftAxisBottom = bottomLeft.clone().add(leftOffset);
+    const rightAxisTop = topRight.clone().add(rightOffset);
+    const rightAxisBottom = bottomRight.clone().add(rightOffset);
     root.add(
-      makeLine("seismic figure left axis tick", [
-        addNormalLift(leftTick, normalLift),
-        addNormalLift(leftTick.clone().add(leftOut), normalLift),
+      makeLine("seismic figure left axis", [
+        addNormalLift(leftAxisTop, normalLift),
+        addNormalLift(leftAxisBottom, normalLift),
       ], axisColor),
     );
     root.add(
-      makeLine("seismic figure right axis tick", [
-        addNormalLift(rightTick, normalLift),
-        addNormalLift(rightTick.clone().add(rightOut), normalLift),
+      makeLine("seismic figure right axis", [
+        addNormalLift(rightAxisTop, normalLift),
+        addNormalLift(rightAxisBottom, normalLift),
       ], axisColor),
     );
+    for (const tick of model.axis.ticks) {
+      const leftTick = leftAxisTop.clone().lerp(leftAxisBottom, tick.t);
+      const rightTick = rightAxisTop.clone().lerp(rightAxisBottom, tick.t);
+      const leftOut = across.clone().multiplyScalar(-labelSizeM * 0.32);
+      const rightOut = across.clone().multiplyScalar(labelSizeM * 0.32);
+      root.add(
+        makeLine("seismic figure left axis tick", [
+          addNormalLift(leftTick, normalLift),
+          addNormalLift(leftTick.clone().add(leftOut), normalLift),
+        ], axisColor),
+      );
+      root.add(
+        makeLine("seismic figure right axis tick", [
+          addNormalLift(rightTick, normalLift),
+          addNormalLift(rightTick.clone().add(rightOut), normalLift),
+        ], axisColor),
+      );
+      root.add(
+        makeTextPlane(
+          "seismic figure left tick label",
+          tick.label,
+          addNormalLift(leftTick.clone().add(leftOut.multiplyScalar(2.15)), normalLift),
+          across.clone().multiplyScalar(labelSizeM * 1.55),
+          horizontalTextHeight.clone().multiplyScalar(0.78),
+          textColor,
+          { fontPx: 42, weight: 700 },
+        ),
+      );
+      root.add(
+        makeTextPlane(
+          "seismic figure right tick label",
+          tick.secondaryLabel ?? tick.label,
+          addNormalLift(rightTick.clone().add(rightOut.multiplyScalar(2.15)), normalLift),
+          across.clone().multiplyScalar(labelSizeM * 2.45),
+          horizontalTextHeight.clone().multiplyScalar(0.78),
+          textColor,
+          { fontPx: 38, weight: 700 },
+        ),
+      );
+    }
+    const axisHeadingWidth = down.clone().multiplyScalar(heightM * 0.44);
+    const axisHeadingHeight = across.clone().multiplyScalar(labelSizeM * 0.88);
     root.add(
       makeTextPlane(
-        "seismic figure left tick label",
-        tick.label,
-        addNormalLift(leftTick.clone().add(leftOut.multiplyScalar(2.15)), normalLift),
-        across.clone().multiplyScalar(labelSizeM * 1.55),
-        horizontalTextHeight.clone().multiplyScalar(0.78),
+        "seismic figure left axis heading",
+        model.axis.heading,
+        addNormalLift(leftAxisTop.clone().lerp(leftAxisBottom, 0.5).add(leftOffset.clone().multiplyScalar(1.2)), normalLift),
+        axisHeadingWidth,
+        axisHeadingHeight,
         textColor,
-        { fontPx: 42, weight: 700 },
+        { fontPx: 44, weight: 800 },
       ),
     );
     root.add(
       makeTextPlane(
-        "seismic figure right tick label",
-        tick.label,
-        addNormalLift(rightTick.clone().add(rightOut.multiplyScalar(2.15)), normalLift),
-        across.clone().multiplyScalar(labelSizeM * 1.55),
-        horizontalTextHeight.clone().multiplyScalar(0.78),
+        "seismic figure right axis heading",
+        model.axis.sideHeading ?? model.axis.heading,
+        addNormalLift(rightAxisTop.clone().lerp(rightAxisBottom, 0.5).add(rightOffset.clone().multiplyScalar(1.2)), normalLift),
+        axisHeadingWidth,
+        axisHeadingHeight,
         textColor,
-        { fontPx: 42, weight: 700 },
+        { fontPx: 44, weight: 800 },
       ),
     );
   }
-  const axisHeadingWidth = down.clone().multiplyScalar(heightM * 0.44);
-  const axisHeadingHeight = across.clone().multiplyScalar(labelSizeM * 0.88);
-  root.add(
-    makeTextPlane(
-      "seismic figure left axis heading",
-      model.axis.heading,
-      addNormalLift(leftAxisTop.clone().lerp(leftAxisBottom, 0.5).add(leftOffset.clone().multiplyScalar(1.2)), normalLift),
-      axisHeadingWidth,
-      axisHeadingHeight,
-      textColor,
-      { fontPx: 44, weight: 800 },
-    ),
-  );
-  root.add(
-    makeTextPlane(
-      "seismic figure right axis heading",
-      model.axis.heading,
-      addNormalLift(rightAxisTop.clone().lerp(rightAxisBottom, 0.5).add(rightOffset.clone().multiplyScalar(1.2)), normalLift),
-      axisHeadingWidth,
-      axisHeadingHeight,
-      textColor,
-      { fontPx: 44, weight: 800 },
-    ),
-  );
 
   if (model.horizonPolyline.length >= 2) {
     const points = model.horizonPolyline.map(([u, t]) =>
       addNormalLift(
-        normalizedSectionPoint(topLeft, topRight, bottomLeft, bottomRight, u, t),
+        normalizedBasisPoint(mesh, frame, u, t),
         normalLift.clone().multiplyScalar(1.4),
       ),
     );
@@ -574,22 +872,8 @@ export function updateSeismicFigureAnnotations(
   }
   if (model.wellTrace) {
     const u = model.wellTrace.t;
-    const traceTop = normalizedSectionPoint(
-      topLeft,
-      topRight,
-      bottomLeft,
-      bottomRight,
-      u,
-      0,
-    );
-    const traceBottom = normalizedSectionPoint(
-      topLeft,
-      topRight,
-      bottomLeft,
-      bottomRight,
-      u,
-      1,
-    );
+    const traceTop = normalizedBasisPoint(mesh, frame, u, 0);
+    const traceBottom = normalizedBasisPoint(mesh, frame, u, 1);
     root.add(
       makeLine("seismic figure well trace", [
         addNormalLift(traceTop, normalLift.clone().multiplyScalar(1.6)),
@@ -640,6 +924,7 @@ export function updateSeismicFigureAnnotations(
     );
   }
 
+  tagFigureTree(root, graphMetadata);
   mesh.add(root);
   mesh.userData.seismicFigureAnnotationRoot = root;
 }

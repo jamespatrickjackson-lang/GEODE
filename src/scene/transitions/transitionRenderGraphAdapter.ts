@@ -23,6 +23,7 @@ interface TransitionRenderGraphChannelInputs {
   colorChannels?: TransitionGraphChannelRecord;
   spatialChannels?: TransitionGraphChannelRecord;
   categoricalChannels?: TransitionGraphChannelRecord;
+  crossfadeChannels?: TransitionGraphChannelRecord;
   unknownChannels?: TransitionGraphChannelRecord;
   channels?: readonly TransitionChannel[];
   metadata?: Readonly<Record<string, unknown>>;
@@ -172,6 +173,13 @@ function stateChannels(
       state.categoricalChannels,
       "discrete-categorical",
       "discrete-commit",
+      state.channelOwnerKey,
+      state.channelOwnerPriority,
+    ),
+    ...channelsFromRecord(
+      state.crossfadeChannels,
+      "representation",
+      "crossfade",
       state.channelOwnerKey,
       state.channelOwnerPriority,
     ),

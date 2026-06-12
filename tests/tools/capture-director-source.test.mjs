@@ -1422,7 +1422,7 @@ test("scene target picking ignores visual labels during focus binding", () => {
     "data.sceneSectionScaleLabel === true",
     "data.naipTileDiagnosticLabel === true",
     "typeof data.captureCameraPathEquationLabel === \"string\"",
-    "data.seismicFigureAnnotation === true && node instanceof THREE.Sprite",
+    "data.seismicFigureAnnotation === true",
   ]) {
     assert.ok(
       sceneSource.includes(expected),
@@ -1434,6 +1434,44 @@ test("scene target picking ignores visual labels during focus binding", () => {
     /const sceneTarget = pickSceneTarget\(clientX, clientY\);[\s\S]*pickMapPoint\(clientX, clientY\)/,
     "focus binding should still fall back to terrain/world picking after labels are ignored",
   );
+});
+
+test("capture modes gate native seismic graph annotations through the scene handle", () => {
+  const sceneSource = readSource("src", "scene.ts");
+  const providerSource = readSource(
+    "src",
+    "capture",
+    "CaptureDirectorProvider.tsx",
+  );
+  const stillSource = readSource(
+    "src",
+    "capture",
+    "deterministicStillExporter.ts",
+  );
+  const frameSource = readSource(
+    "src",
+    "capture",
+    "deterministicFrameSequenceExporter.ts",
+  );
+
+  assert.match(sceneSource, /setCaptureNativeAnnotationsVisible/);
+  assert.match(sceneSource, /captureNativeAnnotationBaseVisible/);
+  assert.match(sceneSource, /seismicFigureAnnotationRoot|seismicFigureAnnotation/);
+  assert.match(providerSource, /captureVisibilityProfileForMode/);
+  assert.match(
+    providerSource,
+    /setCaptureNativeAnnotationsVisible\(\s*captureVisibilityProfileForMode\(captureMode\)\.captureNativeAnnotations\s*\)/,
+    "realtime capture mode should drive native annotation visibility from capture profiles",
+  );
+  for (const source of [stillSource, frameSource]) {
+    assert.match(source, /captureVisibilityProfileForMode/);
+    assert.match(source, /setCaptureNativeAnnotationsVisible/);
+    assert.match(
+      source,
+      /captureVisibilityProfileForMode\(recipe\.mode\)\.captureNativeAnnotations/,
+      "deterministic exporters should share profile semantics with realtime capture",
+    );
+  }
 });
 
 test("deterministic frame-sequence exporter owns fixed-timestep browser frames", () => {

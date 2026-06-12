@@ -946,7 +946,7 @@ export function SceneSectionPlanesContainer({
           />
         </label>
         {products.length > 0 ? (
-          <details open style={nestedDetailsStyle}>
+          <details style={nestedDetailsStyle}>
             <summary style={panelStyles.summary}>Target seismic products</summary>
             <div style={detailsContentStyle}>
               {products.map((product) => (

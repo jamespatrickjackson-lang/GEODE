@@ -149,8 +149,11 @@ tessellate the stored `path` or `surfaceGrid`; do not collapse them to
 first/last endpoints. L5/L11 legacy sections now use plausible transformed
 trace-header paths when available, but they remain unvalidated for precise
 registration. `Forge3d_ANI_PSDM_Stack_Enh.segy` is a visible source gate only
-until a complete CRC-valid source member exists; do not substitute the
-unenhanced product and do not construct direct GDR download URLs.
+until a complete CRC-valid source member exists; do not render it or construct
+direct GDR download URLs. DEC-148 allows only the explicitly labeled
+`psdm-depth-surrogate-showcase`, which renders the unenhanced ANI PSDM source
+as a source-derived presentation-enhanced surrogate without claiming the
+enhanced SEG-Y is held.
 
 Site Details and `GDR 1255 Station Locations` can align their display Z to the
 rendered topo surface. The alignment is display-only: source coordinates,
@@ -227,6 +230,17 @@ below the seismic datum. The figure annotation layer is a visual communication
 overlay and does not validate seismic CRS, datum, or interpretation accuracy.
 Reference figures are layout examples only; never hard-code external example
 line numbers, well labels, scale labels, or captions into app output.
+
+Seismic figure graphs now use an explicit data/datum graph basis per DEC-150.
+Path-curtain graphs measure full trace-path distance and sample depth/time
+against the seismic datum; sample-plane graphs use their surface-grid footprint
+and fixed sample/elevation state without inventing a vertical depth axis. Stable
+graph identity is `layerId + productId + objectKind + objectId`. Do not derive
+graph identity from page ids, page titles, page order, or first-four mesh
+vertices. Transition graph handling treats figure annotations as derived
+entities with their own opacity/base-opacity composition, and capture modes
+gate native seismic graph annotations through the shared capture visibility
+profile.
 
 ## Focused Routing
 

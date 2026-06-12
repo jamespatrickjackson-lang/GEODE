@@ -64,7 +64,7 @@ test("editor control manifest policy and guard are installed", () => {
     "page.render-preset",
     "layer.fog.use",
     "editor.chrome.panel-width",
-    "mt.threshold.surface-boundaries",
+    "mt.threshold.iso-resistivity-surfaces",
     "seismic.display.palette",
   ]) {
     assert.ok(

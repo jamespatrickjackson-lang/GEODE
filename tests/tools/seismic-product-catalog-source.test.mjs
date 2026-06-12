@@ -33,6 +33,17 @@ const seismicInventoryPath = [
   "seismic_source_inventory.json",
 ];
 
+const seismicDemoRecipesPath = [
+  "projects",
+  "utah-forge",
+  "data",
+  "geosee_processed",
+  "utah_forge_phase_3",
+  "seismic_analysis",
+  "browser",
+  "seismic_demo_recipes.json",
+];
+
 const requiredLineProductIds = {
   "301": [
     "gdr-1015-forge2d-301-migr-depth",
@@ -287,6 +298,298 @@ test("GDR 1141 enhanced ANI PSDM 3D stack is audited as source-gated", () => {
   }
 });
 
+test("approved PSDM surrogate recipe renders only the unenhanced depth source", () => {
+  const project = readJson("projects", "utah-forge", "project.json");
+  const recipes = readJson(...seismicDemoRecipesPath);
+  const environment = readJson("projects", "utah-forge", "environment.json");
+  const seismicModelSource = readText(
+    "src",
+    "editor",
+    "layerControls",
+    "seismic",
+    "seismicModel.ts",
+  );
+  const sourceRegistrationSource = readText(
+    "src",
+    "editor",
+    "layerControls",
+    "seismic",
+    "SeismicSourceAndRegistrationControls.tsx",
+  );
+  const seismicLayer = project.layers.find(
+    (layer) => layer.id === "utah-forge-phase3-seismic-browser",
+  );
+  const recipeId = "psdm-depth-surrogate-showcase";
+  const unenhancedProductId = "gdr-1141-forge3d-ani-psdm-stack-unenh";
+  const enhancedProductId = "gdr-1141-forge3d-ani-psdm-stack-enh";
+  const timeProductIds = [
+    "gdr-1141-forge3d-pstm-stack-enh",
+    "gdr-1141-forge3d-poststack-time-migration-fxydecon-stack",
+  ];
+  const expectedLabel =
+    "Presentation-enhanced PSDM surrogate - GDR 1141, unenhanced source";
+
+  const artifactPreset = recipes.capabilityPresets.find(
+    (preset) => preset.id === recipeId,
+  );
+  const projectPreset = seismicLayer?.metadata?.seismicCapabilityPresets?.find(
+    (preset) => preset.id === recipeId,
+  );
+  for (const [source, preset] of [
+    ["artifact", artifactPreset],
+    ["project", projectPreset],
+  ]) {
+    assert.ok(preset, `${source} surrogate preset`);
+    assert.equal(preset.label, expectedLabel, `${source} label`);
+    assert.equal(preset.provenanceClassification, "source-derived", `${source} provenance`);
+    assert.match(preset.provenanceNote, /Presentation-enhanced PSDM surrogate/);
+    assert.match(preset.provenanceNote, /unenhanced anisotropic PSDM depth volume/);
+    assert.match(preset.provenanceNote, /no enhanced SEG-Y is held/i);
+    assert.equal(preset.productId, unenhancedProductId, `${source} product`);
+    assert.deepEqual(
+      preset.visibleProductIds,
+      [unenhancedProductId],
+      `${source} visible products`,
+    );
+    assert.equal(preset.renderMode, "raymarch", `${source} render mode`);
+    assert.equal(preset.sliceAxis, "crossline", `${source} slice axis`);
+    assert.equal(preset.sliceFraction, 0.52, `${source} slice fraction`);
+    assert.equal(preset.sliceThroughVolume, true, `${source} slice-through-volume`);
+    assert.equal(preset.colormap, "blue-white-red", `${source} colormap`);
+    assert.equal(preset.volumeSampleSteps, 112, `${source} ray steps`);
+    assert.equal(preset.mtCoRender, "integrated", `${source} MT co-render`);
+    assert.equal(
+      preset.visibleProductIds.includes(enhancedProductId),
+      false,
+      `${source} must not render the source-gated enhanced PSDM`,
+    );
+    for (const productId of timeProductIds) {
+      assert.equal(
+        preset.visibleProductIds.includes(productId),
+        false,
+        `${source} surrogate must hide ${productId}`,
+      );
+    }
+  }
+
+  const allRecipePresets = [
+    ...(recipes.audiencePresets ?? []),
+    ...(recipes.capabilityPresets ?? []),
+  ];
+  for (const preset of allRecipePresets) {
+    assert.notEqual(
+      preset.productId,
+      enhancedProductId,
+      `${preset.id} must not select the source-gated enhanced PSDM`,
+    );
+    assert.equal(
+      (preset.visibleProductIds ?? []).includes(enhancedProductId),
+      false,
+      `${preset.id} must not show the source-gated enhanced PSDM`,
+    );
+  }
+
+  const seismicStyle =
+    environment.layerStyles?.["utah-forge-phase3-seismic-browser"] ?? {};
+  assert.equal(seismicStyle.seismicAudiencePresetId, recipeId);
+  assert.equal(seismicStyle.seismicCapabilityPresetId, recipeId);
+  assert.equal(seismicStyle.seismicProductId, unenhancedProductId);
+  assert.equal(
+    seismicStyle.seismicProductVisibility?.[unenhancedProductId],
+    true,
+    "global demo default should show the unenhanced PSDM surrogate",
+  );
+  assert.equal(
+    seismicStyle.seismicProductVisibility?.[enhancedProductId],
+    undefined,
+    "global demo default should not include the source-gated enhanced PSDM",
+  );
+  for (const productId of timeProductIds) {
+    assert.equal(
+      seismicStyle.seismicProductVisibility?.[productId],
+      false,
+      `global demo default should hide ${productId}`,
+    );
+  }
+  assert.match(
+    seismicModelSource,
+    /provenanceClassification/,
+    "seismic preset parser should preserve provenance classification",
+  );
+  assert.match(
+    seismicModelSource,
+    /provenanceNote/,
+    "seismic preset parser should preserve provenance note",
+  );
+  assert.match(
+    sourceRegistrationSource,
+    /activePreset\?\.label/,
+    "source registration UI should show the active preset label",
+  );
+  assert.match(
+    sourceRegistrationSource,
+    /activePreset\?\.provenanceNote/,
+    "source registration UI should show the active preset provenance note",
+  );
+});
+
+test("PSDM MT 58-32 source-location tie preset stays claim-safe", () => {
+  const project = readJson("projects", "utah-forge", "project.json");
+  const recipes = readJson(...seismicDemoRecipesPath);
+  const pageId = "61_psdm_mt_58_32_source_location_tie";
+  const pagePath = join("projects", "utah-forge", "pages", `${pageId}.json`);
+  const overlayPath = join(
+    "projects",
+    "utah-forge",
+    "overlays",
+    pageId,
+    "text.md",
+  );
+  const page = readJson(pagePath);
+  const overlay = readFileSync(overlayPath, "utf8");
+  const seismicLayer = project.layers.find(
+    (layer) => layer.id === "utah-forge-phase3-seismic-browser",
+  );
+  const recipeId = "psdm-mt-58-32-source-location-tie";
+  const unenhancedProductId = "gdr-1141-forge3d-ani-psdm-stack-unenh";
+  const enhancedProductId = "gdr-1141-forge3d-ani-psdm-stack-enh";
+  const timeProductIds = [
+    "gdr-1141-forge3d-pstm-stack-enh",
+    "gdr-1141-forge3d-poststack-time-migration-fxydecon-stack",
+  ];
+  const expectedLabel = "PSDM + MT + 58-32 source-location tie";
+
+  assert.equal(
+    project.pageOrder.indexOf(pageId),
+    4,
+    "project should place the tie review page at actual page 5",
+  );
+  assert.equal(page.id, pageId);
+  assert.match(page.title, /PSDM \+ MT \+ 58-32 Source-Location Tie/);
+  assert.match(overlay, /depth-only PSDM/i);
+  assert.match(overlay, /inline review near IL-93/i);
+  assert.match(overlay, /0-2600 m/i);
+  assert.match(overlay, /25 m CMP bin/i);
+  assert.match(overlay, /NAD83 UTM Zone 12N \(EPSG:26912\)/i);
+  assert.match(overlay, /1800 m datum/i);
+  assert.match(overlay, /GDR 1255/i);
+  assert.match(overlay, /Legacy lines L5\/L11 stay excluded/i);
+  assert.match(overlay, /68-32 anchor is not asserted/i);
+  assert.match(overlay, /source-location marker only/i);
+  assert.match(overlay, /no 58-32 trajectory/i);
+  assert.match(overlay, /no well-tie calibration geometry/i);
+
+  const artifactPresets = [
+    recipes.audiencePresets.find((preset) => preset.id === recipeId),
+    recipes.capabilityPresets.find((preset) => preset.id === recipeId),
+  ];
+  const projectPresets = [
+    seismicLayer?.metadata?.seismicAudiencePresets?.find(
+      (preset) => preset.id === recipeId,
+    ),
+    seismicLayer?.metadata?.seismicCapabilityPresets?.find(
+      (preset) => preset.id === recipeId,
+    ),
+  ];
+
+  for (const preset of [...artifactPresets, ...projectPresets]) {
+    assert.ok(preset, "tie preset should be present in generated and project metadata");
+    assert.equal(preset.label, expectedLabel);
+    assert.equal(preset.productId, unenhancedProductId);
+    assert.deepEqual(preset.visibleProductIds, [unenhancedProductId]);
+    assert.equal(preset.provenanceClassification, "source-derived");
+    assert.match(preset.provenanceNote, /source-location-only/i);
+    assert.match(preset.provenanceNote, /no 58-32 trajectory/i);
+    assert.match(preset.provenanceNote, /no enhanced SEG-Y is held/i);
+    assert.equal(preset.mtCoRender, "integrated");
+    assert.equal(preset.renderMode, "raymarch");
+    assert.equal(preset.sliceAxis, "inline");
+    assert.equal(preset.sliceFraction, 0.544);
+    assert.equal(preset.sliceThroughVolume, true);
+    assert.equal(preset.visibleProductIds.includes(enhancedProductId), false);
+    for (const productId of timeProductIds) {
+      assert.equal(
+        preset.visibleProductIds.includes(productId),
+        false,
+        `${preset.id} should keep time-domain products hidden`,
+      );
+    }
+  }
+
+  const seismicStyle =
+    page.layerOverrides?.["utah-forge-phase3-seismic-browser"] ?? {};
+  assert.equal(seismicStyle.seismicCapabilityPresetId, recipeId);
+  assert.equal(seismicStyle.seismicProductId, unenhancedProductId);
+  assert.equal(seismicStyle.seismicRenderMode, "raymarch");
+  assert.equal(seismicStyle.seismicSliceAxis, "inline");
+  assert.equal(seismicStyle.seismicSliceFraction, 0.544);
+  assert.equal(seismicStyle.seismicVerticalDatumMode, "reference-1800m");
+  assert.equal(seismicStyle.seismicColormap, "blue-white-red");
+  assert.equal(seismicStyle.seismicVolumeSampleSteps, 112);
+  assert.equal(seismicStyle.seismicSliceThroughVolume, true);
+  assert.equal(seismicStyle.seismicMtCoRender, "integrated");
+  assert.equal(seismicStyle.seismicProductVisibility?.[unenhancedProductId], true);
+  assert.equal(seismicStyle.seismicProductVisibility?.[enhancedProductId], undefined);
+  for (const productId of timeProductIds) {
+    assert.equal(
+      seismicStyle.seismicProductVisibility?.[productId],
+      false,
+      `tie page should hide ${productId}`,
+    );
+  }
+
+  const boreholeStyle =
+    page.layerOverrides?.["utah-forge-phase3-demo-boreholes"] ?? {};
+  assert.equal(
+    boreholeStyle.demoBoreholeWells?.["16A(78)-32"]?.visible,
+    true,
+    "tie page should show source-derived 16A trajectory context",
+  );
+  assert.equal(
+    boreholeStyle.demoBoreholeWells?.["16B(78)-32"]?.visible,
+    true,
+    "tie page should show source-derived 16B trajectory context",
+  );
+  assert.equal(
+    boreholeStyle.demoBoreholeSourceLocations?.items?.["58-32-WELL"]?.visible,
+    true,
+    "tie page should show the 58-32 source-location marker",
+  );
+  assert.equal(
+    boreholeStyle.demoBoreholeWells?.["58-32-WELL"]?.visible,
+    undefined,
+    "tie page should not imply a 58-32 trajectory layer",
+  );
+
+  assert.equal(page.visibilityOverrides?.terrain, true, "tie page should show topo context");
+  assert.equal(
+    page.visibilityOverrides?.["utah-forge-mt-resistivity-full-density"],
+    true,
+    "tie page should show MT resistivity context",
+  );
+  assert.equal(
+    page.visibilityOverrides?.["utah-forge-mt-resistivity-threshold-surfaces"],
+    true,
+    "tie page should show MT threshold context",
+  );
+
+  const sceneSectionStyle =
+    page.layerOverrides?.["utah-forge-scene-section-planes"] ?? {};
+  assert.equal(sceneSectionStyle.sceneSectionWindowEnabled, true);
+  assert.equal(sceneSectionStyle.sceneSectionWindowActiveAxis, "y");
+  assert.ok(
+    sceneSectionStyle.sceneSectionWindowByAxis?.y,
+    "tie page should use the shared scene-section y window",
+  );
+  assert.ok(
+    sceneSectionStyle.sceneSectionFrameByAxis?.y,
+    "tie page should use the shared scene-section y frame",
+  );
+  assert.deepEqual(sceneSectionStyle.sceneSectionTargetProductIds, [
+    unenhancedProductId,
+  ]);
+});
+
 test("seismic prep recovers required zip-contained GDR 1141 source members", () => {
   const prepSource = readText("prep", "build_utah_forge_seismic_browser.py");
   assert.match(
@@ -302,47 +605,66 @@ test("seismic prep recovers required zip-contained GDR 1141 source members", () 
 });
 
 test("seismic editor exposes first-class all-2D section controls", () => {
-  const controlsSource = readText(
+  const containerSource = readText(
     "src",
     "editor",
     "layerControls",
     "seismic",
     "SeismicCapabilityLayerContainers.tsx",
   );
-  assert.match(
-    controlsSource,
-    /seismic-capability-all-2d-sections/,
-    "editor should expose a direct all-2D section visibility command",
+  const graphControlsSource = readText(
+    "src",
+    "editor",
+    "layerControls",
+    "seismic",
+    "SectionGraphOptionsControls.tsx",
+  );
+  const seismicModelSource = readText(
+    "src",
+    "editor",
+    "layerControls",
+    "seismic",
+    "seismicModel.ts",
   );
   assert.match(
-    controlsSource,
-    /seismic-capability-hide-2d-sections/,
-    "editor should expose a direct 2D section hide command",
+    graphControlsSource,
+    /section-graph-option-\$\{option\.id\}/,
+    "editor should render section graph options with stable option-derived test ids",
+  );
+  for (const label of [
+    "Line 301 depth sections",
+    "Line 301 time sections",
+    "Line 301 velocity section",
+    "Line 302 depth sections",
+    "Line 302 time sections",
+    "Line 302 velocity section",
+    "Line L5 depth sections",
+    "Line L5 time sections",
+    "Line L5 velocity section",
+    "Line L11 depth sections",
+    "Line L11 time sections",
+    "Line L11 velocity section",
+  ]) {
+    assert.match(
+      seismicModelSource,
+      new RegExp(label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")),
+      `editor should expose ${label} under Section Options`,
+    );
+  }
+  assert.doesNotMatch(
+    seismicModelSource,
+    /id: "all-2d-sections"|id: "hide-2d-sections"|id: "survey-plus-2d-sections"/,
+    "editor should not expose the removed bulk 2D shortcut commands",
   );
   assert.match(
-    controlsSource,
-    /seismic-capability-survey-plus-2d-sections/,
-    "editor should expose a survey geometry plus 2D sections command",
-  );
-  assert.match(
-    controlsSource,
+    containerSource,
     /seismic-source-gate-/,
     "editor should expose source-gated seismic product headings",
   );
   assert.match(
-    controlsSource,
-    /product\.surveyKind !== "3d"/,
-    "2D section controls should derive scope from surveyKind rather than hard-coded page fixtures",
-  );
-  assert.match(
-    controlsSource,
-    /visible:\s*true,[\s\S]*seismicProductVisibility: selectedOnlyVisibility/,
+    seismicModelSource,
+    /visible:\s*true,[\s\S]*seismicProductVisibility: selectedProductVisibility/,
     "direct product capability activation should make the seismic layer visible",
-  );
-  assert.match(
-    controlsSource,
-    /visible:\s*true,[\s\S]*seismicProductVisibility: Object\.fromEntries\([\s\S]*product\.surveyKind !== "3d"/,
-    "all-2D section activation should make the seismic layer visible",
   );
 });
 
@@ -360,6 +682,20 @@ test("seismic editor container uses logical source and display groups without au
     "layerControls",
     "seismic",
     "SeismicBrowserControls.tsx",
+  );
+  const surveyGeometrySource = readText(
+    "src",
+    "editor",
+    "layerControls",
+    "seismic",
+    "SeismicSurveyGeometryControls.tsx",
+  );
+  const sectionGraphSource = readText(
+    "src",
+    "editor",
+    "layerControls",
+    "seismic",
+    "SectionGraphOptionsControls.tsx",
   );
   const visibilitySource = readText(
     "src",
@@ -382,6 +718,7 @@ test("seismic editor container uses logical source and display groups without au
     "seismic",
     "seismicModel.ts",
   );
+  const capabilityGroupSource = `${capabilitySource}\n${surveyGeometrySource}\n${sectionGraphSource}\n${seismicModelSource}`;
 
   for (const source of [capabilitySource, browserSource]) {
     assert.doesNotMatch(source, /SEISMIC_AUDIENCE_MODE_OPTIONS/);
@@ -405,16 +742,16 @@ test("seismic editor container uses logical source and display groups without au
   for (const label of [
     "Source-gated products",
     "SeismicSourceAndRegistrationControls",
-    "2D sections",
-    "3D products",
-    "2D product details",
-    "Processing comparison",
+    "2D Section Line",
+    "3D Volume",
+    "3D Section Plane",
+    "Processing Comparison",
     "Display",
-    "Survey geometry",
-    "Figure annotations",
-    "Integrated geophysics",
+    "Seismic survey geometry",
+    "Figure Annotation",
+    "Integrated Geophysics",
   ]) {
-    assert.match(capabilitySource, new RegExp(label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+    assert.match(capabilityGroupSource, new RegExp(label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
   }
 
   assert.doesNotMatch(capabilitySource, /title="Display cleanup"/);

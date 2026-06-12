@@ -527,11 +527,11 @@
       "sectionIsoMax": 4.5
     },
     "utah-forge-phase3-seismic-browser": {
-      "opacity": 1,
-      "seismicProductId": "gdr-1141-forge3d-pstm-stack-enh",
+      "opacity": 0.5,
+      "seismicProductId": "gdr-1141-forge3d-ani-psdm-stack-unenh",
       "seismicProductVisibility": {
         "gdr-1141-forge3d-poststack-time-migration-fxydecon-stack": false,
-        "gdr-1141-forge3d-ani-psdm-stack-unenh": false,
+        "gdr-1141-forge3d-ani-psdm-stack-unenh": true,
         "gdr-1141-forge3d-pstm-stack-enh": false,
         "gdr-1015-forge3d-velo5d-float-01312018": false,
         "gdr-1141-line-301-pdm-enh": false,
@@ -574,6 +574,7 @@
       "seismicTimeScale": 3.25,
       "seismicNavigationVisible": true,
       "seismicLegendVisible": true,
+      "seismicPresentationBarVisible": true,
       "affectedByFog": false,
       "showLabels": false,
       "seismicSliceThroughVolume": true,
@@ -584,13 +585,14 @@
       },
       "seismicRemoveBackground": false,
       "seismicAudienceMode": "technical",
-      "seismicAudiencePresetId": "showcase-time-volume",
+      "seismicAudiencePresetId": "psdm-depth-surrogate-showcase",
+      "seismicCapabilityPresetId": "psdm-depth-surrogate-showcase",
       "seismicDisplayRecipeId": "3d-seismic-showcase",
       "seismicAmplitudeGamma": 1.05,
       "seismicBackgroundCutoff": 0.16,
-      "seismicVolumeSampleSteps": 72,
+      "seismicVolumeSampleSteps": 112,
       "seismicComparisonMode": "overlay",
-      "seismicMtCoRender": "seismic",
+      "seismicMtCoRender": "integrated",
       "sectionIsoEnabled": false
     },
     "utah-forge-scene-section-planes": {

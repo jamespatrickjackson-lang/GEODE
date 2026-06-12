@@ -66,6 +66,23 @@ deflate stream fails before complete recovery with `invalid code lengths set`;
 therefore no source-backed enhanced ANI PSDM render artifact can be produced
 from the current official zip bytes.
 
+GDR 1015 was checked as an alternate source path. The local GDR 1015 archive
+contains GDR 1015 processed 2D products and the 3D velocity volume, including
+`Forge2D-301_Migr-Depth.sgy`, `Forge2D-301_Stack_01312018.sgy`,
+`Forge2D-302_Stack.sgy`, and `Forge3D_velo5D_float_01312018.sgy`. It does not
+contain `Forge3d_ANI_PSDM_Stack_Enh.segy` or another enhanced 3D ANI PSDM
+reflection volume.
+
+The recoverable EBCDIC headers for the GDR 1141 3D ANI PSDM enhanced and
+unenhanced members share the same NAD83 UTM Zone 12N CRS, 1800 m datum, 5 m
+sample interval, 5000 m trace length, 25 m x 25 m CMP bin size, and custom CMP
+coordinate byte fields. The zip central directory lists both delivered members
+at `153,678,840` bytes. The enhanced header adds post-stack processing language
+including `BILATERAL FILTER OFFBINS` and `FXY Decon 3x4 filter width`; the
+unenhanced source remains the complete renderable depth volume. Byte size is
+therefore treated as grid/geometry support together with the header evidence,
+not as proof of identical amplitudes.
+
 ## Changes
 
 `prep/build_utah_forge_seismic_browser.py` now records required zip-contained
@@ -75,6 +92,14 @@ such as `source-member-corrupt`.
 
 `prep/build_utah_forge_seismic_demo_recipes.mjs` carries product source gates
 into the recipes artifact and project layer metadata.
+
+`prep/build_utah_forge_seismic_demo_recipes.mjs`,
+`seismic_demo_recipes.json`, project seismic metadata, and the Utah FORGE
+global seismic style now add `psdm-depth-surrogate-showcase`. The preset renders
+`gdr-1141-forge3d-ani-psdm-stack-unenh` in raymarch mode as
+`Presentation-enhanced PSDM surrogate - GDR 1141, unenhanced source`, with
+`source-derived` provenance and an explicit note that no enhanced SEG-Y is
+held. Time-domain products remain hidden in that surrogate view.
 
 `src/editor/layerControls/seismic/SeismicCapabilityLayerContainers.tsx` now
 adds first-class commands in the Seismic panel:
@@ -118,6 +143,13 @@ scene coordinates. The ANI PSDM unenhanced 3D product reports IL `1-170`, XL
 `1-213`, 1800 m datum, 5 m sample spacing, and CMP-derived UTM corners from the
 source headers. The enhanced ANI PSDM file remains source-gated and is not
 substituted from the unenhanced product.
+
+DEC-148 approves one claim-safe demo exception to the no-substitution rule:
+`gdr-1141-forge3d-ani-psdm-stack-unenh` may be rendered as a
+source-derived, presentation-enhanced PSDM surrogate when the UI and metadata
+state that the rendered source is unenhanced and that no complete enhanced
+SEG-Y is held. The source gate for `gdr-1141-forge3d-ani-psdm-stack-enh`
+remains visible and non-renderable.
 
 L5/L11 legacy sections are no longer treated as endpoint-only fallback when
 trace-header CMP coordinates can be transformed plausibly from legacy NAD27

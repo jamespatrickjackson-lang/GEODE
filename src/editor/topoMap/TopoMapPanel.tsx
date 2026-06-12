@@ -199,7 +199,7 @@ function TopoSubsection({
   testId,
   toggleTestId,
   manifestId,
-  defaultOpen = true,
+  defaultOpen = false,
 }: {
   label: string;
   children: ReactNode;

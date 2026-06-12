@@ -289,7 +289,7 @@ function ControlSection({
   children: React.ReactNode;
 }) {
   return (
-    <details open style={controlSectionStyle} data-testid={testId}>
+    <details style={controlSectionStyle} data-testid={testId}>
       <summary style={controlSectionSummaryStyle}>{label}</summary>
       <div style={controlSectionContentStyle}>{children}</div>
     </details>

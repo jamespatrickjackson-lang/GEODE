@@ -1,4 +1,8 @@
 import * as THREE from "three";
+import {
+  buildSeismicSectionGraphBasis,
+  type SeismicGraphObjectKind,
+} from "../../geophysics/seismicSectionGraphBasis";
 import type { EditableStyle } from "../../pages/types";
 import { UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID } from "../../projectModules/utahForge/layerIds";
 import {
@@ -56,6 +60,63 @@ function seismicVerticalDatumModeFromStyle(
     style.seismicVerticalDatumMode === "terrain-top-preview"
     ? style.seismicVerticalDatumMode
     : "source";
+}
+
+function seismicGraphObjectKindForSection(
+  obj: THREE.Object3D,
+): SeismicGraphObjectKind {
+  const surveyKind = obj.userData?.seismicProductSurveyKind;
+  const axis = obj.userData?.seismicSectionAxis;
+  if (surveyKind === "2d" || surveyKind === "legacy-2d" || axis === "line") {
+    return "2d-section-line";
+  }
+  return "3d-section-plane";
+}
+
+function refreshSeismicSectionGraphBasis(
+  obj: THREE.Mesh,
+  input: {
+    verticalDatumMode: SeismicVerticalDatumMode;
+    verticalDatumOffsetM: number;
+    verticalScaleMPerUnit?: number;
+  },
+): void {
+  const section = obj.geometry.userData.seismicSection as
+    | Record<string, unknown>
+    | undefined;
+  if (!section) return;
+  obj.userData.seismicSectionGraphBasis = buildSeismicSectionGraphBasis(
+    section,
+    {
+      id:
+        typeof obj.userData.seismicProductId === "string"
+          ? obj.userData.seismicProductId
+          : undefined,
+      domainKind:
+        typeof obj.userData.seismicProductDomainKind === "string"
+          ? obj.userData.seismicProductDomainKind
+          : undefined,
+      domainUnit:
+        typeof obj.userData.seismicSampleDomainUnit === "string"
+          ? obj.userData.seismicSampleDomainUnit
+          : undefined,
+      surveyKind:
+        typeof obj.userData.seismicProductSurveyKind === "string"
+          ? obj.userData.seismicProductSurveyKind
+          : undefined,
+    },
+    {
+      layerId: UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID,
+      objectKind: seismicGraphObjectKindForSection(obj),
+      objectId:
+        typeof obj.userData.seismicSectionId === "string"
+          ? obj.userData.seismicSectionId
+          : undefined,
+      verticalDatumMode: input.verticalDatumMode,
+      verticalDatumOffsetM: input.verticalDatumOffsetM,
+      verticalScaleMPerUnit: input.verticalScaleMPerUnit,
+    },
+  );
 }
 
 function isFinitePathPoint(value: unknown): value is SeismicPathPoint {
@@ -562,7 +623,7 @@ export function applySeismicBrowserStyle(this: unknown, id: string, style: Edita
   }
   const selectedSections = new Set<THREE.Object3D>();
 
-  if (renderMode === "slice" || sliceThroughVolume) {
+  if (layerVisible) {
     for (const summary of index.productSummaries) {
       if (renderMode === "raymarch" && summary.id !== productId) continue;
       if (!enabledProductIds.has(summary.id)) continue;
@@ -799,6 +860,7 @@ export function applySeismicBrowserStyle(this: unknown, id: string, style: Edita
 
   for (const sections of index.sectionsByProduct.values()) {
     for (const obj of sections) {
+      obj.userData.seismicSectionSelectedForFace = selectedSections.has(obj);
       obj.visible =
         (renderMode === "slice" ||
           (renderMode === "raymarch" &&
@@ -873,6 +935,11 @@ export function applySeismicBrowserStyle(this: unknown, id: string, style: Edita
       );
       obj.userData.seismicVerticalDatumMode = verticalDatumMode;
       obj.userData.seismicVerticalDatumOffsetM = verticalDatumOffsetM;
+      refreshSeismicSectionGraphBasis(obj, {
+        verticalDatumMode,
+        verticalDatumOffsetM,
+        verticalScaleMPerUnit: sampleUnit === "ms" ? timeScale : undefined,
+      });
       obj.updateMatrixWorld();
 
       const materials = Array.isArray(obj.material)

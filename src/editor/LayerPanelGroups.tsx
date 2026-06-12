@@ -7,6 +7,7 @@ import { globalSettingsAccent, pageAccentForPage, panelStyles } from "./styles";
 import {
   effectiveStyle,
   effectiveVisibility,
+  isStyleFieldOverridden,
   isVisibilityOverridden,
   resolveEnvironmentForPage,
 } from "../pages/effective";
@@ -25,7 +26,12 @@ import {
   TopoDetailDistancePanel,
 } from "./layerControls/layout/LayoutControls";
 import { AddSceneOverlayForm, SceneOverlayRow } from "./layerControls/overlays/SceneOverlayControls";
-import { SceneSectionPlanesContainer, SeismicCapabilityLayerContainers } from "./layerControls/seismic/SeismicControls";
+import {
+  SceneSectionPlanesContainer,
+  SeismicCapabilityLayerContainers,
+  SeismicSurveyGeometryContainer,
+  seismicBrowserPatchFromStyle,
+} from "./layerControls/seismic/SeismicControls";
 import { WorkingAreaFocusContainer } from "./layerControls/workingArea/WorkingAreaFocusContainer";
 import {
   CASE_STUDY_B_CUSTOMER_LAYER_GROUPS,
@@ -36,6 +42,7 @@ import {
   layerStyleOpacityForActiveState,
   PUBLIC_LAYER_GROUPS,
   PUBLIC_TOPO_LAYER_GROUP_TITLE,
+  SEISMIC_BROWSER_FIELDS,
   UTAH_FORGE_CUSTOMER_LAYER_GROUPS,
   UTAH_FORGE_PUBLIC_LAYER_GROUPS,
   UTAH_FORGE_SECTIONS_CROPPING_LAYER_GROUPS,
@@ -373,17 +380,17 @@ export function LayerPanelGroups({
     }
     return null;
   })();
-  const sceneSectionOpenSignal =
+  const sceneSectionRevealOpenSignal =
     state.projectSlug === "utah-forge" &&
     section === "sectionsCropping" &&
-    sceneSectionStyle.sceneSectionEnabled === true
-      ? `${activeOpenSignalPrefix}:${UTAH_FORGE_SCENE_SECTION_LAYER_ID}`
+    revealLayerId === UTAH_FORGE_SCENE_SECTION_LAYER_ID
+      ? revealTargetId
       : undefined;
-  const workingAreaFocusOpenSignal =
+  const workingAreaFocusRevealOpenSignal =
     state.projectSlug === "utah-forge" &&
     section === "sectionsCropping" &&
-    workingAreaFocusStyle.workingAreaFocusEnabled === true
-      ? `${activeOpenSignalPrefix}:${UTAH_FORGE_WORKING_AREA_FOCUS_LAYER_ID}`
+    revealLayerId === UTAH_FORGE_WORKING_AREA_FOCUS_LAYER_ID
+      ? revealTargetId
       : undefined;
 
   return (
@@ -411,16 +418,7 @@ export function LayerPanelGroups({
           devSource="src/editor/LayerPanel.tsx:scene-section"
           devNote="Scene section planes are a virtual Sections tool; controls patch a virtual layer style and SceneManager applies it across targeted visible scene objects."
           accentColor={selectedPageAccent}
-          openSignal={
-            sceneSectionOpenSignal &&
-            revealLayerId === UTAH_FORGE_SCENE_SECTION_LAYER_ID &&
-            revealTargetId
-              ? `${sceneSectionOpenSignal}:${revealTargetId}`
-              : (sceneSectionOpenSignal ??
-                (revealLayerId === UTAH_FORGE_SCENE_SECTION_LAYER_ID
-                  ? revealTargetId
-                  : undefined))
-          }
+          openSignal={sceneSectionRevealOpenSignal}
         >
           <SceneSectionPlanesContainer
             seismicLayer={utahForgeSeismicLayer}
@@ -454,7 +452,7 @@ export function LayerPanelGroups({
         const seismicLayer =
           state.projectSlug === "utah-forge" &&
           section === "public" &&
-          group.title === "Seismic analysis"
+          (group.title === "Seismic analysis" || group.title === "Site Details")
             ? byId.get(UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID)
             : undefined;
         const seismicLayerStyle = seismicLayer
@@ -478,17 +476,11 @@ export function LayerPanelGroups({
           setPageVisibilityOverride(currentPage.id, seismicLayer.id, true);
         };
         const seismicCapabilityDisabled = pageStyleControlsDisabled;
-        const groupOpenSignal = activeLayerOpenSignal(
-          layers.map((layer) => layer.id),
-        );
         const revealGroupOpenSignal =
           revealLayerId && layers.some((layer) => layer.id === revealLayerId)
             ? revealTargetId
             : undefined;
-        const resolvedGroupOpenSignal =
-          groupOpenSignal && revealGroupOpenSignal
-            ? `${groupOpenSignal}:${revealGroupOpenSignal}`
-            : (groupOpenSignal ?? revealGroupOpenSignal);
+        const resolvedGroupOpenSignal = revealGroupOpenSignal;
         if (
           state.projectSlug === "utah-forge" &&
           section === "public" &&
@@ -497,6 +489,89 @@ export function LayerPanelGroups({
           return null;
         }
         if (layers.length === 0) return null;
+        if (
+          state.projectSlug === "utah-forge" &&
+          section === "public" &&
+          group.title === "Seismic analysis" &&
+          seismicLayer &&
+          layerHasRenderableControl(seismicLayer)
+        ) {
+          const seismicBrowserOverridden =
+            currentPage !== null &&
+            SEISMIC_BROWSER_FIELDS.some((field) =>
+              isStyleFieldOverridden(currentPage, seismicLayer.id, field),
+            );
+          return (
+            <LayerGroup
+              key={group.title}
+              title="Seismic analysis"
+              devSource="src/editor/LayerPanelGroups.tsx:seismic-analysis"
+              devNote="Seismic analysis promotes source, product, rendering, isoband, comparison, and annotation containers for the Phase 3 seismic browser."
+              accentColor={selectedPageAccent}
+              openSignal={resolvedGroupOpenSignal}
+            >
+              <LayerGroupFogControl
+                layerIds={layers.map((layer) => layer.id)}
+                isEnv={isEnv}
+                currentPage={currentPage}
+                environment={currentPageEnvironment}
+                globalFogDensity={
+                  currentPageEnvironment.scene?.fog?.density ?? DEFAULT_FOG_DENSITY
+                }
+                onSetEnv={(layerId, affectedByFog) =>
+                  setEnvLayerStyle(layerId, { affectedByFog })
+                }
+                onSetPage={(pageId, layerId, affectedByFog) =>
+                  setPageLayerOverride(pageId, layerId, { affectedByFog })
+                }
+                onSetEnvDensity={(layerId, fogDensity) =>
+                  setEnvLayerStyle(layerId, { fogDensity })
+                }
+                onSetPageDensity={(pageId, layerId, fogDensity) =>
+                  setPageLayerOverride(pageId, layerId, { fogDensity })
+                }
+              />
+              <SeismicCapabilityLayerContainers
+                layer={seismicLayer}
+                style={seismicLayerStyle}
+                disabled={seismicCapabilityDisabled}
+                isEnv={isEnv}
+                currentPage={currentPage}
+                layerId={seismicLayer.id}
+                overridden={seismicBrowserOverridden}
+                sceneSectionStyle={sceneSectionStyle}
+                ensureLayerVisible={ensureSeismicLayerVisible}
+                onToggleOverride={
+                  currentPage
+                    ? (enabled) => {
+                        if (enabled) {
+                          setPageLayerOverride(
+                            currentPage.id,
+                            seismicLayer.id,
+                            seismicBrowserPatchFromStyle(
+                              seismicLayerStyle,
+                              seismicLayer,
+                            ),
+                          );
+                        } else {
+                          for (const field of SEISMIC_BROWSER_FIELDS) {
+                            clearPageLayerOverride(
+                              currentPage.id,
+                              seismicLayer.id,
+                              field,
+                            );
+                          }
+                        }
+                      }
+                    : undefined
+                }
+                setEnvLayerStyle={setEnvLayerStyle}
+                setPageLayerOverride={setPageLayerOverride}
+                sceneHandle={sceneHandle}
+              />
+            </LayerGroup>
+          );
+        }
         if (
           state.projectSlug === "utah-forge" &&
           section === "public" &&
@@ -522,7 +597,7 @@ export function LayerPanelGroups({
               key={group.title}
               title="Site Details"
               devSource="src/editor/LayerPanel.tsx:site-details"
-              devNote="Site Details contains the FORGE site boundary, demo boreholes, and schematic orientation block."
+              devNote="Site Details contains the FORGE site boundary, seismic survey geometry, demo boreholes, and schematic orientation block."
               accentColor={selectedPageAccent}
               openSignal={resolvedGroupOpenSignal}
             >
@@ -535,6 +610,22 @@ export function LayerPanelGroups({
                 currentPage={currentPage}
                 setEnvLayerStyle={setEnvLayerStyle}
                 setPageLayerOverride={setPageLayerOverride}
+                seismicSurveyGeometry={
+                  seismicLayer && layerHasRenderableControl(seismicLayer) ? (
+                    <SeismicSurveyGeometryContainer
+                      layer={seismicLayer}
+                      style={seismicLayerStyle}
+                      disabled={seismicCapabilityDisabled}
+                      isEnv={isEnv}
+                      currentPage={currentPage}
+                      layerId={seismicLayer.id}
+                      ensureLayerVisible={ensureSeismicLayerVisible}
+                      setEnvLayerStyle={setEnvLayerStyle}
+                      setPageLayerOverride={setPageLayerOverride}
+                      sceneHandle={sceneHandle}
+                    />
+                  ) : undefined
+                }
                 disabled={pageStyleControlsDisabled}
                 activeSignalPrefix={activeOpenSignalPrefix}
                 boreholeLayerActive={
@@ -551,7 +642,7 @@ export function LayerPanelGroups({
           group.title === "Working area"
         ) {
           const sectionsCroppingOpenSignal =
-            resolvedGroupOpenSignal ?? workingAreaFocusOpenSignal;
+            resolvedGroupOpenSignal ?? workingAreaFocusRevealOpenSignal;
           return (
             <LayerGroup
               key={group.title}
@@ -769,20 +860,6 @@ export function LayerPanelGroups({
               />
             )}
             {renderedLayers.map(renderLayer)}
-            {seismicLayer && layerHasRenderableControl(seismicLayer) ? (
-              <SeismicCapabilityLayerContainers
-                layer={seismicLayer}
-                style={seismicLayerStyle}
-                disabled={seismicCapabilityDisabled}
-                isEnv={isEnv}
-                currentPage={currentPage}
-                layerId={seismicLayer.id}
-                ensureLayerVisible={ensureSeismicLayerVisible}
-                setEnvLayerStyle={setEnvLayerStyle}
-                setPageLayerOverride={setPageLayerOverride}
-                sceneHandle={sceneHandle}
-              />
-            ) : null}
           </LayerGroup>
         );
       })}
@@ -799,17 +876,12 @@ export function LayerPanelGroups({
           devNote="layerGroupSummaryStyle controls layer-category subheading pills."
           accentColor={selectedPageAccent}
           openSignal={(() => {
-            const activeSignal = activeLayerOpenSignal(
-              otherLayers.map((layer) => layer.id),
-            );
             const revealSignal =
               revealLayerId &&
               otherLayers.some((layer) => layer.id === revealLayerId)
                 ? revealTargetId
                 : undefined;
-            return activeSignal && revealSignal
-              ? `${activeSignal}:${revealSignal}`
-              : (activeSignal ?? revealSignal);
+            return revealSignal;
           })()}
         >
           {otherLayers.map(renderLayer)}

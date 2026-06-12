@@ -30,6 +30,7 @@ function isobandDefaultPlanePosition(axis: "x" | "y" | "z"): number {
 
 export function IsobandControls({
   title = "Isobands",
+  nestedContainer = true,
   style,
   disabled,
   isEnv,
@@ -43,6 +44,7 @@ export function IsobandControls({
   setPageLayerOverride,
 }: {
   title?: string;
+  nestedContainer?: boolean;
   style: EditableStyle;
   disabled: boolean;
   isEnv: boolean;
@@ -210,376 +212,382 @@ export function IsobandControls({
     );
   };
 
-  return (
-    <details style={nestedDetailsStyle} data-testid="layer-isobands-controls">
-      <summary style={panelStyles.summary}>{title}</summary>
-      <div style={detailsContentStyle}>
-        <label style={{ ...nestedControlRowStyle, cursor: "pointer" }}>
-          <span style={nestedFieldLabelStyle}>View</span>
-          <input
-            data-testid="layer-isobands-enabled"
-            type="checkbox"
-            checked={enabled}
-            disabled={disabled}
-            onChange={(event) => setEnabled(event.target.checked)}
-            style={{ opacity: controlOpacity }}
-          />
-          <span
-            style={{
-              flex: 1,
-              color: vibrancyTertiaryLabel,
-              fontSize: 11,
-              opacity: controlOpacity,
-            }}
-          >
-            {volumePlanes ? "section plane iso-bands" : "slice overlay iso-bands"}
-          </span>
-        </label>
+  const content = (
+    <div style={detailsContentStyle}>
+      <label style={{ ...nestedControlRowStyle, cursor: "pointer" }}>
+        <span style={nestedFieldLabelStyle}>View</span>
+        <input
+          data-testid="layer-isobands-enabled"
+          type="checkbox"
+          checked={enabled}
+          disabled={disabled}
+          onChange={(event) => setEnabled(event.target.checked)}
+          style={{ opacity: controlOpacity }}
+        />
+        <span
+          style={{
+            flex: 1,
+            color: vibrancyTertiaryLabel,
+            fontSize: 11,
+            opacity: controlOpacity,
+          }}
+        >
+          {volumePlanes ? "section plane iso-bands" : "slice overlay iso-bands"}
+        </span>
+      </label>
 
-        {volumePlanes ? (
-          <>
-            <div style={nestedControlRowStyle}>
-              <label style={nestedFieldLabelStyle}>Section plane</label>
-              <select
-                data-testid="layer-isobands-volume-axis"
-                value={activeAxis}
-                disabled={disabled}
-                onChange={(event) =>
-                  ensureScenePlane(event.target.value as "x" | "y" | "z")
-                }
-                style={{ flex: 1, minWidth: 0, opacity: controlOpacity }}
-              >
-                <option value="x">X</option>
-                <option value="y">Y</option>
-                <option value="z">Z</option>
-              </select>
-            </div>
-            <div style={nestedControlRowStyle}>
-              <label style={nestedFieldLabelStyle}>Plane position</label>
-              <input
-                data-testid="layer-isobands-volume-position"
-                type="range"
-                min={axisRange.min}
-                max={axisRange.max}
-                step={25}
-                value={planePosition}
-                disabled={disabled}
-                onChange={(event) =>
-                  commitScene({
-                    sceneSectionEnabled: true,
-                    sceneSectionActiveAxis: activeAxis,
-                    sceneSectionPlanes: {
-                      ...scenePlanes,
-                      [activeAxis]: {
-                        ...(scenePlanes[activeAxis] ?? {}),
-                        enabled: true,
-                        positionM: parseFloat(event.target.value),
-                      },
+      {volumePlanes ? (
+        <>
+          <div style={nestedControlRowStyle}>
+            <label style={nestedFieldLabelStyle}>Section plane</label>
+            <select
+              data-testid="layer-isobands-volume-axis"
+              value={activeAxis}
+              disabled={disabled}
+              onChange={(event) =>
+                ensureScenePlane(event.target.value as "x" | "y" | "z")
+              }
+              style={{ flex: 1, minWidth: 0, opacity: controlOpacity }}
+            >
+              <option value="x">X</option>
+              <option value="y">Y</option>
+              <option value="z">Z</option>
+            </select>
+          </div>
+          <div style={nestedControlRowStyle}>
+            <label style={nestedFieldLabelStyle}>Plane position</label>
+            <input
+              data-testid="layer-isobands-volume-position"
+              type="range"
+              min={axisRange.min}
+              max={axisRange.max}
+              step={25}
+              value={planePosition}
+              disabled={disabled}
+              onChange={(event) =>
+                commitScene({
+                  sceneSectionEnabled: true,
+                  sceneSectionActiveAxis: activeAxis,
+                  sceneSectionPlanes: {
+                    ...scenePlanes,
+                    [activeAxis]: {
+                      ...(scenePlanes[activeAxis] ?? {}),
+                      enabled: true,
+                      positionM: parseFloat(event.target.value),
                     },
-                  })
-                }
-                style={
-                  {
-                    flex: 1,
-                    opacity: controlOpacity,
-                    "--editor-slider-fill": `${planeFill}%`,
-                  } as React.CSSProperties
-                }
-              />
-            </div>
-          </>
-        ) : null}
+                  },
+                })
+              }
+              style={
+                {
+                  flex: 1,
+                  opacity: controlOpacity,
+                  "--editor-slider-fill": `${planeFill}%`,
+                } as React.CSSProperties
+              }
+            />
+          </div>
+        </>
+      ) : null}
 
-        <div style={nestedControlRowStyle}>
-          <label style={nestedFieldLabelStyle}>{sourceOpacityLabel}</label>
-          <input
-            data-testid="layer-isobands-source-opacity"
-            type="range"
-            min={0}
-            max={1}
-            step={0.01}
-            value={sourceOpacity}
-            disabled={disabled || !enabled}
-            onChange={(event) =>
-              commit({
-                sectionIsoSourceOpacity: parseFloat(event.target.value),
-              })
-            }
-            style={
-              {
-                flex: 1,
-                opacity: enabled ? controlOpacity : 0.35,
-                "--editor-slider-fill": `${sourceOpacity * 100}%`,
-              } as React.CSSProperties
-            }
-          />
-        </div>
-        <div style={nestedControlRowStyle}>
-          <label style={nestedFieldLabelStyle}>Iso-band count</label>
-          <input
-            data-testid="layer-isobands-count"
-            type="range"
-            min={2}
-            max={32}
-            step={1}
-            value={bandCount}
-            disabled={disabled || !enabled}
-            onChange={(event) =>
-              commit({
-                sectionIsoLevelCount: Math.round(
-                  parseFloat(event.target.value),
-                ),
-              })
-            }
-            style={
-              {
-                flex: 1,
-                opacity: enabled ? controlOpacity : 0.35,
-                "--editor-slider-fill": `${((bandCount - 2) / 30) * 100}%`,
-              } as React.CSSProperties
-            }
-          />
-        </div>
-        <div style={nestedControlRowStyle}>
-          <label style={nestedFieldLabelStyle}>3D bands (cells)</label>
-          <div
-            data-testid="layer-isobands-3d-select"
-            style={{
+      <div style={nestedControlRowStyle}>
+        <label style={nestedFieldLabelStyle}>{sourceOpacityLabel}</label>
+        <input
+          data-testid="layer-isobands-source-opacity"
+          type="range"
+          min={0}
+          max={1}
+          step={0.01}
+          value={sourceOpacity}
+          disabled={disabled || !enabled}
+          onChange={(event) =>
+            commit({
+              sectionIsoSourceOpacity: parseFloat(event.target.value),
+            })
+          }
+          style={
+            {
               flex: 1,
-              display: "flex",
-              flexWrap: "wrap",
-              gap: 4,
               opacity: enabled ? controlOpacity : 0.35,
-            }}
-          >
-            {Array.from({ length: numBands }, (_, index) => {
-              const selected = bandSelection.includes(index);
-              return (
-                <button
-                  key={index}
-                  type="button"
-                  title={`Show iso-band ${index} cells in 3D`}
-                  disabled={disabled || !enabled}
-                  onClick={() => {
-                    const next = new Set(bandSelection);
-                    if (next.has(index)) next.delete(index);
-                    else next.add(index);
-                    commit({
-                      sectionIsoBandSelection: Array.from(next).sort(
-                        (a, b) => a - b,
-                      ),
-                    });
-                  }}
-                  style={{
-                    minWidth: 22,
-                    height: 22,
-                    padding: "0 5px",
-                    borderRadius: 6,
-                    border: "1px solid rgba(255, 255, 255, 0.16)",
-                    background: selected
-                      ? "rgba(120, 200, 255, 0.34)"
-                      : "rgba(255, 255, 255, 0.05)",
-                    color: "inherit",
-                    fontSize: 10,
-                    fontVariantNumeric: "tabular-nums",
-                    cursor: "pointer",
-                  }}
-                >
-                  {index}
-                </button>
-              );
-            })}
-            {bandSelection.length > 0 ? (
+              "--editor-slider-fill": `${sourceOpacity * 100}%`,
+            } as React.CSSProperties
+          }
+        />
+      </div>
+      <div style={nestedControlRowStyle}>
+        <label style={nestedFieldLabelStyle}>Iso-band count</label>
+        <input
+          data-testid="layer-isobands-count"
+          type="range"
+          min={2}
+          max={32}
+          step={1}
+          value={bandCount}
+          disabled={disabled || !enabled}
+          onChange={(event) =>
+            commit({
+              sectionIsoLevelCount: Math.round(
+                parseFloat(event.target.value),
+              ),
+            })
+          }
+          style={
+            {
+              flex: 1,
+              opacity: enabled ? controlOpacity : 0.35,
+              "--editor-slider-fill": `${((bandCount - 2) / 30) * 100}%`,
+            } as React.CSSProperties
+          }
+        />
+      </div>
+      <div style={nestedControlRowStyle}>
+        <label style={nestedFieldLabelStyle}>3D bands (cells)</label>
+        <div
+          data-testid="layer-isobands-3d-select"
+          style={{
+            flex: 1,
+            display: "flex",
+            flexWrap: "wrap",
+            gap: 4,
+            opacity: enabled ? controlOpacity : 0.35,
+          }}
+        >
+          {Array.from({ length: numBands }, (_, index) => {
+            const selected = bandSelection.includes(index);
+            return (
               <button
+                key={index}
                 type="button"
-                data-testid="layer-isobands-3d-clear"
-                disabled={disabled}
-                onClick={() => commit({ sectionIsoBandSelection: [] })}
+                title={`Show iso-band ${index} cells in 3D`}
+                disabled={disabled || !enabled}
+                onClick={() => {
+                  const next = new Set(bandSelection);
+                  if (next.has(index)) next.delete(index);
+                  else next.add(index);
+                  commit({
+                    sectionIsoBandSelection: Array.from(next).sort(
+                      (a, b) => a - b,
+                    ),
+                  });
+                }}
                 style={{
+                  minWidth: 22,
                   height: 22,
-                  padding: "0 8px",
+                  padding: "0 5px",
                   borderRadius: 6,
-                  border: "1px solid rgba(255, 131, 112, 0.4)",
-                  background: "rgba(194, 71, 55, 0.22)",
+                  border: "1px solid rgba(255, 255, 255, 0.16)",
+                  background: selected
+                    ? "rgba(120, 200, 255, 0.34)"
+                    : "rgba(255, 255, 255, 0.05)",
                   color: "inherit",
                   fontSize: 10,
+                  fontVariantNumeric: "tabular-nums",
                   cursor: "pointer",
                 }}
               >
-                clear
+                {index}
               </button>
-            ) : null}
-          </div>
-        </div>
-        <div style={nestedControlRowStyle}>
-          <label style={nestedFieldLabelStyle}>{minLabel}</label>
-          <input
-            data-testid="layer-isobands-min"
-            type="range"
-            min={sourceMin}
-            max={sourceMax}
-            step={rangeKind === "seismic" ? 0.01 : 0.01}
-            value={isoMin}
-            disabled={disabled || !enabled}
-            onChange={(event) => {
-              const next = parseFloat(event.target.value);
-              commit({
-                sectionIsoMin: next,
-                sectionIsoMax: Math.max(isoMax, next + 0.001),
-              });
-            }}
-            style={
-              {
-                flex: 1,
-                opacity: enabled ? controlOpacity : 0.35,
-                "--editor-slider-fill": rangeFill(isoMin),
-              } as React.CSSProperties
-            }
-          />
-        </div>
-        <div style={nestedControlRowStyle}>
-          <label style={nestedFieldLabelStyle}>{maxLabel}</label>
-          <input
-            data-testid="layer-isobands-max"
-            type="range"
-            min={sourceMin}
-            max={sourceMax}
-            step={0.01}
-            value={isoMax}
-            disabled={disabled || !enabled}
-            onChange={(event) => {
-              const next = parseFloat(event.target.value);
-              commit({
-                sectionIsoMin: Math.min(isoMin, next - 0.001),
-                sectionIsoMax: next,
-              });
-            }}
-            style={
-              {
-                flex: 1,
-                opacity: enabled ? controlOpacity : 0.35,
-                "--editor-slider-fill": rangeFill(isoMax),
-              } as React.CSSProperties
-            }
-          />
-        </div>
-        <label style={{ ...nestedControlRowStyle, cursor: "pointer" }}>
-          <span style={nestedFieldLabelStyle}>Iso-band fill</span>
-          <input
-            data-testid="layer-isobands-bands-visible"
-            type="checkbox"
-            checked={bandsVisible}
-            disabled={disabled || !enabled}
-            onChange={(event) =>
-              commit({ sectionIsoBandsVisible: event.target.checked })
-            }
-            style={{ opacity: enabled ? controlOpacity : 0.35 }}
-          />
-          <span style={{ flex: 1 }} />
-        </label>
-        <div style={nestedControlRowStyle}>
-          <label style={nestedFieldLabelStyle}>Band opacity</label>
-          <input
-            data-testid="layer-isobands-band-opacity"
-            type="range"
-            min={0}
-            max={0.85}
-            step={0.01}
-            value={bandOpacity}
-            disabled={disabled || !enabled || !bandsVisible}
-            onChange={(event) =>
-              commit({ sectionIsoBandOpacity: parseFloat(event.target.value) })
-            }
-            style={
-              {
-                flex: 1,
-                opacity: enabled && bandsVisible ? controlOpacity : 0.35,
-                "--editor-slider-fill": `${(bandOpacity / 0.85) * 100}%`,
-              } as React.CSSProperties
-            }
-          />
-        </div>
-        <div style={nestedControlRowStyle}>
-          <label style={nestedFieldLabelStyle}>Band fill offset</label>
-          <input
-            data-testid="layer-isobands-fill-offset"
-            type="range"
-            min={-1}
-            max={1}
-            step={0.01}
-            value={fillOffset}
-            disabled={disabled || !enabled || !bandsVisible}
-            onChange={(event) =>
-              commit({ sectionIsoFillOffset: parseFloat(event.target.value) })
-            }
-            style={
-              {
-                flex: 1,
-                opacity: enabled && bandsVisible ? controlOpacity : 0.35,
-                "--editor-slider-fill": `${((fillOffset + 1) / 2) * 100}%`,
-              } as React.CSSProperties
-            }
-          />
-        </div>
-        <label style={{ ...nestedControlRowStyle, cursor: "pointer" }}>
-          <span style={nestedFieldLabelStyle}>Isolines</span>
-          <input
-            data-testid="layer-isobands-lines-visible"
-            type="checkbox"
-            checked={linesVisible}
-            disabled={disabled || !enabled}
-            onChange={(event) =>
-              commit({ sectionIsoLinesVisible: event.target.checked })
-            }
-            style={{ opacity: enabled ? controlOpacity : 0.35 }}
-          />
-          <span style={{ flex: 1 }} />
-        </label>
-        <div style={nestedControlRowStyle}>
-          <label style={nestedFieldLabelStyle}>Isoline style</label>
-          <select
-            data-testid="layer-isobands-line-style"
-            value={lineStyle}
-            disabled={disabled || !enabled || !linesVisible}
-            onChange={(event) =>
-              commit({
-                sectionIsoLineStyle:
-                  event.target.value === "dashed" ? "dashed" : "solid",
-              })
-            }
-            style={{
-              flex: 1,
-              minWidth: 0,
-              opacity: enabled && linesVisible ? controlOpacity : 0.35,
-            }}
-          >
-            <option value="solid">Solid</option>
-            <option value="dashed">Dashed</option>
-          </select>
-        </div>
-        <div style={nestedControlRowStyle}>
-          <label style={nestedFieldLabelStyle}>Isoline width</label>
-          <input
-            data-testid="layer-isobands-line-width"
-            type="range"
-            min={0}
-            max={12}
-            step={0.1}
-            value={lineWidth}
-            disabled={disabled || !enabled || !linesVisible}
-            onChange={(event) =>
-              commit({ sectionIsoLineWidth: parseFloat(event.target.value) })
-            }
-            style={
-              {
-                flex: 1,
-                opacity: enabled && linesVisible ? controlOpacity : 0.35,
-                "--editor-slider-fill": `${(lineWidth / 12) * 100}%`,
-              } as React.CSSProperties
-            }
-          />
+            );
+          })}
+          {bandSelection.length > 0 ? (
+            <button
+              type="button"
+              data-testid="layer-isobands-3d-clear"
+              disabled={disabled}
+              onClick={() => commit({ sectionIsoBandSelection: [] })}
+              style={{
+                height: 22,
+                padding: "0 8px",
+                borderRadius: 6,
+                border: "1px solid rgba(255, 131, 112, 0.4)",
+                background: "rgba(194, 71, 55, 0.22)",
+                color: "inherit",
+                fontSize: 10,
+                cursor: "pointer",
+              }}
+            >
+              clear
+            </button>
+          ) : null}
         </div>
       </div>
+      <div style={nestedControlRowStyle}>
+        <label style={nestedFieldLabelStyle}>{minLabel}</label>
+        <input
+          data-testid="layer-isobands-min"
+          type="range"
+          min={sourceMin}
+          max={sourceMax}
+          step={rangeKind === "seismic" ? 0.01 : 0.01}
+          value={isoMin}
+          disabled={disabled || !enabled}
+          onChange={(event) => {
+            const next = parseFloat(event.target.value);
+            commit({
+              sectionIsoMin: next,
+              sectionIsoMax: Math.max(isoMax, next + 0.001),
+            });
+          }}
+          style={
+            {
+              flex: 1,
+              opacity: enabled ? controlOpacity : 0.35,
+              "--editor-slider-fill": rangeFill(isoMin),
+            } as React.CSSProperties
+          }
+        />
+      </div>
+      <div style={nestedControlRowStyle}>
+        <label style={nestedFieldLabelStyle}>{maxLabel}</label>
+        <input
+          data-testid="layer-isobands-max"
+          type="range"
+          min={sourceMin}
+          max={sourceMax}
+          step={0.01}
+          value={isoMax}
+          disabled={disabled || !enabled}
+          onChange={(event) => {
+            const next = parseFloat(event.target.value);
+            commit({
+              sectionIsoMin: Math.min(isoMin, next - 0.001),
+              sectionIsoMax: next,
+            });
+          }}
+          style={
+            {
+              flex: 1,
+              opacity: enabled ? controlOpacity : 0.35,
+              "--editor-slider-fill": rangeFill(isoMax),
+            } as React.CSSProperties
+          }
+        />
+      </div>
+      <label style={{ ...nestedControlRowStyle, cursor: "pointer" }}>
+        <span style={nestedFieldLabelStyle}>Iso-band fill</span>
+        <input
+          data-testid="layer-isobands-bands-visible"
+          type="checkbox"
+          checked={bandsVisible}
+          disabled={disabled || !enabled}
+          onChange={(event) =>
+            commit({ sectionIsoBandsVisible: event.target.checked })
+          }
+          style={{ opacity: enabled ? controlOpacity : 0.35 }}
+        />
+        <span style={{ flex: 1 }} />
+      </label>
+      <div style={nestedControlRowStyle}>
+        <label style={nestedFieldLabelStyle}>Band opacity</label>
+        <input
+          data-testid="layer-isobands-band-opacity"
+          type="range"
+          min={0}
+          max={0.85}
+          step={0.01}
+          value={bandOpacity}
+          disabled={disabled || !enabled || !bandsVisible}
+          onChange={(event) =>
+            commit({ sectionIsoBandOpacity: parseFloat(event.target.value) })
+          }
+          style={
+            {
+              flex: 1,
+              opacity: enabled && bandsVisible ? controlOpacity : 0.35,
+              "--editor-slider-fill": `${(bandOpacity / 0.85) * 100}%`,
+            } as React.CSSProperties
+          }
+        />
+      </div>
+      <div style={nestedControlRowStyle}>
+        <label style={nestedFieldLabelStyle}>Band fill offset</label>
+        <input
+          data-testid="layer-isobands-fill-offset"
+          type="range"
+          min={-1}
+          max={1}
+          step={0.01}
+          value={fillOffset}
+          disabled={disabled || !enabled || !bandsVisible}
+          onChange={(event) =>
+            commit({ sectionIsoFillOffset: parseFloat(event.target.value) })
+          }
+          style={
+            {
+              flex: 1,
+              opacity: enabled && bandsVisible ? controlOpacity : 0.35,
+              "--editor-slider-fill": `${((fillOffset + 1) / 2) * 100}%`,
+            } as React.CSSProperties
+          }
+        />
+      </div>
+      <label style={{ ...nestedControlRowStyle, cursor: "pointer" }}>
+        <span style={nestedFieldLabelStyle}>Isolines</span>
+        <input
+          data-testid="layer-isobands-lines-visible"
+          type="checkbox"
+          checked={linesVisible}
+          disabled={disabled || !enabled}
+          onChange={(event) =>
+            commit({ sectionIsoLinesVisible: event.target.checked })
+          }
+          style={{ opacity: enabled ? controlOpacity : 0.35 }}
+        />
+        <span style={{ flex: 1 }} />
+      </label>
+      <div style={nestedControlRowStyle}>
+        <label style={nestedFieldLabelStyle}>Isoline style</label>
+        <select
+          data-testid="layer-isobands-line-style"
+          value={lineStyle}
+          disabled={disabled || !enabled || !linesVisible}
+          onChange={(event) =>
+            commit({
+              sectionIsoLineStyle:
+                event.target.value === "dashed" ? "dashed" : "solid",
+            })
+          }
+          style={{
+            flex: 1,
+            minWidth: 0,
+            opacity: enabled && linesVisible ? controlOpacity : 0.35,
+          }}
+        >
+          <option value="solid">Solid</option>
+          <option value="dashed">Dashed</option>
+        </select>
+      </div>
+      <div style={nestedControlRowStyle}>
+        <label style={nestedFieldLabelStyle}>Isoline width</label>
+        <input
+          data-testid="layer-isobands-line-width"
+          type="range"
+          min={0}
+          max={12}
+          step={0.1}
+          value={lineWidth}
+          disabled={disabled || !enabled || !linesVisible}
+          onChange={(event) =>
+            commit({ sectionIsoLineWidth: parseFloat(event.target.value) })
+          }
+          style={
+            {
+              flex: 1,
+              opacity: enabled && linesVisible ? controlOpacity : 0.35,
+              "--editor-slider-fill": `${(lineWidth / 12) * 100}%`,
+            } as React.CSSProperties
+          }
+        />
+      </div>
+    </div>
+  );
+
+  return nestedContainer ? (
+    <details style={nestedDetailsStyle} data-testid="layer-isobands-controls">
+      <summary style={panelStyles.summary}>{title}</summary>
+      {content}
     </details>
+  ) : (
+    content
   );
 }

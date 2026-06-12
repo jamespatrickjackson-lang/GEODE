@@ -260,6 +260,146 @@ test("adapter emits scalar and color channel facts when available", () => {
   );
 });
 
+test("seismic graph derived entities are represented with stable item identity", () => {
+  const result = buildTransitionRenderGraphTrace({
+    sourceLayers: [
+      layerState({
+        layerId: "utah-forge-phase3-seismic-browser",
+        entityKey:
+          "layer:utah-forge-phase3-seismic-browser:product:gdr-1141:object:3d-section-plane:inline-053",
+        representationKey: "seismic:3d-section-plane",
+        opacity: 0.5,
+        derivedEntities: [
+          {
+            entityKey:
+              "layer:utah-forge-phase3-seismic-browser:product:gdr-1141:object:figure-annotation:inline-053",
+            representationKey: "seismic:figure-annotation",
+            presenceState: "visible",
+            readinessState: "ready",
+            categoricalChannels: {
+              "style:seismicFigureAnnotationsVisible": true,
+              "style:seismicProductId": "gdr-1141",
+              "style:seismicRenderMode": "slice",
+              "style:seismicSliceAxis": "inline",
+            },
+            colorChannels: {
+              "style:seismicFigureTextColor": "#f7f7f2",
+            },
+            scalarChannels: {
+              "style:seismicFigureLabelSizeM": 150,
+              "style:seismicFigureOutsideOffsetM": 240,
+            },
+            metadata: {
+              productId: "gdr-1141",
+              objectKind: "figure-annotation",
+              objectId: "inline-053",
+              basisKind: "trace-path-curtain",
+            },
+          },
+        ],
+      }),
+    ],
+    targetLayers: [
+      layerState({
+        layerId: "utah-forge-phase3-seismic-browser",
+        entityKey:
+          "layer:utah-forge-phase3-seismic-browser:product:gdr-1141:object:3d-section-plane:inline-053",
+        representationKey: "seismic:3d-section-plane",
+        opacity: 0.8,
+        derivedEntities: [
+          {
+            entityKey:
+              "layer:utah-forge-phase3-seismic-browser:product:gdr-1141:object:figure-annotation:inline-053",
+            representationKey: "seismic:figure-annotation",
+            presenceState: "visible",
+            readinessState: "ready",
+            categoricalChannels: {
+              "style:seismicFigureAnnotationsVisible": true,
+              "style:seismicProductId": "gdr-1141",
+              "style:seismicRenderMode": "slice",
+              "style:seismicSliceAxis": "inline",
+            },
+            colorChannels: {
+              "style:seismicFigureTextColor": "#ffd166",
+            },
+            scalarChannels: {
+              "style:seismicFigureLabelSizeM": 190,
+              "style:seismicFigureOutsideOffsetM": 260,
+            },
+            metadata: {
+              productId: "gdr-1141",
+              objectKind: "figure-annotation",
+              objectId: "inline-053",
+              basisKind: "trace-path-curtain",
+            },
+          },
+        ],
+      }),
+    ],
+  });
+  const annotation = result.assignmentTraces.find((trace) =>
+    trace.entityKey.includes(":object:figure-annotation:inline-053"),
+  );
+
+  assert.equal(annotation?.representationKey, undefined);
+  assert.equal(annotation?.assignment, "preserve-interpolate");
+  assert.equal(annotation?.dependencyPolicy, "follow-source");
+  assert.ok(
+    annotation?.changedChannels.some(
+      (channel) =>
+        channel.key === "style:seismicFigureTextColor" &&
+        channel.channelClass === "color-material",
+    ),
+    "figure text color should be a transition channel",
+  );
+  assert.ok(
+    annotation?.changedChannels.some(
+      (channel) =>
+        channel.key === "style:seismicFigureLabelSizeM" &&
+        channel.channelClass === "continuous-scalar",
+    ),
+    "figure label size should be a transition channel",
+  );
+  assert.doesNotMatch(annotation?.entityKey ?? "", /page-|pageId|pageOrder|title/);
+});
+
+test("transition runtime emits seismic graph derived entities and channel coverage", () => {
+  const transitionSource = readFileSync(
+    join(process.cwd(), "src", "scene", "transitions", "transitionEffectiveLayersForPage.ts"),
+    "utf8",
+  );
+
+  assert.match(transitionSource, /seismicGraphDerivedEntities/);
+  for (const representationKey of [
+    "seismic:2d-section-line",
+    "seismic:3d-volume",
+    "seismic:3d-section-plane",
+    "seismic:figure-annotation",
+    "seismic:survey-geometry",
+    "seismic:comparison",
+  ]) {
+    assert.match(
+      transitionSource,
+      new RegExp(representationKey.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")),
+      `transition graph should include ${representationKey}`,
+    );
+  }
+  for (const channel of [
+    "seismicFigureAnnotationsVisible",
+    "seismicFigureTitle",
+    "seismicFigureCaption",
+    "seismicFigureTextColor",
+    "seismicFigureLabelSizeM",
+    "seismicFigureHorizonPoints",
+    "seismicVerticalDatumMode",
+    "seismicProductId",
+    "seismicSliceAxis",
+    "seismicSliceFraction",
+  ]) {
+    assert.match(transitionSource, new RegExp(channel), `missing ${channel}`);
+  }
+});
+
 test("adapter emits spatial channel facts when available", () => {
   const result = buildTransitionRenderGraphTrace({
     sourceLayers: [

@@ -128,6 +128,7 @@ interface SiteDetailsPanelProps {
   currentPage: PresentationPage | null;
   setEnvLayerStyle: LayerStyleSetter;
   setPageLayerOverride: PageStyleSetter;
+  seismicSurveyGeometry?: React.ReactNode;
   activeSignalPrefix?: string;
   boreholeLayerActive?: boolean;
   disabled?: boolean;
@@ -443,6 +444,7 @@ export function SiteDetailsPanel({
   currentPage,
   setEnvLayerStyle,
   setPageLayerOverride,
+  seismicSurveyGeometry,
   activeSignalPrefix,
   boreholeLayerActive = false,
   disabled: disabledProp = false,
@@ -562,6 +564,7 @@ export function SiteDetailsPanel({
   return (
     <>
       {boundaryLayer ? renderLayer(boundaryLayer) : null}
+      {seismicSurveyGeometry ?? null}
       {boreholeLayer ? (
         <>
           <div style={nestedControlRowStyle}>
@@ -594,7 +597,7 @@ export function SiteDetailsPanel({
             }
             testId="site-details-align-to-topo"
           />
-          <AutoOpenDetails summary="Site Labels" defaultOpen>
+          <AutoOpenDetails summary="Site Labels">
             <div style={detailsContentStyle}>
               {siteLabelRows.map((row) => (
                 <div
@@ -630,7 +633,6 @@ export function SiteDetailsPanel({
                 ? `${activeSignalPrefix ?? "site-details"}:source-locations`
                 : undefined
             }
-            defaultOpen
           >
             <div style={detailsContentStyle}>
               <SiteDetailsBooleanRow
@@ -640,7 +642,7 @@ export function SiteDetailsPanel({
                 onChange={(visible) => updateSourceLocations({ visible })}
               />
               {sourceLocationRows.length > 0 ? (
-                <AutoOpenDetails summary="Per-borehole show / hide" defaultOpen>
+                <AutoOpenDetails summary="Per-borehole show / hide">
                   <div style={detailsContentStyle}>
                     {sourceLocationRows.map((row) => {
                       const itemStyle =
@@ -679,7 +681,7 @@ export function SiteDetailsPanel({
                 disabled={disabled}
                 onChange={(opacity) => updateSourceLocations({ opacity })}
               />
-              <AutoOpenDetails summary="Line" defaultOpen>
+              <AutoOpenDetails summary="Line">
                 <div style={detailsContentStyle}>
                   <SiteDetailsBooleanRow
                     label="Visible"

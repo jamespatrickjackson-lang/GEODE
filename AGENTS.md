@@ -119,7 +119,10 @@ APIs.
   control-point validation exists. `Forge3d_ANI_PSDM_Stack_Enh.segy` remains a
   source-gated non-renderable product until a complete CRC-valid source member
   exists; use the GDR landing page only, never a constructed direct download
-  URL. For seismic geometry/source changes run
+  URL. DEC-148 allows only the explicitly labeled
+  `psdm-depth-surrogate-showcase`, which renders the unenhanced ANI PSDM source
+  as a source-derived presentation-enhanced surrogate without claiming the
+  enhanced SEG-Y is held. For seismic geometry/source changes run
   `node tests/tools/seismic-trace-geometry-source.test.mjs`,
   `node tests/tools/seismic-product-catalog-source.test.mjs`, and
   `npm run check:seismic-source-gates`.

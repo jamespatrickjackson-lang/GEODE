@@ -24,6 +24,16 @@ const DISCLOSURE_LABELS = [
   "not a mineral resource estimate",
 ];
 
+const PSDM_SURROGATE_PRESET_ID = "psdm-depth-surrogate-showcase";
+const PSDM_SURROGATE_LABEL =
+  "Presentation-enhanced PSDM surrogate - GDR 1141, unenhanced source";
+const PSDM_SURROGATE_PROVENANCE_NOTE =
+  "Presentation-enhanced PSDM surrogate. Rendered from the GDR 1141 unenhanced anisotropic PSDM depth volume (Forge3d_ANI_PSDM_Stack_UnEnh). In-app contrast tuning reproduces the post-stack display-enhancement class described by the published enhanced product; no enhanced SEG-Y is held. NAD83 UTM 12N (EPSG:26912), 1800 m datum. Source: GDR 1141.";
+const PSDM_58_32_TIE_PRESET_ID = "psdm-mt-58-32-source-location-tie";
+const PSDM_58_32_TIE_LABEL = "PSDM + MT + 58-32 source-location tie";
+const PSDM_58_32_TIE_PROVENANCE_NOTE =
+  "PSDM + MT + 58-32 source-location tie. Presentation-enhanced PSDM surrogate rendered from the GDR 1141 unenhanced anisotropic PSDM depth volume (Forge3d_ANI_PSDM_Stack_UnEnh), with source-derived MT resistivity context near the IL-93 review line. No enhanced SEG-Y is held. 58-32 is shown as a GDR 1358 source-location-only marker; no 58-32 trajectory or well-tie calibration geometry is claimed.";
+
 const PRODUCT_IDS = {
   depth3d: "gdr-1141-forge3d-ani-psdm-stack-unenh",
   time3d: "gdr-1141-forge3d-pstm-stack-enh",
@@ -226,6 +236,7 @@ function makePreset({
   volumeSampleSteps = 96,
   timeScale = 2,
   navigationVisible = true,
+  presentationBarVisible = false,
   sliceThroughVolume = false,
   comparisonProductId,
   comparisonMode = "overlay",
@@ -238,6 +249,8 @@ function makePreset({
   cameraShot,
   caveats = [],
   badges = DISCLOSURE_LABELS,
+  provenanceClassification,
+  provenanceNote,
 }) {
   return {
     id,
@@ -260,6 +273,7 @@ function makePreset({
     volumeSampleSteps,
     timeScale,
     navigationVisible,
+    presentationBarVisible,
     sliceThroughVolume,
     comparisonProductId,
     comparisonMode,
@@ -271,6 +285,8 @@ function makePreset({
     exportLayoutId,
     cameraShot,
     badges,
+    provenanceClassification,
+    provenanceNote,
     caveats: [...DISCLOSURE_LABELS, ...caveats],
   };
 }
@@ -496,6 +512,76 @@ async function main() {
 
   const audiencePresets = [
     makePreset({
+      id: PSDM_SURROGATE_PRESET_ID,
+      label: PSDM_SURROGATE_LABEL,
+      audienceMode: "technical",
+      rank: 0,
+      summary:
+        "Source-derived 3D ANI PSDM depth volume with disclosed presentation enhancement from the unenhanced GDR 1141 source.",
+      displayRecipeId: "3d-seismic-showcase",
+      productId: PRODUCT_IDS.depth3d,
+      renderMode: "raymarch",
+      sliceAxis: "crossline",
+      sliceFraction: 0.52,
+      opacity: 0.5,
+      amplitudeMin: 0.08,
+      amplitudeMax: 0.92,
+      amplitudeGamma: 1.05,
+      colormap: "blue-white-red",
+      backgroundCutoff: 0.16,
+      volumeSampleSteps: 112,
+      timeScale: 2,
+      navigationVisible: true,
+      presentationBarVisible: true,
+      sliceThroughVolume: true,
+      mtCoRender: "integrated",
+      mtStylePatch: { opacity: 0.34, scalarLegendVisible: true },
+      cameraShot: "psdm-surrogate-showcase",
+      provenanceClassification: "source-derived",
+      provenanceNote: PSDM_SURROGATE_PROVENANCE_NOTE,
+      caveats: [
+        "Rendered from the unenhanced GDR 1141 ANI PSDM depth volume.",
+        "Presentation enhancement is disclosed; no enhanced SEG-Y is held.",
+        "MT is co-rendered as a separate source-derived inversion visualization.",
+      ],
+    }),
+    makePreset({
+      id: PSDM_58_32_TIE_PRESET_ID,
+      label: PSDM_58_32_TIE_LABEL,
+      audienceMode: "technical",
+      rank: 0.5,
+      summary:
+        "Source-derived PSDM surrogate and MT context with 58-32 shown only as a source-location marker.",
+      displayRecipeId: "3d-seismic-showcase",
+      productId: PRODUCT_IDS.depth3d,
+      renderMode: "raymarch",
+      sliceAxis: "inline",
+      sliceFraction: 0.544,
+      opacity: 0.5,
+      amplitudeMin: 0.08,
+      amplitudeMax: 0.92,
+      amplitudeGamma: 1.05,
+      colormap: "blue-white-red",
+      backgroundCutoff: 0.16,
+      volumeSampleSteps: 112,
+      timeScale: 2,
+      navigationVisible: true,
+      presentationBarVisible: true,
+      sliceThroughVolume: true,
+      mtCoRender: "integrated",
+      mtStylePatch: { opacity: 0.42, scalarLegendVisible: true },
+      cameraShot: "psdm-mt-58-32-source-location-tie",
+      provenanceClassification: "source-derived",
+      provenanceNote: PSDM_58_32_TIE_PROVENANCE_NOTE,
+      caveats: [
+        "Rendered from the unenhanced GDR 1141 ANI PSDM depth volume.",
+        "Inline review slice is positioned near IL-93 for the 58-32 source-location tie.",
+        "Presentation enhancement is disclosed; no enhanced SEG-Y is held.",
+        "MT is co-rendered as a separate source-derived inversion visualization.",
+        "58-32 is source-location-only; no 58-32 trajectory or well-tie calibration geometry is claimed.",
+      ],
+    }),
+    makePreset({
       id: "investor-overview-volume",
       label: "Investor overview volume",
       audienceMode: "investor",
@@ -666,6 +752,76 @@ async function main() {
   ];
 
   const capabilityPresets = [
+    makePreset({
+      id: PSDM_SURROGATE_PRESET_ID,
+      label: PSDM_SURROGATE_LABEL,
+      audienceMode: "technical",
+      rank: 0,
+      summary:
+        "Source-derived 3D ANI PSDM depth volume with disclosed presentation enhancement from the unenhanced GDR 1141 source.",
+      displayRecipeId: "3d-seismic-showcase",
+      capabilityGroup: "3d-volume-products",
+      productId: PRODUCT_IDS.depth3d,
+      renderMode: "raymarch",
+      sliceAxis: "crossline",
+      sliceFraction: 0.52,
+      opacity: 0.5,
+      amplitudeMin: 0.08,
+      amplitudeMax: 0.92,
+      amplitudeGamma: 1.05,
+      backgroundCutoff: 0.16,
+      volumeSampleSteps: 112,
+      navigationVisible: true,
+      navigationRoleVisibility: { sources: true, receivers: true, lines: true },
+      presentationBarVisible: true,
+      sliceThroughVolume: true,
+      mtCoRender: "integrated",
+      mtStylePatch: { opacity: 0.34, scalarLegendVisible: true },
+      cameraShot: "psdm-surrogate-showcase",
+      provenanceClassification: "source-derived",
+      provenanceNote: PSDM_SURROGATE_PROVENANCE_NOTE,
+      caveats: [
+        "Rendered from the unenhanced GDR 1141 ANI PSDM depth volume.",
+        "Presentation enhancement is disclosed; no enhanced SEG-Y is held.",
+        "MT is co-rendered as a separate source-derived inversion visualization.",
+      ],
+    }),
+    makePreset({
+      id: PSDM_58_32_TIE_PRESET_ID,
+      label: PSDM_58_32_TIE_LABEL,
+      audienceMode: "technical",
+      rank: 0.5,
+      summary:
+        "Source-derived PSDM surrogate and MT context with 58-32 shown only as a source-location marker.",
+      displayRecipeId: "3d-seismic-showcase",
+      capabilityGroup: "integrated-geophysics",
+      productId: PRODUCT_IDS.depth3d,
+      renderMode: "raymarch",
+      sliceAxis: "inline",
+      sliceFraction: 0.544,
+      opacity: 0.5,
+      amplitudeMin: 0.08,
+      amplitudeMax: 0.92,
+      amplitudeGamma: 1.05,
+      backgroundCutoff: 0.16,
+      volumeSampleSteps: 112,
+      navigationVisible: true,
+      navigationRoleVisibility: { sources: true, receivers: true, lines: true },
+      presentationBarVisible: true,
+      sliceThroughVolume: true,
+      mtCoRender: "integrated",
+      mtStylePatch: { opacity: 0.42, scalarLegendVisible: true },
+      cameraShot: "psdm-mt-58-32-source-location-tie",
+      provenanceClassification: "source-derived",
+      provenanceNote: PSDM_58_32_TIE_PROVENANCE_NOTE,
+      caveats: [
+        "Rendered from the unenhanced GDR 1141 ANI PSDM depth volume.",
+        "Inline review slice is positioned near IL-93 for the 58-32 source-location tie.",
+        "Presentation enhancement is disclosed; no enhanced SEG-Y is held.",
+        "MT is co-rendered as a separate source-derived inversion visualization.",
+        "58-32 is source-location-only; no 58-32 trajectory or well-tie calibration geometry is claimed.",
+      ],
+    }),
     makePreset({
       id: "3d-volume-psdm-depth",
       label: "3D PSDM depth volume",

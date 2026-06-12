@@ -3,10 +3,10 @@ import {
   EditorEyeButton,
   detailsContentStyle,
   nestedControlRowStyle,
-  nestedDetailsStyle,
   nestedFieldLabelStyle,
 } from "../../styleControls";
 import type { EditableStyle } from "../../../pages/types";
+import { SeismicCapabilityLayerItem } from "./SeismicCapabilityLayerItem";
 import {
   seismicProcessingStageLabel,
   seismicProductGroups,
@@ -65,10 +65,16 @@ export function SeismicProductVisibilityControls({
   };
 
   return (
-    <details style={nestedDetailsStyle}>
-      <summary style={panelStyles.summary}>
-        Product visibility ({visibleProductCount}/{products.length})
-      </summary>
+    <SeismicCapabilityLayerItem
+      testId="seismic-products-visibility"
+      title={`Product visibility (${visibleProductCount}/${products.length})`}
+      type="products"
+      visible={visibleProductCount > 0}
+      visibilityDisabled={disabled || products.length === 0}
+      onVisibleChange={(visible) =>
+        setVisibilityForProducts(() => visible)
+      }
+    >
       <div style={detailsContentStyle}>
         <div
           style={{
@@ -238,6 +244,6 @@ export function SeismicProductVisibilityControls({
           </div>
         ))}
       </div>
-    </details>
+    </SeismicCapabilityLayerItem>
   );
 }
