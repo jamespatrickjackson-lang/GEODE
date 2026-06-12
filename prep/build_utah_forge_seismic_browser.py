@@ -138,6 +138,7 @@ class Product:
     domain_kind: str
     domain_unit: str
     datum_m: float
+    datum_metadata: dict[str, Any]
     trace_count: int
     sample_count: int
     sample_min: float
@@ -878,26 +879,63 @@ def survey_kind(path: Path) -> str:
     return "2d"
 
 
-def parsed_datum_m(text_header: str) -> float | None:
+def source_header_datum_m(text_header: str) -> float | None:
     datum_measure = header_measure(text_header, "DATUM")
     if not datum_measure:
         return None
     value, unit = datum_measure
     if unit == "ft":
-        return value * FT_TO_M - header_shift_up_m(text_header)
+        return value * FT_TO_M
     if unit == "m":
         return value
     return None
 
 
-def datum_for(text_header: str) -> float:
-    return parsed_datum_m(text_header) or SEISMIC_REFERENCE_DATUM_M
+def parsed_datum_m(text_header: str) -> float | None:
+    raw_datum = source_header_datum_m(text_header)
+    if raw_datum is None:
+        return None
+    return raw_datum - header_shift_up_m(text_header)
+
+
+def legacy_reference_datum_metadata(source_header_datum_m: float) -> dict[str, Any]:
+    return {
+        "sourceHeaderDatumM": round(source_header_datum_m, 6),
+        "datumNormalizationM": round(
+            SEISMIC_REFERENCE_DATUM_M - source_header_datum_m,
+            6,
+        ),
+        "datumNormalizationReason": (
+            "Legacy L5/L11 SEG-Y headers declare a 7000 ft processing datum; "
+            "GeoSee renders those legacy products against the 1800 m seismic "
+            "reference datum while retaining the source header datum for audit."
+        ),
+    }
+
+
+def datum_for_product(
+    path: Path,
+    text_header: str,
+    survey: str,
+) -> tuple[float, dict[str, Any]]:
+    raw_header_datum = source_header_datum_m(text_header)
+    parsed = parsed_datum_m(text_header)
+    if parsed is None:
+        return SEISMIC_REFERENCE_DATUM_M, {}
+    if (
+        survey == "legacy-2d"
+        and raw_header_datum is not None
+        and not measures_close(raw_header_datum, SEISMIC_REFERENCE_DATUM_M, 0.001)
+    ):
+        return SEISMIC_REFERENCE_DATUM_M, legacy_reference_datum_metadata(raw_header_datum)
+    return parsed, {}
 
 
 def vertical_reference_for(
     domain: tuple[str, str],
     datum_m: float,
     source_unit_status: str | None = None,
+    datum_metadata: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     domain_kind_value, domain_unit = domain
     mode = (
@@ -923,6 +961,8 @@ def vertical_reference_for(
                 "SEG-Y textual header does not prove the source sample unit; "
                 "depth metres are inferred from filename and product classification."
             )
+    if datum_metadata:
+        reference.update(datum_metadata)
     return reference
 
 
@@ -2013,6 +2053,7 @@ def make_section_spec(
     source_axis: dict[str, Any] | None = None,
     surface_grid: dict[str, Any] | None = None,
     source_unit_status: str | None = None,
+    datum_metadata: dict[str, Any] | None = None,
 ) -> tuple[dict[str, Any], dict[str, float]]:
     stats = amplitude_stats(matrix)
     encoded = encode_u8(matrix, stats)
@@ -2072,7 +2113,12 @@ def make_section_spec(
             "verticalScaleMPerUnit": TIME_SCALE_M_PER_MS if domain_unit == "ms" else 1.0,
         },
         "datumM": datum_m,
-        "verticalReference": vertical_reference_for(domain, datum_m, source_unit_status),
+        "verticalReference": vertical_reference_for(
+            domain,
+            datum_m,
+            source_unit_status,
+            datum_metadata,
+        ),
         "valueEncoding": value_encoding_for(product_kind(product_path)),
     }
     if source_unit_status:
@@ -2143,6 +2189,7 @@ def build_volume(
     bounds: dict[str, list[float]],
     trace_geometry: dict[str, Any],
     source_unit_status: str | None = None,
+    datum_metadata: dict[str, Any] | None = None,
     max_voxels: int = SOURCE_FIDELITY_VOLUME_MAX_VOXELS,
 ) -> tuple[dict[str, Any], dict[str, float]]:
     with segyio.open(str(path), "r", strict=False, ignore_geometry=True) as f:
@@ -2251,7 +2298,12 @@ def build_volume(
                 "verticalScaleMPerUnit": z_scale,
                 "sourceUnitStatus": source_unit_status,
             },
-            "verticalReference": vertical_reference_for(domain, datum_m, source_unit_status),
+            "verticalReference": vertical_reference_for(
+                domain,
+                datum_m,
+                source_unit_status,
+                datum_metadata,
+            ),
             "valueEncoding": value_encoding_for(product_kind(path)),
             "amplitudeStats": {k: round(v, 6) for k, v in stats.items()},
         },
@@ -2302,7 +2354,7 @@ def build_product(
         sample_format = int(f.bin[segyio.BinField.Format])
         ext_headers = int(getattr(f, "ext_headers", 0) or 0)
         text_header = read_text_header(f)
-        datum = datum_for(text_header)
+        datum, datum_metadata = datum_for_product(path, text_header, survey)
     samples, domain, header_unit_status, sample_axis_metadata = sample_axis_from_header(text_header, raw_samples, domain)
     sample_count = len(samples)
     sample_spacing = (
@@ -2352,6 +2404,7 @@ def build_product(
                     geometry_source=trace_geometry["geometrySource"],
                     source_axis={"kind": axis, "value": axis_value},
                     source_unit_status=source_unit_status,
+                    datum_metadata=datum_metadata,
                 )
                 sections.append(spec)
                 section_stats.append(stats)
@@ -2381,6 +2434,7 @@ def build_product(
                 source_axis={"kind": "sample", "value": float(samples[sample_no])},
                 surface_grid=surface_grid_spec(trace_geometry),
                 source_unit_status=source_unit_status,
+                datum_metadata=datum_metadata,
             )
             sections.append(spec)
             section_stats.append(stats)
@@ -2394,6 +2448,7 @@ def build_product(
             product_bounds,
             trace_geometry,
             source_unit_status,
+            datum_metadata,
             BROWSER_3D_VOLUME_MAX_VOXELS,
         )
         section_stats.append(volume_stats)
@@ -2427,6 +2482,7 @@ def build_product(
                     geometry_source=trace_geometry.get("geometrySource"),
                     source_axis={"kind": axis, "value": fraction},
                     source_unit_status=source_unit_status,
+                    datum_metadata=datum_metadata,
                 )
                 sections.append(spec)
                 section_stats.append(stats)
@@ -2454,6 +2510,7 @@ def build_product(
                 geometry_source=trace_geometry.get("geometrySource"),
                 source_axis={"kind": "sample", "value": float(samples[sample_no])},
                 source_unit_status=source_unit_status,
+                datum_metadata=datum_metadata,
             )
             sections.append(spec)
             section_stats.append(stats)
@@ -2467,6 +2524,7 @@ def build_product(
             product_bounds,
             trace_geometry,
             source_unit_status,
+            datum_metadata,
             BROWSER_3D_VOLUME_MAX_VOXELS,
         )
         section_stats.append(volume_stats)
@@ -2491,6 +2549,7 @@ def build_product(
             nav_paths,
             trace_geometry,
             source_unit_status=source_unit_status,
+            datum_metadata=datum_metadata,
         )
         sections.append(spec)
         section_stats.append(stats)
@@ -2525,6 +2584,7 @@ def build_product(
         domain_kind=domain[0],
         domain_unit=domain[1],
         datum_m=datum,
+        datum_metadata=datum_metadata,
         trace_count=trace_count,
         sample_count=sample_count,
         sample_min=float(samples[0]) if len(samples) else 0,
@@ -2543,7 +2603,7 @@ def build_product(
 
 
 def product_to_manifest(product: Product) -> dict[str, Any]:
-    return {
+    item = {
         "id": product.id,
         "label": product.label,
         "lineId": product.line_id,
@@ -2569,6 +2629,7 @@ def product_to_manifest(product: Product) -> dict[str, Any]:
             (product.domain_kind, product.domain_unit),
             product.datum_m,
             product.source_unit_status,
+            product.datum_metadata,
         ),
         "valueEncoding": value_encoding_for(product.product_kind),
         "sourceGeometry": product.source_geometry,
@@ -2595,6 +2656,9 @@ def product_to_manifest(product: Product) -> dict[str, Any]:
         "raymarchVolume": product.raymarch_volume,
         "textHeaderExcerpt": product.text_header_excerpt,
     }
+    if product.datum_metadata:
+        item["datumMetadata"] = product.datum_metadata
+    return item
 
 
 def write_json(path: Path, payload: Any) -> None:

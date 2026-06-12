@@ -21577,7 +21577,7 @@
       "productKind": "psdm",
       "domainKind": "depth",
       "domainUnit": "m",
-      "datumM": 2133.6,
+      "datumM": 1800,
       "navigationPlacement": {
         "navigationSource": "delivered",
         "placementAccuracy": "unknown",
@@ -21588,7 +21588,7 @@
       },
       "verticalReference": {
         "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
-        "sourceDatumM": 2133.6,
+        "sourceDatumM": 1800,
         "referenceDatumM": 1800,
         "depthElevationMode": "depth-below-datum-to-absolute-elevation",
         "sourceSampleUnit": "m",
@@ -21602,7 +21602,10 @@
           "depthReference": "below surface / report calibration point",
           "expectedDepthConversionErrorM": 20
         },
-        "sourceUnitStatus": "header-indicated-depth-ft-converted-to-m"
+        "sourceUnitStatus": "header-indicated-depth-ft-converted-to-m",
+        "sourceHeaderDatumM": 2133.6,
+        "datumNormalizationM": -333.6,
+        "datumNormalizationReason": "Legacy L5/L11 SEG-Y headers declare a 7000 ft processing datum; GeoSee renders those legacy products against the 1800 m seismic reference datum while retaining the source header datum for audit."
       },
       "valueEncoding": {
         "storedTextureEncoding": "uint8-normalized-p02-p98",
@@ -21667,12 +21670,12 @@
           "min": [
             -12251.153,
             -14465.9717,
-            -3962.4
+            -4296
           ],
           "max": [
             -6770.4159,
             -272.8792,
-            2133.6
+            1800
           ]
         },
         "registrationStatus": "unverified",
@@ -21780,10 +21783,10 @@
             "verticalScaleMPerUnit": 1,
             "sourceUnitStatus": "header-indicated-depth-ft-converted-to-m"
           },
-          "datumM": 2133.6,
+          "datumM": 1800,
           "verticalReference": {
             "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
-            "sourceDatumM": 2133.6,
+            "sourceDatumM": 1800,
             "referenceDatumM": 1800,
             "depthElevationMode": "depth-below-datum-to-absolute-elevation",
             "sourceSampleUnit": "m",
@@ -21797,7 +21800,10 @@
               "depthReference": "below surface / report calibration point",
               "expectedDepthConversionErrorM": 20
             },
-            "sourceUnitStatus": "header-indicated-depth-ft-converted-to-m"
+            "sourceUnitStatus": "header-indicated-depth-ft-converted-to-m",
+            "sourceHeaderDatumM": 2133.6,
+            "datumNormalizationM": -333.6,
+            "datumNormalizationReason": "Legacy L5/L11 SEG-Y headers declare a 7000 ft processing datum; GeoSee renders those legacy products against the 1800 m seismic reference datum while retaining the source header datum for audit."
           },
           "valueEncoding": {
             "storedTextureEncoding": "uint8-normalized-p02-p98",
@@ -25220,12 +25226,12 @@
             "min": [
               -12251.153,
               -14465.9717,
-              -3962.4
+              -4296
             ],
             "max": [
               -6770.4159,
               -272.8792,
-              2133.6
+              1800
             ]
           },
           "navigationPlacement": {
@@ -25239,7 +25245,12 @@
         }
       ],
       "raymarchVolume": null,
-      "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE 2D -B11 PSDM Enhanced Stack SEGY AREA Utah C 3 YEAR ACQUIRED: 1979 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 2ft TRACE LENGTH: 20000 ft C 5 CMP RANGE: 1-681 CMP_FOLD: 45 C 6 COORD SYSTEM: US STATE PLANE 4302 NAD 27 C 7 C 8 C 9 DATE:3/28/2019 C10 DATUM: 7000 ft REPLACEMENT VELOCITY: 10000 ft/s C12 CMP Bin : 75 ft C13 PRODUCT: PSDM Stack in depth C14 PROCESSING FLOW: C15 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C16 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C17 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C18 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C19 POST DECON NOISE ATTENUATION - SPECTRAL EDIT and DESPIKE C20 RESIDUAL STATICS C21 PSDM tomographic VELOCITY ANALYSIS C22 KIRCHHOFF PSDM C23 BPF, 3000 FT AGC SCALING C24 DATA AT FINAL DATUM C25 FXDECON, TV BANDPASS C26 C27 C28 C29 C30 C31 C32 CMP_X: byte 189 4 byte ibm real C33 CMP_X: byte 193 4 byte ibm real C34 BIN_ELEV byte 53 4 byte C35 HEADER FOR FINAL DATUM CMP_STAT: byte 201 4 byte ibm real C36 C37 C38 C39 SEG Y REV1 C40 END EBCDIC"
+      "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE 2D -B11 PSDM Enhanced Stack SEGY AREA Utah C 3 YEAR ACQUIRED: 1979 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 2ft TRACE LENGTH: 20000 ft C 5 CMP RANGE: 1-681 CMP_FOLD: 45 C 6 COORD SYSTEM: US STATE PLANE 4302 NAD 27 C 7 C 8 C 9 DATE:3/28/2019 C10 DATUM: 7000 ft REPLACEMENT VELOCITY: 10000 ft/s C12 CMP Bin : 75 ft C13 PRODUCT: PSDM Stack in depth C14 PROCESSING FLOW: C15 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C16 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C17 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C18 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C19 POST DECON NOISE ATTENUATION - SPECTRAL EDIT and DESPIKE C20 RESIDUAL STATICS C21 PSDM tomographic VELOCITY ANALYSIS C22 KIRCHHOFF PSDM C23 BPF, 3000 FT AGC SCALING C24 DATA AT FINAL DATUM C25 FXDECON, TV BANDPASS C26 C27 C28 C29 C30 C31 C32 CMP_X: byte 189 4 byte ibm real C33 CMP_X: byte 193 4 byte ibm real C34 BIN_ELEV byte 53 4 byte C35 HEADER FOR FINAL DATUM CMP_STAT: byte 201 4 byte ibm real C36 C37 C38 C39 SEG Y REV1 C40 END EBCDIC",
+      "datumMetadata": {
+        "sourceHeaderDatumM": 2133.6,
+        "datumNormalizationM": -333.6,
+        "datumNormalizationReason": "Legacy L5/L11 SEG-Y headers declare a 7000 ft processing datum; GeoSee renders those legacy products against the 1800 m seismic reference datum while retaining the source header datum for audit."
+      }
     },
     {
       "id": "gdr-1141-line-l11-psdm-enh-meters",
@@ -25268,7 +25279,7 @@
       "productKind": "psdm",
       "domainKind": "depth",
       "domainUnit": "m",
-      "datumM": 2133.6,
+      "datumM": 1800,
       "navigationPlacement": {
         "navigationSource": "delivered",
         "placementAccuracy": "unknown",
@@ -25279,7 +25290,7 @@
       },
       "verticalReference": {
         "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
-        "sourceDatumM": 2133.6,
+        "sourceDatumM": 1800,
         "referenceDatumM": 1800,
         "depthElevationMode": "depth-below-datum-to-absolute-elevation",
         "sourceSampleUnit": "m",
@@ -25293,7 +25304,10 @@
           "depthReference": "below surface / report calibration point",
           "expectedDepthConversionErrorM": 20
         },
-        "sourceUnitStatus": "header-indicated-depth-m"
+        "sourceUnitStatus": "header-indicated-depth-m",
+        "sourceHeaderDatumM": 2133.6,
+        "datumNormalizationM": -333.6,
+        "datumNormalizationReason": "Legacy L5/L11 SEG-Y headers declare a 7000 ft processing datum; GeoSee renders those legacy products against the 1800 m seismic reference datum while retaining the source header datum for audit."
       },
       "valueEncoding": {
         "storedTextureEncoding": "uint8-normalized-p02-p98",
@@ -25358,12 +25372,12 @@
           "min": [
             -12251.153,
             -14465.9717,
-            -3866.4
+            -4200
           ],
           "max": [
             -6770.4159,
             -272.8792,
-            2133.6
+            1800
           ]
         },
         "registrationStatus": "unverified",
@@ -25473,10 +25487,10 @@
             "verticalScaleMPerUnit": 1,
             "sourceUnitStatus": "header-indicated-depth-m"
           },
-          "datumM": 2133.6,
+          "datumM": 1800,
           "verticalReference": {
             "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
-            "sourceDatumM": 2133.6,
+            "sourceDatumM": 1800,
             "referenceDatumM": 1800,
             "depthElevationMode": "depth-below-datum-to-absolute-elevation",
             "sourceSampleUnit": "m",
@@ -25490,7 +25504,10 @@
               "depthReference": "below surface / report calibration point",
               "expectedDepthConversionErrorM": 20
             },
-            "sourceUnitStatus": "header-indicated-depth-m"
+            "sourceUnitStatus": "header-indicated-depth-m",
+            "sourceHeaderDatumM": 2133.6,
+            "datumNormalizationM": -333.6,
+            "datumNormalizationReason": "Legacy L5/L11 SEG-Y headers declare a 7000 ft processing datum; GeoSee renders those legacy products against the 1800 m seismic reference datum while retaining the source header datum for audit."
           },
           "valueEncoding": {
             "storedTextureEncoding": "uint8-normalized-p02-p98",
@@ -28913,12 +28930,12 @@
             "min": [
               -12251.153,
               -14465.9717,
-              -3866.4
+              -4200
             ],
             "max": [
               -6770.4159,
               -272.8792,
-              2133.6
+              1800
             ]
           },
           "navigationPlacement": {
@@ -28932,7 +28949,12 @@
         }
       ],
       "raymarchVolume": null,
-      "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE 2D -B11 PSDM Enhanced Stack SEGY CONVERT TO METERS AREA Utah C 3 YEAR ACQUIRED: 1979 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 5m TRACE LENGTH: 6000 m C 5 CMP RANGE: 1-681 CMP_FOLD: 45 C 6 COORD SYSTEM: US STATE PLANE 4302 NAD 27 C 7 C 8 C 9 DATE:3/28/2019 C10 DATUM: 7000 ft REPLACEMENT VELOCITY: 10000 ft/s C12 CMP Bin : 75 ft C13 PRODUCT: PSDM Stack in depth C14 PROCESSING FLOW: C15 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C16 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C17 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C18 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C19 POST DECON NOISE ATTENUATION - SPECTRAL EDIT and DESPIKE C20 RESIDUAL STATICS C21 PSDM tomographic VELOCITY ANALYSIS C22 KIRCHHOFF PSDM C23 BPF, 3000 FT AGC SCALING C24 DATA AT FINAL DATUM C25 FXDECON, TV BANDPASS C26 CONVERT TO METERS and adjusted by -333.6 to account for datum difference C27 C28 C29 C30 C31 C32 CMP_X: byte 189 4 byte ibm real C33 CMP_X: byte 193 4 byte ibm real C34 BIN_ELEV byte 53 4 byte C35 HEADER FOR FINAL DATUM CMP_STAT: byte 201 4 byte ibm real C36 C37 C38 C39 SEG Y REV1 C40 END EBCDIC"
+      "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE 2D -B11 PSDM Enhanced Stack SEGY CONVERT TO METERS AREA Utah C 3 YEAR ACQUIRED: 1979 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 5m TRACE LENGTH: 6000 m C 5 CMP RANGE: 1-681 CMP_FOLD: 45 C 6 COORD SYSTEM: US STATE PLANE 4302 NAD 27 C 7 C 8 C 9 DATE:3/28/2019 C10 DATUM: 7000 ft REPLACEMENT VELOCITY: 10000 ft/s C12 CMP Bin : 75 ft C13 PRODUCT: PSDM Stack in depth C14 PROCESSING FLOW: C15 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C16 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C17 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C18 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C19 POST DECON NOISE ATTENUATION - SPECTRAL EDIT and DESPIKE C20 RESIDUAL STATICS C21 PSDM tomographic VELOCITY ANALYSIS C22 KIRCHHOFF PSDM C23 BPF, 3000 FT AGC SCALING C24 DATA AT FINAL DATUM C25 FXDECON, TV BANDPASS C26 CONVERT TO METERS and adjusted by -333.6 to account for datum difference C27 C28 C29 C30 C31 C32 CMP_X: byte 189 4 byte ibm real C33 CMP_X: byte 193 4 byte ibm real C34 BIN_ELEV byte 53 4 byte C35 HEADER FOR FINAL DATUM CMP_STAT: byte 201 4 byte ibm real C36 C37 C38 C39 SEG Y REV1 C40 END EBCDIC",
+      "datumMetadata": {
+        "sourceHeaderDatumM": 2133.6,
+        "datumNormalizationM": -333.6,
+        "datumNormalizationReason": "Legacy L5/L11 SEG-Y headers declare a 7000 ft processing datum; GeoSee renders those legacy products against the 1800 m seismic reference datum while retaining the source header datum for audit."
+      }
     },
     {
       "id": "gdr-1141-line-l11-psdm-unenh",
@@ -28961,7 +28983,7 @@
       "productKind": "psdm",
       "domainKind": "depth",
       "domainUnit": "m",
-      "datumM": 2133.6,
+      "datumM": 1800,
       "navigationPlacement": {
         "navigationSource": "delivered",
         "placementAccuracy": "unknown",
@@ -28972,7 +28994,7 @@
       },
       "verticalReference": {
         "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
-        "sourceDatumM": 2133.6,
+        "sourceDatumM": 1800,
         "referenceDatumM": 1800,
         "depthElevationMode": "depth-below-datum-to-absolute-elevation",
         "sourceSampleUnit": "m",
@@ -28986,7 +29008,10 @@
           "depthReference": "below surface / report calibration point",
           "expectedDepthConversionErrorM": 20
         },
-        "sourceUnitStatus": "header-indicated-depth-ft-converted-to-m"
+        "sourceUnitStatus": "header-indicated-depth-ft-converted-to-m",
+        "sourceHeaderDatumM": 2133.6,
+        "datumNormalizationM": -333.6,
+        "datumNormalizationReason": "Legacy L5/L11 SEG-Y headers declare a 7000 ft processing datum; GeoSee renders those legacy products against the 1800 m seismic reference datum while retaining the source header datum for audit."
       },
       "valueEncoding": {
         "storedTextureEncoding": "uint8-normalized-p02-p98",
@@ -29051,12 +29076,12 @@
           "min": [
             -12251.153,
             -14465.9717,
-            -3962.4
+            -4296
           ],
           "max": [
             -6770.4159,
             -272.8792,
-            2133.6
+            1800
           ]
         },
         "registrationStatus": "unverified",
@@ -29164,10 +29189,10 @@
             "verticalScaleMPerUnit": 1,
             "sourceUnitStatus": "header-indicated-depth-ft-converted-to-m"
           },
-          "datumM": 2133.6,
+          "datumM": 1800,
           "verticalReference": {
             "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
-            "sourceDatumM": 2133.6,
+            "sourceDatumM": 1800,
             "referenceDatumM": 1800,
             "depthElevationMode": "depth-below-datum-to-absolute-elevation",
             "sourceSampleUnit": "m",
@@ -29181,7 +29206,10 @@
               "depthReference": "below surface / report calibration point",
               "expectedDepthConversionErrorM": 20
             },
-            "sourceUnitStatus": "header-indicated-depth-ft-converted-to-m"
+            "sourceUnitStatus": "header-indicated-depth-ft-converted-to-m",
+            "sourceHeaderDatumM": 2133.6,
+            "datumNormalizationM": -333.6,
+            "datumNormalizationReason": "Legacy L5/L11 SEG-Y headers declare a 7000 ft processing datum; GeoSee renders those legacy products against the 1800 m seismic reference datum while retaining the source header datum for audit."
           },
           "valueEncoding": {
             "storedTextureEncoding": "uint8-normalized-p02-p98",
@@ -32604,12 +32632,12 @@
             "min": [
               -12251.153,
               -14465.9717,
-              -3962.4
+              -4296
             ],
             "max": [
               -6770.4159,
               -272.8792,
-              2133.6
+              1800
             ]
           },
           "navigationPlacement": {
@@ -32623,7 +32651,12 @@
         }
       ],
       "raymarchVolume": null,
-      "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE 2D -B11 PSDM Unenhanced SEGY AREA Utah C 3 YEAR ACQUIRED: 1979 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 2ft TRACE LENGTH: 20000 ft C 5 CMP RANGE: 1-681 CMP_FOLD: 45 C 6 COORD SYSTEM: US STATE PLANE 4302 NAD 27 C 7 C 8 C 9 DATE:3/28/2019 C10 DATUM: 7000 ft REPLACEMENT VELOCITY: 10000 ft/s C12 CMP Bin : 75 ft C13 PRODUCT: PSDM Stack in depth C14 PROCESSING FLOW: C15 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C16 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C17 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C18 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C19 POST DECON NOISE ATTENUATION - SPECTRAL EDIT and DESPIKE C20 RESIDUAL STATICS C21 PSDM tomographic VELOCITY ANALYSIS C22 KIRCHHOFF PSDM C23 BPF, 3000 FT AGC SCALING C24 DATA AT FINAL DATUM C25 C26 C27 C28 C29 C30 C31 C32 CMP_X: byte 189 4 byte ibm real C33 CMP_X: byte 193 4 byte ibm real C34 BIN_ELEV byte 53 4 byte C35 HEADER FOR FINAL DATUM CMP_STAT: byte 201 4 byte ibm real C36 C37 C38 C39 SEG Y REV1 C40 END EBCDIC"
+      "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE 2D -B11 PSDM Unenhanced SEGY AREA Utah C 3 YEAR ACQUIRED: 1979 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 2ft TRACE LENGTH: 20000 ft C 5 CMP RANGE: 1-681 CMP_FOLD: 45 C 6 COORD SYSTEM: US STATE PLANE 4302 NAD 27 C 7 C 8 C 9 DATE:3/28/2019 C10 DATUM: 7000 ft REPLACEMENT VELOCITY: 10000 ft/s C12 CMP Bin : 75 ft C13 PRODUCT: PSDM Stack in depth C14 PROCESSING FLOW: C15 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C16 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C17 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C18 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C19 POST DECON NOISE ATTENUATION - SPECTRAL EDIT and DESPIKE C20 RESIDUAL STATICS C21 PSDM tomographic VELOCITY ANALYSIS C22 KIRCHHOFF PSDM C23 BPF, 3000 FT AGC SCALING C24 DATA AT FINAL DATUM C25 C26 C27 C28 C29 C30 C31 C32 CMP_X: byte 189 4 byte ibm real C33 CMP_X: byte 193 4 byte ibm real C34 BIN_ELEV byte 53 4 byte C35 HEADER FOR FINAL DATUM CMP_STAT: byte 201 4 byte ibm real C36 C37 C38 C39 SEG Y REV1 C40 END EBCDIC",
+      "datumMetadata": {
+        "sourceHeaderDatumM": 2133.6,
+        "datumNormalizationM": -333.6,
+        "datumNormalizationReason": "Legacy L5/L11 SEG-Y headers declare a 7000 ft processing datum; GeoSee renders those legacy products against the 1800 m seismic reference datum while retaining the source header datum for audit."
+      }
     },
     {
       "id": "gdr-1141-line-l5-psdm-enh",
@@ -32652,7 +32685,7 @@
       "productKind": "psdm",
       "domainKind": "depth",
       "domainUnit": "m",
-      "datumM": 2133.6,
+      "datumM": 1800,
       "navigationPlacement": {
         "navigationSource": "delivered",
         "placementAccuracy": "unknown",
@@ -32663,7 +32696,7 @@
       },
       "verticalReference": {
         "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
-        "sourceDatumM": 2133.6,
+        "sourceDatumM": 1800,
         "referenceDatumM": 1800,
         "depthElevationMode": "depth-below-datum-to-absolute-elevation",
         "sourceSampleUnit": "m",
@@ -32677,7 +32710,10 @@
           "depthReference": "below surface / report calibration point",
           "expectedDepthConversionErrorM": 20
         },
-        "sourceUnitStatus": "header-indicated-depth-ft-converted-to-m"
+        "sourceUnitStatus": "header-indicated-depth-ft-converted-to-m",
+        "sourceHeaderDatumM": 2133.6,
+        "datumNormalizationM": -333.6,
+        "datumNormalizationReason": "Legacy L5/L11 SEG-Y headers declare a 7000 ft processing datum; GeoSee renders those legacy products against the 1800 m seismic reference datum while retaining the source header datum for audit."
       },
       "valueEncoding": {
         "storedTextureEncoding": "uint8-normalized-p02-p98",
@@ -32742,12 +32778,12 @@
           "min": [
             -12878.3052,
             -13705.302,
-            -3962.4
+            -4296
           ],
           "max": [
             -20.6017,
             -11235.3945,
-            2133.6
+            1800
           ]
         },
         "registrationStatus": "unverified",
@@ -32857,10 +32893,10 @@
             "verticalScaleMPerUnit": 1,
             "sourceUnitStatus": "header-indicated-depth-ft-converted-to-m"
           },
-          "datumM": 2133.6,
+          "datumM": 1800,
           "verticalReference": {
             "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
-            "sourceDatumM": 2133.6,
+            "sourceDatumM": 1800,
             "referenceDatumM": 1800,
             "depthElevationMode": "depth-below-datum-to-absolute-elevation",
             "sourceSampleUnit": "m",
@@ -32874,7 +32910,10 @@
               "depthReference": "below surface / report calibration point",
               "expectedDepthConversionErrorM": 20
             },
-            "sourceUnitStatus": "header-indicated-depth-ft-converted-to-m"
+            "sourceUnitStatus": "header-indicated-depth-ft-converted-to-m",
+            "sourceHeaderDatumM": 2133.6,
+            "datumNormalizationM": -333.6,
+            "datumNormalizationReason": "Legacy L5/L11 SEG-Y headers declare a 7000 ft processing datum; GeoSee renders those legacy products against the 1800 m seismic reference datum while retaining the source header datum for audit."
           },
           "valueEncoding": {
             "storedTextureEncoding": "uint8-normalized-p02-p98",
@@ -35087,12 +35126,12 @@
             "min": [
               -12878.3052,
               -13705.302,
-              -3962.4
+              -4296
             ],
             "max": [
               -20.6017,
               -11235.3945,
-              2133.6
+              1800
             ]
           },
           "navigationPlacement": {
@@ -35106,7 +35145,12 @@
         }
       ],
       "raymarchVolume": null,
-      "textHeaderExcerpt": "C 1 CLIENC 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic NoiseC 2 LINE 2D -A5 PSDM Enhanced SEGY AREA Utah C 3 YEAR ACQUIRED: 1979 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 4ft TRACE LENGTH: 20000 ft C 5 CMP RANGE: 1-439 CMP_FOLD: 30 C 6 COORD SYSTEM: US STATE PLANE 4302 NAD 27 C 7 C 8 C 9 DATE:3/28/2019 C10 DATUM: 7000 ft REPLACEMENT VELOCITY: 10000 ft/s C12 CMP Bin : 100 ft C13 PRODUCT: PSDM Stack in depth C14 PROCESSING FLOW: C15 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C16 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C17 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C18 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C19 POST DECON NOISE ATTENUATION - SPECTRAL EDIT and DESPIKE C20 RESIDUAL STATICS C21 PSDM tomographic VELOCITY ANALYSIS C22 KIRCHHOFF PSDM C23 BPF, 3000 FT AGC SCALING C24 DATA AT FINAL DATUM C25 FXDECON, TV BANDPASS C26 C27 C28 C29 C30 C31 C32 CMP_X: byte 189 4 byte ibm real C33 CMP_X: byte 193 4 byte ibm real C34 BIN_ELEV byte 53 4 byte C35 HEADER FOR FINAL DATUM CMP_STAT: byte 201 4 byte ibm real C36 C37 C38 C39 SEG Y REV1 C40 END EBCDIC"
+      "textHeaderExcerpt": "C 1 CLIENC 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic NoiseC 2 LINE 2D -A5 PSDM Enhanced SEGY AREA Utah C 3 YEAR ACQUIRED: 1979 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 4ft TRACE LENGTH: 20000 ft C 5 CMP RANGE: 1-439 CMP_FOLD: 30 C 6 COORD SYSTEM: US STATE PLANE 4302 NAD 27 C 7 C 8 C 9 DATE:3/28/2019 C10 DATUM: 7000 ft REPLACEMENT VELOCITY: 10000 ft/s C12 CMP Bin : 100 ft C13 PRODUCT: PSDM Stack in depth C14 PROCESSING FLOW: C15 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C16 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C17 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C18 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C19 POST DECON NOISE ATTENUATION - SPECTRAL EDIT and DESPIKE C20 RESIDUAL STATICS C21 PSDM tomographic VELOCITY ANALYSIS C22 KIRCHHOFF PSDM C23 BPF, 3000 FT AGC SCALING C24 DATA AT FINAL DATUM C25 FXDECON, TV BANDPASS C26 C27 C28 C29 C30 C31 C32 CMP_X: byte 189 4 byte ibm real C33 CMP_X: byte 193 4 byte ibm real C34 BIN_ELEV byte 53 4 byte C35 HEADER FOR FINAL DATUM CMP_STAT: byte 201 4 byte ibm real C36 C37 C38 C39 SEG Y REV1 C40 END EBCDIC",
+      "datumMetadata": {
+        "sourceHeaderDatumM": 2133.6,
+        "datumNormalizationM": -333.6,
+        "datumNormalizationReason": "Legacy L5/L11 SEG-Y headers declare a 7000 ft processing datum; GeoSee renders those legacy products against the 1800 m seismic reference datum while retaining the source header datum for audit."
+      }
     },
     {
       "id": "gdr-1141-line-l5-psdm-enh-meters",
@@ -35160,7 +35204,10 @@
           "depthReference": "below surface / report calibration point",
           "expectedDepthConversionErrorM": 20
         },
-        "sourceUnitStatus": "header-indicated-depth-m"
+        "sourceUnitStatus": "header-indicated-depth-m",
+        "sourceHeaderDatumM": 2133.6,
+        "datumNormalizationM": -333.6,
+        "datumNormalizationReason": "Legacy L5/L11 SEG-Y headers declare a 7000 ft processing datum; GeoSee renders those legacy products against the 1800 m seismic reference datum while retaining the source header datum for audit."
       },
       "valueEncoding": {
         "storedTextureEncoding": "uint8-normalized-p02-p98",
@@ -35355,7 +35402,10 @@
               "depthReference": "below surface / report calibration point",
               "expectedDepthConversionErrorM": 20
             },
-            "sourceUnitStatus": "header-indicated-depth-m"
+            "sourceUnitStatus": "header-indicated-depth-m",
+            "sourceHeaderDatumM": 2133.6,
+            "datumNormalizationM": -333.6,
+            "datumNormalizationReason": "Legacy L5/L11 SEG-Y headers declare a 7000 ft processing datum; GeoSee renders those legacy products against the 1800 m seismic reference datum while retaining the source header datum for audit."
           },
           "valueEncoding": {
             "storedTextureEncoding": "uint8-normalized-p02-p98",
@@ -37587,7 +37637,12 @@
         }
       ],
       "raymarchVolume": null,
-      "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah ROCESSOR: Land Seismic Noise Specialists C 2 LINE 2D -A5 PSDM Enhanced SEGY CONVERTED TO METERES AREA Utah C 3 YEAR ACQUIRED: 1979 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 5m TRACE LENGTH: 10000 m C 5 CMP RANGE: 1-439 CMP_FOLD: 30 C 6 COORD SYSTEM: US STATE PLANE 4302 NAD 27 C 7 C 8 C 9 DATE:3/28/2019 C10 DATUM: 7000 ft REPLACEMENT VELOCITY: 10000 ft/s C12 CMP Bin : 100 ft C13 PRODUCT: PSDM Stack in depth CONVERTED TO METERS C14 PROCESSING FLOW: C15 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C16 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C17 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C18 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C19 POST DECON NOISE ATTENUATION - SPECTRAL EDIT and DESPIKE C20 RESIDUAL STATICS C21 PSDM VELOCITY MODEL BUILDING (tomography tested) C22 KIRCHHOFF PSDM C23 BPF, 3000 FT AGC SCALING, FX Decon C24 DATA AT FINAL DATUM C25 CONVERED TO METERS , shifted up 333.6 meters C26 to account for datum difference C27 C28 C29 C30 C31 C32 CMP_X: byte 189 4 byte ibm real C33 CMP_X: byte 193 4 byte ibm real C34 BIN_ELEV byte 53 4 byte C35 HEADER FOR FINAL DATUM CMP_STAT: byte 201 4 byte ibm real C36 C37 C38 C39 SEG Y REV1 C40 END EBCDIC"
+      "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah ROCESSOR: Land Seismic Noise Specialists C 2 LINE 2D -A5 PSDM Enhanced SEGY CONVERTED TO METERES AREA Utah C 3 YEAR ACQUIRED: 1979 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 5m TRACE LENGTH: 10000 m C 5 CMP RANGE: 1-439 CMP_FOLD: 30 C 6 COORD SYSTEM: US STATE PLANE 4302 NAD 27 C 7 C 8 C 9 DATE:3/28/2019 C10 DATUM: 7000 ft REPLACEMENT VELOCITY: 10000 ft/s C12 CMP Bin : 100 ft C13 PRODUCT: PSDM Stack in depth CONVERTED TO METERS C14 PROCESSING FLOW: C15 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C16 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C17 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C18 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C19 POST DECON NOISE ATTENUATION - SPECTRAL EDIT and DESPIKE C20 RESIDUAL STATICS C21 PSDM VELOCITY MODEL BUILDING (tomography tested) C22 KIRCHHOFF PSDM C23 BPF, 3000 FT AGC SCALING, FX Decon C24 DATA AT FINAL DATUM C25 CONVERED TO METERS , shifted up 333.6 meters C26 to account for datum difference C27 C28 C29 C30 C31 C32 CMP_X: byte 189 4 byte ibm real C33 CMP_X: byte 193 4 byte ibm real C34 BIN_ELEV byte 53 4 byte C35 HEADER FOR FINAL DATUM CMP_STAT: byte 201 4 byte ibm real C36 C37 C38 C39 SEG Y REV1 C40 END EBCDIC",
+      "datumMetadata": {
+        "sourceHeaderDatumM": 2133.6,
+        "datumNormalizationM": -333.6,
+        "datumNormalizationReason": "Legacy L5/L11 SEG-Y headers declare a 7000 ft processing datum; GeoSee renders those legacy products against the 1800 m seismic reference datum while retaining the source header datum for audit."
+      }
     },
     {
       "id": "gdr-1141-line-l5-psdm-unenh",
@@ -37616,7 +37671,7 @@
       "productKind": "psdm",
       "domainKind": "depth",
       "domainUnit": "m",
-      "datumM": 2133.6,
+      "datumM": 1800,
       "navigationPlacement": {
         "navigationSource": "delivered",
         "placementAccuracy": "unknown",
@@ -37627,7 +37682,7 @@
       },
       "verticalReference": {
         "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
-        "sourceDatumM": 2133.6,
+        "sourceDatumM": 1800,
         "referenceDatumM": 1800,
         "depthElevationMode": "depth-below-datum-to-absolute-elevation",
         "sourceSampleUnit": "m",
@@ -37641,7 +37696,10 @@
           "depthReference": "below surface / report calibration point",
           "expectedDepthConversionErrorM": 20
         },
-        "sourceUnitStatus": "header-indicated-depth-ft-converted-to-m"
+        "sourceUnitStatus": "header-indicated-depth-ft-converted-to-m",
+        "sourceHeaderDatumM": 2133.6,
+        "datumNormalizationM": -333.6,
+        "datumNormalizationReason": "Legacy L5/L11 SEG-Y headers declare a 7000 ft processing datum; GeoSee renders those legacy products against the 1800 m seismic reference datum while retaining the source header datum for audit."
       },
       "valueEncoding": {
         "storedTextureEncoding": "uint8-normalized-p02-p98",
@@ -37706,12 +37764,12 @@
           "min": [
             -12878.3052,
             -13705.302,
-            -3962.4
+            -4296
           ],
           "max": [
             -20.6017,
             -11235.3945,
-            2133.6
+            1800
           ]
         },
         "registrationStatus": "unverified",
@@ -37821,10 +37879,10 @@
             "verticalScaleMPerUnit": 1,
             "sourceUnitStatus": "header-indicated-depth-ft-converted-to-m"
           },
-          "datumM": 2133.6,
+          "datumM": 1800,
           "verticalReference": {
             "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
-            "sourceDatumM": 2133.6,
+            "sourceDatumM": 1800,
             "referenceDatumM": 1800,
             "depthElevationMode": "depth-below-datum-to-absolute-elevation",
             "sourceSampleUnit": "m",
@@ -37838,7 +37896,10 @@
               "depthReference": "below surface / report calibration point",
               "expectedDepthConversionErrorM": 20
             },
-            "sourceUnitStatus": "header-indicated-depth-ft-converted-to-m"
+            "sourceUnitStatus": "header-indicated-depth-ft-converted-to-m",
+            "sourceHeaderDatumM": 2133.6,
+            "datumNormalizationM": -333.6,
+            "datumNormalizationReason": "Legacy L5/L11 SEG-Y headers declare a 7000 ft processing datum; GeoSee renders those legacy products against the 1800 m seismic reference datum while retaining the source header datum for audit."
           },
           "valueEncoding": {
             "storedTextureEncoding": "uint8-normalized-p02-p98",
@@ -40051,12 +40112,12 @@
             "min": [
               -12878.3052,
               -13705.302,
-              -3962.4
+              -4296
             ],
             "max": [
               -20.6017,
               -11235.3945,
-              2133.6
+              1800
             ]
           },
           "navigationPlacement": {
@@ -40070,7 +40131,12 @@
         }
       ],
       "raymarchVolume": null,
-      "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE 2D -A5 PSDM Unenhanced SEGY AREA Utah C 3 YEAR ACQUIRED: 1979 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 4ft TRACE LENGTH: 20000 ft C 5 CMP RANGE: 1-439 CMP_FOLD: 30 C 6 COORD SYSTEM: US STATE PLANE 4302 NAD 27 C 7 C 8 C 9 DATE:3/28/2019 C10 DATUM: 7000 ft REPLACEMENT VELOCITY: 10000 ft/s C12 CMP Bin : 100 ft C13 PRODUCT: PSDM Stack in depth C14 PROCESSING FLOW: C15 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C16 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C17 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C18 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C19 POST DECON NOISE ATTENUATION - SPECTRAL EDIT and DESPIKE C20 RESIDUAL STATICS C21 PSDM VELOCITY MODEL BUILDING (tomography tested) C22 KIRCHHOFF PSDM C23 BPF, 3000 FT AGC SCALING C24 DATA AT FINAL DATUM C25 C26 C27 C28 C29 C30 C31 C32 CMP_X: byte 189 4 byte ibm real C33 CMP_X: byte 193 4 byte ibm real C34 BIN_ELEV byte 53 4 byte C35 HEADER FOR FINAL DATUM CMP_STAT: byte 201 4 byte ibm real C36 C37 C38 C39 SEG Y REV1 C40 END EBCDIC"
+      "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE 2D -A5 PSDM Unenhanced SEGY AREA Utah C 3 YEAR ACQUIRED: 1979 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 4ft TRACE LENGTH: 20000 ft C 5 CMP RANGE: 1-439 CMP_FOLD: 30 C 6 COORD SYSTEM: US STATE PLANE 4302 NAD 27 C 7 C 8 C 9 DATE:3/28/2019 C10 DATUM: 7000 ft REPLACEMENT VELOCITY: 10000 ft/s C12 CMP Bin : 100 ft C13 PRODUCT: PSDM Stack in depth C14 PROCESSING FLOW: C15 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C16 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C17 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C18 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C19 POST DECON NOISE ATTENUATION - SPECTRAL EDIT and DESPIKE C20 RESIDUAL STATICS C21 PSDM VELOCITY MODEL BUILDING (tomography tested) C22 KIRCHHOFF PSDM C23 BPF, 3000 FT AGC SCALING C24 DATA AT FINAL DATUM C25 C26 C27 C28 C29 C30 C31 C32 CMP_X: byte 189 4 byte ibm real C33 CMP_X: byte 193 4 byte ibm real C34 BIN_ELEV byte 53 4 byte C35 HEADER FOR FINAL DATUM CMP_STAT: byte 201 4 byte ibm real C36 C37 C38 C39 SEG Y REV1 C40 END EBCDIC",
+      "datumMetadata": {
+        "sourceHeaderDatumM": 2133.6,
+        "datumNormalizationM": -333.6,
+        "datumNormalizationReason": "Legacy L5/L11 SEG-Y headers declare a 7000 ft processing datum; GeoSee renders those legacy products against the 1800 m seismic reference datum while retaining the source header datum for audit."
+      }
     },
     {
       "id": "gdr-1141-line-l5-psdm-unenh-meters",
@@ -40124,7 +40190,10 @@
           "depthReference": "below surface / report calibration point",
           "expectedDepthConversionErrorM": 20
         },
-        "sourceUnitStatus": "header-indicated-depth-m"
+        "sourceUnitStatus": "header-indicated-depth-m",
+        "sourceHeaderDatumM": 2133.6,
+        "datumNormalizationM": -333.6,
+        "datumNormalizationReason": "Legacy L5/L11 SEG-Y headers declare a 7000 ft processing datum; GeoSee renders those legacy products against the 1800 m seismic reference datum while retaining the source header datum for audit."
       },
       "valueEncoding": {
         "storedTextureEncoding": "uint8-normalized-p02-p98",
@@ -40319,7 +40388,10 @@
               "depthReference": "below surface / report calibration point",
               "expectedDepthConversionErrorM": 20
             },
-            "sourceUnitStatus": "header-indicated-depth-m"
+            "sourceUnitStatus": "header-indicated-depth-m",
+            "sourceHeaderDatumM": 2133.6,
+            "datumNormalizationM": -333.6,
+            "datumNormalizationReason": "Legacy L5/L11 SEG-Y headers declare a 7000 ft processing datum; GeoSee renders those legacy products against the 1800 m seismic reference datum while retaining the source header datum for audit."
           },
           "valueEncoding": {
             "storedTextureEncoding": "uint8-normalized-p02-p98",
@@ -42551,7 +42623,12 @@
         }
       ],
       "raymarchVolume": null,
-      "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah ROCESSOR: Land Seismic Noise Specialists C 2 LINE 2D -A5 PSDM Unenhanced SEGY CONVERTED TO METERES AREA Utah C 3 YEAR ACQUIRED: 1979 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 5m TRACE LENGTH: 10000 m C 5 CMP RANGE: 1-439 CMP_FOLD: 30 C 6 COORD SYSTEM: US STATE PLANE 4302 NAD 27 C 7 C 8 C 9 DATE:3/28/2019 C10 DATUM: 7000 ft REPLACEMENT VELOCITY: 10000 ft/s C12 CMP Bin : 100 ft C13 PRODUCT: PSDM Stack in depth CONVERTED TO METERS C14 PROCESSING FLOW: C15 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C16 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C17 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C18 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C19 POST DECON NOISE ATTENUATION - SPECTRAL EDIT and DESPIKE C20 RESIDUAL STATICS C21 PSDM VELOCITY MODEL BUILDING (tomography tested) C22 KIRCHHOFF PSDM C23 BPF, 3000 FT AGC SCALING C24 DATA AT FINAL DATUM C25 CONVERED TO METERS , shifted up 333.6 meters C26 to account for datum difference C27 C28 C29 C30 C31 C32 CMP_X: byte 189 4 byte ibm real C33 CMP_X: byte 193 4 byte ibm real C34 BIN_ELEV byte 53 4 byte C35 HEADER FOR FINAL DATUM CMP_STAT: byte 201 4 byte ibm real C36 C37 C38 C39 SEG Y REV1 C40 END EBCDIC"
+      "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah ROCESSOR: Land Seismic Noise Specialists C 2 LINE 2D -A5 PSDM Unenhanced SEGY CONVERTED TO METERES AREA Utah C 3 YEAR ACQUIRED: 1979 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 5m TRACE LENGTH: 10000 m C 5 CMP RANGE: 1-439 CMP_FOLD: 30 C 6 COORD SYSTEM: US STATE PLANE 4302 NAD 27 C 7 C 8 C 9 DATE:3/28/2019 C10 DATUM: 7000 ft REPLACEMENT VELOCITY: 10000 ft/s C12 CMP Bin : 100 ft C13 PRODUCT: PSDM Stack in depth CONVERTED TO METERS C14 PROCESSING FLOW: C15 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C16 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C17 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C18 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C19 POST DECON NOISE ATTENUATION - SPECTRAL EDIT and DESPIKE C20 RESIDUAL STATICS C21 PSDM VELOCITY MODEL BUILDING (tomography tested) C22 KIRCHHOFF PSDM C23 BPF, 3000 FT AGC SCALING C24 DATA AT FINAL DATUM C25 CONVERED TO METERS , shifted up 333.6 meters C26 to account for datum difference C27 C28 C29 C30 C31 C32 CMP_X: byte 189 4 byte ibm real C33 CMP_X: byte 193 4 byte ibm real C34 BIN_ELEV byte 53 4 byte C35 HEADER FOR FINAL DATUM CMP_STAT: byte 201 4 byte ibm real C36 C37 C38 C39 SEG Y REV1 C40 END EBCDIC",
+      "datumMetadata": {
+        "sourceHeaderDatumM": 2133.6,
+        "datumNormalizationM": -333.6,
+        "datumNormalizationReason": "Legacy L5/L11 SEG-Y headers declare a 7000 ft processing datum; GeoSee renders those legacy products against the 1800 m seismic reference datum while retaining the source header datum for audit."
+      }
     },
     {
       "id": "gdr-1141-line-301-pstm-stack-enh",
@@ -50280,7 +50357,7 @@
       "productKind": "pstm",
       "domainKind": "time",
       "domainUnit": "ms",
-      "datumM": 2133.6,
+      "datumM": 1800,
       "navigationPlacement": {
         "navigationSource": "delivered",
         "placementAccuracy": "unknown",
@@ -50291,7 +50368,7 @@
       },
       "verticalReference": {
         "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
-        "sourceDatumM": 2133.6,
+        "sourceDatumM": 1800,
         "referenceDatumM": 1800,
         "depthElevationMode": "display-depth-below-datum-to-absolute-elevation",
         "sourceSampleUnit": "ms",
@@ -50305,7 +50382,10 @@
           "depthReference": "below surface / report calibration point",
           "expectedDepthConversionErrorM": 20
         },
-        "sourceUnitStatus": "not-depth-m-domain"
+        "sourceUnitStatus": "not-depth-m-domain",
+        "sourceHeaderDatumM": 2133.6,
+        "datumNormalizationM": -333.6,
+        "datumNormalizationReason": "Legacy L5/L11 SEG-Y headers declare a 7000 ft processing datum; GeoSee renders those legacy products against the 1800 m seismic reference datum while retaining the source header datum for audit."
       },
       "valueEncoding": {
         "storedTextureEncoding": "uint8-normalized-p02-p98",
@@ -50370,12 +50450,12 @@
           "min": [
             -12251.153,
             -14465.9717,
-            -6630.4
+            -6964
           ],
           "max": [
             -6770.4159,
             -272.8792,
-            2133.6
+            1800
           ]
         },
         "registrationStatus": "unverified",
@@ -50474,10 +50554,10 @@
             "verticalScaleMPerUnit": 2,
             "sourceUnitStatus": "not-depth-m-domain"
           },
-          "datumM": 2133.6,
+          "datumM": 1800,
           "verticalReference": {
             "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
-            "sourceDatumM": 2133.6,
+            "sourceDatumM": 1800,
             "referenceDatumM": 1800,
             "depthElevationMode": "display-depth-below-datum-to-absolute-elevation",
             "sourceSampleUnit": "ms",
@@ -50491,7 +50571,10 @@
               "depthReference": "below surface / report calibration point",
               "expectedDepthConversionErrorM": 20
             },
-            "sourceUnitStatus": "not-depth-m-domain"
+            "sourceUnitStatus": "not-depth-m-domain",
+            "sourceHeaderDatumM": 2133.6,
+            "datumNormalizationM": -333.6,
+            "datumNormalizationReason": "Legacy L5/L11 SEG-Y headers declare a 7000 ft processing datum; GeoSee renders those legacy products against the 1800 m seismic reference datum while retaining the source header datum for audit."
           },
           "valueEncoding": {
             "storedTextureEncoding": "uint8-normalized-p02-p98",
@@ -53914,12 +53997,12 @@
             "min": [
               -12251.153,
               -14465.9717,
-              -6630.4
+              -6964
             ],
             "max": [
               -6770.4159,
               -272.8792,
-              2133.6
+              1800
             ]
           },
           "navigationPlacement": {
@@ -53933,7 +54016,12 @@
         }
       ],
       "raymarchVolume": null,
-      "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE 2D -B11 Enhanced PSTM Stack SEGY AREA Utah C 3 YEAR ACQUIRED: 1979 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 2ft TRACE LENGTH: 4384 ms C 5 CMP RANGE: 1-681 CMP_FOLD: 45 C 6 COORD SYSTEM: US STATE PLANE 4302 NAD 27 C 7 C 8 C 9 DATE:3/28/2019 C10 DATUM: 7000 ft REPLACEMENT VELOCITY: 10000 ft/s C12 CMP Bin : 75 ft C13 PRODUCT: PSTM Stack in time C14 PROCESSING FLOW: C15 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C16 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C17 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C18 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C19 POST DECON NOISE ATTENUATION - SPECTRAL EDIT and DESPIKE C20 RESIDUAL STATICS C21 AGC C22 PSTM C23 BILATERAL FILTER C24 STACK C25 FX-DECON C26 C27 C28 C29 C30 C31 C32 CMP_X: byte 189 4 byte ibm real C33 CMP_Y: byte 193 4 byte ibm real C34 BIN_ELEV byte 53 4 byte C35 HEADER FOR FINAL DATUM CMP_STAT: byte 201 4 byte ibm real C36 C37 C38 C39 SEG Y REV1 C40 END EBCDIC"
+      "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE 2D -B11 Enhanced PSTM Stack SEGY AREA Utah C 3 YEAR ACQUIRED: 1979 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 2ft TRACE LENGTH: 4384 ms C 5 CMP RANGE: 1-681 CMP_FOLD: 45 C 6 COORD SYSTEM: US STATE PLANE 4302 NAD 27 C 7 C 8 C 9 DATE:3/28/2019 C10 DATUM: 7000 ft REPLACEMENT VELOCITY: 10000 ft/s C12 CMP Bin : 75 ft C13 PRODUCT: PSTM Stack in time C14 PROCESSING FLOW: C15 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C16 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C17 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C18 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C19 POST DECON NOISE ATTENUATION - SPECTRAL EDIT and DESPIKE C20 RESIDUAL STATICS C21 AGC C22 PSTM C23 BILATERAL FILTER C24 STACK C25 FX-DECON C26 C27 C28 C29 C30 C31 C32 CMP_X: byte 189 4 byte ibm real C33 CMP_Y: byte 193 4 byte ibm real C34 BIN_ELEV byte 53 4 byte C35 HEADER FOR FINAL DATUM CMP_STAT: byte 201 4 byte ibm real C36 C37 C38 C39 SEG Y REV1 C40 END EBCDIC",
+      "datumMetadata": {
+        "sourceHeaderDatumM": 2133.6,
+        "datumNormalizationM": -333.6,
+        "datumNormalizationReason": "Legacy L5/L11 SEG-Y headers declare a 7000 ft processing datum; GeoSee renders those legacy products against the 1800 m seismic reference datum while retaining the source header datum for audit."
+      }
     },
     {
       "id": "gdr-1141-line-l11-pstm-unenh",
@@ -53962,7 +54050,7 @@
       "productKind": "pstm",
       "domainKind": "time",
       "domainUnit": "ms",
-      "datumM": 2133.6,
+      "datumM": 1800,
       "navigationPlacement": {
         "navigationSource": "delivered",
         "placementAccuracy": "unknown",
@@ -53973,7 +54061,7 @@
       },
       "verticalReference": {
         "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
-        "sourceDatumM": 2133.6,
+        "sourceDatumM": 1800,
         "referenceDatumM": 1800,
         "depthElevationMode": "display-depth-below-datum-to-absolute-elevation",
         "sourceSampleUnit": "ms",
@@ -53987,7 +54075,10 @@
           "depthReference": "below surface / report calibration point",
           "expectedDepthConversionErrorM": 20
         },
-        "sourceUnitStatus": "not-depth-m-domain"
+        "sourceUnitStatus": "not-depth-m-domain",
+        "sourceHeaderDatumM": 2133.6,
+        "datumNormalizationM": -333.6,
+        "datumNormalizationReason": "Legacy L5/L11 SEG-Y headers declare a 7000 ft processing datum; GeoSee renders those legacy products against the 1800 m seismic reference datum while retaining the source header datum for audit."
       },
       "valueEncoding": {
         "storedTextureEncoding": "uint8-normalized-p02-p98",
@@ -54052,12 +54143,12 @@
           "min": [
             -12251.153,
             -14465.9717,
-            -6630.4
+            -6964
           ],
           "max": [
             -6770.4159,
             -272.8792,
-            2133.6
+            1800
           ]
         },
         "registrationStatus": "unverified",
@@ -54156,10 +54247,10 @@
             "verticalScaleMPerUnit": 2,
             "sourceUnitStatus": "not-depth-m-domain"
           },
-          "datumM": 2133.6,
+          "datumM": 1800,
           "verticalReference": {
             "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
-            "sourceDatumM": 2133.6,
+            "sourceDatumM": 1800,
             "referenceDatumM": 1800,
             "depthElevationMode": "display-depth-below-datum-to-absolute-elevation",
             "sourceSampleUnit": "ms",
@@ -54173,7 +54264,10 @@
               "depthReference": "below surface / report calibration point",
               "expectedDepthConversionErrorM": 20
             },
-            "sourceUnitStatus": "not-depth-m-domain"
+            "sourceUnitStatus": "not-depth-m-domain",
+            "sourceHeaderDatumM": 2133.6,
+            "datumNormalizationM": -333.6,
+            "datumNormalizationReason": "Legacy L5/L11 SEG-Y headers declare a 7000 ft processing datum; GeoSee renders those legacy products against the 1800 m seismic reference datum while retaining the source header datum for audit."
           },
           "valueEncoding": {
             "storedTextureEncoding": "uint8-normalized-p02-p98",
@@ -57596,12 +57690,12 @@
             "min": [
               -12251.153,
               -14465.9717,
-              -6630.4
+              -6964
             ],
             "max": [
               -6770.4159,
               -272.8792,
-              2133.6
+              1800
             ]
           },
           "navigationPlacement": {
@@ -57615,7 +57709,12 @@
         }
       ],
       "raymarchVolume": null,
-      "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE 2D -B11 PSTM Stack SEGY AREA Utah C 3 YEAR ACQUIRED: 1979 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 2ft TRACE LENGTH: 4384 ms C 5 CMP RANGE: 1-681 CMP_FOLD: 45 C 6 COORD SYSTEM: US STATE PLANE 4302 NAD 27 C 7 C 8 C 9 DATE:3/28/2019 C10 DATUM: 7000 ft REPLACEMENT VELOCITY: 10000 ft/s C12 CMP Bin : 75 ft C13 PRODUCT: PSDM Stack in depth C14 PROCESSING FLOW: C15 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C16 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C17 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C18 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C19 POST DECON NOISE ATTENUATION - SPECTRAL EDIT and DESPIKE C20 RESIDUAL STATICS C21 AGC C22 PSTM C23 STACK C24 C25 C26 C27 C28 C29 C30 C31 C32 CMP_X: byte 189 4 byte ibm real C33 CMP_Y: byte 193 4 byte ibm real C34 BIN_ELEV byte 53 4 byte C35 HEADER FOR FINAL DATUM CMP_STAT: byte 201 4 byte ibm real C36 C37 C38 C39 SEG Y REV1 C40 END EBCDIC"
+      "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE 2D -B11 PSTM Stack SEGY AREA Utah C 3 YEAR ACQUIRED: 1979 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 2ft TRACE LENGTH: 4384 ms C 5 CMP RANGE: 1-681 CMP_FOLD: 45 C 6 COORD SYSTEM: US STATE PLANE 4302 NAD 27 C 7 C 8 C 9 DATE:3/28/2019 C10 DATUM: 7000 ft REPLACEMENT VELOCITY: 10000 ft/s C12 CMP Bin : 75 ft C13 PRODUCT: PSDM Stack in depth C14 PROCESSING FLOW: C15 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C16 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C17 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C18 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C19 POST DECON NOISE ATTENUATION - SPECTRAL EDIT and DESPIKE C20 RESIDUAL STATICS C21 AGC C22 PSTM C23 STACK C24 C25 C26 C27 C28 C29 C30 C31 C32 CMP_X: byte 189 4 byte ibm real C33 CMP_Y: byte 193 4 byte ibm real C34 BIN_ELEV byte 53 4 byte C35 HEADER FOR FINAL DATUM CMP_STAT: byte 201 4 byte ibm real C36 C37 C38 C39 SEG Y REV1 C40 END EBCDIC",
+      "datumMetadata": {
+        "sourceHeaderDatumM": 2133.6,
+        "datumNormalizationM": -333.6,
+        "datumNormalizationReason": "Legacy L5/L11 SEG-Y headers declare a 7000 ft processing datum; GeoSee renders those legacy products against the 1800 m seismic reference datum while retaining the source header datum for audit."
+      }
     },
     {
       "id": "gdr-1141-line-l11-unmigrated-time-stack",
@@ -57644,7 +57743,7 @@
       "productKind": "pstm",
       "domainKind": "time",
       "domainUnit": "ms",
-      "datumM": 2133.6,
+      "datumM": 1800,
       "navigationPlacement": {
         "navigationSource": "delivered",
         "placementAccuracy": "unknown",
@@ -57655,7 +57754,7 @@
       },
       "verticalReference": {
         "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
-        "sourceDatumM": 2133.6,
+        "sourceDatumM": 1800,
         "referenceDatumM": 1800,
         "depthElevationMode": "display-depth-below-datum-to-absolute-elevation",
         "sourceSampleUnit": "ms",
@@ -57669,7 +57768,10 @@
           "depthReference": "below surface / report calibration point",
           "expectedDepthConversionErrorM": 20
         },
-        "sourceUnitStatus": "not-depth-m-domain"
+        "sourceUnitStatus": "not-depth-m-domain",
+        "sourceHeaderDatumM": 2133.6,
+        "datumNormalizationM": -333.6,
+        "datumNormalizationReason": "Legacy L5/L11 SEG-Y headers declare a 7000 ft processing datum; GeoSee renders those legacy products against the 1800 m seismic reference datum while retaining the source header datum for audit."
       },
       "valueEncoding": {
         "storedTextureEncoding": "uint8-normalized-p02-p98",
@@ -57734,12 +57836,12 @@
           "min": [
             -12251.153,
             -14465.9717,
-            -6630.4
+            -6964
           ],
           "max": [
             -6770.4159,
             -272.8792,
-            2133.6
+            1800
           ]
         },
         "registrationStatus": "unverified",
@@ -57838,10 +57940,10 @@
             "verticalScaleMPerUnit": 2,
             "sourceUnitStatus": "not-depth-m-domain"
           },
-          "datumM": 2133.6,
+          "datumM": 1800,
           "verticalReference": {
             "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
-            "sourceDatumM": 2133.6,
+            "sourceDatumM": 1800,
             "referenceDatumM": 1800,
             "depthElevationMode": "display-depth-below-datum-to-absolute-elevation",
             "sourceSampleUnit": "ms",
@@ -57855,7 +57957,10 @@
               "depthReference": "below surface / report calibration point",
               "expectedDepthConversionErrorM": 20
             },
-            "sourceUnitStatus": "not-depth-m-domain"
+            "sourceUnitStatus": "not-depth-m-domain",
+            "sourceHeaderDatumM": 2133.6,
+            "datumNormalizationM": -333.6,
+            "datumNormalizationReason": "Legacy L5/L11 SEG-Y headers declare a 7000 ft processing datum; GeoSee renders those legacy products against the 1800 m seismic reference datum while retaining the source header datum for audit."
           },
           "valueEncoding": {
             "storedTextureEncoding": "uint8-normalized-p02-p98",
@@ -61278,12 +61383,12 @@
             "min": [
               -12251.153,
               -14465.9717,
-              -6630.4
+              -6964
             ],
             "max": [
               -6770.4159,
               -272.8792,
-              2133.6
+              1800
             ]
           },
           "navigationPlacement": {
@@ -61297,7 +61402,12 @@
         }
       ],
       "raymarchVolume": null,
-      "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE 2D -B11 Unmigrated Time Stack SEGY AREA Utah C 3 YEAR ACQUIRED: 1979 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 2ft TRACE LENGTH: 20000 ft C 5 CMP RANGE: 1-681 CMP_FOLD: 45 C 6 COORD SYSTEM: US STATE PLANE 4302 NAD 27 C 7 C 8 C 9 DATE:3/28/2019 C10 DATUM: 7000 ft REPLACEMENT VELOCITY: 10000 ft/s C12 CMP Bin : 75 ft C13 PRODUCT: PSDM Stack in depth C14 PROCESSING FLOW: C15 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C16 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C17 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C18 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C19 POST DECON NOISE ATTENUATION - SPECTRAL EDIT and DESPIKE C20 RESIDUAL STATICS C21 PSDM tomographic VELOCITY ANALYSIS C22 Stack C23 BPF, 1000 ms AGC SCALING C24 DATA AT FINAL DATUM C25 C26 C27 C28 C29 C30 C31 C32 CMP_X: byte 189 4 byte ibm real C33 CMP_X: byte 193 4 byte ibm real C34 BIN_ELEV byte 53 4 byte C35 HEADER FOR FINAL DATUM CMP_STAT: byte 201 4 byte ibm real C36 C37 C38 C39 SEG Y REV1 C40 END EBCDIC"
+      "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE 2D -B11 Unmigrated Time Stack SEGY AREA Utah C 3 YEAR ACQUIRED: 1979 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 2ft TRACE LENGTH: 20000 ft C 5 CMP RANGE: 1-681 CMP_FOLD: 45 C 6 COORD SYSTEM: US STATE PLANE 4302 NAD 27 C 7 C 8 C 9 DATE:3/28/2019 C10 DATUM: 7000 ft REPLACEMENT VELOCITY: 10000 ft/s C12 CMP Bin : 75 ft C13 PRODUCT: PSDM Stack in depth C14 PROCESSING FLOW: C15 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C16 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C17 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C18 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C19 POST DECON NOISE ATTENUATION - SPECTRAL EDIT and DESPIKE C20 RESIDUAL STATICS C21 PSDM tomographic VELOCITY ANALYSIS C22 Stack C23 BPF, 1000 ms AGC SCALING C24 DATA AT FINAL DATUM C25 C26 C27 C28 C29 C30 C31 C32 CMP_X: byte 189 4 byte ibm real C33 CMP_X: byte 193 4 byte ibm real C34 BIN_ELEV byte 53 4 byte C35 HEADER FOR FINAL DATUM CMP_STAT: byte 201 4 byte ibm real C36 C37 C38 C39 SEG Y REV1 C40 END EBCDIC",
+      "datumMetadata": {
+        "sourceHeaderDatumM": 2133.6,
+        "datumNormalizationM": -333.6,
+        "datumNormalizationReason": "Legacy L5/L11 SEG-Y headers declare a 7000 ft processing datum; GeoSee renders those legacy products against the 1800 m seismic reference datum while retaining the source header datum for audit."
+      }
     },
     {
       "id": "gdr-1141-line-l5-pstm-enh",
@@ -61326,7 +61436,7 @@
       "productKind": "pstm",
       "domainKind": "time",
       "domainUnit": "ms",
-      "datumM": 2133.6,
+      "datumM": 1800,
       "navigationPlacement": {
         "navigationSource": "delivered",
         "placementAccuracy": "unknown",
@@ -61337,7 +61447,7 @@
       },
       "verticalReference": {
         "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
-        "sourceDatumM": 2133.6,
+        "sourceDatumM": 1800,
         "referenceDatumM": 1800,
         "depthElevationMode": "display-depth-below-datum-to-absolute-elevation",
         "sourceSampleUnit": "ms",
@@ -61351,7 +61461,10 @@
           "depthReference": "below surface / report calibration point",
           "expectedDepthConversionErrorM": 20
         },
-        "sourceUnitStatus": "not-depth-m-domain"
+        "sourceUnitStatus": "not-depth-m-domain",
+        "sourceHeaderDatumM": 2133.6,
+        "datumNormalizationM": -333.6,
+        "datumNormalizationReason": "Legacy L5/L11 SEG-Y headers declare a 7000 ft processing datum; GeoSee renders those legacy products against the 1800 m seismic reference datum while retaining the source header datum for audit."
       },
       "valueEncoding": {
         "storedTextureEncoding": "uint8-normalized-p02-p98",
@@ -61416,12 +61529,12 @@
           "min": [
             -12878.3052,
             -13705.302,
-            -6630.4
+            -6964
           ],
           "max": [
             -20.6017,
             -11235.3945,
-            2133.6
+            1800
           ]
         },
         "registrationStatus": "unverified",
@@ -61520,10 +61633,10 @@
             "verticalScaleMPerUnit": 2,
             "sourceUnitStatus": "not-depth-m-domain"
           },
-          "datumM": 2133.6,
+          "datumM": 1800,
           "verticalReference": {
             "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
-            "sourceDatumM": 2133.6,
+            "sourceDatumM": 1800,
             "referenceDatumM": 1800,
             "depthElevationMode": "display-depth-below-datum-to-absolute-elevation",
             "sourceSampleUnit": "ms",
@@ -61537,7 +61650,10 @@
               "depthReference": "below surface / report calibration point",
               "expectedDepthConversionErrorM": 20
             },
-            "sourceUnitStatus": "not-depth-m-domain"
+            "sourceUnitStatus": "not-depth-m-domain",
+            "sourceHeaderDatumM": 2133.6,
+            "datumNormalizationM": -333.6,
+            "datumNormalizationReason": "Legacy L5/L11 SEG-Y headers declare a 7000 ft processing datum; GeoSee renders those legacy products against the 1800 m seismic reference datum while retaining the source header datum for audit."
           },
           "valueEncoding": {
             "storedTextureEncoding": "uint8-normalized-p02-p98",
@@ -63750,12 +63866,12 @@
             "min": [
               -12878.3052,
               -13705.302,
-              -6630.4
+              -6964
             ],
             "max": [
               -20.6017,
               -11235.3945,
-              2133.6
+              1800
             ]
           },
           "navigationPlacement": {
@@ -63769,7 +63885,12 @@
         }
       ],
       "raymarchVolume": null,
-      "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE 2D -A5 PSTM Stack Enhanced SEGY AREA Utah C 3 YEAR ACQUIRED: 1979 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 2ms TRACE LENGTH: 4384 ms C 5 CMP RANGE: 1-439 CMP_FOLD: 30 C 6 COORD SYSTEM: US STATE PLANE 4302 NAD 27 C 7 C 8 C 9 DATE:3/28/2019 C10 DATUM: 7000 ft REPLACEMENT VELOCITY: 10000 ft/s C12 CMP Bin : 100 ft C13 PRODUCT: PSTM Stack in time C14 PROCESSING FLOW: C15 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C16 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C17 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C18 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C19 POST DECON NOISE ATTENUATION - SPECTRAL EDIT and DESPIKE C20 RESIDUAL STATICS C21 AGC C22 PSTM C23 STACK C24 C25 C26 C27 C28 C29 C30 C31 C32 CMP_X: byte 189 4 byte ibm real C33 CMP_Y: byte 193 4 byte ibm real C34 BIN_ELEV byte 53 4 byte C35 HEADER FOR FINAL DATUM CMP_STAT: byte 201 4 byte ibm real C36 C37 C38 C39 SEG Y REV1 C40 END EBCDIC"
+      "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE 2D -A5 PSTM Stack Enhanced SEGY AREA Utah C 3 YEAR ACQUIRED: 1979 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 2ms TRACE LENGTH: 4384 ms C 5 CMP RANGE: 1-439 CMP_FOLD: 30 C 6 COORD SYSTEM: US STATE PLANE 4302 NAD 27 C 7 C 8 C 9 DATE:3/28/2019 C10 DATUM: 7000 ft REPLACEMENT VELOCITY: 10000 ft/s C12 CMP Bin : 100 ft C13 PRODUCT: PSTM Stack in time C14 PROCESSING FLOW: C15 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C16 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C17 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C18 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C19 POST DECON NOISE ATTENUATION - SPECTRAL EDIT and DESPIKE C20 RESIDUAL STATICS C21 AGC C22 PSTM C23 STACK C24 C25 C26 C27 C28 C29 C30 C31 C32 CMP_X: byte 189 4 byte ibm real C33 CMP_Y: byte 193 4 byte ibm real C34 BIN_ELEV byte 53 4 byte C35 HEADER FOR FINAL DATUM CMP_STAT: byte 201 4 byte ibm real C36 C37 C38 C39 SEG Y REV1 C40 END EBCDIC",
+      "datumMetadata": {
+        "sourceHeaderDatumM": 2133.6,
+        "datumNormalizationM": -333.6,
+        "datumNormalizationReason": "Legacy L5/L11 SEG-Y headers declare a 7000 ft processing datum; GeoSee renders those legacy products against the 1800 m seismic reference datum while retaining the source header datum for audit."
+      }
     },
     {
       "id": "gdr-1141-line-l5-pstm-unenh",
@@ -63798,7 +63919,7 @@
       "productKind": "pstm",
       "domainKind": "time",
       "domainUnit": "ms",
-      "datumM": 2133.6,
+      "datumM": 1800,
       "navigationPlacement": {
         "navigationSource": "delivered",
         "placementAccuracy": "unknown",
@@ -63809,7 +63930,7 @@
       },
       "verticalReference": {
         "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
-        "sourceDatumM": 2133.6,
+        "sourceDatumM": 1800,
         "referenceDatumM": 1800,
         "depthElevationMode": "display-depth-below-datum-to-absolute-elevation",
         "sourceSampleUnit": "ms",
@@ -63823,7 +63944,10 @@
           "depthReference": "below surface / report calibration point",
           "expectedDepthConversionErrorM": 20
         },
-        "sourceUnitStatus": "not-depth-m-domain"
+        "sourceUnitStatus": "not-depth-m-domain",
+        "sourceHeaderDatumM": 2133.6,
+        "datumNormalizationM": -333.6,
+        "datumNormalizationReason": "Legacy L5/L11 SEG-Y headers declare a 7000 ft processing datum; GeoSee renders those legacy products against the 1800 m seismic reference datum while retaining the source header datum for audit."
       },
       "valueEncoding": {
         "storedTextureEncoding": "uint8-normalized-p02-p98",
@@ -63888,12 +64012,12 @@
           "min": [
             -12878.3052,
             -13705.302,
-            -6630.4
+            -6964
           ],
           "max": [
             -20.6017,
             -11235.3945,
-            2133.6
+            1800
           ]
         },
         "registrationStatus": "unverified",
@@ -63992,10 +64116,10 @@
             "verticalScaleMPerUnit": 2,
             "sourceUnitStatus": "not-depth-m-domain"
           },
-          "datumM": 2133.6,
+          "datumM": 1800,
           "verticalReference": {
             "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
-            "sourceDatumM": 2133.6,
+            "sourceDatumM": 1800,
             "referenceDatumM": 1800,
             "depthElevationMode": "display-depth-below-datum-to-absolute-elevation",
             "sourceSampleUnit": "ms",
@@ -64009,7 +64133,10 @@
               "depthReference": "below surface / report calibration point",
               "expectedDepthConversionErrorM": 20
             },
-            "sourceUnitStatus": "not-depth-m-domain"
+            "sourceUnitStatus": "not-depth-m-domain",
+            "sourceHeaderDatumM": 2133.6,
+            "datumNormalizationM": -333.6,
+            "datumNormalizationReason": "Legacy L5/L11 SEG-Y headers declare a 7000 ft processing datum; GeoSee renders those legacy products against the 1800 m seismic reference datum while retaining the source header datum for audit."
           },
           "valueEncoding": {
             "storedTextureEncoding": "uint8-normalized-p02-p98",
@@ -66222,12 +66349,12 @@
             "min": [
               -12878.3052,
               -13705.302,
-              -6630.4
+              -6964
             ],
             "max": [
               -20.6017,
               -11235.3945,
-              2133.6
+              1800
             ]
           },
           "navigationPlacement": {
@@ -66241,7 +66368,12 @@
         }
       ],
       "raymarchVolume": null,
-      "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE 2D -A5 PSTM Stack Unenhanced SEGY AREA Utah C 3 YEAR ACQUIRED: 1979 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 2ms TRACE LENGTH: 4384 ms C 5 CMP RANGE: 1-439 CMP_FOLD: 30 C 6 COORD SYSTEM: US STATE PLANE 4302 NAD 27 C 7 C 8 C 9 DATE:3/28/2019 C10 DATUM: 7000 ft REPLACEMENT VELOCITY: 10000 ft/s C12 CMP Bin : 100 ft C13 PRODUCT: PSTM Stack in time C14 PROCESSING FLOW: C15 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C16 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C17 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C18 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C19 POST DECON NOISE ATTENUATION - SPECTRAL EDIT and DESPIKE C20 RESIDUAL STATICS C21 AGC C22 PSTM C23 STACK C24 C25 C26 C27 C28 C29 C30 C31 C32 CMP_X: byte 189 4 byte ibm real C33 CMP_Y: byte 193 4 byte ibm real C34 BIN_ELEV byte 53 4 byte C35 HEADER FOR FINAL DATUM CMP_STAT: byte 201 4 byte ibm real C36 C37 C38 C39 SEG Y REV1 C40 END EBCDIC"
+      "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE 2D -A5 PSTM Stack Unenhanced SEGY AREA Utah C 3 YEAR ACQUIRED: 1979 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 2ms TRACE LENGTH: 4384 ms C 5 CMP RANGE: 1-439 CMP_FOLD: 30 C 6 COORD SYSTEM: US STATE PLANE 4302 NAD 27 C 7 C 8 C 9 DATE:3/28/2019 C10 DATUM: 7000 ft REPLACEMENT VELOCITY: 10000 ft/s C12 CMP Bin : 100 ft C13 PRODUCT: PSTM Stack in time C14 PROCESSING FLOW: C15 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C16 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C17 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C18 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C19 POST DECON NOISE ATTENUATION - SPECTRAL EDIT and DESPIKE C20 RESIDUAL STATICS C21 AGC C22 PSTM C23 STACK C24 C25 C26 C27 C28 C29 C30 C31 C32 CMP_X: byte 189 4 byte ibm real C33 CMP_Y: byte 193 4 byte ibm real C34 BIN_ELEV byte 53 4 byte C35 HEADER FOR FINAL DATUM CMP_STAT: byte 201 4 byte ibm real C36 C37 C38 C39 SEG Y REV1 C40 END EBCDIC",
+      "datumMetadata": {
+        "sourceHeaderDatumM": 2133.6,
+        "datumNormalizationM": -333.6,
+        "datumNormalizationReason": "Legacy L5/L11 SEG-Y headers declare a 7000 ft processing datum; GeoSee renders those legacy products against the 1800 m seismic reference datum while retaining the source header datum for audit."
+      }
     },
     {
       "id": "gdr-1141-line-l5-unmigrated-time-stack",
@@ -66270,7 +66402,7 @@
       "productKind": "pstm",
       "domainKind": "time",
       "domainUnit": "ms",
-      "datumM": 2133.6,
+      "datumM": 1800,
       "navigationPlacement": {
         "navigationSource": "delivered",
         "placementAccuracy": "unknown",
@@ -66281,7 +66413,7 @@
       },
       "verticalReference": {
         "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
-        "sourceDatumM": 2133.6,
+        "sourceDatumM": 1800,
         "referenceDatumM": 1800,
         "depthElevationMode": "display-depth-below-datum-to-absolute-elevation",
         "sourceSampleUnit": "ms",
@@ -66295,7 +66427,10 @@
           "depthReference": "below surface / report calibration point",
           "expectedDepthConversionErrorM": 20
         },
-        "sourceUnitStatus": "not-depth-m-domain"
+        "sourceUnitStatus": "not-depth-m-domain",
+        "sourceHeaderDatumM": 2133.6,
+        "datumNormalizationM": -333.6,
+        "datumNormalizationReason": "Legacy L5/L11 SEG-Y headers declare a 7000 ft processing datum; GeoSee renders those legacy products against the 1800 m seismic reference datum while retaining the source header datum for audit."
       },
       "valueEncoding": {
         "storedTextureEncoding": "uint8-normalized-p02-p98",
@@ -66360,12 +66495,12 @@
           "min": [
             -12878.3052,
             -13705.302,
-            -6466.4
+            -6800
           ],
           "max": [
             -20.6017,
             -11235.3945,
-            2133.6
+            1800
           ]
         },
         "registrationStatus": "unverified",
@@ -66464,10 +66599,10 @@
             "verticalScaleMPerUnit": 2,
             "sourceUnitStatus": "not-depth-m-domain"
           },
-          "datumM": 2133.6,
+          "datumM": 1800,
           "verticalReference": {
             "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
-            "sourceDatumM": 2133.6,
+            "sourceDatumM": 1800,
             "referenceDatumM": 1800,
             "depthElevationMode": "display-depth-below-datum-to-absolute-elevation",
             "sourceSampleUnit": "ms",
@@ -66481,7 +66616,10 @@
               "depthReference": "below surface / report calibration point",
               "expectedDepthConversionErrorM": 20
             },
-            "sourceUnitStatus": "not-depth-m-domain"
+            "sourceUnitStatus": "not-depth-m-domain",
+            "sourceHeaderDatumM": 2133.6,
+            "datumNormalizationM": -333.6,
+            "datumNormalizationReason": "Legacy L5/L11 SEG-Y headers declare a 7000 ft processing datum; GeoSee renders those legacy products against the 1800 m seismic reference datum while retaining the source header datum for audit."
           },
           "valueEncoding": {
             "storedTextureEncoding": "uint8-normalized-p02-p98",
@@ -68694,12 +68832,12 @@
             "min": [
               -12878.3052,
               -13705.302,
-              -6466.4
+              -6800
             ],
             "max": [
               -20.6017,
               -11235.3945,
-              2133.6
+              1800
             ]
           },
           "navigationPlacement": {
@@ -68713,7 +68851,12 @@
         }
       ],
       "raymarchVolume": null,
-      "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE 2D -A5 Unmigrated Stack SEGY AREA Utah C 3 YEAR ACQUIRED: 1979 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 4ft TRACE LENGTH: 20000 ft C 5 CMP RANGE: 1-439 CMP_FOLD: 30 C 6 COORD SYSTEM: US STATE PLANE 4302 NAD 27 C 7 C 8 C 9 DATE:3/28/2019 C10 DATUM: 7000 ft REPLACEMENT VELOCITY: 10000 ft/s C12 CMP Bin : 100 ft C13 PRODUCT: Time Stack C14 PROCESSING FLOW: C15 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C16 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C17 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C18 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C19 POST DECON NOISE ATTENUATION - SPECTRAL EDIT and DESPIKE C20 RESIDUAL STATICS C21 C22 Stack C23 BPF, 1000 ms AGC SCALING C24 DATA AT FINAL DATUM C25 C26 C27 C28 C29 C30 C31 C32 CMP_X: byte 189 4 byte ibm real C33 CMP_X: byte 193 4 byte ibm real C34 BIN_ELEV byte 53 4 byte C35 HEADER FOR FINAL DATUM CMP_STAT: byte 201 4 byte ibm real C36 C37 C38 C39 SEG Y REV1 C40 END EBCDIC"
+      "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE 2D -A5 Unmigrated Stack SEGY AREA Utah C 3 YEAR ACQUIRED: 1979 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 4ft TRACE LENGTH: 20000 ft C 5 CMP RANGE: 1-439 CMP_FOLD: 30 C 6 COORD SYSTEM: US STATE PLANE 4302 NAD 27 C 7 C 8 C 9 DATE:3/28/2019 C10 DATUM: 7000 ft REPLACEMENT VELOCITY: 10000 ft/s C12 CMP Bin : 100 ft C13 PRODUCT: Time Stack C14 PROCESSING FLOW: C15 GEOMETRY ASSIGNMENT AND QC,TRACE EDITS,REFRACTION STATICS. C16 AIRBLAST DENOISE,SPECTRAL EDIT DENOISE,LSNS DENOISE C17 QCOMP 100, DECON (OP 180 ms PRW 0.01%) C18 VELOCITY ANALYSIS AND RESIDUAL STATICS LOOPS (TWO ROUNDS) C19 POST DECON NOISE ATTENUATION - SPECTRAL EDIT and DESPIKE C20 RESIDUAL STATICS C21 C22 Stack C23 BPF, 1000 ms AGC SCALING C24 DATA AT FINAL DATUM C25 C26 C27 C28 C29 C30 C31 C32 CMP_X: byte 189 4 byte ibm real C33 CMP_X: byte 193 4 byte ibm real C34 BIN_ELEV byte 53 4 byte C35 HEADER FOR FINAL DATUM CMP_STAT: byte 201 4 byte ibm real C36 C37 C38 C39 SEG Y REV1 C40 END EBCDIC",
+      "datumMetadata": {
+        "sourceHeaderDatumM": 2133.6,
+        "datumNormalizationM": -333.6,
+        "datumNormalizationReason": "Legacy L5/L11 SEG-Y headers declare a 7000 ft processing datum; GeoSee renders those legacy products against the 1800 m seismic reference datum while retaining the source header datum for audit."
+      }
     },
     {
       "id": "gdr-1015-forge2d-301-stack-01312018",
@@ -73856,7 +73999,7 @@
       "productKind": "velocity",
       "domainKind": "velocity-time",
       "domainUnit": "ms",
-      "datumM": 2133.6,
+      "datumM": 1800,
       "navigationPlacement": {
         "navigationSource": "delivered",
         "placementAccuracy": "unknown",
@@ -73867,7 +74010,7 @@
       },
       "verticalReference": {
         "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
-        "sourceDatumM": 2133.6,
+        "sourceDatumM": 1800,
         "referenceDatumM": 1800,
         "depthElevationMode": "display-depth-below-datum-to-absolute-elevation",
         "sourceSampleUnit": "ms",
@@ -73881,7 +74024,10 @@
           "depthReference": "below surface / report calibration point",
           "expectedDepthConversionErrorM": 20
         },
-        "sourceUnitStatus": "not-depth-m-domain"
+        "sourceUnitStatus": "not-depth-m-domain",
+        "sourceHeaderDatumM": 2133.6,
+        "datumNormalizationM": -333.6,
+        "datumNormalizationReason": "Legacy L5/L11 SEG-Y headers declare a 7000 ft processing datum; GeoSee renders those legacy products against the 1800 m seismic reference datum while retaining the source header datum for audit."
       },
       "valueEncoding": {
         "storedTextureEncoding": "uint8-normalized-p02-p98",
@@ -73950,12 +74096,12 @@
           "min": [
             -12251.153,
             -14465.9717,
-            -37866.4
+            -38200
           ],
           "max": [
             -6770.4159,
             -272.8792,
-            2133.6
+            1800
           ]
         },
         "registrationStatus": "unverified",
@@ -74054,10 +74200,10 @@
             "verticalScaleMPerUnit": 2,
             "sourceUnitStatus": "not-depth-m-domain"
           },
-          "datumM": 2133.6,
+          "datumM": 1800,
           "verticalReference": {
             "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
-            "sourceDatumM": 2133.6,
+            "sourceDatumM": 1800,
             "referenceDatumM": 1800,
             "depthElevationMode": "display-depth-below-datum-to-absolute-elevation",
             "sourceSampleUnit": "ms",
@@ -74071,7 +74217,10 @@
               "depthReference": "below surface / report calibration point",
               "expectedDepthConversionErrorM": 20
             },
-            "sourceUnitStatus": "not-depth-m-domain"
+            "sourceUnitStatus": "not-depth-m-domain",
+            "sourceHeaderDatumM": 2133.6,
+            "datumNormalizationM": -333.6,
+            "datumNormalizationReason": "Legacy L5/L11 SEG-Y headers declare a 7000 ft processing datum; GeoSee renders those legacy products against the 1800 m seismic reference datum while retaining the source header datum for audit."
           },
           "valueEncoding": {
             "storedTextureEncoding": "uint8-normalized-p02-p98",
@@ -74778,12 +74927,12 @@
             "min": [
               -12251.153,
               -14465.9717,
-              -37866.4
+              -38200
             ],
             "max": [
               -6770.4159,
               -272.8792,
-              2133.6
+              1800
             ]
           },
           "navigationPlacement": {
@@ -74797,7 +74946,12 @@
         }
       ],
       "raymarchVolume": null,
-      "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE 2D -B11 PSDM Interval Velocity AREA Utah C 3 YEAR ACQUIRED: 1979 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 2ft TRACE LENGTH: 20000 ft C 5 CMP RANGE: 1-681 CMP_FOLD: NA C 6 COORD SYSTEM: US STATE PLANE 4302 NAD 27 C 7 C 8 C 9 DATE:3/28/2019 C10 DATUM: 7000 ft REPLACEMENT VELOCITY: 10000 ft/s C12 CMP Bin : 75 ft C13 PRODUCT: PSDM Stack in depth C14 PROCESSING FLOW: C15 PSDM tomographic VELOCITY ANALYSIS C16 iterations of handpicking guide and tomographic updates C17 data at topography (BIN_ELEV)with 10000 ft/s replacement velocity flood C18 C19 C20 C21 C22 C23 C24 C25 C26 C27 C28 C29 C30 C31 C32 CMP_X: byte 189 4 byte ibm real C33 CMP_X: byte 193 4 byte ibm real C34 BIN_ELEV byte 53 4 byte C35 HEADER FOR FINAL DATUM CMP_STAT: byte 201 4 byte ibm real C36 C37 C38 C39 SEG Y REV1 C40 END EBCDIC"
+      "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE 2D -B11 PSDM Interval Velocity AREA Utah C 3 YEAR ACQUIRED: 1979 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 2ft TRACE LENGTH: 20000 ft C 5 CMP RANGE: 1-681 CMP_FOLD: NA C 6 COORD SYSTEM: US STATE PLANE 4302 NAD 27 C 7 C 8 C 9 DATE:3/28/2019 C10 DATUM: 7000 ft REPLACEMENT VELOCITY: 10000 ft/s C12 CMP Bin : 75 ft C13 PRODUCT: PSDM Stack in depth C14 PROCESSING FLOW: C15 PSDM tomographic VELOCITY ANALYSIS C16 iterations of handpicking guide and tomographic updates C17 data at topography (BIN_ELEV)with 10000 ft/s replacement velocity flood C18 C19 C20 C21 C22 C23 C24 C25 C26 C27 C28 C29 C30 C31 C32 CMP_X: byte 189 4 byte ibm real C33 CMP_X: byte 193 4 byte ibm real C34 BIN_ELEV byte 53 4 byte C35 HEADER FOR FINAL DATUM CMP_STAT: byte 201 4 byte ibm real C36 C37 C38 C39 SEG Y REV1 C40 END EBCDIC",
+      "datumMetadata": {
+        "sourceHeaderDatumM": 2133.6,
+        "datumNormalizationM": -333.6,
+        "datumNormalizationReason": "Legacy L5/L11 SEG-Y headers declare a 7000 ft processing datum; GeoSee renders those legacy products against the 1800 m seismic reference datum while retaining the source header datum for audit."
+      }
     },
     {
       "id": "gdr-1141-line-l5-psdm-interval-velocity",
@@ -74826,7 +74980,7 @@
       "productKind": "velocity",
       "domainKind": "velocity-time",
       "domainUnit": "ms",
-      "datumM": 2133.6,
+      "datumM": 1800,
       "navigationPlacement": {
         "navigationSource": "delivered",
         "placementAccuracy": "unknown",
@@ -74837,7 +74991,7 @@
       },
       "verticalReference": {
         "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
-        "sourceDatumM": 2133.6,
+        "sourceDatumM": 1800,
         "referenceDatumM": 1800,
         "depthElevationMode": "display-depth-below-datum-to-absolute-elevation",
         "sourceSampleUnit": "ms",
@@ -74851,7 +75005,10 @@
           "depthReference": "below surface / report calibration point",
           "expectedDepthConversionErrorM": 20
         },
-        "sourceUnitStatus": "not-depth-m-domain"
+        "sourceUnitStatus": "not-depth-m-domain",
+        "sourceHeaderDatumM": 2133.6,
+        "datumNormalizationM": -333.6,
+        "datumNormalizationReason": "Legacy L5/L11 SEG-Y headers declare a 7000 ft processing datum; GeoSee renders those legacy products against the 1800 m seismic reference datum while retaining the source header datum for audit."
       },
       "valueEncoding": {
         "storedTextureEncoding": "uint8-normalized-p02-p98",
@@ -74920,12 +75077,12 @@
           "min": [
             -12878.3052,
             -13705.302,
-            -37866.4
+            -38200
           ],
           "max": [
             -20.6017,
             -11235.3945,
-            2133.6
+            1800
           ]
         },
         "registrationStatus": "unverified",
@@ -75024,10 +75181,10 @@
             "verticalScaleMPerUnit": 2,
             "sourceUnitStatus": "not-depth-m-domain"
           },
-          "datumM": 2133.6,
+          "datumM": 1800,
           "verticalReference": {
             "verticalDatum": "absolute elevation metres above sea level in GeoSee scene coordinates",
-            "sourceDatumM": 2133.6,
+            "sourceDatumM": 1800,
             "referenceDatumM": 1800,
             "depthElevationMode": "display-depth-below-datum-to-absolute-elevation",
             "sourceSampleUnit": "ms",
@@ -75041,7 +75198,10 @@
               "depthReference": "below surface / report calibration point",
               "expectedDepthConversionErrorM": 20
             },
-            "sourceUnitStatus": "not-depth-m-domain"
+            "sourceUnitStatus": "not-depth-m-domain",
+            "sourceHeaderDatumM": 2133.6,
+            "datumNormalizationM": -333.6,
+            "datumNormalizationReason": "Legacy L5/L11 SEG-Y headers declare a 7000 ft processing datum; GeoSee renders those legacy products against the 1800 m seismic reference datum while retaining the source header datum for audit."
           },
           "valueEncoding": {
             "storedTextureEncoding": "uint8-normalized-p02-p98",
@@ -75508,12 +75668,12 @@
             "min": [
               -12878.3052,
               -13705.302,
-              -37866.4
+              -38200
             ],
             "max": [
               -20.6017,
               -11235.3945,
-              2133.6
+              1800
             ]
           },
           "navigationPlacement": {
@@ -75527,7 +75687,12 @@
         }
       ],
       "raymarchVolume": null,
-      "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE 2D -A5 PSDM velocity SEGY AREA Utah C 3 YEAR ACQUIRED: 1979 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 4ft TRACE LENGTH: 20000 ft C 5 CMP RANGE: 1-439 CMP_FOLD: 30 C 6 COORD SYSTEM: US STATE PLANE 4302 NAD 27 C 7 C 8 C 9 DATE:3/28/2019 C10 DATUM: 7000 ft REPLACEMENT VELOCITY: 10000 ft/s C12 CMP Bin : 100 ft C13 PRODUCT: PSDM velocities C14 PROCESSING FLOW: C15 PSDM tomographic VELOCITY ANALYSIS C16 model building for PSDM C17 data at topography (BIN_ELEV)with 10000 ft/s replacement velocity flood C18 C19 C20 C21 C22 C23 C24 C25 C26 C27 C28 C29 C30 C31 C32 CMP_X: byte 189 4 byte ibm real C33 CMP_X: byte 193 4 byte ibm real C34 BIN_ELEV byte 53 4 byte C35 HEADER FOR FINAL DATUM CMP_STAT: byte 201 4 byte ibm real C36 C37 C38 C39 SEG Y REV1 C40 END EBCDIC"
+      "textHeaderExcerpt": "C 1 CLIENT: USGS/University of Utah PROCESSOR: Land Seismic Noise SpecialiC 2 LINE 2D -A5 PSDM velocity SEGY AREA Utah C 3 YEAR ACQUIRED: 1979 YEAR PROCESSED: 2019 C 4 SAMPLE INT: 4ft TRACE LENGTH: 20000 ft C 5 CMP RANGE: 1-439 CMP_FOLD: 30 C 6 COORD SYSTEM: US STATE PLANE 4302 NAD 27 C 7 C 8 C 9 DATE:3/28/2019 C10 DATUM: 7000 ft REPLACEMENT VELOCITY: 10000 ft/s C12 CMP Bin : 100 ft C13 PRODUCT: PSDM velocities C14 PROCESSING FLOW: C15 PSDM tomographic VELOCITY ANALYSIS C16 model building for PSDM C17 data at topography (BIN_ELEV)with 10000 ft/s replacement velocity flood C18 C19 C20 C21 C22 C23 C24 C25 C26 C27 C28 C29 C30 C31 C32 CMP_X: byte 189 4 byte ibm real C33 CMP_X: byte 193 4 byte ibm real C34 BIN_ELEV byte 53 4 byte C35 HEADER FOR FINAL DATUM CMP_STAT: byte 201 4 byte ibm real C36 C37 C38 C39 SEG Y REV1 C40 END EBCDIC",
+      "datumMetadata": {
+        "sourceHeaderDatumM": 2133.6,
+        "datumNormalizationM": -333.6,
+        "datumNormalizationReason": "Legacy L5/L11 SEG-Y headers declare a 7000 ft processing datum; GeoSee renders those legacy products against the 1800 m seismic reference datum while retaining the source header datum for audit."
+      }
     }
   ],
   "sourceFiles": [

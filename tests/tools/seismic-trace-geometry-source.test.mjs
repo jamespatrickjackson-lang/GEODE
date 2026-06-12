@@ -153,7 +153,19 @@ test("Legacy non-metre PSDM depth headers are converted from feet to scene metre
   assert.equal(l5.domainUnit, "m");
   assert.equal(l5.sourceUnitStatus, "header-indicated-depth-ft-converted-to-m");
   assert.equal(l5.sections[0]?.sampleDomain?.sourceUnitStatus, l5.sourceUnitStatus);
-  closeEnough(l5.datumM, 2133.6, 0.01, "L5 datum converted from 7000 ft");
+  closeEnough(l5.datumM, 1800, 0.01, "L5 render datum normalized to reference datum");
+  closeEnough(
+    l5.verticalReference?.sourceHeaderDatumM,
+    2133.6,
+    0.01,
+    "L5 source header datum retained for audit",
+  );
+  closeEnough(
+    l5.verticalReference?.datumNormalizationM,
+    -333.6,
+    0.01,
+    "L5 source header datum offset retained for audit",
+  );
   closeEnough(l5.sampleDomain?.spacing?.value, 3.048, 0.000001, "L5 validated 10 ft sample spacing in metres");
   closeEnough(l5.sampleRange?.[1], 6096, 0.001, "L5 20000 ft depth range in metres");
   assert.equal(
@@ -165,7 +177,19 @@ test("Legacy non-metre PSDM depth headers are converted from feet to scene metre
   assert.equal(l11.domainUnit, "m");
   assert.equal(l11.sourceUnitStatus, "header-indicated-depth-ft-converted-to-m");
   assert.equal(l11.sections[0]?.sampleDomain?.sourceUnitStatus, l11.sourceUnitStatus);
-  closeEnough(l11.datumM, 2133.6, 0.01, "L11 datum converted from 7000 ft");
+  closeEnough(l11.datumM, 1800, 0.01, "L11 render datum normalized to reference datum");
+  closeEnough(
+    l11.verticalReference?.sourceHeaderDatumM,
+    2133.6,
+    0.01,
+    "L11 source header datum retained for audit",
+  );
+  closeEnough(
+    l11.verticalReference?.datumNormalizationM,
+    -333.6,
+    0.01,
+    "L11 source header datum offset retained for audit",
+  );
   closeEnough(l11.sampleDomain?.spacing?.value, 0.6096, 0.000001, "L11 2 ft sample spacing in metres");
   closeEnough(l11.sampleRange?.[1], 6096, 0.001, "L11 20000 ft depth range in metres");
 });
@@ -181,7 +205,8 @@ test("Converted legacy metre products keep header datum and trace-length guards"
   closeEnough(l5.sampleRange?.[1], 5800, 0.001, "L5 converted sample max");
 
   assert.equal(l11.sourceUnitStatus, "header-indicated-depth-m");
-  closeEnough(l11.datumM, 2133.6, 0.01, "L11 converted datum from 7000 ft");
+  closeEnough(l11.datumM, 1800, 0.01, "L11 converted datum normalized to reference datum");
+  closeEnough(l11.verticalReference?.sourceHeaderDatumM, 2133.6, 0.01, "L11 converted header datum retained");
   closeEnough(l11.sampleDomain?.spacing?.value, 0.6, 0.000001, "L11 converted trace-length-derived spacing");
   closeEnough(l11.sampleRange?.[1], 6000, 0.001, "L11 converted trace length");
   assert.equal(l11.sampleDomain?.axisSource?.source, "header-trace-length-derived");

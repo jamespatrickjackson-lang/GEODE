@@ -1291,7 +1291,7 @@
       "productKind": "psdm",
       "domainKind": "depth",
       "domainUnit": "m",
-      "datumM": 2133.6,
+      "datumM": 1800.0,
       "sourceGeometry": {
         "status": "trace-header-derived",
         "geometrySource": "trace-header-cmp-ibm-real-state-plane-nad27-ftus-to-utm",
@@ -1350,12 +1350,12 @@
           "min": [
             -12251.153,
             -14465.9717,
-            -3962.4
+            -4296.0
           ],
           "max": [
             -6770.4159,
             -272.8792,
-            2133.6
+            1800.0
           ]
         },
         "registrationStatus": "unverified",
@@ -1403,7 +1403,7 @@
       "productKind": "psdm",
       "domainKind": "depth",
       "domainUnit": "m",
-      "datumM": 2133.6,
+      "datumM": 1800.0,
       "sourceGeometry": {
         "status": "trace-header-derived",
         "geometrySource": "trace-header-cmp-ibm-real-state-plane-nad27-ftus-to-utm",
@@ -1462,12 +1462,12 @@
           "min": [
             -12251.153,
             -14465.9717,
-            -3866.4
+            -4200.0
           ],
           "max": [
             -6770.4159,
             -272.8792,
-            2133.6
+            1800.0
           ]
         },
         "registrationStatus": "unverified",
@@ -1515,7 +1515,7 @@
       "productKind": "psdm",
       "domainKind": "depth",
       "domainUnit": "m",
-      "datumM": 2133.6,
+      "datumM": 1800.0,
       "sourceGeometry": {
         "status": "trace-header-derived",
         "geometrySource": "trace-header-cmp-ibm-real-state-plane-nad27-ftus-to-utm",
@@ -1574,12 +1574,12 @@
           "min": [
             -12251.153,
             -14465.9717,
-            -3962.4
+            -4296.0
           ],
           "max": [
             -6770.4159,
             -272.8792,
-            2133.6
+            1800.0
           ]
         },
         "registrationStatus": "unverified",
@@ -1627,7 +1627,7 @@
       "productKind": "psdm",
       "domainKind": "depth",
       "domainUnit": "m",
-      "datumM": 2133.6,
+      "datumM": 1800.0,
       "sourceGeometry": {
         "status": "trace-header-derived",
         "geometrySource": "trace-header-cmp-ibm-real-state-plane-nad27-ftus-to-utm",
@@ -1686,12 +1686,12 @@
           "min": [
             -12878.3052,
             -13705.302,
-            -3962.4
+            -4296.0
           ],
           "max": [
             -20.6017,
             -11235.3945,
-            2133.6
+            1800.0
           ]
         },
         "registrationStatus": "unverified",
@@ -1851,7 +1851,7 @@
       "productKind": "psdm",
       "domainKind": "depth",
       "domainUnit": "m",
-      "datumM": 2133.6,
+      "datumM": 1800.0,
       "sourceGeometry": {
         "status": "trace-header-derived",
         "geometrySource": "trace-header-cmp-ibm-real-state-plane-nad27-ftus-to-utm",
@@ -1910,12 +1910,12 @@
           "min": [
             -12878.3052,
             -13705.302,
-            -3962.4
+            -4296.0
           ],
           "max": [
             -20.6017,
             -11235.3945,
-            2133.6
+            1800.0
           ]
         },
         "registrationStatus": "unverified",
@@ -2425,7 +2425,7 @@
       "productKind": "pstm",
       "domainKind": "time",
       "domainUnit": "ms",
-      "datumM": 2133.6,
+      "datumM": 1800.0,
       "sourceGeometry": {
         "status": "trace-header-derived",
         "geometrySource": "trace-header-cmp-ibm-real-state-plane-nad27-ftus-to-utm",
@@ -2484,12 +2484,12 @@
           "min": [
             -12251.153,
             -14465.9717,
-            -6630.4
+            -6964.0
           ],
           "max": [
             -6770.4159,
             -272.8792,
-            2133.6
+            1800.0
           ]
         },
         "registrationStatus": "unverified",
@@ -2537,7 +2537,7 @@
       "productKind": "pstm",
       "domainKind": "time",
       "domainUnit": "ms",
-      "datumM": 2133.6,
+      "datumM": 1800.0,
       "sourceGeometry": {
         "status": "trace-header-derived",
         "geometrySource": "trace-header-cmp-ibm-real-state-plane-nad27-ftus-to-utm",
@@ -2596,12 +2596,12 @@
           "min": [
             -12251.153,
             -14465.9717,
-            -6630.4
+            -6964.0
           ],
           "max": [
             -6770.4159,
             -272.8792,
-            2133.6
+            1800.0
           ]
         },
         "registrationStatus": "unverified",
@@ -2649,7 +2649,7 @@
       "productKind": "pstm",
       "domainKind": "time",
       "domainUnit": "ms",
-      "datumM": 2133.6,
+      "datumM": 1800.0,
       "sourceGeometry": {
         "status": "trace-header-derived",
         "geometrySource": "trace-header-cmp-ibm-real-state-plane-nad27-ftus-to-utm",
@@ -2708,12 +2708,12 @@
           "min": [
             -12251.153,
             -14465.9717,
-            -6630.4
+            -6964.0
           ],
           "max": [
             -6770.4159,
             -272.8792,
-            2133.6
+            1800.0
           ]
         },
         "registrationStatus": "unverified",
@@ -2761,7 +2761,7 @@
       "productKind": "pstm",
       "domainKind": "time",
       "domainUnit": "ms",
-      "datumM": 2133.6,
+      "datumM": 1800.0,
       "sourceGeometry": {
         "status": "trace-header-derived",
         "geometrySource": "trace-header-cmp-ibm-real-state-plane-nad27-ftus-to-utm",
@@ -2820,12 +2820,12 @@
           "min": [
             -12878.3052,
             -13705.302,
-            -6630.4
+            -6964.0
           ],
           "max": [
             -20.6017,
             -11235.3945,
-            2133.6
+            1800.0
           ]
         },
         "registrationStatus": "unverified",
@@ -2873,7 +2873,7 @@
       "productKind": "pstm",
       "domainKind": "time",
       "domainUnit": "ms",
-      "datumM": 2133.6,
+      "datumM": 1800.0,
       "sourceGeometry": {
         "status": "trace-header-derived",
         "geometrySource": "trace-header-cmp-ibm-real-state-plane-nad27-ftus-to-utm",
@@ -2932,12 +2932,12 @@
           "min": [
             -12878.3052,
             -13705.302,
-            -6630.4
+            -6964.0
           ],
           "max": [
             -20.6017,
             -11235.3945,
-            2133.6
+            1800.0
           ]
         },
         "registrationStatus": "unverified",
@@ -2985,7 +2985,7 @@
       "productKind": "pstm",
       "domainKind": "time",
       "domainUnit": "ms",
-      "datumM": 2133.6,
+      "datumM": 1800.0,
       "sourceGeometry": {
         "status": "trace-header-derived",
         "geometrySource": "trace-header-cmp-ibm-real-state-plane-nad27-ftus-to-utm",
@@ -3044,12 +3044,12 @@
           "min": [
             -12878.3052,
             -13705.302,
-            -6466.4
+            -6800.0
           ],
           "max": [
             -20.6017,
             -11235.3945,
-            2133.6
+            1800.0
           ]
         },
         "registrationStatus": "unverified",
@@ -3405,7 +3405,7 @@
       "productKind": "velocity",
       "domainKind": "velocity-time",
       "domainUnit": "ms",
-      "datumM": 2133.6,
+      "datumM": 1800.0,
       "sourceGeometry": {
         "status": "trace-header-derived",
         "geometrySource": "trace-header-cmp-ibm-real-state-plane-nad27-ftus-to-utm",
@@ -3464,12 +3464,12 @@
           "min": [
             -12251.153,
             -14465.9717,
-            -37866.4
+            -38200.0
           ],
           "max": [
             -6770.4159,
             -272.8792,
-            2133.6
+            1800.0
           ]
         },
         "registrationStatus": "unverified",
@@ -3517,7 +3517,7 @@
       "productKind": "velocity",
       "domainKind": "velocity-time",
       "domainUnit": "ms",
-      "datumM": 2133.6,
+      "datumM": 1800.0,
       "sourceGeometry": {
         "status": "trace-header-derived",
         "geometrySource": "trace-header-cmp-ibm-real-state-plane-nad27-ftus-to-utm",
@@ -3576,12 +3576,12 @@
           "min": [
             -12878.3052,
             -13705.302,
-            -37866.4
+            -38200.0
           ],
           "max": [
             -20.6017,
             -11235.3945,
-            2133.6
+            1800.0
           ]
         },
         "registrationStatus": "unverified",

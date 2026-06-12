@@ -683,10 +683,20 @@ function validateSeismicProducts(seismicLayer) {
     ),
     true,
   );
+  const topGraniteInterpretationLayer = manifest.interpretationLayers?.find(
+    (layer) => layer.id === "top-of-granite-survey-picks-58-32",
+  );
   assert.equal(
-    manifest.interpretationLayers?.every((layer) => layer.status === "planned"),
+    manifest.interpretationLayers?.every((layer) =>
+      layer.id === topGraniteInterpretationLayer?.id
+        ? layer.status === "source-derived-interpreted-reference"
+        : layer.status === "planned",
+    ),
     true,
   );
+  assert.equal(topGraniteInterpretationLayer?.datumM, 1800);
+  assert.equal(topGraniteInterpretationLayer?.provenanceClassification, "source-derived");
+  assert.equal(topGraniteInterpretationLayer?.calibration?.depthBelowDatumM, 1200);
   assert.equal(
     manifest.interpretationLayers?.some((layer) =>
       layer.caveat?.toLowerCase().includes("auto-labeled"),
@@ -755,6 +765,21 @@ function validateSeismicProducts(seismicLayer) {
     );
     if (product.domainKind === "depth") {
       assert.equal(product.datumM, 1800, `${product.id} depth datum`);
+    }
+    if (product.lineId === "L5" || product.lineId === "L11") {
+      assert.equal(product.datumM, 1800, `${product.id} legacy datum`);
+      assertCloseTo(
+        product.verticalReference?.sourceHeaderDatumM,
+        2133.6,
+        0.01,
+        `${product.id} source header datum`,
+      );
+      assertCloseTo(
+        product.verticalReference?.datumNormalizationM,
+        -333.6,
+        0.01,
+        `${product.id} datum normalization`,
+      );
     }
     if (product.productKind === "velocity") {
       assert.deepEqual(
