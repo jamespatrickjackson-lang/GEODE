@@ -9,6 +9,7 @@ import {
   UTAH_FORGE_MT_THRESHOLD_SURFACES_LAYER_ID,
   UTAH_FORGE_MT_TOP_CONTACT_SURFACE_LAYER_ID,
   UTAH_FORGE_MT_TOP_SURFACE_LAYER_ID,
+  UTAH_FORGE_BOREHOLE_LOGS_LAYER_ID,
   UTAH_FORGE_PHASE3_WORKING_AREA_LAYER_ID,
   UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID,
   UTAH_FORGE_SITE_BOUNDARY_LAYER_ID,
@@ -311,6 +312,25 @@ export const MT_VOLUME_FIELDS = [
   "scalarLegendVisible",
   "opacity",
 ] as const satisfies readonly (keyof EditableStyle)[];
+export const BOREHOLE_LOG_FIELDS = [
+  "boreholeLogActiveWell",
+  "boreholeLogTrackSelection",
+  "boreholeLogTrackOffsetM",
+  "boreholeLogTrackWidthM",
+  "boreholeLogGammaScaleApi",
+  "boreholeLogResistivityMinOhmM",
+  "boreholeLogResistivityMaxOhmM",
+  "boreholeLogCurveFillCutoff",
+  "boreholeLogCurveOpacity",
+  "boreholeLogCurveLineWidthPx",
+  "boreholeLogDepthMinFt",
+  "boreholeLogDepthMaxFt",
+  "boreholeLogVerticalExaggeration",
+  "boreholeLogLithologyOpacity",
+  "boreholeLogLithologyWidthPx",
+  "boreholeLogProvenanceVisible",
+  "boreholeLogReadoutVisible",
+] as const satisfies readonly (keyof EditableStyle)[];
 export const ATMOSPHERE_VOLUME_FIELDS = [
   "atmosphereSubtype",
   "atmosphereBoundsMode",
@@ -427,7 +447,10 @@ export const UTAH_FORGE_PUBLIC_LAYER_GROUPS = [
   },
   {
     title: "Bore Holes",
-    ids: [UTAH_FORGE_DEMO_BOREHOLES_LAYER_ID],
+    ids: [
+      UTAH_FORGE_DEMO_BOREHOLES_LAYER_ID,
+      UTAH_FORGE_BOREHOLE_LOGS_LAYER_ID,
+    ],
   },
   {
     title: "Seismic analysis",

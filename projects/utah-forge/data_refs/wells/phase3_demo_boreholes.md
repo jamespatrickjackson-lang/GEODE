@@ -32,6 +32,11 @@ The `FORGE site boundary` control remains under `Site Details`; boreholes now
 have their own container so priority wells can be listed without implying every
 record has renderable trajectory geometry.
 
+`utah-forge-borehole-logs` is a separate, default-hidden source-derived layer
+for log tracks. It consumes this layer's validated 16A and 16B trajectories as
+path references, but it does not replace or promote source-location markers.
+See `projects/utah-forge/data_refs/wells/borehole_logs.md`.
+
 ## Bore Holes Priority Registry
 
 - `58-32`: core characterization and seismic/geologic anchor. GDR 1358 provides well and pad location rows; no active trajectory is rendered.

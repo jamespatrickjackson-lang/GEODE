@@ -760,6 +760,64 @@
       }
     },
     {
+      "id": "utah-forge-borehole-logs",
+      "label": "Borehole logs",
+      "type": "mesh",
+      "files": {
+        "manifest": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/borehole_logs/borehole_logs_manifest.json"
+      },
+      "metadata": {
+        "sourceFile": "Utah FORGE public LAS/CSV/XLSX log packages",
+        "sourceDate": "2017-2024",
+        "derivedArtifactDate": "2026-06-12",
+        "sourceOrigin": "Utah FORGE GDR submissions 1006, 1153, 1283, 1292, 1358, 1516, and 1531",
+        "sourceUrls": [
+          "https://gdr.openei.org/submissions/1006",
+          "https://gdr.openei.org/submissions/1153",
+          "https://gdr.openei.org/submissions/1283",
+          "https://gdr.openei.org/submissions/1292",
+          "https://gdr.openei.org/submissions/1358",
+          "https://gdr.openei.org/submissions/1516",
+          "https://gdr.openei.org/submissions/1531"
+        ],
+        "classification": "source-derived borehole logs",
+        "confidentiality": "public-source/derived",
+        "placeholder": false,
+        "sourceDataIncluded": true,
+        "rawSourceDataCommitted": false,
+        "boreholeLogs": {
+          "label": "Utah FORGE Borehole Logs",
+          "coordinateSystem": "scene-local meters, X east, Y north, Z up",
+          "sourceCrs": "EPSG:26912",
+          "containerArtifact": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/borehole_logs/borehole_logs_manifest.json",
+          "trackKinds": [
+            "gamma",
+            "resistivity",
+            "lithology"
+          ],
+          "trajectoryPolicy": "Tracks render only when mapped to validated as-drilled trajectory points. Missing trajectories remain source-blocked.",
+          "dlisPolicy": "DLIS and PDF sources are inventoried but not parsed without a tested parser.",
+          "rawSourceRoot": ".tmp/source-intake/utah-forge-borehole-logs"
+        },
+        "notes": "Source-derived borehole log layer. Display claims are limited to machine-readable LAS/CSV/XLSX tracks mapped by measured depth onto validated trajectories.",
+        "crsRegistration": {
+          "horizontalCrs": "EPSG:26912",
+          "verticalDatum": "per-well source datum where present; rendered in scene-local metres",
+          "units": "m",
+          "coordinateBasis": "utm",
+          "origin": {
+            "easting_m": 341467.35,
+            "northing_m": 4273374.5,
+            "elevation_m": 0
+          },
+          "rotationDeg": 0,
+          "registrationStatus": "unverified",
+          "accuracyClaimStatus": "source-derived track display; trajectory validation required per well",
+          "notes": "Logs are displayed along measured trajectory points only when the manifest marks the well trajectory available."
+        }
+      }
+    },
+    {
       "id": "utah-forge-site-boundary",
       "label": "FORGE site boundary",
       "type": "line",

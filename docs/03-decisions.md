@@ -2664,3 +2664,29 @@ basis remain under the Sections tool.
 `projects/*/overlays/**`, page ids, page titles, page indexes, or page order.
 Per-frame authored values such as explicit `groundTraceWidthM` remain valid
 overrides; generic defaults and clamps come from the effective Cinematics scene.
+
+## DEC-156 - Borehole logs render only on validated trajectories
+
+Extends DEC-143 for Utah FORGE borehole-log rendering.
+
+**Considered:** render borehole logs as vertical projections from wellhead
+coordinates, render every parsed LAS/CSV/XLSX track regardless of path status,
+or gate rendering on a measured-depth path that has validated trajectory points.
+
+**Chose:** `utah-forge-borehole-logs` renders only machine-readable
+source-derived tracks mapped by measured depth onto validated as-drilled
+trajectories. Tracks without a validated trajectory remain in the derived
+manifest as explicit source gaps, not display geometry. DLIS and PDF members
+are inventoried but not parsed unless a tested local parser is added.
+
+**Why:** a vertical projection would create false geometry confidence for
+deviated FORGE wells, and rendering parsed logs without a path would weaken the
+source claim boundary. The manifest can still preserve source presence,
+download status, units, sample spacing, and gap status so missing render output
+is auditable.
+
+**Guard:** raw GDR source packages stay in `.tmp/source-intake/utah-forge-borehole-logs/`
+or another ignored local source root. Committed artifacts may include only
+derived manifests, code, tests, docs, and explicit gap metadata. Do not repair
+missing log rendering with page fixtures, vertical fallback geometry, or
+unvalidated trajectory assumptions.

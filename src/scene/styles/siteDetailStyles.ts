@@ -2,7 +2,10 @@ import * as THREE from "three";
 import { Line2 } from "three/examples/jsm/lines/Line2.js";
 import { LineMaterial } from "three/examples/jsm/lines/LineMaterial.js";
 import type { EditableStyle } from "../../pages/types";
-import { UTAH_FORGE_DEMO_BOREHOLES_LAYER_ID } from "../../projectModules/utahForge/layerIds";
+import {
+  UTAH_FORGE_BOREHOLE_LOGS_LAYER_ID,
+  UTAH_FORGE_DEMO_BOREHOLES_LAYER_ID,
+} from "../../projectModules/utahForge/layerIds";
 import {
   UTAH_FORGE_DEMO_BOREHOLE_WELL_IDS,
   resolveDemoBoreholeSourceLocationItemStyle,
@@ -15,6 +18,7 @@ import {
   rebuildDemoBoreholeCenterlineGeometry,
   rebuildDemoBoreholePipeGeometry,
 } from "../../loaders/loadUtahForgeDemoBoreholes";
+import { applyUtahForgeBoreholeLogStyleToGroup } from "../../loaders/loadUtahForgeBoreholeLogs";
 import { loadBoreholeIconTexture } from "../../loaders/boreholeIcon";
 import { clamp01, clampRange } from "./styleUtils";
 
@@ -288,6 +292,18 @@ export function applyEzGammaStyle(this: unknown, layerId: string, style: Editabl
       }
     }
   });
+}
+
+export function applyUtahForgeBoreholeLogStyle(
+  this: unknown,
+  layerId: string,
+  style: EditableStyle,
+): void {
+  if (layerId !== UTAH_FORGE_BOREHOLE_LOGS_LAYER_ID) return;
+  const host = this as SiteDetailStyleHost;
+  const group = host.layers.get(layerId);
+  if (!group) return;
+  applyUtahForgeBoreholeLogStyleToGroup(group, style);
 }
 
 export function applyDemoBoreholeStyle(this: unknown, layerId: string, style: EditableStyle): void {
