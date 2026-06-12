@@ -768,11 +768,13 @@ function summarizeState(state) {
 
 async function waitForApp(page) {
   await page.goto(url(), { waitUntil: "networkidle" });
-  await page.locator("body").filter({ hasText: "Utah FORGE" }).waitFor({
+  // Readiness is the render canvas plus the page controller hook. Body
+  // text is deck-state (page titles change under authoring) and must not
+  // gate the tool.
+  await page.locator("canvas").waitFor({ timeout: 90_000 });
+  await page.waitForFunction(() => Boolean(window.__pageController?.getState), undefined, {
     timeout: 90_000,
   });
-  await page.locator("canvas").waitFor({ timeout: 30_000 });
-  await page.waitForFunction(() => Boolean(window.__pageController?.getState));
 }
 
 async function gotoAndSettle(page, index) {
