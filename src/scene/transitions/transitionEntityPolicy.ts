@@ -218,9 +218,18 @@ function fallbackForChangedChannels(
   if (changedChannels.some((channel) => channel.capability === "crossfade")) {
     return "crossfade";
   }
+  // DEC-163: color-material channels commit discretely, but they ride the
+  // final commit rather than demoting the entity - an interpolable sibling
+  // channel (scalar ramp) must keep its preserve-interpolate assignment.
+  // A color-only change has nothing to interpolate and commits discretely.
+  const hasInterpolableChange = changedChannels.some(
+    (channel) => channel.capability === "interpolate",
+  );
   if (
     changedChannels.some(
-      (channel) => channel.capability === "discrete-commit",
+      (channel) =>
+        channel.capability === "discrete-commit" &&
+        (channel.channelClass !== "color-material" || !hasInterpolableChange),
     )
   ) {
     return "discrete-commit";

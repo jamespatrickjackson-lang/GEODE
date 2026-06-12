@@ -155,6 +155,7 @@ import {
 import {
   SceneOverlaysController,
   type SceneOverlayDebugState,
+  type SceneOverlayTransitionClock,
 } from "./overlays/SceneOverlaysController";
 import {
   applySceneSectionHelperTransitionOpacity as applySceneSectionHelperTransitionOpacityImpl,
@@ -3073,6 +3074,7 @@ export class SceneManager {
       this.sceneOverlayController.applySceneOverlaysAtTransitionEnd(
         environment,
         nextPage,
+        undefined,
       );
       return null;
     }
@@ -3105,6 +3107,7 @@ export class SceneManager {
       this.sceneOverlayController.applySceneOverlaysAtTransitionEnd(
         environment,
         nextPage,
+        this.sceneOverlayTransitionClock(),
       );
     }
     this.recordTransitionCommitAttempt({
@@ -5213,10 +5216,12 @@ export class SceneManager {
   applySceneOverlaysAtTransitionStart(
     environment: EnvironmentSetup,
     nextPage: PresentationPage,
+    clock?: SceneOverlayTransitionClock,
   ): void {
     this.sceneOverlayController.applySceneOverlaysAtTransitionStart(
       environment,
       nextPage,
+      clock ?? this.sceneOverlayTransitionClock(),
     );
   }
 
@@ -5232,7 +5237,19 @@ export class SceneManager {
     this.sceneOverlayController.applySceneOverlaysAtTransitionEnd(
       environment,
       nextPage,
+      this.sceneOverlayTransitionClock(),
     );
+  }
+
+  private sceneOverlayTransitionClock():
+    | SceneOverlayTransitionClock
+    | undefined {
+    const transition = this.activeSceneTransitionContext;
+    if (!transition) return undefined;
+    return {
+      durationMs: transition.durationMs,
+      startMs: transition.startMs,
+    };
   }
 
   notifyResize(width: number, height: number): void {

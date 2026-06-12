@@ -92,6 +92,33 @@ function parentOpacityForFrame(
   return clamp01(options.parentOpacityForLayer(parentLayerId));
 }
 
+// Visibility is a composed channel (operating spec): the executor may
+// attenuate an authored-visible object to invisible, but must never force
+// an authored-invisible child visible during a fade. The authored flag is
+// captured once per transition window and restored when the frame is done.
+function composeEntityObjectVisibility(
+  object: TransitionEntityOpacityObject,
+  treeFactor: number,
+): void {
+  const userData = object.userData ?? (object.userData = {});
+  if (typeof userData.transitionBaseVisible !== "boolean") {
+    userData.transitionBaseVisible = object.visible !== false;
+  }
+  object.visible =
+    userData.transitionBaseVisible === true && treeFactor > 0.001;
+}
+
+function restoreEntityObjectVisibility(
+  object: TransitionEntityOpacityObject,
+): void {
+  const userData = object.userData;
+  if (!userData || typeof userData.transitionBaseVisible !== "boolean") {
+    return;
+  }
+  object.visible = userData.transitionBaseVisible;
+  delete userData.transitionBaseVisible;
+}
+
 export function collectTransitionEntityObjects(
   root: TransitionEntityOpacityObject,
 ): Map<string, TransitionEntityOpacityObject[]> {
@@ -114,9 +141,9 @@ export function applyTransitionEntityOpacityToTree(
   const parentOpacity = clamp01(parentLayerOpacity);
   const entityFactor = clamp01(entityOpacityFactor);
   const treeFactor = clamp01(parentOpacity * entityFactor);
-  root.visible = treeFactor > 0.001;
+  composeEntityObjectVisibility(root, treeFactor);
   root.traverse((object) => {
-    object.visible = treeFactor > 0.001;
+    composeEntityObjectVisibility(object, treeFactor);
     for (const material of materialList(object)) {
       const nextOpacity = clamp01(baseOpacityForMaterial(material) * treeFactor);
       if (typeof material.opacity === "number") {
@@ -155,6 +182,10 @@ export function applyTransitionEntityOpacityFrames(
         parentOpacityForFrame(frame, object, options),
         frame.opacityFactor,
       );
+      if (frame.done === true) {
+        restoreEntityObjectVisibility(object);
+        object.traverse(restoreEntityObjectVisibility);
+      }
     }
   }
 }

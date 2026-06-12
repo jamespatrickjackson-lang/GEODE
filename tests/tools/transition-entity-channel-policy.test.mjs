@@ -74,6 +74,61 @@ test("matched visible entity with scalar diff preserves and interpolates", () =>
   assert.equal(result.compatibility, "compatible");
 });
 
+test("color-only change commits discretely instead of claiming interpolation (DEC-163)", () => {
+  const result = classifyTransitionEntityPair({
+    source: visibleEntity({
+      channels: [
+        {
+          key: "style:color",
+          channelClass: "color-material",
+          capability: "discrete-commit",
+          value: "#f7f7f2",
+        },
+      ],
+    }),
+    target: visibleEntity({
+      channels: [
+        {
+          key: "style:color",
+          channelClass: "color-material",
+          capability: "discrete-commit",
+          value: "#ffd166",
+        },
+      ],
+    }),
+  });
+
+  assert.equal(result.assignment, "discrete-commit");
+  assert.equal(result.executionMode, "commit-discrete");
+});
+
+test("color change beside an interpolable channel keeps preserve-interpolate (DEC-163)", () => {
+  const channelsFor = (color, opacity) => [
+    {
+      key: "style:color",
+      channelClass: "color-material",
+      capability: "discrete-commit",
+      value: color,
+    },
+    {
+      key: "opacity",
+      channelClass: "continuous-scalar",
+      capability: "interpolate",
+      value: opacity,
+    },
+  ];
+  const result = classifyTransitionEntityPair({
+    source: visibleEntity({ channels: channelsFor("#f7f7f2", 0.4) }),
+    target: visibleEntity({ channels: channelsFor("#ffd166", 0.9) }),
+  });
+
+  assert.equal(result.assignment, "preserve-interpolate");
+  assert.deepEqual(
+    result.changedChannels.map((channel) => channel.key).sort(),
+    ["opacity", "style:color"],
+  );
+});
+
 test("matched visible entity with spatial diff preserves and interpolates", () => {
   const result = classifyTransitionEntityPair({
     source: visibleEntity({

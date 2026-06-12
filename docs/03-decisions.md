@@ -2835,3 +2835,28 @@ transition landed.
 
 **Guard:** `editor-deferred-flush` must preserve running enter tweens and must
 not become a generic bypass for duplicate target assertions or final commits.
+
+## DEC-163 - Color/material transition channels are explicitly discrete
+
+**Chose:** the transition render-graph adapter declares `color-material`
+channels with capability `discrete-commit`, and quick legends share the
+editor panel's landed gate: legend writes are blocked while a page
+transition is running or while the authoring page differs from the
+displayed page (`legendWritesLanded`).
+
+**Why:** color channels carried capability `interpolate` but no executor
+interpolates them, so classifier assignments claimed an interpolation the
+runtime silently snapped at frame one (review finding 2.2, Option A).
+Quick-legend writes without a landed gate applied selected-page styles
+onto a viewport showing a different page and persisted authored state to
+pages the user was not looking at (review finding 8.1); MT mode clicks
+mid-transition baked interpolated ramp values into the 1.5s mode
+animation and replayed them over the committed target (finding 7.2).
+
+**Guard:** a future color-lerp executor may restore `interpolate` for
+same-identity visible-in-both layers, scoped per layer family, with its
+own decision entry. The legend landed gate must stay shared
+(`src/ui/legendAuthoringTarget.ts`); per-legend copies are not allowed.
+The MT mode animation cancels its RAF when a page transition starts;
+final persistence still writes only `scalarLegendVisible` plus
+`scalarInclusionMode`.

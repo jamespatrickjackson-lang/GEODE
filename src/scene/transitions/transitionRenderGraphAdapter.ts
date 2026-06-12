@@ -155,10 +155,13 @@ function stateChannels(
       state.channelOwnerKey,
       state.channelOwnerPriority,
     ),
+    // DEC-163: color/material channels are declared discrete-commit. No
+    // executor interpolates them, so claiming "interpolate" produced
+    // preserve-interpolate assignments the runtime silently snapped.
     ...channelsFromRecord(
       state.colorChannels,
       "color-material",
-      "interpolate",
+      "discrete-commit",
       state.channelOwnerKey,
       state.channelOwnerPriority,
     ),

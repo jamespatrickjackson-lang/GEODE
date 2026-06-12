@@ -20,7 +20,10 @@ import {
 } from "../pages/effective";
 import { usePageController } from "../pages/PageController";
 import type { EditableStyle, PresentationPage } from "../pages/types";
-import { selectedLegendAuthoringPage } from "./legendAuthoringTarget";
+import {
+  legendWritesLanded,
+  selectedLegendAuthoringPage,
+} from "./legendAuthoringTarget";
 import {
   boundaryStyleFromDefinition,
   mtSurfaceBoundaryDefinitionsFromMetadata,
@@ -95,6 +98,13 @@ export function MtSurfaceBoundaryLegend({
       ? controllerPage
       : selectedPage ?? controllerPage);
   const writePage = authoringPage ?? page;
+  const writesEnabled = legendWritesLanded({
+    transitionActive: transitionFrame.active,
+    targetIndex,
+    authoringPage,
+    displayedPage: pageOverride ?? pages[currentIndex] ?? null,
+    editingEnvironment,
+  });
   if (!page) return null;
   const pageEnvironment = resolveEnvironmentForPage(
     state.environment,
@@ -134,6 +144,7 @@ export function MtSurfaceBoundaryLegend({
       : {};
   const definitionsById = new Map(definitions.map((definition) => [definition.id, definition]));
   const setBoundaryVisibility = (boundaryId: string, nextVisible: boolean) => {
+    if (!writesEnabled) return;
     const definition = definitionsById.get(boundaryId);
     const current =
       boundaryStyles[boundaryId] ??

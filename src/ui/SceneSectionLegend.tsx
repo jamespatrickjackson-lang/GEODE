@@ -34,7 +34,10 @@ import type {
   SceneSectionFrameState,
   SceneSectionPlaneState,
 } from "../pages/types";
-import { selectedLegendAuthoringPage } from "./legendAuthoringTarget";
+import {
+  legendWritesLanded,
+  selectedLegendAuthoringPage,
+} from "./legendAuthoringTarget";
 
 const UTAH_FORGE_PROJECT_SLUG = "utah-forge";
 const SCENE_SECTION_LAYER_ID = UTAH_FORGE_SCENE_SECTION_LAYER_ID;
@@ -569,6 +572,13 @@ export function SceneSectionLegend({
       ? controllerPage
       : selectedPage ?? controllerPage);
   const writePage = authoringPage ?? page;
+  const writesEnabled = legendWritesLanded({
+    transitionActive: transitionFrame.active,
+    targetIndex,
+    authoringPage,
+    displayedPage: pageOverride ?? pages[currentIndex] ?? null,
+    editingEnvironment,
+  });
   const pageEnvironment = page
     ? resolveEnvironmentForPage(state.environment, allAuthoringPages, page)
     : state.environment;
@@ -602,6 +612,7 @@ export function SceneSectionLegend({
     targetLayerId: string,
     patch: Partial<EditableStyle>,
   ) => {
+    if (!writesEnabled) return;
     const merged = { ...styleForLayer(targetLayerId), ...patch };
     if (canApplyLiveSceneEdits()) {
       sceneHandle.manager.applyStyle(targetLayerId, merged);
@@ -624,6 +635,7 @@ export function SceneSectionLegend({
     targetLayerId: string,
     patch: Partial<EditableStyle>,
   ) => {
+    if (!writesEnabled) return;
     if (!canApplyLiveSceneEdits()) return;
     sceneHandle.manager.applyStyle(targetLayerId, {
       ...styleForLayer(targetLayerId),

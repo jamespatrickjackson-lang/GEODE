@@ -9,7 +9,10 @@ import {
 } from "../pages/effective";
 import { usePageController } from "../pages/PageController";
 import type { EditableStyle, PresentationPage } from "../pages/types";
-import { selectedLegendAuthoringPage } from "./legendAuthoringTarget";
+import {
+  legendWritesLanded,
+  selectedLegendAuthoringPage,
+} from "./legendAuthoringTarget";
 import {
   QUICK_LEGEND_INACTIVE_BACKGROUND,
   colorWithAlpha,
@@ -133,6 +136,13 @@ export function BoreholeLogsLegend({
       ? controllerPage
       : selectedPage ?? controllerPage);
   const writePage = authoringPage ?? page;
+  const writesEnabled = legendWritesLanded({
+    transitionActive: transitionFrame.active,
+    targetIndex,
+    authoringPage,
+    displayedPage: pageOverride ?? pages[currentIndex] ?? null,
+    editingEnvironment,
+  });
   if (!page) return null;
 
   const pageEnvironment = resolveEnvironmentForPage(
@@ -154,6 +164,7 @@ export function BoreholeLogsLegend({
 
   const selection = trackSelection(style);
   const setStylePatch = (patch: Partial<EditableStyle>) => {
+    if (!writesEnabled) return;
     if (canApplyLiveSceneEdits()) {
       sceneHandle.manager.applyStyle(LAYER_ID, { ...style, ...patch });
     }
@@ -164,6 +175,7 @@ export function BoreholeLogsLegend({
     }
   };
   const setLayerVisible = (nextVisible: boolean) => {
+    if (!writesEnabled) return;
     if (editingEnvironment) {
       const currentlyVisible = state.environment.defaultVisibleLayers.includes(LAYER_ID);
       if (currentlyVisible !== nextVisible) toggleEnvDefaultVisible(LAYER_ID);

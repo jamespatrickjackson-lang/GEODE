@@ -89,6 +89,13 @@ Transition channels include:
 
 Unsupported channels must be explicitly declared discrete. They must not silently snap because they were forgotten.
 
+Declared-discrete channel families (no executor interpolates them yet):
+
+- color / material color channels (`color-material`, DEC-163): commit
+  discretely. A future color-lerp executor may upgrade same-identity
+  visible-in-both layers per family with a new decision entry.
+- categorical channels (`discrete-categorical`): commit discretely.
+
 ## Enter / exit
 
 Visible in source and absent/hidden in target:

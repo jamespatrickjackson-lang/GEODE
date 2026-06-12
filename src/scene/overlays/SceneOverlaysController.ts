@@ -2,6 +2,7 @@ import * as THREE from "three";
 import type { EnvironmentSetup, PresentationPage, SceneOverlayDef } from "../../pages/types";
 import { effectiveSceneOverlays } from "../../pages/effective";
 import {
+  OUTLINE_VISIBLE_ALPHA,
   disposeSceneOverlay,
   fadeSceneOverlayTo,
   loadSingleSceneOverlay,
@@ -14,6 +15,17 @@ import { debugLog } from "../../utils/debugLog";
 import { getHeightSampler } from "../heightSampler";
 
 export const SCENE_OVERLAY_FADE_MS = 800;
+const SCENE_OVERLAY_END_CLAMP_MIN_MS = 150;
+
+/**
+ * Page-transition clock for overlay fades (review finding 5.1). When
+ * provided, overlay fades ride the transition's duration instead of the
+ * fixed 800ms editor fade, so overlays settle when the camera lands.
+ */
+export interface SceneOverlayTransitionClock {
+  durationMs: number;
+  startMs?: number;
+}
 
 type SceneOverlayApplyPhase =
   | "page"
@@ -28,8 +40,9 @@ interface SceneOverlayApplyDebug {
 }
 
 export interface SceneOverlayDebugState {
-  policy: "fixed-duration-linear-fade";
+  policy: "fixed-duration-linear-fade" | "transition-clock-linear-fade";
   fadeDurationMs: number;
+  lastTransitionClockDurationMs: number | null;
   registeredHandleCount: number;
   activeTweenCount: number;
   activeOutlineTweenCount: number;
@@ -57,6 +70,7 @@ export class SceneOverlaysController {
   private overlayMaxAnisotropy = 1;
   private hoveredOverlayId: string | null = null;
   private lastApplyDebug: SceneOverlayApplyDebug | null = null;
+  private lastTransitionClockDurationMs: number | null = null;
 
   constructor(private readonly scene: THREE.Scene) {}
 
@@ -191,8 +205,12 @@ getDebugState(): SceneOverlayDebugState {
     outlineTweenActive: handle.outlineTween !== null,
   }));
   return {
-    policy: "fixed-duration-linear-fade",
+    policy:
+      this.lastTransitionClockDurationMs !== null
+        ? "transition-clock-linear-fade"
+        : "fixed-duration-linear-fade",
     fadeDurationMs: SCENE_OVERLAY_FADE_MS,
+    lastTransitionClockDurationMs: this.lastTransitionClockDurationMs,
     registeredHandleCount: handles.length,
     activeTweenCount: handles.filter((handle) => handle.tweenActive).length,
     activeOutlineTweenCount: handles.filter((handle) => handle.outlineTweenActive)
@@ -248,9 +266,25 @@ applySceneOverlaysForPage(
   }
 }
 
+private applySceneOverlayOpacityNow(
+  handle: SceneOverlayHandle,
+  opacity: number,
+): void {
+  handle.tween = null;
+  handle.target = opacity;
+  handle.material.opacity = opacity;
+  handle.mesh.visible = opacity > 0.001;
+  const outlineTo = opacity > 0 ? OUTLINE_VISIBLE_ALPHA : 0;
+  handle.outlineTween = null;
+  handle.outlineTarget = outlineTo;
+  handle.outlineMaterial.opacity = outlineTo;
+  handle.outlineMesh.visible = outlineTo > 0.001;
+}
+
 applySceneOverlaysAtTransitionStart(
   environment: EnvironmentSetup,
   nextPage: PresentationPage,
+  clock?: SceneOverlayTransitionClock,
 ): void {
   // Cache the target page so a registration during the tween replays
   // the correct end-state instead of the previous page's.
@@ -264,19 +298,28 @@ applySceneOverlaysAtTransitionStart(
     resolvedCount: resolved.length,
     appliedAtMs: now,
   };
+  this.lastTransitionClockDurationMs = clock ? clock.durationMs : null;
   if (this.sceneOverlays.size === 0) return;
+  // Both decreases and increases ride the page-transition clock so
+  // overlays settle when the camera lands instead of running a second
+  // 800ms wave after commit (finding 5.1).
+  const durationMs = clock ? clock.durationMs : SCENE_OVERLAY_FADE_MS;
   for (const r of resolved) {
     const handle = this.sceneOverlays.get(r.id);
     if (!handle) continue;
-    if (r.opacity < handle.target) {
-      fadeSceneOverlayTo(handle, r.opacity, now, SCENE_OVERLAY_FADE_MS);
+    if (durationMs <= 0) {
+      setSceneOverlayTint(handle, r.tint);
+      this.applySceneOverlayOpacityNow(handle, r.opacity);
+      continue;
     }
+    fadeSceneOverlayTo(handle, r.opacity, clock?.startMs ?? now, durationMs);
   }
 }
 
 applySceneOverlaysAtTransitionEnd(
   environment: EnvironmentSetup,
   nextPage: PresentationPage,
+  clock?: SceneOverlayTransitionClock,
 ): void {
   this.lastOverlayEnv = environment;
   this.lastOverlayPage = nextPage;
@@ -289,17 +332,27 @@ applySceneOverlaysAtTransitionEnd(
     appliedAtMs: now,
   };
   if (this.sceneOverlays.size === 0) return;
+  // The end phase is a clamp, not a second fade: handles still off
+  // target (registration raced the tween, or an editor change landed
+  // mid-transition) finish over the remaining transition time, floored
+  // so the catch-up never degenerates into a one-frame pop.
+  const remainingMs = clock
+    ? Math.max(
+        (clock.startMs ?? now) + clock.durationMs - now,
+        clock.durationMs <= 0 ? 0 : SCENE_OVERLAY_END_CLAMP_MIN_MS,
+      )
+    : SCENE_OVERLAY_END_CLAMP_MIN_MS;
   for (const r of resolved) {
     const handle = this.sceneOverlays.get(r.id);
     if (!handle) continue;
     // Tint is direct (no tween) so apply unconditionally.
     setSceneOverlayTint(handle, r.tint);
-    // Anything not already at target (which includes the show-ins
-    // skipped by the start half, plus opacity-shifts on overlays
-    // that stayed visible across the transition).
-    if (r.opacity !== handle.target) {
-      fadeSceneOverlayTo(handle, r.opacity, now, SCENE_OVERLAY_FADE_MS);
+    if (r.opacity === handle.target && !handle.tween) continue;
+    if (remainingMs <= 0) {
+      this.applySceneOverlayOpacityNow(handle, r.opacity);
+      continue;
     }
+    fadeSceneOverlayTo(handle, r.opacity, now, remainingMs);
   }
 }
 }

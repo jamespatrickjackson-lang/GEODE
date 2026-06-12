@@ -2591,9 +2591,10 @@ export function PageControllerProvider({
         target.transition.easing,
         transitionStartMs,
       );
-      // Scene overlays: fade leaving overlays out NOW (so they're not
-      // visible mid-tween over the wrong terrain) but defer fade-ins to
-      // the camera-arrival callback below.
+      // Scene overlays ride the page-transition clock in both directions
+      // (DEC-163 review finding 5.1): the manager derives the clock from
+      // the transition context registered above, so fades settle when the
+      // camera lands; the commit-time apply only clamps stragglers.
       sceneHandle.manager.applySceneOverlaysAtTransitionStart(
         targetResolved.environment,
         targetResolved.page,

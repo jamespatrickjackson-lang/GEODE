@@ -28,7 +28,10 @@ import {
 } from "../pages/effective";
 import { usePageController } from "../pages/PageController";
 import type { EditableStyle, PresentationPage } from "../pages/types";
-import { selectedLegendAuthoringPage } from "./legendAuthoringTarget";
+import {
+  legendWritesLanded,
+  selectedLegendAuthoringPage,
+} from "./legendAuthoringTarget";
 import { easeProgress } from "../scene/transitions/transitionStyles";
 import { UTAH_FORGE_MT_RESISTIVITY_FULL_DENSITY_LAYER_ID } from "../projectModules/utahForge/layerIds";
 
@@ -648,6 +651,14 @@ export function ResistivityLegend({
       ? controllerPage
       : selectedPage ?? controllerPage);
   const writePage = authoringPage ?? page;
+  const displayedPage = pageOverride ?? pages[currentIndex] ?? null;
+  const writesEnabled = legendWritesLanded({
+    transitionActive,
+    targetIndex,
+    authoringPage,
+    displayedPage,
+    editingEnvironment,
+  });
   const modeTransitionScopeKey = mtCellPointsModeTransitionScopeKey({
     projectSlug: state.projectSlug,
     editingEnvironment,
@@ -672,6 +683,19 @@ export function ResistivityLegend({
     setModeTransitionTarget(null);
     setEdgePopoverOpen(false);
   }, [modeTransitionScopeKey]);
+  // A page transition outlives the local 1.5s mode animation's RAF unless
+  // it is cancelled here; the leftover ticks would replay a stale
+  // interpolated style over the committed target page (finding 7.2).
+  useEffect(() => {
+    if (!transitionActive) return;
+    modeTransitionTokenRef.current += 1;
+    if (modeTransitionFrameRef.current !== null) {
+      window.cancelAnimationFrame(modeTransitionFrameRef.current);
+      modeTransitionFrameRef.current = null;
+    }
+    setModeTransitionTarget(null);
+    setEdgePopoverOpen(false);
+  }, [transitionActive]);
 
   if (state.projectSlug !== UTAH_FORGE_PROJECT_SLUG) return null;
   const legendTextColors = resolveLegendTextColors(
@@ -729,6 +753,7 @@ export function ResistivityLegend({
   const displayedMode = modeTransitionTarget ?? targetMode;
   const rampBodyVisible = pointCloudVisible;
   const controlsAvailable =
+    writesEnabled &&
     pointCloudVisible &&
     targetMode === "spectrum" &&
     modeTransitionTarget === null;
@@ -825,6 +850,7 @@ export function ResistivityLegend({
   const lowOverlap = Math.abs(trimMinPercent - blendMinPercent) < 1.2;
   const highOverlap = Math.abs(trimMaxPercent - blendMaxPercent) < 1.2;
   const setSpectralValue = (handle: SpectralHandle, value: number) => {
+    if (!writesEnabled) return;
     let nextTrimMin = trimMin;
     let nextBlendMin = blendMin;
     let nextBlendMax = blendMax;
@@ -864,6 +890,7 @@ export function ResistivityLegend({
     }
   };
   const setScalarRenderPatch = (patch: Partial<EditableStyle>) => {
+    if (!writesEnabled) return;
     if (canApplyLiveSceneEdits()) {
       sceneHandle.manager.applyStyle(layerId, { ...style, ...patch });
     }
@@ -874,6 +901,7 @@ export function ResistivityLegend({
     }
   };
   const setPointCloudVisible = (nextVisible: boolean) => {
+    if (!writesEnabled) return;
     if (!nextVisible) setEdgePopoverOpen(false);
     if (editingEnvironment) {
       const currentlyDefaultVisible =
@@ -904,7 +932,8 @@ export function ResistivityLegend({
     }
   };
   const setMtCellPointsMode = (nextMode: MtCellPointsMode) => {
-    if (!pointCloudVisible || nextMode === displayedMode) return;
+    if (!writesEnabled || !pointCloudVisible || nextMode === displayedMode)
+      return;
     if (modeTransitionFrameRef.current !== null) {
       window.cancelAnimationFrame(modeTransitionFrameRef.current);
       modeTransitionFrameRef.current = null;
@@ -979,6 +1008,7 @@ export function ResistivityLegend({
     modeTransitionFrameRef.current = window.requestAnimationFrame(tick);
   };
   const setEdgeValue = (handle: EdgeHandle, value: number) => {
+    if (!writesEnabled) return;
     const patch: Partial<EditableStyle> =
       handle === "edgeLower"
         ? { scalarEdgeLowerValue: clamp(value, trimMin, Math.max(trimMin, blendMin)) }
@@ -1132,6 +1162,7 @@ export function ResistivityLegend({
           data-testid={testId("resistivity-legend-master-toggle")}
           aria-pressed={pointCloudVisible}
           title={pointCloudVisible ? "Hide MT Cells" : "Show MT Cells"}
+          disabled={!writesEnabled}
           onPointerDown={(event) => event.stopPropagation()}
           onClick={() => setPointCloudVisible(!pointCloudVisible)}
           style={mtCellPointsPrimaryStyle(pointCloudVisible)}
@@ -1162,6 +1193,7 @@ export function ResistivityLegend({
             data-testid={testId("resistivity-legend-full-cloud-toggle")}
             title="All Valid Cells"
             disabled={
+              !writesEnabled ||
               !pointCloudVisible ||
               displayedMode === "full-cloud" ||
               modeTransitionTarget !== null
@@ -1182,6 +1214,7 @@ export function ResistivityLegend({
             data-testid={testId("resistivity-legend-spectrum-toggle")}
             title="Log10 Resistivity Window"
             disabled={
+              !writesEnabled ||
               !pointCloudVisible ||
               displayedMode === "spectrum" ||
               modeTransitionTarget !== null

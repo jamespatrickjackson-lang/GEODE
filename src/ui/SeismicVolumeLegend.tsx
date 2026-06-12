@@ -20,7 +20,10 @@ import {
 } from "../pages/effective";
 import { usePageController } from "../pages/PageController";
 import type { EditableStyle, PresentationPage } from "../pages/types";
-import { selectedLegendAuthoringPage } from "./legendAuthoringTarget";
+import {
+  legendWritesLanded,
+  selectedLegendAuthoringPage,
+} from "./legendAuthoringTarget";
 import { buildSeismicFigureModel } from "../geophysics/geophysicsFigureModel";
 
 const UTAH_FORGE_PROJECT_SLUG = "utah-forge";
@@ -383,6 +386,13 @@ export function SeismicVolumeLegend({
       ? controllerPage
       : selectedPage ?? controllerPage);
   const writePage = authoringPage ?? page;
+  const writesEnabled = legendWritesLanded({
+    transitionActive: transitionFrame.active,
+    targetIndex,
+    authoringPage,
+    displayedPage: pageOverride ?? pages[currentIndex] ?? null,
+    editingEnvironment,
+  });
   const pageEnvironment = page
     ? resolveEnvironmentForPage(state.environment, state.pages, page)
     : state.environment;
@@ -473,6 +483,7 @@ export function SeismicVolumeLegend({
   });
 
   const patchStyle = (patch: Partial<EditableStyle>) => {
+    if (!writesEnabled) return;
     if (canApplyLiveSceneEdits()) {
       sceneHandle.manager.applyStyle(SEISMIC_LAYER_ID, { ...style, ...patch });
     }

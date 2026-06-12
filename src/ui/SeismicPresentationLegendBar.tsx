@@ -28,7 +28,10 @@ import {
   resolveLegendTextColors,
   transparentLegendPanelStyle,
 } from "./legendStyles";
-import { selectedLegendAuthoringPage } from "./legendAuthoringTarget";
+import {
+  legendWritesLanded,
+  selectedLegendAuthoringPage,
+} from "./legendAuthoringTarget";
 import {
   buildSeismicPresentationLegendModel,
   seismicPresentationColor,
@@ -415,6 +418,13 @@ export function SeismicPresentationLegendBar({
       ? controllerPage
       : selectedPage ?? controllerPage);
   const writePage = authoringPage ?? page;
+  const writesEnabled = legendWritesLanded({
+    transitionActive: transitionFrame.active,
+    targetIndex,
+    authoringPage,
+    displayedPage: pageOverride ?? pages[currentIndex] ?? null,
+    editingEnvironment,
+  });
   const allPages = [...state.pages, ...state.archivedPages];
   const pageEnvironment = page
     ? resolveEnvironmentForPage(state.environment, allPages, page)
@@ -476,6 +486,7 @@ export function SeismicPresentationLegendBar({
     verticalExaggeration: topoMapSettings.terrain.verticalExaggeration,
   });
   const patchStyle = (patch: Partial<EditableStyle>) => {
+    if (!writesEnabled) return;
     if (canApplyLiveSceneEdits()) {
       sceneHandle.manager.applyStyle(UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID, {
         ...style,
@@ -495,6 +506,7 @@ export function SeismicPresentationLegendBar({
     patchStyle({ seismicSliceAxis: axis });
   };
   const setLayerVisible = (nextVisible: boolean) => {
+    if (!writesEnabled) return;
     if (!nextVisible) {
       setControlsPopoverOpen(false);
       setInfoPopoverOpen(false);

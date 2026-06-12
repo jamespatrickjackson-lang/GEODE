@@ -25,7 +25,10 @@ import {
 } from "../pages/effective";
 import { usePageController } from "../pages/PageController";
 import type { EditableStyle, PresentationPage } from "../pages/types";
-import { selectedLegendAuthoringPage } from "./legendAuthoringTarget";
+import {
+  legendWritesLanded,
+  selectedLegendAuthoringPage,
+} from "./legendAuthoringTarget";
 import type {
   ScalarSectionIsoTarget,
   SectionIsoTargetGroup,
@@ -529,6 +532,13 @@ export function SectionIsoLegend({
       ? controllerPage
       : selectedPage ?? controllerPage);
   const writePage = authoringPage ?? page;
+  const writesEnabled = legendWritesLanded({
+    transitionActive: transitionFrame.active,
+    targetIndex,
+    authoringPage,
+    displayedPage: pageOverride ?? pages[currentIndex] ?? null,
+    editingEnvironment,
+  });
   const pageEnvironment = page
     ? resolveEnvironmentForPage(state.environment, state.pages, page)
     : state.environment;
@@ -585,6 +595,7 @@ export function SectionIsoLegend({
       ? (style.sectionIsoTargetIds as Record<string, boolean>)
       : {};
   const commit = (patch: Partial<EditableStyle>) => {
+    if (!writesEnabled) return;
     const merged = { ...style, ...patch };
     if (canApplyLiveSceneEdits()) {
       sceneHandle.manager.applyStyle(layerId, merged);

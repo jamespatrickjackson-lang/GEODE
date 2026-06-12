@@ -217,3 +217,86 @@ test("survey role frames fade only the matching role entity", () => {
   assert.equal(sourceMaterial.opacity, 0.78);
   assert.equal(receiverMaterial.opacity, 0.78);
 });
+
+test("authored-invisible children stay invisible during the fade and flags restore on done", () => {
+  const hiddenChild = node("hidden pick proxy", {}, material(1));
+  hiddenChild.visible = false;
+  const visibleChild = node("annotation", {}, material(0.9));
+  const entity = node(
+    "figure root",
+    {
+      transitionEntityKey: "entity:figure:a",
+      transitionRepresentationKey: "seismic:figure-annotation",
+      transitionParentLayerId: "seismic-layer",
+      transitionObjectKind: "figure-annotation",
+    },
+    material(0.8),
+    [hiddenChild, visibleChild],
+  );
+  const root = node("root", {}, null, [entity]);
+
+  applyTransitionEntityOpacityFrames(root, [
+    {
+      entityKey: "entity:figure:a",
+      parentLayerId: "seismic-layer",
+      opacityFactor: 0.5,
+    },
+  ]);
+
+  assert.equal(entity.visible, true);
+  assert.equal(visibleChild.visible, true);
+  assert.equal(hiddenChild.visible, false);
+  assert.equal(entity.userData.transitionBaseVisible, true);
+  assert.equal(hiddenChild.userData.transitionBaseVisible, false);
+
+  applyTransitionEntityOpacityFrames(root, [
+    {
+      entityKey: "entity:figure:a",
+      parentLayerId: "seismic-layer",
+      opacityFactor: 1,
+      done: true,
+    },
+  ]);
+
+  assert.equal(entity.visible, true);
+  assert.equal(visibleChild.visible, true);
+  assert.equal(hiddenChild.visible, false);
+  assert.equal("transitionBaseVisible" in entity.userData, false);
+  assert.equal("transitionBaseVisible" in hiddenChild.userData, false);
+  assert.equal("transitionBaseVisible" in visibleChild.userData, false);
+});
+
+test("fade-to-zero hides authored-visible objects until done restores the flag", () => {
+  const entity = node(
+    "survey lines",
+    {
+      transitionEntityKey: "entity:survey:lines",
+      transitionRepresentationKey: "seismic:survey-geometry",
+      transitionParentLayerId: "seismic-layer",
+      transitionObjectKind: "survey-geometry",
+      transitionRole: "lines",
+    },
+    material(0.82),
+  );
+  const root = node("root", {}, null, [entity]);
+
+  applyTransitionEntityOpacityFrames(root, [
+    {
+      entityKey: "entity:survey:lines",
+      parentLayerId: "seismic-layer",
+      opacityFactor: 0,
+    },
+  ]);
+  assert.equal(entity.visible, false);
+
+  applyTransitionEntityOpacityFrames(root, [
+    {
+      entityKey: "entity:survey:lines",
+      parentLayerId: "seismic-layer",
+      opacityFactor: 0,
+      done: true,
+    },
+  ]);
+  assert.equal(entity.visible, true);
+  assert.equal("transitionBaseVisible" in entity.userData, false);
+});

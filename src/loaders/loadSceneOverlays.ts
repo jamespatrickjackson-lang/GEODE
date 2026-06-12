@@ -13,7 +13,7 @@ import { debugLog } from "../utils/debugLog";
 const OUTLINE_COLOR = 0xc8c0a8;
 const OUTLINE_LINEWIDTH = 1.2;
 const OUTLINE_LIFT_M = 6; // above streams (+5m), below targets
-const OUTLINE_VISIBLE_ALPHA = 0.6;
+export const OUTLINE_VISIBLE_ALPHA = 0.6;
 
 // Scene-overlay loader. Each registered overlay becomes a single
 // terrain-conformal mesh textured with the source image:
