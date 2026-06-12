@@ -25,30 +25,15 @@ import {
 } from "../../topoMap/settings";
 import type { TransitionCommitGateState } from "./transitionCommitGate";
 import type { TransitionAssignmentTrace } from "./transitionRenderGraphAdapter";
+import { easeProgress } from "./transitionEasing";
+
+// Re-exported so existing `import { easeProgress } from "./transitionStyles"`
+// call sites keep working; the implementation lives in the dependency-free
+// transitionEasing module.
+export { easeProgress };
 
 const MT_SURFACE_MASK_DEFAULT_DEPTH_M = 25;
 const MT_SURFACE_MASK_DEFAULT_FEATHER_M = 175;
-
-function clamp01(v: number): number {
-  return Math.min(1, Math.max(0, v));
-}
-
-export function easeProgress(t: number, easing: EasingName): number {
-  const x = clamp01(t);
-  switch (easing) {
-    case "linear":
-      return x;
-    case "easeInOutSine":
-      return -(Math.cos(Math.PI * x) - 1) / 2;
-    case "easeOutQuart":
-      return 1 - Math.pow(1 - x, 4);
-    case "easeOutCubic":
-      return 1 - Math.pow(1 - x, 3);
-    case "easeInOutCubic":
-    default:
-      return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
-  }
-}
 
 export function scalarInclusionFilterActive(
   layerId: string,

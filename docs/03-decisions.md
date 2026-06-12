@@ -2537,3 +2537,38 @@ temporary face display state into disposable page fixtures.
 or page-order conditionals. Face display channel toggles are runtime UI state;
 computed source frame coordinates must come from product/object basis metadata,
 not persisted page geometry.
+
+## DEC-152 - Transition execution layer consumes classifier assignments
+
+Supersedes the TRD-008 classifier-only boundary recorded in
+`docs/dev-context/Transition-Decision-Log.md`. Durable peer of TRD-013.
+
+**Considered:** keep the pure classifier diagnostic-only and patch the seismic
+transition defects through more imperative `shouldCrossfade*` booleans; build a
+bounded execution layer for the seismic graph only; or make a single execution
+layer the assignment-driven owner of all transition channels.
+
+**Chose:** a transition execution layer that consumes classifier assignments and
+owns per-entity execution for every channel. It is a dispatch layer, not a
+reimplementation: `buildTransitionExecutionPlan` turns assignments into typed
+operations, `evaluateTransitionExecutionPlan` advances them per frame, and a
+channel-executor registry routes each operation to an existing interpolation
+kernel. The environment-scene blend (TRD-009), scene-section mask/helper owner
+(TRD-010), Section ISO root owner (TRD-011/012), working-area focus tween, and
+the protected MT full-density scalar kernel become registered executors
+triggered by assignment. Seismic derived entities gain a dedicated entity
+executor keyed on trace-header `userData` identity.
+
+**Why:** the classifier already resolves correct per-entity behavior, but a
+parallel imperative ladder made the real decision, so the seismic derived-entity
+graph classified without driving anything. Routing execution through assignments
+satisfies Transition-Continuity-Contract invariant 11 (scene mutation consumes
+assignments, not independent fades) while preserving the documented protected
+paths byte-for-byte inside their kernels.
+
+**Guard:** the existing transition source-pattern tests are the regression
+contract and stay green; only assertions naming a replaced decision-ladder
+boolean move to the assignment-driven equivalent. The MT-scalar/cloud kernel is
+unchanged; only its dispatch trigger moves. Do not introduce page-id,
+page-index, page-title, or page-order branches in the execution layer, and do
+not reimplement interpolation math outside the registered kernels.

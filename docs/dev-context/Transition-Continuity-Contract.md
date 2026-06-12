@@ -104,19 +104,25 @@ Current allowed implementation scope:
   and helper opacity accepted by TRD-010 and bounded by TRD-012.
 - Narrow target-active Section ISO derived-root crossfade owner accepted by
   TRD-011 and bounded by TRD-012.
+- Transition execution layer that consumes classifier assignments and dispatches
+  each per-entity operation to an existing interpolation kernel, accepted by
+  TRD-013. The execution layer is the single assignment-driven owner; the
+  TRD-009/010/011/012 owners and the protected MT-scalar kernel are registered
+  channel executors triggered by assignment, with unchanged interpolation math.
 
 Current excluded implementation scope:
 
 - Camera smoothing.
-- Opacity behavior changes.
+- Opacity behavior changes outside assignment-driven dispatch to existing
+  kernels (no new interpolation math).
 - Contour cadence or LOD changes.
 - Broad section-helper behavior changes outside the TRD-010 mask/helper-opacity
   transition owner.
 - Broad ground-line remediation outside existing helper/height-sampler paths.
-- Snapshot execution changes.
+- Snapshot execution changes outside assignment-driven dispatch.
 - Page JSON or fixture composition edits.
-- Wiring the pure classifier assignments into broad scene mutation.
 - Terrain light-mode ramp, lighting, sun, and full scene mood interpolation.
 
-Execution-layer consumers can be designed after this contract and classifier
-shape are accepted.
+Per TRD-013, wiring classifier assignments into scene mutation is now in scope
+through the execution layer; the prior classifier-only boundary (TRD-008) is
+superseded.

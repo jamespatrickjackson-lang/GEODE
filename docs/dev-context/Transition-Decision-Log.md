@@ -306,3 +306,52 @@ section exits on unsectioned target pages.
 
 Evidence: `tests/tools/scene-section-transition-behavior-source.test.mjs`,
 `tests/tools/section-iso-transition-smoothing-source.test.mjs`.
+
+## TRD-013 - Transition Execution Layer Consumes Classifier Assignments
+
+Status: accepted
+
+Supersedes the TRD-008 classifier-only boundary.
+
+Problem: The classifier (`classifyTransitionRenderGraphs`) produces correct
+per-entity assignments every navigation, but no scene mutation consumes them.
+Execution is decided by a parallel imperative ladder
+(`shouldCrossfadeDiscreteData`, `shouldCrossfadeSceneSection`,
+`shouldTweenScalarStyle`, `authoredProductTransitionKind`) and advanced by
+`tickLayerTweens`. The seismic derived-entity graph (section/product,
+figure-annotation, survey-geometry, comparison) classifies with stable identity
+keys but drives nothing, so survey-geometry toggles crossfade the whole seismic
+layer, figure annotations have no independent enter/exit, slice-fraction changes
+crossfade instead of moving, and same-product sections fade between pages.
+
+Decision: A transition execution layer consumes classifier assignments and is
+the single owner of per-entity execution. It is an ownership/dispatch layer, not
+a reimplementation. `buildTransitionExecutionPlan` maps each assignment's
+execution mode to an executor kind; `evaluateTransitionExecutionPlan` advances it
+per frame; a channel-executor registry dispatches each active operation to an
+existing interpolation kernel. The TRD-009 environment-scene blend, the TRD-010
+scene-section mask/helper owner, the TRD-011/012 Section ISO root owner, the
+working-area focus tween, and the protected MT full-density scalar kernel are
+re-framed as registered channel executors triggered by assignment, not as
+independent deciders. Their interpolation math is unchanged. Seismic derived
+entities gain a dedicated entity executor that applies per-identity opacity to
+trace-header-tagged meshes.
+
+Consequences: The imperative decision ladder in `transitionEffectiveLayersForPage`
+is replaced by plan construction; `tickLayerTweens` becomes a plan evaluator that
+dispatches through the registry. The protected MT-scalar/cloud path keeps its
+exact kernel (`interpolatedScalarStyle`); only its dispatch trigger moves to the
+assignment. All prior transition source-pattern tests remain the regression
+contract and must stay green; assertions that grep a replaced decision-ladder
+boolean are repointed at the assignment-driven equivalent in lockstep with this
+entry. Page-id, page-index, page-title, and page-order remain non-identity.
+
+Revisit when: A renderer needs a durable per-entity execution exception that
+cannot be expressed as an assignment execution mode plus a registered executor
+kind, or when the channel-executor registry needs an authored timing source
+separate from page-transition timing.
+
+Evidence: `tests/tools/transition-execution-plan.test.mjs`,
+`tests/tools/seismic-graph-transition-executor.test.mjs`,
+`tests/tools/transition-entity-channel-policy.test.mjs`. Peer durable decision
+DEC-152 in `docs/03-decisions.md`.
