@@ -17,6 +17,11 @@ const RECIPES_PATH = path.join(
 const PROJECT_PATH = path.join(ROOT, "projects/utah-forge/project.json");
 const RECIPES_PROJECT_PATH = `${SEISMIC_DIR}/browser/seismic_demo_recipes.json`;
 const SEISMIC_LAYER_ID = "utah-forge-phase3-seismic-browser";
+const MT_FULL_DENSITY_LAYER_ID = "utah-forge-mt-resistivity-full-density";
+const MT_THRESHOLD_SURFACES_LAYER_ID =
+  "utah-forge-mt-resistivity-threshold-surfaces";
+const DEMO_BOREHOLES_LAYER_ID = "utah-forge-phase3-demo-boreholes";
+const SCENE_SECTION_LAYER_ID = "utah-forge-scene-section-planes";
 
 const DISCLOSURE_LABELS = [
   "public geothermal demo data",
@@ -33,6 +38,114 @@ const PSDM_58_32_TIE_PRESET_ID = "psdm-mt-58-32-source-location-tie";
 const PSDM_58_32_TIE_LABEL = "PSDM + MT + 58-32 source-location tie";
 const PSDM_58_32_TIE_PROVENANCE_NOTE =
   "PSDM + MT + 58-32 source-location tie. Presentation-enhanced PSDM surrogate rendered from the GDR 1141 unenhanced anisotropic PSDM depth volume (Forge3d_ANI_PSDM_Stack_UnEnh), with source-derived MT resistivity context near the IL-93 review line. No enhanced SEG-Y is held. 58-32 is shown as a GDR 1358 source-location-only marker; no 58-32 trajectory or well-tie calibration geometry is claimed.";
+const PSDM_58_32_TOP_GRANITE_PRESET_ID =
+  "psdm-mt-58-32-top-granite-reference";
+const PSDM_58_32_TOP_GRANITE_LABEL =
+  "PSDM + MT + 58-32 top-of-granite reference";
+const PSDM_58_32_TOP_GRANITE_PROVENANCE_NOTE =
+  "Source-derived interpreted top-of-granite reference for the PSDM + MT + 58-32 view. Built from the addendum survey-pick summary: 58-32 calibration pick 1200 m below the 1800 m datum near XL-105 / IL-93, survey range about 850-1500 m below datum, north trend deepening to about 1600 m, +/-50 m pick uncertainty, and 20-25 degree west dip. It is an interpreted reference overlay, not an extracted complete horizon volume.";
+const PSDM_58_32_SCENE_Y_M = -10380;
+const PSDM_58_32_DEPTH_WINDOW = {
+  minAlongM: -18500,
+  maxAlongM: -2500,
+  bottomElevationM: -3600,
+};
+const PSDM_58_32_DEPTH_FRAME = {
+  enabled: true,
+  controlsVisible: true,
+  minAM: PSDM_58_32_DEPTH_WINDOW.minAlongM,
+  maxAM: PSDM_58_32_DEPTH_WINDOW.maxAlongM,
+  minBM: PSDM_58_32_DEPTH_WINDOW.bottomElevationM,
+  maxBM: 1800,
+  groundTraceVisible: true,
+  groundTraceWidthM: 10,
+  axesVisible: true,
+  axisIntervalM: 1000,
+  axisTextScale: 0.82,
+  axisTextPaddingM: 120,
+  axisAHeading: "Easting",
+  axisBHeading: "Elevation",
+  axisHeadingColor: "#f7f7f2",
+  axisAlignment: "utm",
+  axisDatum: "utm",
+  axisDatumOriginEastingM: 341467.35,
+  axisDatumOriginNorthingM: 4273374.5,
+};
+const PSDM_58_32_LINKED_LAYER_STYLE_PATCHES = {
+  [MT_FULL_DENSITY_LAYER_ID]: {
+    visible: true,
+    opacity: 0.42,
+    scalarLegendVisible: true,
+    scalarInclusionMode: "all-valid",
+  },
+  [MT_THRESHOLD_SURFACES_LAYER_ID]: {
+    visible: true,
+    opacity: 0.72,
+    mtThresholdSurfaceVisibility: {
+      "conductive-le-10-ohm-m": false,
+      "conductive-le-30-ohm-m": true,
+      "resistive-ge-1000-ohm-m": true,
+    },
+  },
+  [DEMO_BOREHOLES_LAYER_ID]: {
+    visible: true,
+    showLabels: true,
+    demoBoreholeWells: {
+      "16A(78)-32": { visible: true },
+      "16B(78)-32": { visible: true },
+    },
+    demoBoreholeSourceLocations: {
+      visible: true,
+      items: {
+        "58-32-WELL": {
+          visible: true,
+          labelVisible: true,
+        },
+      },
+    },
+  },
+  [SCENE_SECTION_LAYER_ID]: {
+    visible: true,
+    sceneSectionEnabled: true,
+    sceneSectionMode: "cutaway",
+    sceneSectionTargetScope: "selected-targets",
+    sceneSectionTargetLayerIds: [
+      SEISMIC_LAYER_ID,
+      MT_FULL_DENSITY_LAYER_ID,
+      MT_THRESHOLD_SURFACES_LAYER_ID,
+    ],
+    sceneSectionTargetProductIds: ["gdr-1141-forge3d-ani-psdm-stack-unenh"],
+    sceneSectionActiveAxis: "y",
+    sceneSectionPlanes: {
+      y: {
+        enabled: true,
+        positionM: PSDM_58_32_SCENE_Y_M,
+      },
+    },
+    sceneSectionWindowEnabled: true,
+    sceneSectionWindowActiveAxis: "y",
+    sceneSectionWindowByAxis: {
+      y: PSDM_58_32_DEPTH_WINDOW,
+    },
+    sceneSectionFrameEnabled: true,
+    sceneSectionActiveFrameId: "axis:y",
+    sceneSectionFrameByAxis: {
+      y: PSDM_58_32_DEPTH_FRAME,
+    },
+    sceneSectionFrames: [
+      {
+        id: "axis:y",
+        label: PSDM_58_32_TIE_LABEL,
+        axis: "y",
+        plane: {
+          enabled: true,
+          positionM: PSDM_58_32_SCENE_Y_M,
+        },
+        frame: PSDM_58_32_DEPTH_FRAME,
+      },
+    ],
+  },
+};
 
 const PRODUCT_IDS = {
   depth3d: "gdr-1141-forge3d-ani-psdm-stack-unenh",
@@ -186,6 +299,37 @@ const interpretationLayers = [
     caveat: "Horizons must be manually reviewed before investor or regulatory display.",
   },
   {
+    id: "top-of-granite-survey-picks-58-32",
+    label: "Top of Granite - survey picks at 58-32",
+    status: "source-derived-interpreted-reference",
+    geometry: "section pick line and optional draped reference surface",
+    author: "GeoSee addendum intake",
+    reviewStatus: "demo-reference",
+    confidence: "interpreted +/-50 m pick uncertainty",
+    provenanceClassification: "source-derived",
+    datumM: 1800,
+    calibration: {
+      well: "58-32",
+      inline: 93,
+      crossline: 105,
+      depthBelowDatumM: 1200,
+    },
+    surveyPickSummary: {
+      eastDepthBelowDatumM: [850, 1000],
+      valleyAxisDepthBelowDatumM: 1500,
+      northDepthBelowDatumM: 1600,
+      southDepthBelowDatumM: 1400,
+      dipDegreesWest: [20, 25],
+      dipUncertaintyDegrees: 5,
+      pickUncertaintyM: 50,
+      aboveContactReflectorZoneM: 300,
+    },
+    caveat:
+      "Intra-granite energy is treated as multiples / side reflections and is not rendered as granite structure.",
+    source:
+      "Engineering note: Top of Granite - Survey Picks; Phase 2B Fig II.1.7 contour map, Fig II.1.6B IL-95 E-W at 58-32, Miller (2019) reprocessed.",
+  },
+  {
     id: "target-corridors",
     label: "Target corridors",
     status: "planned",
@@ -235,6 +379,7 @@ function makePreset({
   backgroundCutoff = 0.16,
   volumeSampleSteps = 96,
   timeScale = 2,
+  verticalDatumMode,
   navigationVisible = true,
   presentationBarVisible = false,
   sliceThroughVolume = false,
@@ -245,6 +390,7 @@ function makePreset({
   removeBackground = false,
   capabilityGroup,
   mtStylePatch,
+  linkedLayerStylePatches,
   exportLayoutId,
   cameraShot,
   caveats = [],
@@ -272,6 +418,7 @@ function makePreset({
     backgroundCutoff,
     volumeSampleSteps,
     timeScale,
+    verticalDatumMode,
     navigationVisible,
     presentationBarVisible,
     sliceThroughVolume,
@@ -282,6 +429,7 @@ function makePreset({
     removeBackground,
     capabilityGroup,
     mtStylePatch,
+    linkedLayerStylePatches,
     exportLayoutId,
     cameraShot,
     badges,
@@ -565,11 +713,13 @@ async function main() {
       backgroundCutoff: 0.16,
       volumeSampleSteps: 112,
       timeScale: 2,
+      verticalDatumMode: "reference-1800m",
       navigationVisible: true,
       presentationBarVisible: true,
       sliceThroughVolume: true,
       mtCoRender: "integrated",
       mtStylePatch: { opacity: 0.42, scalarLegendVisible: true },
+      linkedLayerStylePatches: PSDM_58_32_LINKED_LAYER_STYLE_PATCHES,
       cameraShot: "psdm-mt-58-32-source-location-tie",
       provenanceClassification: "source-derived",
       provenanceNote: PSDM_58_32_TIE_PROVENANCE_NOTE,
@@ -579,6 +729,43 @@ async function main() {
         "Presentation enhancement is disclosed; no enhanced SEG-Y is held.",
         "MT is co-rendered as a separate source-derived inversion visualization.",
         "58-32 is source-location-only; no 58-32 trajectory or well-tie calibration geometry is claimed.",
+      ],
+    }),
+    makePreset({
+      id: PSDM_58_32_TOP_GRANITE_PRESET_ID,
+      label: PSDM_58_32_TOP_GRANITE_LABEL,
+      audienceMode: "technical",
+      rank: 0.55,
+      summary:
+        "Source-derived interpreted top-of-granite pick reference added to the PSDM + MT + 58-32 scene.",
+      displayRecipeId: "interpretation-overlays",
+      productId: PRODUCT_IDS.depth3d,
+      renderMode: "slice",
+      sliceAxis: "inline",
+      sliceFraction: 0.544,
+      opacity: 0.58,
+      amplitudeMin: 0.08,
+      amplitudeMax: 0.92,
+      amplitudeGamma: 1.05,
+      colormap: "blue-white-red",
+      backgroundCutoff: 0.16,
+      volumeSampleSteps: 112,
+      timeScale: 2,
+      verticalDatumMode: "reference-1800m",
+      navigationVisible: true,
+      presentationBarVisible: true,
+      mtCoRender: "integrated",
+      mtStylePatch: { opacity: 0.42, scalarLegendVisible: true },
+      linkedLayerStylePatches: PSDM_58_32_LINKED_LAYER_STYLE_PATCHES,
+      cameraShot: "psdm-mt-58-32-top-granite-reference",
+      provenanceClassification: "source-derived",
+      provenanceNote: PSDM_58_32_TOP_GRANITE_PROVENANCE_NOTE,
+      caveats: [
+        "Interpreted top-of-granite reference comes from survey picks, not a complete extracted horizon volume.",
+        "58-32 calibration pick is 1200 m below the 1800 m datum near XL-105 / IL-93.",
+        "Pick uncertainty is disclosed as +/-50 m; intra-granite energy is not rendered as granite structure.",
+        "MT is co-rendered as a separate source-derived inversion visualization.",
+        "Presentation enhancement is disclosed; no enhanced SEG-Y is held.",
       ],
     }),
     makePreset({
@@ -805,12 +992,14 @@ async function main() {
       amplitudeGamma: 1.05,
       backgroundCutoff: 0.16,
       volumeSampleSteps: 112,
+      verticalDatumMode: "reference-1800m",
       navigationVisible: true,
       navigationRoleVisibility: { sources: true, receivers: true, lines: true },
       presentationBarVisible: true,
       sliceThroughVolume: true,
       mtCoRender: "integrated",
       mtStylePatch: { opacity: 0.42, scalarLegendVisible: true },
+      linkedLayerStylePatches: PSDM_58_32_LINKED_LAYER_STYLE_PATCHES,
       cameraShot: "psdm-mt-58-32-source-location-tie",
       provenanceClassification: "source-derived",
       provenanceNote: PSDM_58_32_TIE_PROVENANCE_NOTE,
@@ -820,6 +1009,43 @@ async function main() {
         "Presentation enhancement is disclosed; no enhanced SEG-Y is held.",
         "MT is co-rendered as a separate source-derived inversion visualization.",
         "58-32 is source-location-only; no 58-32 trajectory or well-tie calibration geometry is claimed.",
+      ],
+    }),
+    makePreset({
+      id: PSDM_58_32_TOP_GRANITE_PRESET_ID,
+      label: PSDM_58_32_TOP_GRANITE_LABEL,
+      audienceMode: "technical",
+      rank: 0.55,
+      summary:
+        "Source-derived interpreted top-of-granite pick reference added to the PSDM + MT + 58-32 scene.",
+      displayRecipeId: "interpretation-overlays",
+      capabilityGroup: "integrated-geophysics",
+      productId: PRODUCT_IDS.depth3d,
+      renderMode: "slice",
+      sliceAxis: "inline",
+      sliceFraction: 0.544,
+      opacity: 0.58,
+      amplitudeMin: 0.08,
+      amplitudeMax: 0.92,
+      amplitudeGamma: 1.05,
+      backgroundCutoff: 0.16,
+      volumeSampleSteps: 112,
+      verticalDatumMode: "reference-1800m",
+      navigationVisible: true,
+      navigationRoleVisibility: { sources: true, receivers: true, lines: true },
+      presentationBarVisible: true,
+      mtCoRender: "integrated",
+      mtStylePatch: { opacity: 0.42, scalarLegendVisible: true },
+      linkedLayerStylePatches: PSDM_58_32_LINKED_LAYER_STYLE_PATCHES,
+      cameraShot: "psdm-mt-58-32-top-granite-reference",
+      provenanceClassification: "source-derived",
+      provenanceNote: PSDM_58_32_TOP_GRANITE_PROVENANCE_NOTE,
+      caveats: [
+        "Interpreted top-of-granite reference comes from survey picks, not a complete extracted horizon volume.",
+        "58-32 calibration pick is 1200 m below the 1800 m datum near XL-105 / IL-93.",
+        "Pick uncertainty is disclosed as +/-50 m; intra-granite energy is not rendered as granite structure.",
+        "MT is co-rendered as a separate source-derived inversion visualization.",
+        "Presentation enhancement is disclosed; no enhanced SEG-Y is held.",
       ],
     }),
     makePreset({

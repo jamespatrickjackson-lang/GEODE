@@ -3891,6 +3891,7 @@
             "interpretationLayerIds": [
               "reviewed-faults",
               "reviewed-horizons",
+              "top-of-granite-survey-picks-58-32",
               "target-corridors",
               "presentation-annotations"
             ],
@@ -4026,6 +4027,7 @@
             "backgroundCutoff": 0.16,
             "volumeSampleSteps": 112,
             "timeScale": 2,
+            "verticalDatumMode": "reference-1800m",
             "navigationVisible": true,
             "presentationBarVisible": true,
             "sliceThroughVolume": true,
@@ -4035,6 +4037,131 @@
             "mtStylePatch": {
               "opacity": 0.42,
               "scalarLegendVisible": true
+            },
+            "linkedLayerStylePatches": {
+              "utah-forge-mt-resistivity-full-density": {
+                "visible": true,
+                "opacity": 0.42,
+                "scalarLegendVisible": true,
+                "scalarInclusionMode": "all-valid"
+              },
+              "utah-forge-mt-resistivity-threshold-surfaces": {
+                "visible": true,
+                "opacity": 0.72,
+                "mtThresholdSurfaceVisibility": {
+                  "conductive-le-10-ohm-m": false,
+                  "conductive-le-30-ohm-m": true,
+                  "resistive-ge-1000-ohm-m": true
+                }
+              },
+              "utah-forge-phase3-demo-boreholes": {
+                "visible": true,
+                "showLabels": true,
+                "demoBoreholeWells": {
+                  "16A(78)-32": {
+                    "visible": true
+                  },
+                  "16B(78)-32": {
+                    "visible": true
+                  }
+                },
+                "demoBoreholeSourceLocations": {
+                  "visible": true,
+                  "items": {
+                    "58-32-WELL": {
+                      "visible": true,
+                      "labelVisible": true
+                    }
+                  }
+                }
+              },
+              "utah-forge-scene-section-planes": {
+                "visible": true,
+                "sceneSectionEnabled": true,
+                "sceneSectionMode": "cutaway",
+                "sceneSectionTargetScope": "selected-targets",
+                "sceneSectionTargetLayerIds": [
+                  "utah-forge-phase3-seismic-browser",
+                  "utah-forge-mt-resistivity-full-density",
+                  "utah-forge-mt-resistivity-threshold-surfaces"
+                ],
+                "sceneSectionTargetProductIds": [
+                  "gdr-1141-forge3d-ani-psdm-stack-unenh"
+                ],
+                "sceneSectionActiveAxis": "y",
+                "sceneSectionPlanes": {
+                  "y": {
+                    "enabled": true,
+                    "positionM": -10380
+                  }
+                },
+                "sceneSectionWindowEnabled": true,
+                "sceneSectionWindowActiveAxis": "y",
+                "sceneSectionWindowByAxis": {
+                  "y": {
+                    "minAlongM": -18500,
+                    "maxAlongM": -2500,
+                    "bottomElevationM": -3600
+                  }
+                },
+                "sceneSectionFrameEnabled": true,
+                "sceneSectionActiveFrameId": "axis:y",
+                "sceneSectionFrameByAxis": {
+                  "y": {
+                    "enabled": true,
+                    "controlsVisible": true,
+                    "minAM": -18500,
+                    "maxAM": -2500,
+                    "minBM": -3600,
+                    "maxBM": 1800,
+                    "groundTraceVisible": true,
+                    "groundTraceWidthM": 10,
+                    "axesVisible": true,
+                    "axisIntervalM": 1000,
+                    "axisTextScale": 0.82,
+                    "axisTextPaddingM": 120,
+                    "axisAHeading": "Easting",
+                    "axisBHeading": "Elevation",
+                    "axisHeadingColor": "#f7f7f2",
+                    "axisAlignment": "utm",
+                    "axisDatum": "utm",
+                    "axisDatumOriginEastingM": 341467.35,
+                    "axisDatumOriginNorthingM": 4273374.5
+                  }
+                },
+                "sceneSectionFrames": [
+                  {
+                    "id": "axis:y",
+                    "label": "PSDM + MT + 58-32 source-location tie",
+                    "axis": "y",
+                    "plane": {
+                      "enabled": true,
+                      "positionM": -10380
+                    },
+                    "frame": {
+                      "enabled": true,
+                      "controlsVisible": true,
+                      "minAM": -18500,
+                      "maxAM": -2500,
+                      "minBM": -3600,
+                      "maxBM": 1800,
+                      "groundTraceVisible": true,
+                      "groundTraceWidthM": 10,
+                      "axesVisible": true,
+                      "axisIntervalM": 1000,
+                      "axisTextScale": 0.82,
+                      "axisTextPaddingM": 120,
+                      "axisAHeading": "Easting",
+                      "axisBHeading": "Elevation",
+                      "axisHeadingColor": "#f7f7f2",
+                      "axisAlignment": "utm",
+                      "axisDatum": "utm",
+                      "axisDatumOriginEastingM": 341467.35,
+                      "axisDatumOriginNorthingM": 4273374.5
+                    }
+                  }
+                ]
+              }
             },
             "cameraShot": "psdm-mt-58-32-source-location-tie",
             "badges": [
@@ -4053,6 +4180,183 @@
               "Presentation enhancement is disclosed; no enhanced SEG-Y is held.",
               "MT is co-rendered as a separate source-derived inversion visualization.",
               "58-32 is source-location-only; no 58-32 trajectory or well-tie calibration geometry is claimed."
+            ]
+          },
+          {
+            "id": "psdm-mt-58-32-top-granite-reference",
+            "label": "PSDM + MT + 58-32 top-of-granite reference",
+            "audienceMode": "technical",
+            "rank": 0.55,
+            "summary": "Source-derived interpreted top-of-granite pick reference added to the PSDM + MT + 58-32 scene.",
+            "displayRecipeId": "interpretation-overlays",
+            "productId": "gdr-1141-forge3d-ani-psdm-stack-unenh",
+            "visibleProductIds": [
+              "gdr-1141-forge3d-ani-psdm-stack-unenh"
+            ],
+            "renderMode": "slice",
+            "sliceAxis": "inline",
+            "sliceFraction": 0.544,
+            "opacity": 0.58,
+            "amplitudeMin": 0.08,
+            "amplitudeMax": 0.92,
+            "amplitudeGamma": 1.05,
+            "colormap": "blue-white-red",
+            "backgroundCutoff": 0.16,
+            "volumeSampleSteps": 112,
+            "timeScale": 2,
+            "verticalDatumMode": "reference-1800m",
+            "navigationVisible": true,
+            "presentationBarVisible": true,
+            "sliceThroughVolume": false,
+            "comparisonMode": "overlay",
+            "mtCoRender": "integrated",
+            "removeBackground": false,
+            "mtStylePatch": {
+              "opacity": 0.42,
+              "scalarLegendVisible": true
+            },
+            "linkedLayerStylePatches": {
+              "utah-forge-mt-resistivity-full-density": {
+                "visible": true,
+                "opacity": 0.42,
+                "scalarLegendVisible": true,
+                "scalarInclusionMode": "all-valid"
+              },
+              "utah-forge-mt-resistivity-threshold-surfaces": {
+                "visible": true,
+                "opacity": 0.72,
+                "mtThresholdSurfaceVisibility": {
+                  "conductive-le-10-ohm-m": false,
+                  "conductive-le-30-ohm-m": true,
+                  "resistive-ge-1000-ohm-m": true
+                }
+              },
+              "utah-forge-phase3-demo-boreholes": {
+                "visible": true,
+                "showLabels": true,
+                "demoBoreholeWells": {
+                  "16A(78)-32": {
+                    "visible": true
+                  },
+                  "16B(78)-32": {
+                    "visible": true
+                  }
+                },
+                "demoBoreholeSourceLocations": {
+                  "visible": true,
+                  "items": {
+                    "58-32-WELL": {
+                      "visible": true,
+                      "labelVisible": true
+                    }
+                  }
+                }
+              },
+              "utah-forge-scene-section-planes": {
+                "visible": true,
+                "sceneSectionEnabled": true,
+                "sceneSectionMode": "cutaway",
+                "sceneSectionTargetScope": "selected-targets",
+                "sceneSectionTargetLayerIds": [
+                  "utah-forge-phase3-seismic-browser",
+                  "utah-forge-mt-resistivity-full-density",
+                  "utah-forge-mt-resistivity-threshold-surfaces"
+                ],
+                "sceneSectionTargetProductIds": [
+                  "gdr-1141-forge3d-ani-psdm-stack-unenh"
+                ],
+                "sceneSectionActiveAxis": "y",
+                "sceneSectionPlanes": {
+                  "y": {
+                    "enabled": true,
+                    "positionM": -10380
+                  }
+                },
+                "sceneSectionWindowEnabled": true,
+                "sceneSectionWindowActiveAxis": "y",
+                "sceneSectionWindowByAxis": {
+                  "y": {
+                    "minAlongM": -18500,
+                    "maxAlongM": -2500,
+                    "bottomElevationM": -3600
+                  }
+                },
+                "sceneSectionFrameEnabled": true,
+                "sceneSectionActiveFrameId": "axis:y",
+                "sceneSectionFrameByAxis": {
+                  "y": {
+                    "enabled": true,
+                    "controlsVisible": true,
+                    "minAM": -18500,
+                    "maxAM": -2500,
+                    "minBM": -3600,
+                    "maxBM": 1800,
+                    "groundTraceVisible": true,
+                    "groundTraceWidthM": 10,
+                    "axesVisible": true,
+                    "axisIntervalM": 1000,
+                    "axisTextScale": 0.82,
+                    "axisTextPaddingM": 120,
+                    "axisAHeading": "Easting",
+                    "axisBHeading": "Elevation",
+                    "axisHeadingColor": "#f7f7f2",
+                    "axisAlignment": "utm",
+                    "axisDatum": "utm",
+                    "axisDatumOriginEastingM": 341467.35,
+                    "axisDatumOriginNorthingM": 4273374.5
+                  }
+                },
+                "sceneSectionFrames": [
+                  {
+                    "id": "axis:y",
+                    "label": "PSDM + MT + 58-32 source-location tie",
+                    "axis": "y",
+                    "plane": {
+                      "enabled": true,
+                      "positionM": -10380
+                    },
+                    "frame": {
+                      "enabled": true,
+                      "controlsVisible": true,
+                      "minAM": -18500,
+                      "maxAM": -2500,
+                      "minBM": -3600,
+                      "maxBM": 1800,
+                      "groundTraceVisible": true,
+                      "groundTraceWidthM": 10,
+                      "axesVisible": true,
+                      "axisIntervalM": 1000,
+                      "axisTextScale": 0.82,
+                      "axisTextPaddingM": 120,
+                      "axisAHeading": "Easting",
+                      "axisBHeading": "Elevation",
+                      "axisHeadingColor": "#f7f7f2",
+                      "axisAlignment": "utm",
+                      "axisDatum": "utm",
+                      "axisDatumOriginEastingM": 341467.35,
+                      "axisDatumOriginNorthingM": 4273374.5
+                    }
+                  }
+                ]
+              }
+            },
+            "cameraShot": "psdm-mt-58-32-top-granite-reference",
+            "badges": [
+              "public geothermal demo data",
+              "processed seismic product",
+              "not a mineral resource estimate"
+            ],
+            "provenanceClassification": "source-derived",
+            "provenanceNote": "Source-derived interpreted top-of-granite reference for the PSDM + MT + 58-32 view. Built from the addendum survey-pick summary: 58-32 calibration pick 1200 m below the 1800 m datum near XL-105 / IL-93, survey range about 850-1500 m below datum, north trend deepening to about 1600 m, +/-50 m pick uncertainty, and 20-25 degree west dip. It is an interpreted reference overlay, not an extracted complete horizon volume.",
+            "caveats": [
+              "public geothermal demo data",
+              "processed seismic product",
+              "not a mineral resource estimate",
+              "Interpreted top-of-granite reference comes from survey picks, not a complete extracted horizon volume.",
+              "58-32 calibration pick is 1200 m below the 1800 m datum near XL-105 / IL-93.",
+              "Pick uncertainty is disclosed as +/-50 m; intra-granite energy is not rendered as granite structure.",
+              "MT is co-rendered as a separate source-derived inversion visualization.",
+              "Presentation enhancement is disclosed; no enhanced SEG-Y is held."
             ]
           },
           {
@@ -4475,6 +4779,41 @@
             "caveat": "Horizons must be manually reviewed before investor or regulatory display."
           },
           {
+            "id": "top-of-granite-survey-picks-58-32",
+            "label": "Top of Granite - survey picks at 58-32",
+            "status": "source-derived-interpreted-reference",
+            "geometry": "section pick line and optional draped reference surface",
+            "author": "GeoSee addendum intake",
+            "reviewStatus": "demo-reference",
+            "confidence": "interpreted +/-50 m pick uncertainty",
+            "provenanceClassification": "source-derived",
+            "datumM": 1800,
+            "calibration": {
+              "well": "58-32",
+              "inline": 93,
+              "crossline": 105,
+              "depthBelowDatumM": 1200
+            },
+            "surveyPickSummary": {
+              "eastDepthBelowDatumM": [
+                850,
+                1000
+              ],
+              "valleyAxisDepthBelowDatumM": 1500,
+              "northDepthBelowDatumM": 1600,
+              "southDepthBelowDatumM": 1400,
+              "dipDegreesWest": [
+                20,
+                25
+              ],
+              "dipUncertaintyDegrees": 5,
+              "pickUncertaintyM": 50,
+              "aboveContactReflectorZoneM": 300
+            },
+            "caveat": "Intra-granite energy is treated as multiples / side reflections and is not rendered as granite structure.",
+            "source": "Engineering note: Top of Granite - Survey Picks; Phase 2B Fig II.1.7 contour map, Fig II.1.6B IL-95 E-W at 58-32, Miller (2019) reprocessed."
+          },
+          {
             "id": "target-corridors",
             "label": "Target corridors",
             "status": "planned",
@@ -4621,6 +4960,7 @@
             "backgroundCutoff": 0.16,
             "volumeSampleSteps": 112,
             "timeScale": 2,
+            "verticalDatumMode": "reference-1800m",
             "navigationVisible": true,
             "presentationBarVisible": true,
             "sliceThroughVolume": true,
@@ -4636,6 +4976,131 @@
             "mtStylePatch": {
               "opacity": 0.42,
               "scalarLegendVisible": true
+            },
+            "linkedLayerStylePatches": {
+              "utah-forge-mt-resistivity-full-density": {
+                "visible": true,
+                "opacity": 0.42,
+                "scalarLegendVisible": true,
+                "scalarInclusionMode": "all-valid"
+              },
+              "utah-forge-mt-resistivity-threshold-surfaces": {
+                "visible": true,
+                "opacity": 0.72,
+                "mtThresholdSurfaceVisibility": {
+                  "conductive-le-10-ohm-m": false,
+                  "conductive-le-30-ohm-m": true,
+                  "resistive-ge-1000-ohm-m": true
+                }
+              },
+              "utah-forge-phase3-demo-boreholes": {
+                "visible": true,
+                "showLabels": true,
+                "demoBoreholeWells": {
+                  "16A(78)-32": {
+                    "visible": true
+                  },
+                  "16B(78)-32": {
+                    "visible": true
+                  }
+                },
+                "demoBoreholeSourceLocations": {
+                  "visible": true,
+                  "items": {
+                    "58-32-WELL": {
+                      "visible": true,
+                      "labelVisible": true
+                    }
+                  }
+                }
+              },
+              "utah-forge-scene-section-planes": {
+                "visible": true,
+                "sceneSectionEnabled": true,
+                "sceneSectionMode": "cutaway",
+                "sceneSectionTargetScope": "selected-targets",
+                "sceneSectionTargetLayerIds": [
+                  "utah-forge-phase3-seismic-browser",
+                  "utah-forge-mt-resistivity-full-density",
+                  "utah-forge-mt-resistivity-threshold-surfaces"
+                ],
+                "sceneSectionTargetProductIds": [
+                  "gdr-1141-forge3d-ani-psdm-stack-unenh"
+                ],
+                "sceneSectionActiveAxis": "y",
+                "sceneSectionPlanes": {
+                  "y": {
+                    "enabled": true,
+                    "positionM": -10380
+                  }
+                },
+                "sceneSectionWindowEnabled": true,
+                "sceneSectionWindowActiveAxis": "y",
+                "sceneSectionWindowByAxis": {
+                  "y": {
+                    "minAlongM": -18500,
+                    "maxAlongM": -2500,
+                    "bottomElevationM": -3600
+                  }
+                },
+                "sceneSectionFrameEnabled": true,
+                "sceneSectionActiveFrameId": "axis:y",
+                "sceneSectionFrameByAxis": {
+                  "y": {
+                    "enabled": true,
+                    "controlsVisible": true,
+                    "minAM": -18500,
+                    "maxAM": -2500,
+                    "minBM": -3600,
+                    "maxBM": 1800,
+                    "groundTraceVisible": true,
+                    "groundTraceWidthM": 10,
+                    "axesVisible": true,
+                    "axisIntervalM": 1000,
+                    "axisTextScale": 0.82,
+                    "axisTextPaddingM": 120,
+                    "axisAHeading": "Easting",
+                    "axisBHeading": "Elevation",
+                    "axisHeadingColor": "#f7f7f2",
+                    "axisAlignment": "utm",
+                    "axisDatum": "utm",
+                    "axisDatumOriginEastingM": 341467.35,
+                    "axisDatumOriginNorthingM": 4273374.5
+                  }
+                },
+                "sceneSectionFrames": [
+                  {
+                    "id": "axis:y",
+                    "label": "PSDM + MT + 58-32 source-location tie",
+                    "axis": "y",
+                    "plane": {
+                      "enabled": true,
+                      "positionM": -10380
+                    },
+                    "frame": {
+                      "enabled": true,
+                      "controlsVisible": true,
+                      "minAM": -18500,
+                      "maxAM": -2500,
+                      "minBM": -3600,
+                      "maxBM": 1800,
+                      "groundTraceVisible": true,
+                      "groundTraceWidthM": 10,
+                      "axesVisible": true,
+                      "axisIntervalM": 1000,
+                      "axisTextScale": 0.82,
+                      "axisTextPaddingM": 120,
+                      "axisAHeading": "Easting",
+                      "axisBHeading": "Elevation",
+                      "axisHeadingColor": "#f7f7f2",
+                      "axisAlignment": "utm",
+                      "axisDatum": "utm",
+                      "axisDatumOriginEastingM": 341467.35,
+                      "axisDatumOriginNorthingM": 4273374.5
+                    }
+                  }
+                ]
+              }
             },
             "cameraShot": "psdm-mt-58-32-source-location-tie",
             "badges": [
@@ -4654,6 +5119,189 @@
               "Presentation enhancement is disclosed; no enhanced SEG-Y is held.",
               "MT is co-rendered as a separate source-derived inversion visualization.",
               "58-32 is source-location-only; no 58-32 trajectory or well-tie calibration geometry is claimed."
+            ]
+          },
+          {
+            "id": "psdm-mt-58-32-top-granite-reference",
+            "label": "PSDM + MT + 58-32 top-of-granite reference",
+            "audienceMode": "technical",
+            "rank": 0.55,
+            "summary": "Source-derived interpreted top-of-granite pick reference added to the PSDM + MT + 58-32 scene.",
+            "displayRecipeId": "interpretation-overlays",
+            "productId": "gdr-1141-forge3d-ani-psdm-stack-unenh",
+            "visibleProductIds": [
+              "gdr-1141-forge3d-ani-psdm-stack-unenh"
+            ],
+            "renderMode": "slice",
+            "sliceAxis": "inline",
+            "sliceFraction": 0.544,
+            "opacity": 0.58,
+            "amplitudeMin": 0.08,
+            "amplitudeMax": 0.92,
+            "amplitudeGamma": 1.05,
+            "colormap": "blue-white-red",
+            "backgroundCutoff": 0.16,
+            "volumeSampleSteps": 112,
+            "timeScale": 2,
+            "verticalDatumMode": "reference-1800m",
+            "navigationVisible": true,
+            "presentationBarVisible": true,
+            "sliceThroughVolume": false,
+            "comparisonMode": "overlay",
+            "mtCoRender": "integrated",
+            "navigationRoleVisibility": {
+              "sources": true,
+              "receivers": true,
+              "lines": true
+            },
+            "removeBackground": false,
+            "capabilityGroup": "integrated-geophysics",
+            "mtStylePatch": {
+              "opacity": 0.42,
+              "scalarLegendVisible": true
+            },
+            "linkedLayerStylePatches": {
+              "utah-forge-mt-resistivity-full-density": {
+                "visible": true,
+                "opacity": 0.42,
+                "scalarLegendVisible": true,
+                "scalarInclusionMode": "all-valid"
+              },
+              "utah-forge-mt-resistivity-threshold-surfaces": {
+                "visible": true,
+                "opacity": 0.72,
+                "mtThresholdSurfaceVisibility": {
+                  "conductive-le-10-ohm-m": false,
+                  "conductive-le-30-ohm-m": true,
+                  "resistive-ge-1000-ohm-m": true
+                }
+              },
+              "utah-forge-phase3-demo-boreholes": {
+                "visible": true,
+                "showLabels": true,
+                "demoBoreholeWells": {
+                  "16A(78)-32": {
+                    "visible": true
+                  },
+                  "16B(78)-32": {
+                    "visible": true
+                  }
+                },
+                "demoBoreholeSourceLocations": {
+                  "visible": true,
+                  "items": {
+                    "58-32-WELL": {
+                      "visible": true,
+                      "labelVisible": true
+                    }
+                  }
+                }
+              },
+              "utah-forge-scene-section-planes": {
+                "visible": true,
+                "sceneSectionEnabled": true,
+                "sceneSectionMode": "cutaway",
+                "sceneSectionTargetScope": "selected-targets",
+                "sceneSectionTargetLayerIds": [
+                  "utah-forge-phase3-seismic-browser",
+                  "utah-forge-mt-resistivity-full-density",
+                  "utah-forge-mt-resistivity-threshold-surfaces"
+                ],
+                "sceneSectionTargetProductIds": [
+                  "gdr-1141-forge3d-ani-psdm-stack-unenh"
+                ],
+                "sceneSectionActiveAxis": "y",
+                "sceneSectionPlanes": {
+                  "y": {
+                    "enabled": true,
+                    "positionM": -10380
+                  }
+                },
+                "sceneSectionWindowEnabled": true,
+                "sceneSectionWindowActiveAxis": "y",
+                "sceneSectionWindowByAxis": {
+                  "y": {
+                    "minAlongM": -18500,
+                    "maxAlongM": -2500,
+                    "bottomElevationM": -3600
+                  }
+                },
+                "sceneSectionFrameEnabled": true,
+                "sceneSectionActiveFrameId": "axis:y",
+                "sceneSectionFrameByAxis": {
+                  "y": {
+                    "enabled": true,
+                    "controlsVisible": true,
+                    "minAM": -18500,
+                    "maxAM": -2500,
+                    "minBM": -3600,
+                    "maxBM": 1800,
+                    "groundTraceVisible": true,
+                    "groundTraceWidthM": 10,
+                    "axesVisible": true,
+                    "axisIntervalM": 1000,
+                    "axisTextScale": 0.82,
+                    "axisTextPaddingM": 120,
+                    "axisAHeading": "Easting",
+                    "axisBHeading": "Elevation",
+                    "axisHeadingColor": "#f7f7f2",
+                    "axisAlignment": "utm",
+                    "axisDatum": "utm",
+                    "axisDatumOriginEastingM": 341467.35,
+                    "axisDatumOriginNorthingM": 4273374.5
+                  }
+                },
+                "sceneSectionFrames": [
+                  {
+                    "id": "axis:y",
+                    "label": "PSDM + MT + 58-32 source-location tie",
+                    "axis": "y",
+                    "plane": {
+                      "enabled": true,
+                      "positionM": -10380
+                    },
+                    "frame": {
+                      "enabled": true,
+                      "controlsVisible": true,
+                      "minAM": -18500,
+                      "maxAM": -2500,
+                      "minBM": -3600,
+                      "maxBM": 1800,
+                      "groundTraceVisible": true,
+                      "groundTraceWidthM": 10,
+                      "axesVisible": true,
+                      "axisIntervalM": 1000,
+                      "axisTextScale": 0.82,
+                      "axisTextPaddingM": 120,
+                      "axisAHeading": "Easting",
+                      "axisBHeading": "Elevation",
+                      "axisHeadingColor": "#f7f7f2",
+                      "axisAlignment": "utm",
+                      "axisDatum": "utm",
+                      "axisDatumOriginEastingM": 341467.35,
+                      "axisDatumOriginNorthingM": 4273374.5
+                    }
+                  }
+                ]
+              }
+            },
+            "cameraShot": "psdm-mt-58-32-top-granite-reference",
+            "badges": [
+              "public geothermal demo data",
+              "processed seismic product",
+              "not a mineral resource estimate"
+            ],
+            "provenanceClassification": "source-derived",
+            "provenanceNote": "Source-derived interpreted top-of-granite reference for the PSDM + MT + 58-32 view. Built from the addendum survey-pick summary: 58-32 calibration pick 1200 m below the 1800 m datum near XL-105 / IL-93, survey range about 850-1500 m below datum, north trend deepening to about 1600 m, +/-50 m pick uncertainty, and 20-25 degree west dip. It is an interpreted reference overlay, not an extracted complete horizon volume.",
+            "caveats": [
+              "public geothermal demo data",
+              "processed seismic product",
+              "not a mineral resource estimate",
+              "Interpreted top-of-granite reference comes from survey picks, not a complete extracted horizon volume.",
+              "58-32 calibration pick is 1200 m below the 1800 m datum near XL-105 / IL-93.",
+              "Pick uncertainty is disclosed as +/-50 m; intra-granite energy is not rendered as granite structure.",
+              "MT is co-rendered as a separate source-derived inversion visualization.",
+              "Presentation enhancement is disclosed; no enhanced SEG-Y is held."
             ]
           },
           {
@@ -7808,6 +8456,7 @@
     "158_page",
     "159_page",
     "61_psdm_mt_58_32_source_location_tie",
+    "62_psdm_mt_58_32_top_granite_reference",
     "166_page",
     "167_page",
     "160_page",

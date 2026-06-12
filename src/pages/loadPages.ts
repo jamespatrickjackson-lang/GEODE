@@ -37,6 +37,13 @@ export interface LoadedProject {
   archivedPages: PresentationPage[];
 }
 
+interface ProjectBundlePayload {
+  manifest: ProjectManifest;
+  environment: EnvironmentSetup;
+  pages: PresentationPage[];
+  archivedPages: PresentationPage[];
+}
+
 function normalizedPageIds(value: unknown): string[] {
   return Array.isArray(value)
     ? value.filter((id): id is string => typeof id === "string" && id !== "")
@@ -67,6 +74,32 @@ export async function loadProject(
   projectSlug: string = DEFAULT_PROJECT_SLUG,
 ): Promise<LoadedProject> {
   const paths = getProjectPaths(projectSlug);
+  if (import.meta.env.DEV) {
+    try {
+      const bundle = await fetchJson<ProjectBundlePayload>(
+        `/api/project-bundle?project=${encodeURIComponent(paths.slug)}`,
+      );
+      bundle.manifest.pageOrder = normalizedPageIds(bundle.manifest.pageOrder);
+      bundle.manifest.archivedPageOrder = normalizedPageIds(
+        bundle.manifest.archivedPageOrder,
+      );
+      debugLog(
+        `[loadProject] ${bundle.manifest.id}: ${bundle.pages.length} pages, ` +
+          `${bundle.archivedPages.length} archived pages, ${bundle.manifest.layers.length} layers`,
+      );
+      return {
+        projectSlug: paths.slug,
+        projectRoot: paths.root,
+        manifest: bundle.manifest,
+        environment: bundle.environment,
+        pages: bundle.pages,
+        archivedPages: bundle.archivedPages,
+      };
+    } catch (error) {
+      console.warn("[loadProject] project bundle failed; falling back:", error);
+    }
+  }
+
   const [manifest, environment] = await Promise.all([
     fetchJson<ProjectManifest>(paths.projectJson),
     fetchJson<EnvironmentSetup>(paths.environmentJson),
