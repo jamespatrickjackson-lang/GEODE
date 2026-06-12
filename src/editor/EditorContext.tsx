@@ -410,6 +410,12 @@ function mergeSceneEdit(
       ...patch.compositionGuides,
     };
   }
+  if (patch.sectionVisuals) {
+    next.sectionVisuals = {
+      ...(base?.sectionVisuals ?? {}),
+      ...patch.sectionVisuals,
+    };
+  }
   if (patch.sun) next.sun = { ...(base?.sun ?? {}), ...patch.sun };
   if (patch.topoDetails) {
     next.topoDetails = { ...(base?.topoDetails ?? {}), ...patch.topoDetails };
@@ -487,6 +493,9 @@ function cinematicScenePatchForEdit(
   }
   if (patch.compositionGuides !== undefined) {
     next.compositionGuides = patch.compositionGuides;
+  }
+  if (patch.sectionVisuals !== undefined) {
+    next.sectionVisuals = patch.sectionVisuals;
   }
   if (patch.gui !== undefined) next.gui = patch.gui;
   return next;

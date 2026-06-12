@@ -286,6 +286,12 @@ export function mergeSceneProperties(
       ...patch.compositionGuides,
     };
   }
+  if (patch.sectionVisuals) {
+    next.sectionVisuals = {
+      ...(base?.sectionVisuals ?? {}),
+      ...patch.sectionVisuals,
+    };
+  }
   if (patch.sun) next.sun = { ...(base?.sun ?? {}), ...patch.sun };
   if (patch.topoDetails) {
     next.topoDetails = { ...(base?.topoDetails ?? {}), ...patch.topoDetails };

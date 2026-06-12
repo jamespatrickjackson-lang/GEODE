@@ -67,7 +67,6 @@ const selectableLabels = [
   "Seismic only",
   "MT only",
   "Seismic + MT",
-  "PSDM + MT + 58-32 tie",
   "Isoband source: seismic amplitude",
   "Isoband source: MT resistivity",
   "Sources",
@@ -146,6 +145,8 @@ test("Section Options selectable types patch existing seismic style fields", () 
   assert.match(helperSource, /seismicComparisonProductId/);
   assert.match(helperSource, /seismicComparisonMode/);
   assert.match(helperSource, /seismicMtCoRender/);
+  assert.match(helperSource, /linkedLayerStylePatches/);
+  assert.match(helperSource, /capabilityGroup === "integrated-geophysics"/);
   assert.match(helperSource, /seismicIsoSource/);
   assert.match(helperSource, /seismicNavigationRoleVisibility/);
 });

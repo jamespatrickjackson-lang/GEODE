@@ -130,6 +130,7 @@ const CINEMATIC_SCENE_PATCH_KEYS = [
   "motionTrails",
   "presentationFrame",
   "compositionGuides",
+  "sectionVisuals",
   "gui",
 ] as const satisfies readonly (keyof SceneProperties)[];
 

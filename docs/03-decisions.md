@@ -2636,3 +2636,28 @@ annotation. Do not repair annotation differences with `projects/*/pages/**`,
 branches. 3D volume and scene-section cut annotations must use the same target
 profile model and move with their owning graph object or cut frame before any
 visual claim is made.
+
+## DEC-155 - Section helper visual variables are Cinematics scene state
+
+Extends DEC-151 for generic section-helper visual tuning.
+
+**Considered:** keep section helper widths and arrow dimensions as fixed runtime
+constants, expose them as per-section layer controls under Sections, or expose
+generic visual variables under Cinematics scene state.
+
+**Chose:** `SceneProperties.sectionVisuals` owns generic section helper visual
+variables: frame outline width scale/min/max, push-pull arrow length clamp,
+arrow radius and gap scale, scale-axis tick length clamp, and default ground
+trace width. Cinematics -> Post Processing exposes these under `Section
+Visuals`. Runtime scene-section helper generation reads the current effective
+scene after render-preset, page override, and preview patch resolution.
+
+**Why:** these values are visual treatment controls, not per-plane geometry or
+disposable page fixtures. Scene-level ownership lets presentations tune helper
+legibility consistently while per-axis section geometry, visibility, and source
+basis remain under the Sections tool.
+
+**Guard:** do not encode section helper visual tuning in `projects/*/pages/**`,
+`projects/*/overlays/**`, page ids, page titles, page indexes, or page order.
+Per-frame authored values such as explicit `groundTraceWidthM` remain valid
+overrides; generic defaults and clamps come from the effective Cinematics scene.

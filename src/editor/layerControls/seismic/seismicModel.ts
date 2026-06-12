@@ -81,6 +81,7 @@ export interface SeismicAudiencePresetOption {
   backgroundCutoff?: number;
   volumeSampleSteps?: number;
   timeScale?: number;
+  verticalDatumMode?: EditableStyle["seismicVerticalDatumMode"];
   navigationVisible?: boolean;
   navigationRoleVisibility?: EditableStyle["seismicNavigationRoleVisibility"];
   presentationBarVisible?: boolean;
@@ -517,6 +518,12 @@ export function seismicAudiencePresets(
             : undefined,
         timeScale:
           typeof preset.timeScale === "number" ? preset.timeScale : undefined,
+        verticalDatumMode:
+          preset.verticalDatumMode === "source" ||
+          preset.verticalDatumMode === "reference-1800m" ||
+          preset.verticalDatumMode === "terrain-top-preview"
+            ? preset.verticalDatumMode
+            : undefined,
         navigationVisible:
           typeof preset.navigationVisible === "boolean"
             ? preset.navigationVisible
@@ -680,6 +687,7 @@ export function seismicPresetPatch(
         : 96,
     seismicTimeScale:
       typeof preset.timeScale === "number" ? preset.timeScale : 2,
+    seismicVerticalDatumMode: preset.verticalDatumMode,
     seismicNavigationVisible:
       typeof preset.navigationVisible === "boolean"
         ? preset.navigationVisible
@@ -1240,16 +1248,22 @@ export function seismicSectionGraphOptionGroups(
     },
     mtStylePatch: { opacity: 0.36, scalarLegendVisible: true },
   });
-  push(
-    optionFromPreset(
-      "Integrated Geophysics",
-      "PSDM + MT + 58-32 tie",
-      "psdm-mt-58-32-source-location-tie",
-      presets,
-      products,
-      fallbackProductId,
-    ),
-  );
+  for (const preset of presets.filter(
+    (candidate) =>
+      candidate.capabilityGroup === "integrated-geophysics" &&
+      candidate.linkedLayerStylePatches,
+  )) {
+    push(
+      optionFromPreset(
+        "Integrated Geophysics",
+        preset.label,
+        preset.id,
+        presets,
+        products,
+        fallbackProductId,
+      ),
+    );
+  }
   push({
     id: "isoband-source-seismic-amplitude",
     label: "Isoband source: seismic amplitude",

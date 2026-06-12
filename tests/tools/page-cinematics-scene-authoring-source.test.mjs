@@ -34,6 +34,7 @@ const sceneManager = readSource("src", "scene", "SceneManager.ts");
 const sceneMount = readSource("src", "scene.ts");
 const postprocessing = readSource("src", "scene", "postprocessing.ts");
 const renderPresets = readSource("src", "pages", "renderPresets.ts");
+const effective = readSource("src", "pages", "effective.ts");
 const typesSource = readSource("src", "pages", "types.ts");
 
 test("Cinematics keeps the selected authoring target instead of forcing Global Settings", () => {
@@ -452,6 +453,85 @@ test("Post-processing stack exposes DOF, tilt-shift, and lens-grade controls in 
   ]) {
     assert.match(postprocessing, new RegExp(`\\b${uniform}\\b`));
   }
+});
+
+test("Cinematics exposes generic section visual variables", () => {
+  const sectionVisualsStart = environmentPanel.indexOf(
+    "function SectionVisualsControls",
+  );
+  assert.ok(
+    sectionVisualsStart >= 0,
+    "SectionVisualsControls should own section visuals rows.",
+  );
+  const sectionVisualsEnd = environmentPanel.indexOf(
+    "export function EnvironmentScenePanel",
+    sectionVisualsStart,
+  );
+  const sectionVisualsBody = environmentPanel.slice(
+    sectionVisualsStart,
+    sectionVisualsEnd,
+  );
+  assert.match(
+    pagePanel,
+    /<SectionVisualsPanel[\s\S]*title="Section Visuals"/,
+    "Cinematics should mount Section Visuals as its own top-level container.",
+  );
+  assert.match(
+    environmentPanel,
+    /export function SectionVisualsPanel[\s\S]*content="sectionVisuals"/,
+    "Section Visuals should use a dedicated panel wrapper.",
+  );
+
+  assert.match(
+    typesSource,
+    /sectionVisuals\?:\s*\{[\s\S]*outlineWidthScale\?:\s*number[\s\S]*outlineMinWidthM\?:\s*number[\s\S]*outlineMaxWidthM\?:\s*number[\s\S]*arrowSpanScale\?:\s*number[\s\S]*arrowMinLengthM\?:\s*number[\s\S]*arrowMaxLengthM\?:\s*number[\s\S]*arrowRadiusScale\?:\s*number[\s\S]*arrowGapScale\?:\s*number[\s\S]*axisTickLengthScale\?:\s*number[\s\S]*axisTickMinLengthM\?:\s*number[\s\S]*axisTickMaxLengthM\?:\s*number/,
+    "SceneProperties should expose generic section visual variables.",
+  );
+  assert.match(
+    sectionVisualsBody,
+    />Section Visuals</,
+    "Section Visuals panel should expose a Section Visuals container body.",
+  );
+  for (const label of [
+    "Outline scale",
+    "Outline min",
+    "Outline max",
+    "Arrow scale",
+    "Arrow min",
+    "Arrow max",
+    "Arrow radius",
+    "Arrow gap",
+    "Tick scale",
+    "Tick min",
+    "Tick max",
+    "Ground trace",
+  ]) {
+    assert.match(
+      sectionVisualsBody,
+      new RegExp(`>${label}<|["']${label}["']`),
+      `Section Visuals should expose ${label}.`,
+    );
+  }
+  assert.match(
+    sectionVisualsBody,
+    /setSectionVisuals\(\{\s*outlineWidthScale: v\s*\}\)/,
+    "Section Visuals should write through the scene sectionVisuals setter.",
+  );
+  assert.match(
+    effective,
+    /if\s*\(patch\.sectionVisuals\)\s*\{[\s\S]*next\.sectionVisuals\s*=/,
+    "Effective scene merge should preserve nested sectionVisuals values.",
+  );
+  assert.match(
+    editorContext,
+    /if\s*\(patch\.sectionVisuals\)\s*\{[\s\S]*next\.sectionVisuals\s*=/,
+    "Editor scene merge should preserve nested sectionVisuals values.",
+  );
+  assert.match(
+    renderPresets,
+    /"sectionVisuals"/,
+    "Render presets should carry sectionVisuals as a cinematic scene patch.",
+  );
 });
 
 test("Composition guide lines render at the thinner presentation width", () => {

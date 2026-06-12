@@ -542,6 +542,7 @@ export function applyEnvironment(this: any, environment: EnvironmentSetup): void
     sceneWithPageOverrides,
     this.environmentScenePreviewPatch,
   );
+  this.currentSceneProperties = sp;
   const authoritativeTerrain = applyTopoMaterialAuthority(
     sp.terrain,
     environment.scene?.terrain,

@@ -688,7 +688,7 @@ interface CameraSetupPanelProps {
   onActivate?: () => void;
   accentColor?: string | null;
   topSlot?: React.ReactNode;
-  content?: "camera" | "post";
+  content?: "camera" | "post" | "sectionVisuals";
   scene: SceneProperties;
   setScene: (patch: Partial<SceneProperties>) => void;
 }
@@ -796,6 +796,144 @@ function lightSourceDefaults(
     return { ...base, distance: 9000, decay: 1.6 };
   }
   return base;
+}
+
+function SectionVisualsControls({
+  scene,
+  setSectionVisuals,
+}: {
+  scene: SceneProperties;
+  setSectionVisuals: (
+    patch: NonNullable<SceneProperties["sectionVisuals"]>,
+  ) => void;
+}) {
+  return (
+    <>
+      <div style={sectionHeaderStyle}>Section Visuals</div>
+      <div style={panelStyles.section}>
+        <Row label="Outline scale" manifestId="cinematics.section-visuals.outline-scale">
+          <Range
+            value={scene.sectionVisuals?.outlineWidthScale ?? 0.018}
+            min={0.004}
+            max={0.08}
+            step={0.001}
+            format={(v) => `${v.toFixed(3)}x`}
+            onChange={(v) => setSectionVisuals({ outlineWidthScale: v })}
+          />
+        </Row>
+        <Row label="Outline min" manifestId="cinematics.section-visuals.outline-min">
+          <Range
+            value={scene.sectionVisuals?.outlineMinWidthM ?? 240}
+            min={40}
+            max={1200}
+            step={10}
+            format={(v) => `${v.toFixed(0)} m`}
+            onChange={(v) => setSectionVisuals({ outlineMinWidthM: v })}
+          />
+        </Row>
+        <Row label="Outline max" manifestId="cinematics.section-visuals.outline-max">
+          <Range
+            value={scene.sectionVisuals?.outlineMaxWidthM ?? 600}
+            min={80}
+            max={2400}
+            step={10}
+            format={(v) => `${v.toFixed(0)} m`}
+            onChange={(v) => setSectionVisuals({ outlineMaxWidthM: v })}
+          />
+        </Row>
+        <Row label="Arrow scale" manifestId="cinematics.section-visuals.arrow-scale">
+          <Range
+            value={scene.sectionVisuals?.arrowSpanScale ?? 1.12}
+            min={0.3}
+            max={3}
+            step={0.02}
+            format={(v) => `${v.toFixed(2)}x`}
+            onChange={(v) => setSectionVisuals({ arrowSpanScale: v })}
+          />
+        </Row>
+        <Row label="Arrow min" manifestId="cinematics.section-visuals.arrow-min">
+          <Range
+            value={scene.sectionVisuals?.arrowMinLengthM ?? 520}
+            min={120}
+            max={1600}
+            step={20}
+            format={(v) => `${v.toFixed(0)} m`}
+            onChange={(v) => setSectionVisuals({ arrowMinLengthM: v })}
+          />
+        </Row>
+        <Row label="Arrow max" manifestId="cinematics.section-visuals.arrow-max">
+          <Range
+            value={scene.sectionVisuals?.arrowMaxLengthM ?? 1120}
+            min={240}
+            max={3200}
+            step={20}
+            format={(v) => `${v.toFixed(0)} m`}
+            onChange={(v) => setSectionVisuals({ arrowMaxLengthM: v })}
+          />
+        </Row>
+        <Row label="Arrow radius" manifestId="cinematics.section-visuals.arrow-radius">
+          <Range
+            value={scene.sectionVisuals?.arrowRadiusScale ?? 0.28}
+            min={0.08}
+            max={0.7}
+            step={0.01}
+            format={(v) => `${v.toFixed(2)}x`}
+            onChange={(v) => setSectionVisuals({ arrowRadiusScale: v })}
+          />
+        </Row>
+        <Row label="Arrow gap" manifestId="cinematics.section-visuals.arrow-gap">
+          <Range
+            value={scene.sectionVisuals?.arrowGapScale ?? 1.28}
+            min={0.6}
+            max={3}
+            step={0.02}
+            format={(v) => `${v.toFixed(2)}x`}
+            onChange={(v) => setSectionVisuals({ arrowGapScale: v })}
+          />
+        </Row>
+        <Row label="Tick scale" manifestId="cinematics.section-visuals.tick-scale">
+          <Range
+            value={scene.sectionVisuals?.axisTickLengthScale ?? 1.25}
+            min={0.2}
+            max={4}
+            step={0.05}
+            format={(v) => `${v.toFixed(2)}x`}
+            onChange={(v) => setSectionVisuals({ axisTickLengthScale: v })}
+          />
+        </Row>
+        <Row label="Tick min" manifestId="cinematics.section-visuals.tick-min">
+          <Range
+            value={scene.sectionVisuals?.axisTickMinLengthM ?? 260}
+            min={40}
+            max={1600}
+            step={10}
+            format={(v) => `${v.toFixed(0)} m`}
+            onChange={(v) => setSectionVisuals({ axisTickMinLengthM: v })}
+          />
+        </Row>
+        <Row label="Tick max" manifestId="cinematics.section-visuals.tick-max">
+          <Range
+            value={scene.sectionVisuals?.axisTickMaxLengthM ?? 900}
+            min={80}
+            max={3200}
+            step={20}
+            format={(v) => `${v.toFixed(0)} m`}
+            onChange={(v) => setSectionVisuals({ axisTickMaxLengthM: v })}
+          />
+        </Row>
+        <Row label="Ground trace" manifestId="cinematics.section-visuals.ground-trace-width">
+          <Range
+            value={scene.sectionVisuals?.groundTraceWidthM ?? 360}
+            min={30}
+            max={2000}
+            step={10}
+            format={(v) => `${v.toFixed(0)} m`}
+            onChange={(v) => setSectionVisuals({ groundTraceWidthM: v })}
+          />
+        </Row>
+      </div>
+    </>
+  );
 }
 
 export function EnvironmentScenePanel({
@@ -1673,6 +1811,15 @@ export function CameraSetupPanel({
     setScene({
       compositionGuides: {
         ...(scene.compositionGuides ?? {}),
+        ...patch,
+      },
+    });
+  const setSectionVisuals = (
+    patch: NonNullable<SceneProperties["sectionVisuals"]>,
+  ) =>
+    setScene({
+      sectionVisuals: {
+        ...(scene.sectionVisuals ?? {}),
         ...patch,
       },
     });
@@ -2679,6 +2826,12 @@ export function CameraSetupPanel({
           </div>
             </>
           )}
+          {content === "sectionVisuals" && (
+            <SectionVisualsControls
+              scene={scene}
+              setSectionVisuals={setSectionVisuals}
+            />
+          )}
         </div>
       )}
     </div>
@@ -2689,6 +2842,12 @@ export function PostProcessingPanel(
   props: Omit<CameraSetupPanelProps, "content" | "topSlot">,
 ) {
   return <CameraSetupPanel {...props} content="post" />;
+}
+
+export function SectionVisualsPanel(
+  props: Omit<CameraSetupPanelProps, "content" | "topSlot">,
+) {
+  return <CameraSetupPanel {...props} content="sectionVisuals" />;
 }
 
 export function GuiSetupPanel({

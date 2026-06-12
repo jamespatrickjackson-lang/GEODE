@@ -143,13 +143,18 @@ test("section legend exposes per-axis controls and Section Options popout", () =
   );
   assert.match(
     legendSource,
+    /scene-section-legend-\$\{axis\}-controls-visible/,
+    "Quick legend should expose Control frame per axis.",
+  );
+  assert.match(
+    legendSource,
     /aria-pressed=\{model\.shown\}/,
     "Quick legend axis buttons should expose pressed state.",
   );
   assert.match(
     legendSource,
-    /scene-section-legend-\$\{axis\}-show[\s\S]*scene-section-legend-\$\{axis\}-section-options[\s\S]*scene-section-legend-\$\{axis\}-flip[\s\S]*scene-section-legend-\$\{axis\}-axes-visible[\s\S]*scene-section-legend-\$\{axis\}-ground-trace-visible/,
-    "Quick legend should order controls as Show, Section Options, Flip, Scale axes, Ground trace.",
+    /scene-section-legend-\$\{axis\}-show[\s\S]*scene-section-legend-\$\{axis\}-section-options[\s\S]*scene-section-legend-\$\{axis\}-flip[\s\S]*scene-section-legend-\$\{axis\}-axes-visible[\s\S]*scene-section-legend-\$\{axis\}-ground-trace-visible[\s\S]*scene-section-legend-\$\{axis\}-controls-visible/,
+    "Quick legend should order controls as Show, Section Options, Flip, Scale axes, Ground trace, Control frame.",
   );
   assert.match(
     legendSource,
@@ -205,6 +210,41 @@ test("section legend exposes per-axis controls and Section Options popout", () =
   );
   assert.match(
     legendSource,
+    /<LegendToggleIcon kind="controlFrame" \/>[\s\S]{0,120}<\/button>/,
+    "Quick legend should render icon-only Control frame controls.",
+  );
+  assert.match(
+    legendSource,
+    /controlsVisible: !model\.controlsVisible/,
+    "Control frame quick toggle should update per-axis controlsVisible.",
+  );
+  assert.match(
+    legendSource,
+    /function activeFrameIdForAxis[\s\S]*style\.sceneSectionActiveFrameId[\s\S]*builtInFrameId\(axis\)/,
+    "Quick legend axis actions should preserve active source/custom frame ids before falling back to built-in axes.",
+  );
+  assert.match(
+    legendSource,
+    /function builtInAxisForFrameId[\s\S]*\^axis:\(\[xyz\]\)\$/,
+    "Quick legend should be able to identify built-in frame ids by axis.",
+  );
+  assert.match(
+    legendSource,
+    /activeBuiltInAxis[\s\S]*activeBuiltInAxis === axis \? activeFrameId : builtInFrameId\(axis\)/,
+    "Quick legend must not preserve a stale built-in frame id from another axis.",
+  );
+  assert.match(
+    legendSource,
+    /function seismicSourceTargetPatch[\s\S]*sceneSectionTargetLayerIds[\s\S]*SEISMIC_LAYER_ID[\s\S]*sceneSectionTargetProductIds/,
+    "Quick legend axis actions should carry seismic source targets when the face display is seismic.",
+  );
+  assert.match(
+    legendSource,
+    /seismicSourceTargetPatch\([\s\S]*style,[\s\S]*seismicStyle,[\s\S]*seismicLayer,[\s\S]*activeFaceChannels/,
+    "Quick legend axis toggles should apply the source-aware section target patch.",
+  );
+  assert.match(
+    legendSource,
     /M8 8 4 12l4 4M4 12h16M16 8l4 4-4 4/,
     "Quick legend Flip icon should be centered inside the 24px viewBox.",
   );
@@ -250,7 +290,7 @@ test("section legend exposes per-axis controls and Section Options popout", () =
   );
   assert.doesNotMatch(
     legendSource,
-    /P Controle|scene-section-legend-helper-visible|scene-section-legend-\$\{axis\}-controls/,
+    /P Controle|scene-section-legend-helper-visible|scene-section-legend-\$\{axis\}-controls(?!-visible)/,
     "Quick legend should not keep the global P Controle helper toggle.",
   );
 });

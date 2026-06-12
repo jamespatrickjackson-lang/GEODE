@@ -356,6 +356,26 @@ test("scene section runtime resolves source-derived face bases before axis fallb
   assert.match(controllerSource, /sectionFaceFrameFromGraphBasis/);
   assert.match(controllerSource, /sceneSectionSourceFaceFrame/);
   assert.match(controllerSource, /seismicSectionSelectedForFace/);
+  assert.match(
+    controllerSource,
+    /seismicSectionSelectedForFace[\s\S]{0,180}selectedBasis = basis[\s\S]{0,180}productTargets\.size > 0/,
+    "selected seismic source faces should win before stale product-target filters can force axis fallback",
+  );
+  assert.match(
+    controllerSource,
+    /sceneSectionOrthonormalSourceBasis[\s\S]*crossVectors\(normal, axisA\)[\s\S]*sourceBasis\.center\.dot\(sourceBasis\.normal\)/,
+    "source-derived helper bases should be normalized and right-handed before helper quaternion construction",
+  );
+  assert.match(
+    controllerSource,
+    /function sceneSectionBuiltInAxisForFrameId[\s\S]*\^axis:\(\[xyz\]\)\$/,
+    "runtime should be able to identify built-in frame ids by axis.",
+  );
+  assert.match(
+    controllerSource,
+    /activeBuiltInAxis && activeBuiltInAxis !== activeAxis[\s\S]*sceneSectionBuiltInFrameId\(activeAxis\)/,
+    "runtime source-face resolution must normalize stale built-in active frame ids to the active axis.",
+  );
   assert.match(controllerSource, /sourceFaceFrame[\s\S]*sceneSectionResolvedFrameBasis/);
   assert.match(styleSource, /seismicSectionSelectedForFace/);
   assert.doesNotMatch(

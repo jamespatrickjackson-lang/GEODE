@@ -40,6 +40,7 @@ import {
   EnvironmentScenePanel,
   GuiSetupPanel,
   PostProcessingPanel,
+  SectionVisualsPanel,
 } from "./EnvironmentScenePanel";
 import type {
   DynamicCamera,
@@ -1602,6 +1603,12 @@ export function VisualStudioPanel({
       />
       <PostProcessingPanel
         title="Post Processing"
+        accentColor={accentColor}
+        scene={cinematicsScene}
+        setScene={setCinematicsScene}
+      />
+      <SectionVisualsPanel
+        title="Section Visuals"
         accentColor={accentColor}
         scene={cinematicsScene}
         setScene={setCinematicsScene}

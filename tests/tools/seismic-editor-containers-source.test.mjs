@@ -206,23 +206,38 @@ test("seismic capability containers follow MT-like data to display order", () =>
   );
   assert.match(
     containerSource,
-    /data-testid="seismic-capability-psdm-58-32-depth-window"/,
-    "seismic editor should expose the PSDM + MT + 58-32 depth-window preset",
+    /data-testid=\{`seismic-capability-depth-window-preset-\$\{preset\.id\}`\}/,
+    "seismic editor should expose metadata-driven depth-window presets",
   );
   assert.match(
     containerSource,
-    /UTAH_FORGE_SCENE_SECTION_LAYER_ID/,
-    "depth-window shortcut should write the shared scene-section layer",
+    /linkedLayerStylePatches\?\.\[UTAH_FORGE_SCENE_SECTION_LAYER_ID\]/,
+    "depth-window shortcut should be discovered from linked scene-section preset metadata",
   );
   assert.match(
     containerSource,
-    /sceneSectionWindowByAxis/,
-    "depth-window shortcut should reuse scene-section window fields",
+    /const seismicDepthWindowSceneSectionPatch[\s\S]*sceneSectionTargetLayerIds[\s\S]*layerId[\s\S]*sceneSectionTargetProductIds[\s\S]*productId/,
+    "depth-window toggles should target the active seismic layer/product instead of reviving a generic Y window.",
   );
   assert.match(
     containerSource,
-    /sceneSectionFrameByAxis/,
-    "depth-window shortcut should reuse scene-section frame fields",
+    /sceneSectionActiveFrameId:\s*activeFrameId/,
+    "depth-window toggles should preserve an existing Y/source frame id.",
+  );
+  assert.match(
+    containerSource,
+    /commitSceneSectionStyle\(seismicDepthWindowSceneSectionPatch\(visible\)\)/,
+    "depth-window visibility toggles should use the source-aware scene-section patch.",
+  );
+  assert.match(
+    seismicModelSource,
+    /linkedLayerStylePatches/,
+    "seismic model should preserve linked layer patch metadata from capability presets",
+  );
+  assert.match(
+    seismicModelSource,
+    /verticalDatumMode/,
+    "seismic model should preserve preset-owned vertical datum mode",
   );
   assert.doesNotMatch(
     containerSource,

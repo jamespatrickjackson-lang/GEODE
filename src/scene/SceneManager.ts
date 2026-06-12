@@ -802,6 +802,7 @@ export class SceneManager {
   // distinct-units list.
   private geologyHandle: GeologyHandle | null = null;
   environmentScenePreviewPatch: Partial<SceneProperties> | null = null;
+  currentSceneProperties: SceneProperties = {};
   private lastAppliedRenderPresetId: string | null = null;
   private lateReapplyDebugSequence = 0;
   private lateReapplyDebugDuringTransitionCount = 0;

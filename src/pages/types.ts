@@ -1350,6 +1350,20 @@ export interface SceneProperties {
     aspectMask?: "none" | "16:9" | "1.85:1" | "2.39:1";
     lineThickness?: number;
   };
+  sectionVisuals?: {
+    outlineWidthScale?: number;
+    outlineMinWidthM?: number;
+    outlineMaxWidthM?: number;
+    arrowSpanScale?: number;
+    arrowMinLengthM?: number;
+    arrowMaxLengthM?: number;
+    arrowRadiusScale?: number;
+    arrowGapScale?: number;
+    axisTickLengthScale?: number;
+    axisTickMinLengthM?: number;
+    axisTickMaxLengthM?: number;
+    groundTraceWidthM?: number;
+  };
 
   // Optional cinematic preset references. These are config-only until a
   // future resolver explicitly patches existing scene fields; missing values
@@ -1542,12 +1556,13 @@ export type CinematicScenePatch = Partial<
     | "depthOfField"
     | "tiltShift"
     | "lensEffects"
-    | "motionTrails"
-    | "presentationFrame"
-    | "compositionGuides"
-    | "gui"
-  >
->;
+        | "motionTrails"
+        | "presentationFrame"
+        | "compositionGuides"
+        | "sectionVisuals"
+        | "gui"
+      >
+    >;
 
 export type CinematicLayerStylePatch = Partial<
   Pick<

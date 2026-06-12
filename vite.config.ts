@@ -141,6 +141,89 @@ function noStoreProjectAssetsPlugin(): Plugin {
   };
 }
 
+function projectBundleDevPlugin(): Plugin {
+  return {
+    name: "geosee-project-bundle-dev",
+    apply: "serve",
+    configureServer(server) {
+      server.middlewares.use(async (req, res, next) => {
+        const rawUrl = req.url ?? "";
+        if (!rawUrl.startsWith("/api/project-bundle")) {
+          next();
+          return;
+        }
+
+        try {
+          const url = new URL(rawUrl, "http://localhost");
+          const slug = url.searchParams.get("project") ?? "";
+          if (!/^[a-z0-9-]+$/i.test(slug)) {
+            res.statusCode = 400;
+            res.setHeader("Content-Type", "application/json");
+            res.end(JSON.stringify({ error: "Invalid project slug" }));
+            return;
+          }
+
+          const root = resolve(server.config.root, "projects", slug);
+          const manifestPath = resolve(root, "project.json");
+          const environmentPath = resolve(root, "environment.json");
+          if (
+            !manifestPath.startsWith(resolve(server.config.root, "projects")) ||
+            !environmentPath.startsWith(resolve(server.config.root, "projects"))
+          ) {
+            res.statusCode = 400;
+            res.setHeader("Content-Type", "application/json");
+            res.end(JSON.stringify({ error: "Invalid project path" }));
+            return;
+          }
+
+          const [manifest, environment] = await Promise.all([
+            fs.readFile(manifestPath, "utf8").then(JSON.parse),
+            fs.readFile(environmentPath, "utf8").then(JSON.parse),
+          ]);
+          const pageIds = Array.isArray(manifest.pageOrder)
+            ? manifest.pageOrder.filter((id: unknown): id is string => typeof id === "string" && id !== "")
+            : [];
+          const archivedPageIds = Array.isArray(manifest.archivedPageOrder)
+            ? manifest.archivedPageOrder.filter(
+                (id: unknown): id is string => typeof id === "string" && id !== "",
+              )
+            : [];
+          const readPage = async (pageId: string) => {
+            const pagePath = resolve(root, "pages", `${pageId}.json`);
+            return JSON.parse(await fs.readFile(pagePath, "utf8"));
+          };
+          const [pages, archivedPages] = await Promise.all([
+            Promise.all(pageIds.map(readPage)),
+            Promise.all(archivedPageIds.map(readPage)),
+          ]);
+
+          manifest.pageOrder = pageIds;
+          manifest.archivedPageOrder = archivedPageIds;
+          res.statusCode = 200;
+          res.setHeader("Cache-Control", "no-store, max-age=0");
+          res.setHeader("Content-Type", "application/json");
+          res.end(
+            JSON.stringify({
+              manifest,
+              environment,
+              pages,
+              archivedPages,
+            }),
+          );
+        } catch (error) {
+          res.statusCode = 500;
+          res.setHeader("Content-Type", "application/json");
+          res.end(
+            JSON.stringify({
+              error: error instanceof Error ? error.message : "Project bundle failed",
+            }),
+          );
+        }
+      });
+    },
+  };
+}
+
 type ProjectManifestForBuild = {
   archivedPageOrder?: unknown;
   [key: string]: unknown;
@@ -286,6 +369,7 @@ export default defineConfig(({ command }) => ({
   },
   plugins: [
     react(),
+    projectBundleDevPlugin(),
     authorWritePlugin(),
     noStoreProjectAssetsPlugin(),
     copyFfmpegCoreAssetsPlugin(),

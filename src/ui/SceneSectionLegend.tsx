@@ -48,7 +48,12 @@ const AXIS_COLORS = {
 } as const;
 const SCENE_SECTION_AXES = ["x", "y", "z"] as const;
 type SceneSectionLegendAxis = (typeof SCENE_SECTION_AXES)[number];
-type LegendToggleKind = "flip" | "controls" | "groundTrace" | "axes";
+type LegendToggleKind =
+  | "flip"
+  | "controls"
+  | "groundTrace"
+  | "axes"
+  | "controlFrame";
 type FaceChannelKey = "seismic" | "volume" | "isobars" | "mtScalar";
 
 const FACE_CHANNELS: Array<{
@@ -65,7 +70,7 @@ const rootStyle: CSSProperties = {
   ...transparentLegendPanelStyle,
   left: LEGEND_PAGE_EDGE_MARGIN_PX,
   bottom: LEGEND_BOTTOM_EDGE_OFFSET_PX + 256,
-  padding: 13,
+  padding: 12,
   minWidth: 220,
 };
 
@@ -229,6 +234,27 @@ function LegendToggleIcon({ kind }: { kind: LegendToggleKind }) {
       </svg>
     );
   }
+  if (kind === "controlFrame") {
+    return (
+      <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
+        <path
+          d="M7 7h10v10H7z"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinejoin="round"
+        />
+        <path
+          d="M12 3v4M12 17v4M9 5l3-3 3 3M9 19l3 3 3-3"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    );
+  }
   if (kind === "groundTrace") {
     return (
       <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
@@ -267,6 +293,11 @@ function LegendToggleIcon({ kind }: { kind: LegendToggleKind }) {
 
 function builtInFrameId(axis: SceneSectionLegendAxis): string {
   return `axis:${axis}`;
+}
+
+function builtInAxisForFrameId(id: string): SceneSectionLegendAxis | null {
+  const match = /^axis:([xyz])$/.exec(id);
+  return match ? (match[1] as SceneSectionLegendAxis) : null;
 }
 
 function builtInFrameLabel(axis: SceneSectionLegendAxis): string {
@@ -369,6 +400,90 @@ function faceChannels(style: EditableStyle) {
     volume: configured.volume === true,
     isobars: configured.isobars === true,
     mtScalar: configured.mtScalar === true,
+  };
+}
+
+function stringList(value: unknown): string[] {
+  return Array.isArray(value)
+    ? value.filter((candidate): candidate is string => typeof candidate === "string")
+    : [];
+}
+
+function selectedSeismicProductId(style: EditableStyle): string {
+  return typeof style.seismicProductId === "string" && style.seismicProductId.trim()
+    ? style.seismicProductId
+    : "";
+}
+
+function activeFrameIdForAxis(
+  style: EditableStyle,
+  axis: SceneSectionLegendAxis,
+): string {
+  const explicitFrames = Array.isArray(style.sceneSectionFrames)
+    ? style.sceneSectionFrames
+    : [];
+  const activeFrameId =
+    typeof style.sceneSectionActiveFrameId === "string" &&
+    style.sceneSectionActiveFrameId.trim()
+      ? style.sceneSectionActiveFrameId
+      : "";
+  const activeBuiltInAxis = builtInAxisForFrameId(activeFrameId);
+  if (activeBuiltInAxis) {
+    return activeBuiltInAxis === axis ? activeFrameId : builtInFrameId(axis);
+  }
+  const matchingCustomFrame = explicitFrames.find(
+    (entry) =>
+      typeof entry?.id === "string" &&
+      !entry.id.startsWith("axis:") &&
+      entry.axis === axis &&
+      entry.id === activeFrameId,
+  );
+  if (matchingCustomFrame?.id) return matchingCustomFrame.id;
+  if (
+    style.sceneSectionActiveAxis === axis &&
+    activeFrameId.startsWith("source:")
+  ) {
+    return activeFrameId;
+  }
+  return builtInFrameId(axis);
+}
+
+function seismicSourceTargetPatch(
+  style: EditableStyle,
+  seismicStyle: EditableStyle,
+  seismicLayer: unknown,
+  channels: ReturnType<typeof faceChannels>,
+): Partial<EditableStyle> {
+  const existingLayerIds = stringList(style.sceneSectionTargetLayerIds);
+  const hasSeismicTarget = existingLayerIds.includes(SEISMIC_LAYER_ID);
+  const seismicFaceVisible =
+    style.sceneSectionFaceChannels?.seismic === true ||
+    seismicStyle.seismicSliceThroughVolume === true ||
+    seismicStyle.seismicRenderMode === "slice";
+  const shouldTargetSeismic =
+    hasSeismicTarget ||
+    (channels.seismic &&
+      Boolean(seismicLayer) &&
+      seismicStyle.visible !== false &&
+      seismicFaceVisible);
+  if (!shouldTargetSeismic) return {};
+
+  const nextLayerIds = hasSeismicTarget
+    ? existingLayerIds
+    : [...existingLayerIds, SEISMIC_LAYER_ID];
+  const productId = selectedSeismicProductId(seismicStyle);
+  const existingProductIds = stringList(style.sceneSectionTargetProductIds);
+  const nextProductIds =
+    productId && !existingProductIds.includes(productId)
+      ? [productId, ...existingProductIds]
+      : existingProductIds;
+
+  return {
+    sceneSectionTargetScope: "selected-targets",
+    sceneSectionTargetLayerIds: nextLayerIds,
+    ...(nextProductIds.length > 0
+      ? { sceneSectionTargetProductIds: nextProductIds }
+      : {}),
   };
 }
 
@@ -543,6 +658,13 @@ export function SceneSectionLegend({
     axis: SceneSectionLegendAxis,
     planePatch: Partial<SceneSectionPlaneState>,
   ) => {
+    const activeFaceChannels = runtimeFaceChannels ?? faceChannels(style);
+    const sourceTargetPatch = seismicSourceTargetPatch(
+      style,
+      seismicStyle,
+      seismicLayer,
+      activeFaceChannels,
+    );
     const nextPlane = {
       ...(style.sceneSectionPlanes?.[axis] ?? {}),
       ...planePatch,
@@ -550,8 +672,9 @@ export function SceneSectionLegend({
     commit({
       sceneSectionEnabled: true,
       sceneSectionMode: "cutaway",
+      ...sourceTargetPatch,
       sceneSectionActiveAxis: axis,
-      sceneSectionActiveFrameId: builtInFrameId(axis),
+      sceneSectionActiveFrameId: activeFrameIdForAxis(style, axis),
       sceneSectionPlanes: {
         ...(style.sceneSectionPlanes ?? {}),
         [axis]: nextPlane,
@@ -563,6 +686,13 @@ export function SceneSectionLegend({
     axis: SceneSectionLegendAxis,
     framePatch: Partial<SceneSectionFrameState>,
   ) => {
+    const activeFaceChannels = runtimeFaceChannels ?? faceChannels(style);
+    const sourceTargetPatch = seismicSourceTargetPatch(
+      style,
+      seismicStyle,
+      seismicLayer,
+      activeFaceChannels,
+    );
     const nextFrame = {
       ...(style.sceneSectionFrameByAxis?.[axis] ?? {}),
       ...framePatch,
@@ -570,8 +700,9 @@ export function SceneSectionLegend({
     commit({
       sceneSectionEnabled: true,
       sceneSectionMode: "cutaway",
+      ...sourceTargetPatch,
       sceneSectionActiveAxis: axis,
-      sceneSectionActiveFrameId: builtInFrameId(axis),
+      sceneSectionActiveFrameId: activeFrameIdForAxis(style, axis),
       sceneSectionFrameEnabled: true,
       sceneSectionFrameByAxis: {
         ...(style.sceneSectionFrameByAxis ?? {}),
@@ -629,65 +760,81 @@ export function SceneSectionLegend({
                 >
                   <LegendToggleIcon kind="controls" />
                 </button>
-              <button
-                type="button"
-                aria-label={`${axisLabel} Flip`}
-                aria-pressed={model.flipped}
-                title="Flip side"
-                disabled={!model.shown}
-                data-testid={`scene-section-legend-${axis}-flip`}
-                onClick={() =>
-                  setAxisPlanePatch(axis, {
-                    invert: !model.flipped,
-                  })
-                }
-                style={iconButtonStyle(axisColor, model.shown)}
-              >
-                <LegendToggleIcon kind="flip" />
-              </button>
-              <button
-                type="button"
-                aria-label={`${axisLabel} Scale axes`}
-                aria-pressed={model.axesVisible}
-                title="Scale axes"
-                disabled={!model.shown}
-                data-testid={`scene-section-legend-${axis}-axes-visible`}
-                onClick={() =>
-                  setAxisFramePatch(axis, {
-                    axesVisible: !model.axesVisible,
-                  })
-                }
-                style={iconButtonStyle(axisColor, model.shown)}
-              >
-                <LegendToggleIcon kind="axes" />
-              </button>
-              {axis !== "z" ? (
                 <button
                   type="button"
-                  aria-label={`${axisLabel} Ground trace`}
-                  aria-pressed={model.groundTraceVisible}
-                  title="Ground trace"
+                  aria-label={`${axisLabel} Flip`}
+                  aria-pressed={model.flipped}
+                  title="Flip side"
                   disabled={!model.shown}
-                  data-testid={`scene-section-legend-${axis}-ground-trace-visible`}
+                  data-testid={`scene-section-legend-${axis}-flip`}
                   onClick={() =>
-                    setAxisFramePatch(axis, {
-                      groundTraceVisible: !model.groundTraceVisible,
+                    setAxisPlanePatch(axis, {
+                      invert: !model.flipped,
                     })
                   }
                   style={iconButtonStyle(axisColor, model.shown)}
                 >
-                  <LegendToggleIcon kind="groundTrace" />
+                  <LegendToggleIcon kind="flip" />
                 </button>
-              ) : (
-                <span aria-hidden="true" style={iconSpacerStyle} />
-              )}
+                <button
+                  type="button"
+                  aria-label={`${axisLabel} Scale axes`}
+                  aria-pressed={model.axesVisible}
+                  title="Scale axes"
+                  disabled={!model.shown}
+                  data-testid={`scene-section-legend-${axis}-axes-visible`}
+                  onClick={() =>
+                    setAxisFramePatch(axis, {
+                      axesVisible: !model.axesVisible,
+                    })
+                  }
+                  style={iconButtonStyle(axisColor, model.shown)}
+                >
+                  <LegendToggleIcon kind="axes" />
+                </button>
+                {axis !== "z" ? (
+                  <button
+                    type="button"
+                    aria-label={`${axisLabel} Ground trace`}
+                    aria-pressed={model.groundTraceVisible}
+                    title="Ground trace"
+                    disabled={!model.shown}
+                    data-testid={`scene-section-legend-${axis}-ground-trace-visible`}
+                    onClick={() =>
+                      setAxisFramePatch(axis, {
+                        groundTraceVisible: !model.groundTraceVisible,
+                      })
+                    }
+                    style={iconButtonStyle(axisColor, model.shown)}
+                  >
+                    <LegendToggleIcon kind="groundTrace" />
+                  </button>
+                ) : (
+                  <span aria-hidden="true" style={iconSpacerStyle} />
+                )}
+                <button
+                  type="button"
+                  aria-label={`${axisLabel} Control frame`}
+                  aria-pressed={model.controlsVisible}
+                  title="Control frame"
+                  disabled={!model.shown}
+                  data-testid={`scene-section-legend-${axis}-controls-visible`}
+                  onClick={() =>
+                    setAxisFramePatch(axis, {
+                      controlsVisible: !model.controlsVisible,
+                    })
+                  }
+                  style={iconButtonStyle(axisColor, model.shown)}
+                >
+                  <LegendToggleIcon kind="controlFrame" />
+                </button>
+              </div>
             </div>
-          </div>
-        );
-      })}
-    </aside>
-    {popoverOpen && seismicLayer && typeof document !== "undefined"
-      ? createPortal(
+          );
+        })}
+      </aside>
+      {popoverOpen && seismicLayer && typeof document !== "undefined"
+        ? createPortal(
           <div
             ref={popoverRef}
             data-testid="scene-section-options-popout"

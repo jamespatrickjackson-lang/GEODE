@@ -132,6 +132,13 @@ export function SeismicSurveyGeometryContainer({
         preset.mtStylePatch,
       );
     }
+    if (preset.linkedLayerStylePatches) {
+      for (const [targetLayerId, patch] of Object.entries(
+        preset.linkedLayerStylePatches,
+      )) {
+        commitLayerStyle(targetLayerId, patch);
+      }
+    }
   };
   const setNavigationRoleVisible = (
     role: "sources" | "receivers" | "lines",
@@ -262,6 +269,9 @@ export function SeismicCapabilityLayerContainers({
   const activeCapabilityPreset = capabilityPresets.find(
     (preset) => preset.id === currentCapabilityPresetId,
   );
+  const linkedSceneSectionPresets = capabilityPresets.filter((preset) =>
+    Boolean(preset.linkedLayerStylePatches?.[UTAH_FORGE_SCENE_SECTION_LAYER_ID]),
+  );
   const controlOpacity = disabled ? 0.4 : 1;
   const liveSeismicStyleRef = useRef(style);
   const liveSceneSectionStyleRef = useRef(sceneSectionStyle);
@@ -316,6 +326,55 @@ export function SeismicCapabilityLayerContainers({
       );
     }
   };
+  const sceneSectionStringList = (value: unknown): string[] =>
+    Array.isArray(value)
+      ? value.filter((candidate): candidate is string => typeof candidate === "string")
+      : [];
+  const seismicDepthWindowSceneSectionPatch = (
+    visible: boolean,
+  ): Partial<EditableStyle> => {
+    if (!visible) {
+      return {
+        visible: false,
+        sceneSectionEnabled: false,
+        sceneSectionFrameEnabled: false,
+        sceneSectionWindowEnabled: false,
+      };
+    }
+    const currentStyle = liveSceneSectionStyleRef.current;
+    const layerTargets = sceneSectionStringList(
+      currentStyle.sceneSectionTargetLayerIds,
+    );
+    const productTargets = sceneSectionStringList(
+      currentStyle.sceneSectionTargetProductIds,
+    );
+    const activeFrameId =
+      currentStyle.sceneSectionActiveAxis === "y" &&
+      typeof currentStyle.sceneSectionActiveFrameId === "string" &&
+      currentStyle.sceneSectionActiveFrameId.trim()
+        ? currentStyle.sceneSectionActiveFrameId
+        : "axis:y";
+    const nextProductTargets =
+      productId && !productTargets.includes(productId)
+        ? [productId, ...productTargets]
+        : productTargets;
+    return {
+      visible: true,
+      sceneSectionEnabled: true,
+      sceneSectionMode: "cutaway",
+      sceneSectionFrameEnabled: true,
+      sceneSectionWindowEnabled: true,
+      sceneSectionActiveAxis: "y",
+      sceneSectionActiveFrameId: activeFrameId,
+      sceneSectionTargetScope: "selected-targets",
+      sceneSectionTargetLayerIds: layerTargets.includes(layerId)
+        ? layerTargets
+        : [...layerTargets, layerId],
+      ...(nextProductTargets.length > 0
+        ? { sceneSectionTargetProductIds: nextProductTargets }
+        : {}),
+    };
+  };
   const applyCapabilityPreset = (presetId: string) => {
     const preset = capabilityPresets.find(
       (candidate) => candidate.id === presetId,
@@ -339,8 +398,6 @@ export function SeismicCapabilityLayerContainers({
       }
     }
   };
-  const applyPsdm58_32DepthWindow = () =>
-    applyCapabilityPreset("psdm-mt-58-32-source-location-tie");
   const renderSourceGatedProductItem = (
     gate: SeismicRequiredProductSourceGate,
   ) => (
@@ -521,12 +578,7 @@ export function SeismicCapabilityLayerContainers({
         )}
         visibilityDisabled={disabled}
         onVisibleChange={(visible) =>
-          commitSceneSectionStyle({
-            visible,
-            sceneSectionEnabled: visible,
-            sceneSectionFrameEnabled: visible,
-            sceneSectionWindowEnabled: visible,
-          })
+          commitSceneSectionStyle(seismicDepthWindowSceneSectionPatch(visible))
         }
       >
         {(() => {
@@ -553,12 +605,9 @@ export function SeismicCapabilityLayerContainers({
                 checked={styleBoolean(sceneSectionStyle, "sceneSectionWindowEnabled", false)}
                 disabled={disabled}
                 onChange={(e) =>
-                  commitSceneSectionStyle({
-                    visible: e.target.checked,
-                    sceneSectionEnabled: e.target.checked,
-                    sceneSectionFrameEnabled: e.target.checked,
-                    sceneSectionWindowEnabled: e.target.checked,
-                  })
+                  commitSceneSectionStyle(
+                    seismicDepthWindowSceneSectionPatch(e.target.checked),
+                  )
                 }
                 style={{ opacity: controlOpacity }}
               />
@@ -575,37 +624,44 @@ export function SeismicCapabilityLayerContainers({
             </label>
           );
         })()}
-        <div style={{ ...nestedControlRowStyle, gap: 6, flexWrap: "wrap" }}>
-          <label style={nestedFieldLabelStyle}>Preset</label>
-          <button
-            type="button"
-            data-testid="seismic-capability-psdm-58-32-depth-window"
-            disabled={disabled}
-            onClick={applyPsdm58_32DepthWindow}
-            style={{
-              ...panelStyles.iconButton,
-              width: "auto",
-              padding: "3px 7px",
-              fontSize: 10,
-              opacity: controlOpacity,
-            }}
-          >
-            PSDM + MT + 58-32
-          </button>
-        </div>
-        <div style={nestedControlRowStyle}>
-          <label style={nestedFieldLabelStyle}>Claim</label>
-          <span
-            style={{
-              flex: 1,
-              color: vibrancyTertiaryLabel,
-              fontSize: 11,
-              opacity: controlOpacity,
-            }}
-          >
-            58-32 source-location-only
-          </span>
-        </div>
+        {linkedSceneSectionPresets.length > 0 ? (
+          <div style={{ ...nestedControlRowStyle, gap: 6, flexWrap: "wrap" }}>
+            <label style={nestedFieldLabelStyle}>Preset</label>
+            {linkedSceneSectionPresets.map((preset) => (
+              <button
+                key={preset.id}
+                type="button"
+                data-testid={`seismic-capability-depth-window-preset-${preset.id}`}
+                disabled={disabled}
+                onClick={() => applyCapabilityPreset(preset.id)}
+                style={{
+                  ...panelStyles.iconButton,
+                  width: "auto",
+                  padding: "3px 7px",
+                  fontSize: 10,
+                  opacity: controlOpacity,
+                }}
+              >
+                {preset.label}
+              </button>
+            ))}
+          </div>
+        ) : null}
+        {activeCapabilityPreset?.summary ? (
+          <div style={nestedControlRowStyle}>
+            <label style={nestedFieldLabelStyle}>Preset</label>
+            <span
+              style={{
+                flex: 1,
+                color: vibrancyTertiaryLabel,
+                fontSize: 11,
+                opacity: controlOpacity,
+              }}
+            >
+              {activeCapabilityPreset.summary}
+            </span>
+          </div>
+        ) : null}
       </SeismicCapabilityLayerItem>
 
       <SeismicCapabilityLayerItem
