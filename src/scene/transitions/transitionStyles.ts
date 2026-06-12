@@ -25,6 +25,7 @@ import {
 } from "../../topoMap/settings";
 import type { TransitionCommitGateState } from "./transitionCommitGate";
 import type { TransitionAssignmentTrace } from "./transitionRenderGraphAdapter";
+import type { TransitionExecutionPlan } from "./transitionExecutionPlan";
 import { easeProgress } from "./transitionEasing";
 
 // Re-exported so existing `import { easeProgress } from "./transitionStyles"`
@@ -183,6 +184,11 @@ export interface SceneTransitionContext {
   sectionIsoStableLayerIds: Set<string>;
   warnedUnexpectedVisibleLayerIds: Set<string>;
   assignmentTraces: TransitionAssignmentTrace[];
+  // Execution layer (TRD-013 / DEC-152). The classifier assignments are turned
+  // into a plan of per-entity operations. The seismic entity executor consumes
+  // its `seismic-entity` operations; protected/existing channels keep their
+  // guarded materialization kernels and are mirrored here for trace fidelity.
+  executionPlan: TransitionExecutionPlan | null;
   commitState: TransitionCommitGateState;
 }
 

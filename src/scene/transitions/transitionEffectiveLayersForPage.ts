@@ -16,6 +16,7 @@ import {
   type TransitionRenderGraphDerivedEntityState,
   type TransitionRenderGraphLayerState,
 } from "./transitionRenderGraphAdapter";
+import { buildTransitionExecutionPlan } from "./transitionExecutionPlan";
 import { createTransitionCommitGate } from "./transitionCommitGate";
 import {
   SCENE_SECTION_AFFECTED_LAYER_IDS,
@@ -752,7 +753,7 @@ export function transitionEffectiveLayersForPage(
       },
     });
   }
-  const assignmentTraces = buildTransitionRenderGraphTrace({
+  const renderGraphTrace = buildTransitionRenderGraphTrace({
     sourceLayers: sourceGraphLayers,
     targetLayers: targetGraphLayers,
     evidence: {
@@ -760,7 +761,20 @@ export function transitionEffectiveLayersForPage(
       targetPageId: toPage.id,
       observedCaseFamily: "layer-visibility-opacity",
     },
-  }).assignmentTraces;
+  });
+  const assignmentTraces = renderGraphTrace.assignmentTraces;
+  // Execution layer (TRD-013 / DEC-152): turn the classifier assignments into a
+  // plan of per-entity operations. The seismic entity executor owns the
+  // `seismic-entity` operations; protected/existing channels keep their guarded
+  // materialization kernels below and are classified here for trace fidelity.
+  const executionPlan = buildTransitionExecutionPlan({
+    assignments: renderGraphTrace.assignments,
+    startMs: now,
+    durationMs: duration,
+    easing,
+    scalarStyleDurationMs: Math.max(0, scalarStyleDurationMs),
+    scalarStyleEasing,
+  });
   this.activeSceneTransitionContext = {
     sourcePageId: fromPage.id,
     targetPageId: toPage.id,
@@ -777,6 +791,7 @@ export function transitionEffectiveLayersForPage(
     sectionIsoStableLayerIds: new Set<string>(),
     warnedUnexpectedVisibleLayerIds: new Set(),
     assignmentTraces,
+    executionPlan,
     commitState: createTransitionCommitGate({
       transitionId,
       sourcePageId: fromPage.id,

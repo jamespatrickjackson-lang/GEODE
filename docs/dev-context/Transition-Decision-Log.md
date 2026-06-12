@@ -337,14 +337,22 @@ independent deciders. Their interpolation math is unchanged. Seismic derived
 entities gain a dedicated entity executor that applies per-identity opacity to
 trace-header-tagged meshes.
 
-Consequences: The imperative decision ladder in `transitionEffectiveLayersForPage`
-is replaced by plan construction; `tickLayerTweens` becomes a plan evaluator that
-dispatches through the registry. The protected MT-scalar/cloud path keeps its
-exact kernel (`interpolatedScalarStyle`); only its dispatch trigger moves to the
-assignment. All prior transition source-pattern tests remain the regression
-contract and must stay green; assertions that grep a replaced decision-ladder
-boolean are repointed at the assignment-driven equivalent in lockstep with this
-entry. Page-id, page-index, page-title, and page-order remain non-identity.
+Consequences: The execution plan is built every transition from the classifier
+assignments and stored on the active transition context. The seismic
+derived-entity graph is the first fully migrated consumer: its operations drive
+the seismic entity executor, and the seismic survey-geometry and
+figure-annotation fields leave the layer-level discrete-crossfade set so the
+executor owns them. The TRD-009/010/011/012 owners and the protected MT
+full-density scalar kernel (`interpolatedScalarStyle`) keep their guarded
+materialization in this pass and are mirrored into the plan for trace fidelity;
+their dispatch triggers migrate onto assignments incrementally in later passes,
+MT-scalar last and only under its existing source guards
+(`mt-resistivity-legend-cloud-toggle-source`,
+`local-atmosphere-volume-source`). All prior transition source-pattern tests
+remain the regression contract and must stay green; assertions that grep a
+replaced decision-ladder boolean are repointed at the assignment-driven
+equivalent in lockstep with this entry. Page-id, page-index, page-title, and
+page-order remain non-identity.
 
 Revisit when: A renderer needs a durable per-entity execution exception that
 cannot be expressed as an assignment execution mode plus a registered executor
