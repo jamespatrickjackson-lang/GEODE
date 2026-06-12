@@ -16,10 +16,12 @@ import {
 } from "../../projectModules/utahForge/layerIds";
 import { UTAH_FORGE_DISCRETE_CROSSFADE_LAYER_IDS } from "../../projectModules/utahForge/crossfadeFields";
 import {
+  PUBLIC_SURFACE_CLIP_DEFAULTS,
   TOPO_MAP_GRATICULE_EDGE_STYLE_FIELDS,
   TOPO_MAP_LEGACY_GRATICULE_LAYER_ID,
   TOPO_MAP_LEGACY_PUBLIC_SURFACE_LAYER_IDS,
-  TOPO_MAP_PUBLIC_SURFACE_CLIP_STYLE_FIELDS,
+  TOPO_MAP_PUBLIC_SURFACE_CLIP_DISCRETE_STYLE_FIELDS,
+  TOPO_MAP_PUBLIC_SURFACE_CLIP_NUMERIC_STYLE_FIELDS,
   isTopoMapGraticuleLayer,
   isTopoMapLayer,
 } from "../../topoMap/settings";
@@ -259,6 +261,7 @@ export const SCALAR_TRANSITION_STYLE_FIELDS: readonly (keyof EditableStyle)[] = 
   "boreholeLogVerticalExaggeration",
   "boreholeLogLithologyOpacity",
   "boreholeLogLithologyWidthPx",
+  ...TOPO_MAP_PUBLIC_SURFACE_CLIP_NUMERIC_STYLE_FIELDS,
 ];
 
 const LOCAL_ATMOSPHERE_DISCRETE_STYLE_FIELDS: readonly (keyof EditableStyle)[] =
@@ -343,6 +346,20 @@ export function scalarStyleNumber(
   if (field === "sectionIsoBandOpacity") return 0.32;
   if (field === "sectionIsoFillOffset") return 0;
   if (field === "sectionIsoSourceOpacity") return 0;
+  if (field === "publicSurfaceClipCenterX")
+    return PUBLIC_SURFACE_CLIP_DEFAULTS.centerX;
+  if (field === "publicSurfaceClipCenterY")
+    return PUBLIC_SURFACE_CLIP_DEFAULTS.centerY;
+  if (field === "publicSurfaceClipCenterZ")
+    return PUBLIC_SURFACE_CLIP_DEFAULTS.centerZ;
+  if (field === "publicSurfaceClipSizeX")
+    return PUBLIC_SURFACE_CLIP_DEFAULTS.sizeX;
+  if (field === "publicSurfaceClipSizeY")
+    return PUBLIC_SURFACE_CLIP_DEFAULTS.sizeY;
+  if (field === "publicSurfaceClipSizeZ")
+    return PUBLIC_SURFACE_CLIP_DEFAULTS.sizeZ;
+  if (field === "publicSurfaceClipRotationZDeg")
+    return PUBLIC_SURFACE_CLIP_DEFAULTS.rotationZDeg;
   return null;
 }
 
@@ -630,7 +647,7 @@ export function forgeDiscreteDataStyleChanged(
     styleFieldsChanged(
       fromStyle,
       toStyle,
-      TOPO_MAP_PUBLIC_SURFACE_CLIP_STYLE_FIELDS,
+      TOPO_MAP_PUBLIC_SURFACE_CLIP_DISCRETE_STYLE_FIELDS,
     )
   ) {
     return true;

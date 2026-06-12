@@ -1510,3 +1510,24 @@ Copy-paste prompt for the reviewing/fixing agent:
 - New behavior decisions (color channels, atmosphere field split,
   borehole declaration, overlay clock) each need a `docs/03-decisions.md`
   entry; do not rewrite older entries.
+
+## 2026-06-12 topo public-surface transition audit note
+
+- Render-stack trace for `projects/utah-forge` page `156_page` showed topo
+  material authority from `environment.scene.terrain`, active preset `user-3`,
+  shader `terrainMaterial/topo-image`, NAIP 2024 8192 texture
+  `v=684f5a7e42719aa9`, public clip enabled, rounded-square edge fade, and
+  runtime terrain mesh geometry.
+- Synthetic visibility transitions classified terrain as `fade-opacity`;
+  terrain shader `uOpacity` accepted transition writes, ruling out the
+  shader-ignore/no-uniform hypothesis for ordinary visibility fades.
+- Synthetic public-surface clip movement reproduced the active-to-active snap
+  mechanism: numeric clip fields forced `discrete-crossfade`, created a terrain
+  layer snapshot, and hid/re-entered the live terrain root despite compatible
+  render-graph assignment.
+- Fix family: treat numeric public-surface clip bounds as continuous
+  page-clock style channels, keep `publicSurfaceClipEnabled`,
+  `publicSurfaceClipShape`, and `publicSurfaceClipPreviewVisible` discrete, and
+  allow the topo surface layer to use the existing scalar-style tween executor.
+  No page ids, page indexes, fixture pairs, or project page JSON changes were
+  used.

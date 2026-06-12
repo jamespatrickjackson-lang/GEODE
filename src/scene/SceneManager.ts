@@ -1588,6 +1588,7 @@ export class SceneManager {
     group: THREE.Group,
   ): boolean {
     return (
+      this.isTopoSurfaceLayerId(id) ||
       this.layerHasScalarPreviewData(group) ||
       id === UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID
     );

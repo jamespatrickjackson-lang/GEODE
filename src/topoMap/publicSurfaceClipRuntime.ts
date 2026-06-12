@@ -4,19 +4,11 @@ import { LineSegments2 } from "three/examples/jsm/lines/LineSegments2.js";
 import { LineSegmentsGeometry } from "three/examples/jsm/lines/LineSegmentsGeometry.js";
 import type { EditableStyle } from "../pages/types";
 import type { TerrainMaterialHandle } from "../scene/terrainMaterial";
+import { PUBLIC_SURFACE_CLIP_DEFAULTS } from "./settings";
 import { styleNumber } from "./runtimeUtils";
 
 const PUBLIC_SURFACE_CLIP_CIRCLE_SEGMENTS = 48;
 const PUBLIC_SURFACE_CLIP_RENDER_ORDER = 4550;
-const PUBLIC_SURFACE_CLIP_DEFAULTS = {
-  centerX: 0,
-  centerY: 0,
-  centerZ: 2000,
-  sizeX: 279_150,
-  sizeY: 227_900,
-  sizeZ: 8000,
-  rotationZDeg: 0,
-} as const;
 
 export interface PublicSurfaceClipBox {
   enabled: boolean;
