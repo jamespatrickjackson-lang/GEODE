@@ -503,9 +503,16 @@ export interface EditableStyle {
   boreholeLogActiveWell?: string;
   boreholeLogTrackSelection?: {
     gamma?: boolean;
+    hcgr?: boolean;
+    hsgr?: boolean;
     resistivity?: boolean;
     lithology?: boolean;
   };
+  boreholeLogHcgrColor?: string;
+  boreholeLogHsgrColor?: string;
+  boreholeLogResistivityColor?: string;
+  boreholeLogBaselineColor?: string;
+  boreholeLogLegendVisible?: boolean;
   boreholeLogTrackOffsetM?: number;
   boreholeLogTrackWidthM?: number;
   boreholeLogGammaScaleApi?: number;

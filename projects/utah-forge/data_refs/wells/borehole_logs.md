@@ -39,11 +39,13 @@ inventory summaries, render eligibility, source URLs, and explicit gap status.
 
 `16A(78)-32` is the only renderable well in the generated manifest. The
 renderer maps the parsed GDR 1292 HCGR and HSGR gamma tracks by measured depth
-onto the existing validated 16A trajectory from the demo borehole manifest.
-Those tracks render as fixed-frame UTM ribbons: the baseline follows the
-as-drilled trajectory, gamma amplitude offsets in one constant horizontal lane,
-and multiple gamma mnemonics receive parallel lane bases. The renderer does not
-use the trajectory-local normal that can twist at doglegs.
+onto the existing validated 16A trajectory from the demo borehole manifest. The
+HCGR and HSGR source curves are distinct paired tracks, not a symmetric fill of
+one curve. They render as fixed-frame UTM ribbons: measured depth stays anchored
+to the as-drilled trajectory, each track gets a visible lane-local spine, and
+gamma amplitude fills only from that spine to the curve edge. Multiple gamma
+mnemonics receive separated parallel lane bases. The renderer does not use the
+trajectory-local normal that can twist at doglegs.
 
 `78-32` has a parsed GDR 1153 gamma track, but no validated trajectory is
 available in the active project, so it remains
@@ -60,10 +62,13 @@ this patch.
 ## Display Controls
 
 The editor exposes the layer under `FORGE Data > Bore Holes` as `Borehole
-logs`. It is hidden by default. Controls cover active well, track selection,
-lane base offset, amplitude width, GR scale, resistivity log-axis bounds, curve
-cutoff, depth window, vertical exaggeration, lithology opacity, provenance, and
-readout.
+logs`. It is hidden by default. Controls cover active well, HCGR/HSGR,
+resistivity, and lithology track selection, HCGR/HSGR/resistivity/spine colors,
+quick legend visibility, lane base offset, amplitude width, GR scale,
+resistivity log-axis bounds, curve cutoff, depth window, vertical
+exaggeration, lithology opacity, provenance, and readout. The viewport quick
+legend writes the same visibility and track-selection fields as the editor
+panel.
 
 No vertical projection fallback or local-normal spiral offset exists. A track
 without a validated as-drilled trajectory remains in the manifest as a

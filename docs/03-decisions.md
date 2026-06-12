@@ -2715,3 +2715,54 @@ avoid adding an authoring control before a real need for manual azimuth exists.
 vertical projection fallbacks, page-id-specific fixes, or camera-facing
 billboards for source claims. Display scale controls may tune readability but
 must not change source samples, measured depths, CRS, or trajectory gating.
+
+## DEC-158 - Borehole log ribbons fill from lane-local spines
+
+Supersedes the DEC-157 sentence that described the trajectory path as the
+visible ribbon baseline for every track.
+
+**Considered:** keep filling each track from the original trajectory path to its
+offset curve, soften the page copy to avoid claiming lane separation, or give
+each track its own lane-local baseline spine and fill only within that lane.
+
+**Chose:** each renderable borehole-log track uses a visible fixed-frame
+lane-local spine at its base offset. The ribbon mesh fills only between that
+spine and the track curve edge. Multiple gamma tracks use separated lane bases
+with a clear gap, while measured-depth placement remains anchored to the
+validated as-drilled trajectory.
+
+**Why:** the source HCGR and HSGR curves are distinct, but filling both ribbons
+from the original trajectory made the farther lane cover the nearer lane and
+visually fuse the display into one band. Lane-local spines make the zero line
+visible for each curve and keep the overlay wording honest.
+
+**Guard:** do not claim parallel lanes unless the rendered objects expose
+separated lane bases. Do not use mirrored fills, duplicated source samples, or
+overlapping lane meshes as proof of two measured curves. Lithology remains a
+path column/segment, not an amplitude wiggle.
+
+## DEC-159 - Borehole log legend and colors are layer style channels
+
+Extends DEC-157 and DEC-158 for Utah FORGE borehole-log authoring and page
+transitions.
+
+**Considered:** keep HCGR/HSGR colors hardcoded in the loader, make a
+page-specific quick legend for the showcase page, or promote Borehole Logs
+colors, legend visibility, and track toggles into normal layer style channels.
+
+**Chose:** Borehole Logs track colors, lane-spine color, legend visibility, and
+track toggles live on `EditableStyle.boreholeLog*` fields. The editor panel and
+quick legend write the same fields. The Utah quick-legend stack owns the
+viewport legend transition, while page-to-page transition field lists declare
+Borehole Log color, scalar, and categorical channels explicitly.
+
+**Why:** the layer needs the same authoring and transition behavior as other
+Utah source-derived layers. Hardcoded colors and unregistered style fields make
+the runtime look detached from page transitions and prevent quick legend
+buttons from matching the editor panel.
+
+**Guard:** do not repair Borehole Logs transitions with page ids, page order,
+page titles, or page fixture special cases. New legend controls must use the
+shared compact quick-legend helpers from `src/ui/legendStyles.ts`, and quick
+legend buttons must mutate the same layer style or visibility fields exposed in
+the editor panel.

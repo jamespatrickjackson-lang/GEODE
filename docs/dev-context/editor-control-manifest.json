@@ -1879,6 +1879,30 @@
       "status": "active"
     },
     {
+      "id": "borehole-logs.track-colors",
+      "label": "Track colors",
+      "kind": "control-family",
+      "parentId": "borehole-logs.controls",
+      "sourceFile": "src/editor/layerControls/wells/BoreholeLogsControls.tsx",
+      "sourceAnchor": "testId=\"borehole-logs-hcgr-color\"",
+      "scope": "utah-forge borehole-log layer",
+      "backedBy": "EditableStyle.boreholeLogHcgrColor, EditableStyle.boreholeLogHsgrColor, EditableStyle.boreholeLogResistivityColor, and EditableStyle.boreholeLogBaselineColor",
+      "setterRoute": "LayerColorStyleControl",
+      "status": "active"
+    },
+    {
+      "id": "borehole-logs.legend",
+      "label": "Legend",
+      "kind": "control",
+      "parentId": "borehole-logs.controls",
+      "sourceFile": "src/editor/layerControls/wells/BoreholeLogsControls.tsx",
+      "sourceAnchor": "testId=\"borehole-logs-legend-visible\"",
+      "scope": "utah-forge borehole-log layer",
+      "backedBy": "EditableStyle.boreholeLogLegendVisible",
+      "setterRoute": "LayerBooleanStyleControl",
+      "status": "active"
+    },
+    {
       "id": "borehole-logs.track-offset",
       "label": "Lane base offset",
       "kind": "control",

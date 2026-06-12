@@ -58,6 +58,21 @@ function displacementAt(ribbon, index) {
   return ribbon.curve[index].clone().sub(ribbon.baseline[index]);
 }
 
+function scenePointAt(index) {
+  const [x, y, z] = doglegTrajectory[index].scene;
+  return { x, y, z };
+}
+
+function offsetFromPath(point, index) {
+  const path = scenePointAt(index);
+  return point.clone().sub({
+    x: path.x,
+    y: path.y,
+    z: path.z,
+    isVector3: true,
+  });
+}
+
 test("borehole log tracks use one fixed UTM lane across doglegs", async () => {
   const loader = await importLoader();
   assert.equal(typeof loader.computeBoreholeLogLaneFrame, "function");
@@ -75,14 +90,27 @@ test("borehole log tracks use one fixed UTM lane across doglegs", async () => {
   assert.equal(ribbon.baseline.length, gammaTrack.samples.length);
   assert.equal(ribbon.curve.length, gammaTrack.samples.length);
   for (let index = 0; index < ribbon.baseline.length; index += 1) {
-    const displacement = displacementAt(ribbon, index);
-    assert.ok(displacement.length() >= 23.99 && displacement.length() <= 60.01);
-    assert.ok(Math.abs(displacement.z) < 1e-9, "lane displacement must stay horizontal");
+    const baselineOffset = offsetFromPath(ribbon.baseline[index], index);
+    assert.ok(Math.abs(baselineOffset.length() - 24) < 1e-9);
+    assert.ok(Math.abs(baselineOffset.z) < 1e-9, "lane baseline must stay horizontal");
     assert.ok(
-      Math.abs(displacement.clone().normalize().dot(frame.laneAxis) - 1) < 1e-9,
-      "all dogleg displacements must stay parallel to the same lane axis",
+      Math.abs(baselineOffset.clone().normalize().dot(frame.laneAxis) - 1) < 1e-9,
+      "all lane baselines must stay parallel to the same lane axis",
     );
-    assert.equal(ribbon.curve[index].z, ribbon.baseline[index].z);
+
+    const amplitudeOffset = displacementAt(ribbon, index);
+    assert.ok(amplitudeOffset.length() >= -1e-9 && amplitudeOffset.length() <= 36.01);
+    assert.ok(Math.abs(amplitudeOffset.z) < 1e-9, "amplitude displacement must stay horizontal");
+    if (amplitudeOffset.length() > 1e-9) {
+      assert.ok(
+        Math.abs(amplitudeOffset.clone().normalize().dot(frame.laneAxis) - 1) < 1e-9,
+        "all dogleg displacements must stay parallel to the same lane axis",
+      );
+    }
+    assert.ok(
+      Math.abs(ribbon.curve[index].z - ribbon.baseline[index].z) < 1e-9,
+      "curve and baseline stay in the same vertical curtain",
+    );
   }
 });
 
@@ -120,11 +148,48 @@ test("multiple gamma mnemonics get parallel separated lanes", async () => {
     frame,
   );
 
-  const firstBase = displacementAt(first, 0).length();
-  const secondBase = displacementAt(second, 0).length();
+  const firstBase = offsetFromPath(first.baseline[0], 0).length();
+  const secondBase = offsetFromPath(second.baseline[0], 0).length();
+  const firstFullScaleCurve = offsetFromPath(first.curve[2], 2).length();
   assert.ok(Math.abs(firstBase - 24) < 1e-9);
-  assert.ok(Math.abs(secondBase - 72) < 1e-9);
-  assert.ok(Math.abs(secondBase - firstBase - 48) < 1e-9);
+  assert.ok(Math.abs(secondBase - 78) < 1e-9);
+  assert.ok(Math.abs(secondBase - firstBase - 54) < 1e-9);
+  assert.ok(
+    Math.abs(secondBase - firstFullScaleCurve - 18) < 1e-9,
+    "adjacent filled ribbon lanes should have a clear gap instead of overlap",
+  );
+});
+
+test("borehole log track colors use authored style overrides", async () => {
+  const loader = await importLoader();
+  assert.equal(typeof loader.boreholeLogTrackColor, "function");
+
+  assert.equal(
+    loader.boreholeLogTrackColor(gammaTrack, {
+      boreholeLogHcgrColor: "#abcdef",
+    }),
+    "#abcdef",
+  );
+  assert.equal(
+    loader.boreholeLogTrackColor(
+      { ...gammaTrack, id: "test-hsgr", mnemonic: "HSGR" },
+      { boreholeLogHsgrColor: "#123456" },
+    ),
+    "#123456",
+  );
+  assert.equal(
+    loader.boreholeLogTrackColor(
+      {
+        ...gammaTrack,
+        id: "test-res",
+        kind: "resistivity",
+        mnemonic: "ILD",
+        unit: "Ohm-m",
+      },
+      { boreholeLogResistivityColor: "#fedcba" },
+    ),
+    "#fedcba",
+  );
 });
 
 test("lithology intervals render on the trajectory path, not as wiggles", async () => {

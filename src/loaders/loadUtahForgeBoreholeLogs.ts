@@ -74,7 +74,11 @@ const DEFAULT_GAMMA_SCALE_API = 150;
 const DEFAULT_RESISTIVITY_MIN = 1;
 const DEFAULT_RESISTIVITY_MAX = 1000;
 const DEFAULT_LITHOLOGY_LINE_WIDTH = 12;
-const TRACK_LANE_GAP_M = 12;
+const DEFAULT_HCGR_COLOR = "#ffe26d";
+const DEFAULT_HSGR_COLOR = "#ff9f43";
+const DEFAULT_RESISTIVITY_COLOR = "#4dd6ff";
+const DEFAULT_BASELINE_COLOR = "#eef7f2";
+const TRACK_LANE_GAP_M = 18;
 
 export interface BoreholeLogLaneFrame {
   laneAxis: THREE.Vector3;
@@ -85,6 +89,7 @@ export interface BoreholeLogRibbonGeometry {
   baseline: THREE.Vector3[];
   curve: THREE.Vector3[];
   positions: number[];
+  baselinePositions: number[];
   curvePositions: number[];
   indices: number[];
   laneAxis: THREE.Vector3;
@@ -157,10 +162,33 @@ function styleNumber(
   return Math.max(min, Math.min(max, value));
 }
 
+function styleString(
+  style: EditableStyle,
+  field: keyof EditableStyle,
+  fallback: string,
+): string {
+  const raw = style[field];
+  return typeof raw === "string" && raw.trim().length > 0 ? raw : fallback;
+}
+
 function trackSelection(style: EditableStyle, kind: TrackKind): boolean {
   const selection = style.boreholeLogTrackSelection;
   if (!selection || typeof selection !== "object") return true;
   return selection[kind] !== false;
+}
+
+function boreholeLogMnemonicVisible(
+  style: EditableStyle,
+  track: BoreholeLogTrack,
+): boolean {
+  if (track.kind !== "gamma") return true;
+  const selection = style.boreholeLogTrackSelection;
+  if (!selection || typeof selection !== "object") return true;
+  if (selection.gamma === false) return false;
+  const mnemonic = track.mnemonic.toUpperCase();
+  if (mnemonic.includes("HCGR")) return selection.hcgr !== false;
+  if (mnemonic.includes("HSGR")) return selection.hsgr !== false;
+  return true;
 }
 
 function activeWellVisible(style: EditableStyle, wellId: string): boolean {
@@ -283,6 +311,7 @@ export function buildTrackRibbonGeometry(
   const baseline: THREE.Vector3[] = [];
   const curve: THREE.Vector3[] = [];
   const positions: number[] = [];
+  const baselinePositions: number[] = [];
   const curvePositions: number[] = [];
   const indices: number[] = [];
   const [depthMin, depthMax] = depthWindow(style);
@@ -304,22 +333,36 @@ export function buildTrackRibbonGeometry(
   const laneBaseOffsetM = trackLaneBaseOffset(style, trackIndex);
   const origin = interpolateTrajectoryByMdFt(trajectory, trajectory[0]?.mdFt ?? 0);
   if (!origin) {
-    return { baseline, curve, positions, curvePositions, indices, laneAxis: laneFrame.laneAxis.clone(), laneBaseOffsetM };
+    return {
+      baseline,
+      curve,
+      positions,
+      baselinePositions,
+      curvePositions,
+      indices,
+      laneAxis: laneFrame.laneAxis.clone(),
+      laneBaseOffsetM,
+    };
   }
   for (const sample of track.samples) {
     if (sample.mdFt < depthMin || sample.mdFt > depthMax) continue;
     const base = interpolateTrajectoryByMdFt(trajectory, sample.mdFt);
     if (!base) continue;
     const amplitude = Math.max(cutoff, Math.min(1, sampleAmplitude(track, sample.value, style)));
-    const pathPoint = transformedPoint(base, origin, verticalExaggeration);
+    const laneBasePoint = transformedPoint(
+      base.clone().add(laneFrame.laneAxis.clone().multiplyScalar(laneBaseOffsetM)),
+      origin,
+      verticalExaggeration,
+    );
     const curvePoint = transformedPoint(
       base.clone().add(laneFrame.laneAxis.clone().multiplyScalar(laneBaseOffsetM + amplitude * trackWidth)),
       origin,
       verticalExaggeration,
     );
-    baseline.push(pathPoint);
+    baseline.push(laneBasePoint);
     curve.push(curvePoint);
-    positions.push(pathPoint.x, pathPoint.y, pathPoint.z, curvePoint.x, curvePoint.y, curvePoint.z);
+    positions.push(laneBasePoint.x, laneBasePoint.y, laneBasePoint.z, curvePoint.x, curvePoint.y, curvePoint.z);
+    baselinePositions.push(laneBasePoint.x, laneBasePoint.y, laneBasePoint.z);
     curvePositions.push(curvePoint.x, curvePoint.y, curvePoint.z);
   }
   for (let index = 0; index < baseline.length - 1; index += 1) {
@@ -333,6 +376,7 @@ export function buildTrackRibbonGeometry(
     baseline,
     curve,
     positions,
+    baselinePositions,
     curvePositions,
     indices,
     laneAxis: laneFrame.laneAxis.clone(),
@@ -369,12 +413,29 @@ export function buildLithologyColumnGeometry(
   };
 }
 
-function trackColor(track: BoreholeLogTrack): string {
-  if (track.kind === "resistivity") return "#4dd6ff";
+export function boreholeLogTrackColor(
+  track: BoreholeLogTrack,
+  style: EditableStyle = {},
+): string {
+  if (track.kind === "resistivity") {
+    return styleString(
+      style,
+      "boreholeLogResistivityColor",
+      DEFAULT_RESISTIVITY_COLOR,
+    );
+  }
   const mnemonic = track.mnemonic.toUpperCase();
-  if (mnemonic.includes("HSGR")) return "#ffb24a";
-  if (mnemonic.includes("HCGR")) return "#ffe26d";
+  if (mnemonic.includes("HSGR")) {
+    return styleString(style, "boreholeLogHsgrColor", DEFAULT_HSGR_COLOR);
+  }
+  if (mnemonic.includes("HCGR")) {
+    return styleString(style, "boreholeLogHcgrColor", DEFAULT_HCGR_COLOR);
+  }
   return "#ffd166";
+}
+
+function boreholeLogBaselineColor(style: EditableStyle): string {
+  return styleString(style, "boreholeLogBaselineColor", DEFAULT_BASELINE_COLOR);
 }
 
 function lithologyColor(lithology: string): string {
@@ -425,7 +486,7 @@ function makeTrackObject(
   trackIndex: number,
   laneFrame: BoreholeLogLaneFrame,
 ): THREE.Group {
-  const color = trackColor(track);
+  const color = boreholeLogTrackColor(track);
   const root = new THREE.Group();
   root.name = `${well.id} ${track.mnemonic} borehole log`;
   root.renderOrder = RENDER_ORDER;
@@ -451,6 +512,18 @@ function makeTrackObject(
     displayName: `${well.id} ${track.mnemonic}`,
   };
   root.add(ribbon);
+
+  const baseline = new Line2(
+    new LineGeometry(),
+    makeLineMaterial(DEFAULT_BASELINE_COLOR, 1.2, 0.72),
+  );
+  baseline.name = `${well.id} ${track.mnemonic} borehole log lane baseline`;
+  baseline.renderOrder = RENDER_ORDER - 0.01;
+  baseline.userData = {
+    boreholeLogPart: "lane-baseline",
+    displayName: `${well.id} ${track.mnemonic} baseline`,
+  };
+  root.add(baseline);
 
   const edge = new Line2(new LineGeometry(), makeLineMaterial(color, 2.6, 0.92));
   edge.name = `${well.id} ${track.mnemonic} borehole log curve`;
@@ -565,10 +638,15 @@ export function updateUtahForgeBoreholeLogObject(
       : computeBoreholeLogLaneFrame(trajectory);
   const ribbon = buildTrackRibbonGeometry(trajectory, track, style, trackIndex, laneFrame);
   const ribbonMesh = childByPart<THREE.Mesh>(obj, "ribbon");
+  const baselineLine = childByPart<Line2>(obj, "lane-baseline");
   const edgeLine = childByPart<Line2>(obj, "curve-edge");
   const curveOpacity = styleNumber(style, "boreholeLogCurveOpacity", 0.92, 0, 1);
   const curveLineWidth = styleNumber(style, "boreholeLogCurveLineWidthPx", 2.6, 0.5, 18);
-  const visible = selected && ribbon.curvePositions.length >= 6;
+  const color = boreholeLogTrackColor(track, style);
+  const visible =
+    selected &&
+    boreholeLogMnemonicVisible(style, track) &&
+    ribbon.curvePositions.length >= 6;
 
   if (ribbonMesh) {
     const geometry = ribbonMesh.geometry as THREE.BufferGeometry;
@@ -577,6 +655,7 @@ export function updateUtahForgeBoreholeLogObject(
     geometry.computeBoundingSphere();
     const meshMaterial = ribbonMesh.material as THREE.MeshBasicMaterial | undefined;
     if (meshMaterial) {
+      meshMaterial.color.set(color);
       meshMaterial.opacity = Math.min(0.34, curveOpacity * 0.24);
       meshMaterial.transparent = true;
       meshMaterial.depthWrite = false;
@@ -585,12 +664,28 @@ export function updateUtahForgeBoreholeLogObject(
     ribbonMesh.visible = visible && ribbon.indices.length >= 6;
   }
 
+  if (baselineLine) {
+    const baselineGeometry = baselineLine.geometry as LineGeometry;
+    baselineGeometry.setPositions(ribbon.baselinePositions);
+    baselineLine.computeLineDistances();
+    const baselineMaterial = baselineLine.material as LineMaterial | undefined;
+    if (baselineMaterial) {
+      baselineMaterial.color.set(boreholeLogBaselineColor(style));
+      baselineMaterial.opacity = Math.min(0.82, Math.max(0.32, curveOpacity * 0.58));
+      baselineMaterial.linewidth = Math.max(1, curveLineWidth * 0.36);
+      baselineMaterial.transparent = true;
+      baselineMaterial.needsUpdate = true;
+    }
+    baselineLine.visible = visible && ribbon.baselinePositions.length >= 6;
+  }
+
   if (edgeLine) {
     const edgeGeometry = edgeLine.geometry as LineGeometry;
     edgeGeometry.setPositions(ribbon.curvePositions);
     edgeLine.computeLineDistances();
     const edgeMaterial = edgeLine.material as LineMaterial | undefined;
     if (edgeMaterial) {
+      edgeMaterial.color.set(color);
       edgeMaterial.opacity = curveOpacity;
       edgeMaterial.linewidth = curveLineWidth;
       edgeMaterial.transparent = true;

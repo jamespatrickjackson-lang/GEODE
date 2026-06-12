@@ -315,6 +315,11 @@ export const MT_VOLUME_FIELDS = [
 export const BOREHOLE_LOG_FIELDS = [
   "boreholeLogActiveWell",
   "boreholeLogTrackSelection",
+  "boreholeLogHcgrColor",
+  "boreholeLogHsgrColor",
+  "boreholeLogResistivityColor",
+  "boreholeLogBaselineColor",
+  "boreholeLogLegendVisible",
   "boreholeLogTrackOffsetM",
   "boreholeLogTrackWidthM",
   "boreholeLogGammaScaleApi",

@@ -4,12 +4,14 @@ import {
   editorDarkSelectStyle,
   EnvSelectRow,
   LayerBooleanStyleControl,
+  LayerColorStyleControl,
   LayerNumberStyleControl,
   detailsContentStyle,
   nestedControlRowStyle,
   nestedDetailsStyle,
   nestedFieldLabelStyle,
   styleNumber,
+  styleString,
   type LayerStyleSetter,
   type PageStyleClearer,
   type PageStyleSetter,
@@ -26,10 +28,16 @@ const WELL_OPTIONS = [
 ] as const;
 
 const TRACKS = [
-  { key: "gamma", label: "GR" },
-  { key: "resistivity", label: "Resistivity" },
-  { key: "lithology", label: "Lithology" },
+  { key: "hcgr", label: "HCGR" },
+  { key: "hsgr", label: "HSGR" },
+  { key: "resistivity", label: "RES" },
+  { key: "lithology", label: "Lith" },
 ] as const;
+
+const DEFAULT_HCGR_COLOR = "#ffe26d";
+const DEFAULT_HSGR_COLOR = "#ff9f43";
+const DEFAULT_RESISTIVITY_COLOR = "#4dd6ff";
+const DEFAULT_BASELINE_COLOR = "#eef7f2";
 
 function activeWell(style: EditableStyle): string {
   return typeof style.boreholeLogActiveWell === "string"
@@ -39,8 +47,13 @@ function activeWell(style: EditableStyle): string {
 
 function trackSelection(style: EditableStyle) {
   const selection = style.boreholeLogTrackSelection;
+  const gamma = selection?.gamma !== false;
+  const hcgr = gamma && selection?.hcgr !== false;
+  const hsgr = gamma && selection?.hsgr !== false;
   return {
-    gamma: selection?.gamma !== false,
+    gamma: hcgr || hsgr,
+    hcgr,
+    hsgr,
     resistivity: selection?.resistivity !== false,
     lithology: selection?.lithology !== false,
   };
@@ -70,14 +83,18 @@ function TrackSelectionRow({
               type="checkbox"
               checked={selection[track.key]}
               disabled={disabled}
-              onChange={(event) =>
+              onChange={(event) => {
+                const nextSelection = {
+                  ...selection,
+                  [track.key]: event.target.checked,
+                };
+                nextSelection.gamma = nextSelection.hcgr || nextSelection.hsgr;
                 onChange({
                   boreholeLogTrackSelection: {
-                    ...selection,
-                    [track.key]: event.target.checked,
+                    ...nextSelection,
                   },
-                })
-              }
+                });
+              }}
             />
             <span>{track.label}</span>
           </label>
@@ -136,6 +153,27 @@ export function boreholeLogPatchFromStyle(
   return {
     boreholeLogActiveWell: activeWell(style),
     boreholeLogTrackSelection: trackSelection(style),
+    boreholeLogHcgrColor: styleString(
+      style,
+      "boreholeLogHcgrColor",
+      DEFAULT_HCGR_COLOR,
+    ),
+    boreholeLogHsgrColor: styleString(
+      style,
+      "boreholeLogHsgrColor",
+      DEFAULT_HSGR_COLOR,
+    ),
+    boreholeLogResistivityColor: styleString(
+      style,
+      "boreholeLogResistivityColor",
+      DEFAULT_RESISTIVITY_COLOR,
+    ),
+    boreholeLogBaselineColor: styleString(
+      style,
+      "boreholeLogBaselineColor",
+      DEFAULT_BASELINE_COLOR,
+    ),
+    boreholeLogLegendVisible: style.boreholeLogLegendVisible !== false,
     boreholeLogTrackOffsetM: styleNumber(style, "boreholeLogTrackOffsetM", 24),
     boreholeLogTrackWidthM: styleNumber(style, "boreholeLogTrackWidthM", 36),
     boreholeLogGammaScaleApi: styleNumber(style, "boreholeLogGammaScaleApi", 150),
@@ -226,6 +264,72 @@ export function BoreholeLogsControls({
         ) : null}
 
         <TrackSelectionRow style={style} disabled={controlsDisabled} onChange={patch} />
+
+        <LayerColorStyleControl
+          label="HCGR"
+          field="boreholeLogHcgrColor"
+          fallback={DEFAULT_HCGR_COLOR}
+          style={style}
+          isEnv={isEnv}
+          currentPage={currentPage}
+          layerId={layerId}
+          setEnvLayerStyle={setEnvLayerStyle}
+          setPageLayerOverride={setPageLayerOverride}
+          clearPageLayerOverride={clearPageLayerOverride}
+          testId="borehole-logs-hcgr-color"
+        />
+        <LayerColorStyleControl
+          label="HSGR"
+          field="boreholeLogHsgrColor"
+          fallback={DEFAULT_HSGR_COLOR}
+          style={style}
+          isEnv={isEnv}
+          currentPage={currentPage}
+          layerId={layerId}
+          setEnvLayerStyle={setEnvLayerStyle}
+          setPageLayerOverride={setPageLayerOverride}
+          clearPageLayerOverride={clearPageLayerOverride}
+          testId="borehole-logs-hsgr-color"
+        />
+        <LayerColorStyleControl
+          label="RES"
+          field="boreholeLogResistivityColor"
+          fallback={DEFAULT_RESISTIVITY_COLOR}
+          style={style}
+          isEnv={isEnv}
+          currentPage={currentPage}
+          layerId={layerId}
+          setEnvLayerStyle={setEnvLayerStyle}
+          setPageLayerOverride={setPageLayerOverride}
+          clearPageLayerOverride={clearPageLayerOverride}
+          testId="borehole-logs-resistivity-color"
+        />
+        <LayerColorStyleControl
+          label="Spine"
+          field="boreholeLogBaselineColor"
+          fallback={DEFAULT_BASELINE_COLOR}
+          style={style}
+          isEnv={isEnv}
+          currentPage={currentPage}
+          layerId={layerId}
+          setEnvLayerStyle={setEnvLayerStyle}
+          setPageLayerOverride={setPageLayerOverride}
+          clearPageLayerOverride={clearPageLayerOverride}
+          testId="borehole-logs-baseline-color"
+        />
+        <LayerBooleanStyleControl
+          label="Legend"
+          field="boreholeLogLegendVisible"
+          fallback={true}
+          style={style}
+          isEnv={isEnv}
+          currentPage={currentPage}
+          layerId={layerId}
+          setEnvLayerStyle={setEnvLayerStyle}
+          setPageLayerOverride={setPageLayerOverride}
+          clearPageLayerOverride={clearPageLayerOverride}
+          testId="borehole-logs-legend-visible"
+        />
 
         <LayerNumberStyleControl
           label="Lane base offset"

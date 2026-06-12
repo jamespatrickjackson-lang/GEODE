@@ -15,6 +15,7 @@ import { LightModeToggle } from "../ui/LightModeToggle";
 import { SceneLabels } from "../ui/SceneLabels";
 import { AssayLegend } from "../ui/AssayLegend";
 import { ResistivityLegend } from "../ui/ResistivityLegend";
+import { BoreholeLogsLegend } from "../ui/BoreholeLogsLegend";
 import { MtSurfaceBoundaryLegend } from "../ui/MtSurfaceBoundaryLegend";
 import { SectionIsoLegend } from "../ui/SectionIsoLegend";
 import { SeismicPresentationLegendBar } from "../ui/SeismicPresentationLegendBar";
@@ -43,6 +44,7 @@ import {
 import { audienceLensById } from "../projectModules/caseStudyB/audienceLenses";
 import { UTAH_FORGE_PREVIEW_LAYER_OVERRIDE_FIELDS } from "../projectModules/utahForge/editorPreviewFields";
 import {
+  UTAH_FORGE_BOREHOLE_LOGS_LAYER_ID,
   UTAH_FORGE_MT_RESISTIVITY_FULL_DENSITY_LAYER_ID,
   UTAH_FORGE_MT_RESISTIVITY_POINT_CLOUD_LEGEND_LAYER_IDS,
   UTAH_FORGE_MT_RESISTIVITY_SLICES_LAYER_ID,
@@ -61,7 +63,7 @@ const EditorRoot = lazy(() =>
 
 const utahForgeLegendStackStyle: CSSProperties = {
   position: "absolute",
-  zIndex: 11,
+  zIndex: 22,
   display: "flex",
   flexDirection: "column",
   alignItems: "flex-start",
@@ -81,6 +83,7 @@ type UtahForgeLegendId =
   | "scene-section"
   | "section-iso"
   | "mt-boundaries"
+  | "borehole-logs"
   | "surface-elevation"
   | "mt-resistivity";
 
@@ -89,6 +92,7 @@ const UTAH_FORGE_NON_RESISTIVITY_LEGENDS: readonly UtahForgeLegendId[] = [
   "scene-section",
   "section-iso",
   "mt-boundaries",
+  "borehole-logs",
   "surface-elevation",
 ];
 
@@ -135,6 +139,7 @@ function utahForgeLegendPresenceForPage(
       "scene-section": false,
       "section-iso": false,
       "mt-boundaries": false,
+      "borehole-logs": false,
       "surface-elevation": false,
       "mt-resistivity": false,
     };
@@ -160,6 +165,7 @@ function utahForgeLegendPresenceForPage(
   const seismicStyle = styleFor(UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID);
   const sceneSectionStyle = styleFor(UTAH_FORGE_SCENE_SECTION_LAYER_ID);
   const thresholdStyle = styleFor(UTAH_FORGE_MT_THRESHOLD_SURFACES_LAYER_ID);
+  const boreholeLogStyle = styleFor(UTAH_FORGE_BOREHOLE_LOGS_LAYER_ID);
   const topoMapSettings = resolveTopoMapSettings({
     manifest: state.manifest,
     environment,
@@ -187,6 +193,11 @@ function utahForgeLegendPresenceForPage(
     "mt-boundaries":
       visible.has(UTAH_FORGE_MT_THRESHOLD_SURFACES_LAYER_ID) &&
       thresholdStyle.mtSurfaceBoundaryLegendVisible !== false,
+    "borehole-logs":
+      (visible.has(UTAH_FORGE_BOREHOLE_LOGS_LAYER_ID) ||
+        page.visibilityOverrides?.[UTAH_FORGE_BOREHOLE_LOGS_LAYER_ID] !==
+          undefined) &&
+      boreholeLogStyle.boreholeLogLegendVisible !== false,
     "surface-elevation": surfaceElevationVisible,
     "mt-resistivity":
       scalarVisible || pointCloudExplicitPageOverride || globalSettingsAuthoring,
@@ -522,6 +533,8 @@ function renderUtahForgeLegendItem(
       return <SectionIsoLegend stacked pageOverride={pageOverride} />;
     case "mt-boundaries":
       return <MtSurfaceBoundaryLegend stacked pageOverride={pageOverride} />;
+    case "borehole-logs":
+      return <BoreholeLogsLegend stacked pageOverride={pageOverride} />;
     case "surface-elevation":
       return <SurfaceElevationLegend stacked pageOverride={pageOverride} />;
     case "mt-resistivity":
