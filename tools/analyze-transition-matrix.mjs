@@ -8,6 +8,8 @@ import { writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { isExpectedReadPixelsWarning } from "./lib/console-health.mjs";
+
 const DEFAULT_RESULTS_DIR = path.join(
   "docs",
   "dev-context",
@@ -20,10 +22,6 @@ const MIN_ACTIVE_TRACE_SAMPLES = 12;
 const MAX_ACTIVE_TRACE_GAP_MS = 150;
 const SCENE_SECTION_GROUND_TRACE_SNAPSHOT_POLICY =
   "mirror-delayed-ground-trace-into-helper-snapshot";
-
-function isReadPixelsWarning(message) {
-  return /ReadPixels/i.test(message?.text ?? "");
-}
 
 function stableLayerKey(entry) {
   return [
@@ -1421,10 +1419,10 @@ function analyzeManifest(manifest, options = {}) {
   const interruptionDivergences = sourceTargetDivergences(manifest);
   const lateReapply = lateReapplyRows(manifest);
   const unexpectedConsole = (manifest.consoleMessages ?? []).filter(
-    (message) => !isReadPixelsWarning(message),
+    (message) => !isExpectedReadPixelsWarning(message),
   );
   const expectedReadPixelsWarnings = (manifest.consoleMessages ?? []).filter(
-    isReadPixelsWarning,
+    isExpectedReadPixelsWarning,
   );
 
   return {

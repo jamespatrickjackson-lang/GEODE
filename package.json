@@ -13,6 +13,7 @@
     "check:editor-controls": "node tools/check-editor-control-manifest.mjs",
     "check:workspace": "node tools/check-workspace-state.mjs && node tools/check-editor-control-manifest.mjs",
     "check:visual-qa-clean": "node tools/check-workspace-state.mjs --broad",
+    "check:startup-console": "node tools/check-startup-console.mjs",
     "inspect:effective": "node tools/inspect-effective-state.mjs",
     "check:runtime-assets": "node tools/validate-runtime-assets.mjs",
     "check:seismic-source-gates": "node tools/validate-seismic-source-gates.mjs",
