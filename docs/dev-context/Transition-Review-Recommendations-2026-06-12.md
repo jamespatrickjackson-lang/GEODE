@@ -427,7 +427,8 @@ Ownership map of scene object types versus transition handling:
 | Scene overlays (compass/branding planes) | fixed 800ms detached fade | gap - finding 5.1 |
 | Atmosphere volumes | discrete crossfade only | gap - finding 6.1 |
 | Borehole log tracks | none (fields dead) | gap - finding 6.2 |
-| UI legends (React side) | local UI transitions | out of scope here; target-mode authority rules apply |
+| UI legends (React side) | local UI transitions + deferred live-apply gate | gaps - findings 7.1, 7.2, 7.3, 8.1 |
+| Editor panel live edits | `canApplyLiveSceneEdits` defer + flush | gap - finding 7.1 (flush suppressed) |
 
 #### Finding 6.1 - MEDIUM - atmosphere continuous fields are double-declared and can never interpolate
 
@@ -476,6 +477,189 @@ Full implementation steps: see "Fix write-up: Finding 6.2" below.
 `TransitionPresenceState` includes `dormant`, but `graphPresenceState`
 only emits `visible | hidden | loading | absent`. Harmless; remove or
 document when touching the policy types.
+
+### Pass 7 - quick legends and editor live-apply interplay (complete)
+
+Files read: `ResistivityLegend.tsx` (full), `legendAuthoringTarget.ts`,
+`EditorChrome.tsx` live-apply bridge, `EditorContext.tsx` dispatcher
+callbacks (`canApplyLiveSceneEdits`, `setEnvLayerStyle`,
+`setPageLayerOverride`, `setPageVisibilityOverride`,
+`toggleEnvDefaultVisible`), `authoringTarget.ts`,
+`SceneManager.setVisible` / `reapplyCurrentPageState` /
+`suppressDuplicatePostCommitReapply`, live-apply grep across all legend
+panels, `tests/tools/editor-transition-gate-source.test.mjs`.
+
+#### Verified-good in pass 7 (do not re-fix)
+
+- The MT Resistivity Cells mode animation implements the stale-RAF
+  contract correctly: the 1.5s RAF loop is token-guarded and
+  scope-keyed by project/page/write-page/layer
+  ([ResistivityLegend.tsx:558-568](../../src/ui/ResistivityLegend.tsx#L558-L568),
+  [658-674](../../src/ui/ResistivityLegend.tsx#L658-L674)); a page-context
+  change cancels the frame and clears the local mode state.
+- Mode clicks persist only `scalarLegendVisible` +
+  `scalarInclusionMode` ([ResistivityLegend.tsx:890-900](../../src/ui/ResistivityLegend.tsx#L890-L900)),
+  per the CLAUDE contract.
+- The legend header derives `targetMode` from the target authored style,
+  not the interpolated ramp style
+  ([ResistivityLegend.tsx:722-728](../../src/ui/ResistivityLegend.tsx#L722-L728)).
+- All legend panels gate live `applyStyle` writes behind
+  `canApplyLiveSceneEdits()`, which defers during an active page
+  transition; editor state persistence is never blocked (covered by
+  `editor-transition-gate-source.test.mjs`).
+
+#### Finding 7.1 - HIGH - deferred mid-transition edits are flushed into the post-commit suppression window and visually dropped
+
+During a page transition every live scene write from legends and editor
+panels is deferred: `canApplyLiveSceneEdits()` returns false and sets
+`deferredLiveSceneApplyRef`
+([EditorContext.tsx:2309-2315](../../src/editor/EditorContext.tsx#L2309-L2315)).
+At transition end, `EditorLiveApplyTransitionBridge` flushes exactly
+once by calling `reapplyCurrentPageState()`
+([EditorChrome.tsx:589-611](../../src/editor/EditorChrome.tsx#L589-L611)).
+That flush cannot land:
+
+- The bridge effect runs after the camera-completion callback, which has
+  already called `finalizePageTransitionCommit` synchronously - so
+  either the still-live context's `hasFinalized` branch suppresses the
+  reapply ([SceneManager.ts:4503-4516](../../src/scene/SceneManager.ts#L4503-L4516)),
+  or `suppressDuplicatePostCommitReapply` consumes it as the
+  first-post-commit duplicate
+  ([SceneManager.ts:2981-2997](../../src/scene/SceneManager.ts#L2981-L2997)).
+- The only repair inside the suppression path is the sanctioned
+  MT-full-density narrow reapply
+  (`applySettledMtCellPointsTargetStyle`,
+  [SceneManager.ts:2999-3018](../../src/scene/SceneManager.ts#L2999-L3018)).
+
+Result: an edit made to any non-MT-full-density layer while a
+transition is running (legend slider, editor panel control, visibility
+toggle on the selected page) is persisted to editor state but never
+applied to the live scene - the viewport silently diverges from
+authored state until the next edit, navigation, or async resolve. The
+existing source test only asserts persistence is not blocked; nothing
+asserts the deferred visual flush lands.
+
+Recommendation: give the deferred flush its own reapply reason (e.g.
+`"editor-deferred-flush"`) passed by the bridge, and allow that reason
+through both suppression branches the same way `"async-layer-resolve"`
+is allowed today. Alternatively, skip suppression when the deferred
+flag was set during the just-finished transition. Either way, extend
+the editor-transition-gate test family with a behavior test: edit a
+non-MT layer mid-transition, finish the transition, assert the live
+scene style matches the persisted override.
+
+#### Finding 7.2 - MEDIUM - MT mode buttons are clickable during a page transition and capture an interpolated base style
+
+The All Valid Cells / Log10 Resistivity Window buttons disable
+themselves during a LOCAL mode animation but not during a PAGE
+transition ([ResistivityLegend.tsx:1158-1198](../../src/ui/ResistivityLegend.tsx#L1158-L1198)).
+A click mid-transition runs `setMtCellPointsMode` with `style` resolved
+from the transition-interpolation branch
+([ResistivityLegend.tsx:714-721](../../src/ui/ResistivityLegend.tsx#L714-L721)),
+so `authoredSpectrumStyle` / `fullCloudPreviewStyle` bake mid-tween
+scalar values into the 1.5s mode animation's from/to styles. While the
+page transition runs, each RAF tick's live apply is deferred (no
+visual fight - good), but the RAF outlives the page transition and its
+remaining ticks plus the final
+`applyLiveMtCellPointsStyle({ ...style, ... })` write the stale
+interpolated snapshot over the freshly committed target page style.
+Persistence stays correct (mode fields only); the live scene's scalar
+window/edge values diverge from authored state until the next reapply.
+The directives doc says interpolated scalar style is for ramp/handle
+visuals only.
+
+Recommendation: either disable the two mode buttons while
+`transitionFrame.active` (mirrors `controlsAvailable` behavior), or
+build the mode-animation from/to styles from `targetStyle` (authored)
+instead of `style`, and bump `modeTransitionTokenRef` when
+`transitionActive` flips true so an in-flight mode animation cannot
+straddle a page transition.
+
+#### Finding 7.3 - MEDIUM - quick-legend visibility toggles snap instantly and trigger full section/working-area reapplies
+
+Legend master toggles (e.g. MT Cells) route through
+`setPageVisibilityOverride` -> `SceneManager.setVisible`, which flips
+`group.visible` binarily with no fade and then runs
+`reapplySceneSectionPlanes()` and `reapplyWorkingAreaFocus()`
+([SceneManager.ts:1192-1206](../../src/scene/SceneManager.ts#L1192-L1206)).
+Two consequences: (a) a quick-legend visibility click pops the layer
+on/off with zero ramp - inconsistent with the 1.5s slider-style
+standard the mode buttons set, and visually harsher than any page
+transition; (b) every click pays a full scene-section apply including
+`rebuildSceneSectionHelpers` and the full-scene material traversal
+(finding 4.2's cost) even when the toggled layer is not sectioned.
+`toggleEnvDefaultVisible` has the same shape for environment-level
+toggles.
+
+Recommendation: add a faded visibility path for editor/legend toggles -
+reuse the existing `layerTweens` machinery with a short local fade
+(300-500ms, easeInOutCubic) from the current render opacity to
+target, leaving `setVisible` untouched for PageController's internal
+instant applies. Scope the post-toggle section/working-area reapply to
+the toggled layer where the targeting state allows it. Keep the fade
+out of `applyEffectiveVisibilityForPage` so page loads stay instant.
+
+#### Observation 7.4 - slider drags dispatch a persistence write per pointer-move
+
+Legend handle drags call `setPageLayerOverride` on every pointer-move
+([ResistivityLegend.tsx:851-865](../../src/ui/ResistivityLegend.tsx#L851-L865)),
+dispatching a reducer action (and dirty-marking) per move event in
+addition to the live `applyStyle`. Editor-state churn during a drag is
+UI-side cost, not a transition defect; if profiling ever shows drag
+jank, throttle the persistence dispatch to pointer-up or an interval
+while keeping the live apply per-move. No change required now.
+
+### Pass 8 - editor panel selection and authoring-target interplay (complete)
+
+Files read: `authoringTarget.ts` (full), `PageController.tsx`
+(`applyAuthoringPageNow`, `previewAuthoringPage`, `goto` selection
+paths), `PagePanel.tsx` selection flow, `LayerPanel.tsx`
+landed-gating region, `EditorContext.tsx` page-override dispatchers.
+
+#### Verified-good in pass 8 (do not re-fix)
+
+- The editor panel gates page-scoped style controls behind
+  `pageSelectionHasLanded` (selection equals current index, not
+  transitioning, no target index) and disables them otherwise
+  ([LayerPanel.tsx:368-381](../../src/editor/LayerPanel.tsx#L368-L381),
+  [authoringTarget.ts:23-40](../../src/editor/authoringTarget.ts#L23-L40)).
+- `applyAuthoringPageNow` refuses to fight an active transition
+  (`if (isTransitioningRef.current) return`,
+  [PageController.tsx:2377-2382](../../src/pages/PageController.tsx#L2377-L2382)),
+  so authoring-preview applies cannot stomp transition state.
+- `EditorContext` page-override dispatchers only live-apply when the
+  write target is the selected page, and route everything through the
+  same deferred gate during transitions.
+
+#### Finding 8.1 - MEDIUM - quick legends lack the landed gate; after a mid-transition selection they author and live-apply a page the viewport is not showing
+
+Selecting a page in the sidebar during an active transition updates
+editor selection but `applyAuthoringPageNow` no-ops (correctly). If the
+transition lands on a different page than the new selection, the editor
+panel's controls stay disabled via `pageSelectionHasLanded` - but the
+quick legends do not use that gate. `ResistivityLegend` resolves its
+working `page` from the SELECTED page once no transition is active
+([ResistivityLegend.tsx:638-649](../../src/ui/ResistivityLegend.tsx#L638-L649))
+and its live writes (`setSpectralValue`, `setScalarRenderPatch`,
+`setEdgeValue`) call `manager.applyStyle` with no landed or
+selected-equals-displayed check
+([ResistivityLegend.tsx:851-875](../../src/ui/ResistivityLegend.tsx#L851-L875)).
+The persistence path compounds it: `setPageLayerOverride` live-applies
+the SELECTED page's merged effective style because the write target is
+the selected page ([EditorContext.tsx:3281-3305](../../src/editor/EditorContext.tsx#L3281-L3305)),
+even though the viewport is displaying a different page. Result: a
+legend drag in the selected-not-displayed state writes page-X styles
+onto a scene showing page Y. The other legend panels share the
+live-apply shape and the same exposure.
+
+Recommendation: give the quick legends the same landed semantics the
+panel has - when the legend's authoring page is not the landed
+displayed page, either (a) disable the write controls (read-only
+legend), or (b) keep controls active but suppress the legend's direct
+`manager.applyStyle` and rely on persistence only. Option (a) matches
+the editor panel's established UX. Implement once in a shared hook
+(e.g. `useLegendAuthoringGate`) consumed by all legend panels rather
+than per-legend copies.
 
 ---
 
@@ -1027,6 +1211,12 @@ independently verifiable and respects the operating-spec constraints.
    "content arrives in two waves" family for every late-loading layer.
    Implementation: see "Fix write-up: Finding 2.1" and "Fix write-up:
    Finding 3.1" above (2.1's hook is a prerequisite for 3.1).
+2b. **Finding 7.1** (HIGH, correctness) - let the editor's deferred
+   live-edit flush through the post-commit suppression window (distinct
+   reapply reason allowed like `async-layer-resolve`), with a behavior
+   test that a mid-transition edit to a non-MT layer is visible after
+   the transition. Small, isolated, and it un-breaks every legend and
+   editor control during transitions.
 3. **Finding 3.2** (MEDIUM, correctness) - compose authored visibility
    in the entity opacity executor before any other family migrates to
    it. Implementation: see "Fix write-up: Finding 3.2" above.
@@ -1047,6 +1237,13 @@ independently verifiable and respects the operating-spec constraints.
    resolution across section-tween ticks. Pure perf; do after the
    correctness items so profiling reflects final behavior.
    Implementation: see "Fix write-up: Finding 4.2" above.
+7b. **Findings 7.2 + 8.1** (MEDIUM, legend gating) - disable or re-base
+   the MT mode buttons during page transitions, and give all quick
+   legends the panel's landed-gate semantics via one shared hook. Do
+   together; both are "legend writes against the wrong base state".
+7c. **Finding 7.3** (MEDIUM, visual) - faded visibility path for
+   editor/legend toggles plus layer-scoped section/working-area
+   reapply.
 8. **Finding 2.5** (DOC) - refresh stale line references and size maps
    in `Page-Transitions-And-Section-Frames.md` and `src/scene/CLAUDE.md`.
 9. **Verification item 5.2** - reproduce-or-clear the
