@@ -49,6 +49,7 @@ async function loadExecutionPlanModule() {
 const {
   buildTransitionExecutionPlan,
   evaluateTransitionExecutionPlan,
+  replanTransitionEntityReadiness,
   transitionExecutionPlanComplete,
 } = await loadExecutionPlanModule();
 
@@ -288,6 +289,117 @@ test("hold-until-ready does not ramp target in", () => {
   assert.equal(frame.enteringOpacityFactor, 1); // not an enter; stays full
   const op = plan.operations[0];
   assert.equal(op.holdUntilReady, true);
+});
+
+test("readiness replan converts matching held layer operation into current-time enter", () => {
+  const plan = buildTransitionExecutionPlan(
+    planInput([
+      assignment({
+        entityKey: "layer:late-layer",
+        executionMode: "hold-source",
+        assignment: "hold-until-ready",
+        targetReadiness: "loading",
+        traceReasons: ["assignment:hold-until-ready"],
+      }),
+      assignment({
+        entityKey: "layer:other-late-layer",
+        executionMode: "hold-source",
+        assignment: "hold-until-ready",
+        targetReadiness: "loading",
+      }),
+    ]),
+  );
+
+  const replanned = replanTransitionEntityReadiness(
+    plan,
+    new Set(["layer:late-layer", "late-layer"]),
+    1300,
+    500,
+  );
+
+  assert.deepEqual(replanned, ["layer:late-layer"]);
+  const readyOp = plan.operations.find((op) => op.entityKey === "layer:late-layer");
+  const untouchedOp = plan.operations.find(
+    (op) => op.entityKey === "layer:other-late-layer",
+  );
+  assert.equal(readyOp.holdUntilReady, false);
+  assert.equal(readyOp.executionMode, "enter");
+  assert.equal(readyOp.assignment, "enter");
+  assert.equal(readyOp.startMsOverride, 1300);
+  assert.equal(readyOp.durationMs, 500);
+  assert.ok(
+    readyOp.traceReasons.includes(
+      "readiness-replan:hold-source->enter",
+    ),
+  );
+  assert.equal(untouchedOp.holdUntilReady, true);
+
+  const atAttach = evaluateTransitionExecutionPlan(plan, 1300).find(
+    (frame) => frame.entityKey === "layer:late-layer",
+  );
+  const half = evaluateTransitionExecutionPlan(plan, 1550).find(
+    (frame) => frame.entityKey === "layer:late-layer",
+  );
+  assert.equal(atAttach.enteringOpacityFactor, 0);
+  assert.equal(half.enteringOpacityFactor, 0.5);
+});
+
+test("readiness replan uses a floor for short remaining durations and leaves nonmatching derived roots alone", () => {
+  const plan = {
+    startMs: 1000,
+    operations: [
+      {
+        entityKey: "layer:late-layer",
+        parentLayerId: "late-layer",
+        representationKey: "layer:pointcloud",
+        executorKind: "layer-opacity",
+        executionMode: "hold-source",
+        assignment: "hold-until-ready",
+        derivedFromEntityKey: null,
+        dependencyPolicy: "independent",
+        holdUntilReady: true,
+        durationMs: 800,
+        easing: "linear",
+        channels: [],
+        sourcePresence: "visible",
+        targetPresence: "visible",
+        sourceReadiness: "ready",
+        targetReadiness: "loading",
+        traceReasons: [],
+      },
+      {
+        entityKey: "layer:late-layer:derived:section-iso-root",
+        parentLayerId: "late-layer",
+        representationKey: "derived:section-iso-band",
+        executorKind: "section-iso-root",
+        executionMode: "hold-source",
+        assignment: "hold-until-ready",
+        derivedFromEntityKey: "layer:late-layer",
+        dependencyPolicy: "dependent",
+        holdUntilReady: true,
+        durationMs: 800,
+        easing: "linear",
+        channels: [],
+        sourcePresence: "visible",
+        targetPresence: "visible",
+        sourceReadiness: "ready",
+        targetReadiness: "loading",
+        traceReasons: [],
+      },
+    ],
+  };
+
+  const replanned = replanTransitionEntityReadiness(
+    plan,
+    new Set(["layer:late-layer", "late-layer"]),
+    1780,
+    20,
+  );
+
+  assert.deepEqual(replanned, ["layer:late-layer"]);
+  assert.equal(plan.operations[0].durationMs, 150);
+  assert.equal(plan.operations[1].holdUntilReady, true);
+  assert.equal(plan.operations[1].executionMode, "hold-source");
 });
 
 test("crossfade frame splits source-out and target-in alphas", () => {

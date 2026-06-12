@@ -2993,6 +2993,13 @@ export function applySceneSectionHelperTransitionOpacity(this: any): void {
     const mats = Array.isArray(mat) ? mat : [mat];
     for (const material of mats) {
       if (material.userData?.sceneSectionHelper !== true) continue;
+      if (
+        obj.userData?.scalarSectionIsoOverlay === true ||
+        material.userData?.scalarSectionIsoOverlay === true
+      ) {
+        this.applySectionIsoHelperTransitionOpacity?.(material, opacity);
+        continue;
+      }
       const baseOpacity = this.baseOpacityForMaterial(material);
       material.opacity = baseOpacity * opacity;
       material.transparent =

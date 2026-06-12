@@ -112,6 +112,14 @@ export interface TransitionCommitGate {
   recordCommitAttempt(attempt: TransitionCommitAttempt): TransitionCommitTrace;
 }
 
+export function reapplyReasonBypassesPostCommitSuppression(
+  reason: string,
+): boolean {
+  return (
+    reason === "async-layer-resolve" || reason === "editor-deferred-flush"
+  );
+}
+
 interface NormalizedChannel {
   channelClass: string | null;
   value: unknown;

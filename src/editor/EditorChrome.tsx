@@ -598,7 +598,7 @@ function EditorLiveApplyTransitionBridge() {
   useEffect(() => {
     setLiveApplyTransitionActive(active);
     if (!active && flushDeferredLiveSceneEdits()) {
-      reapplyCurrentPageState();
+      reapplyCurrentPageState("editor-deferred-flush");
     }
     return () => setLiveApplyTransitionActive(false);
   }, [

@@ -2822,3 +2822,16 @@ page titles, or page fixture special cases. New legend controls must use the
 shared compact quick-legend helpers from `src/ui/legendStyles.ts`, and quick
 legend buttons must mutate the same layer style or visibility fields exposed in
 the editor panel.
+
+## DEC-162 - Deferred editor flush may pass post-finalize suppression
+
+**Chose:** `editor-deferred-flush` is a distinct current-page reapply reason
+that may pass post-finalize suppression only to apply known editor mutations
+queued during a transition.
+
+**Why:** generic duplicate final commits must stay suppressed, but deferred
+editor edits are authored state changes that were intentionally held until the
+transition landed.
+
+**Guard:** `editor-deferred-flush` must preserve running enter tweens and must
+not become a generic bypass for duplicate target assertions or final commits.

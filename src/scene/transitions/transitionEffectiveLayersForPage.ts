@@ -948,6 +948,7 @@ export function transitionEffectiveLayersForPage(
     sourceVisibleLayerIds,
     targetVisibleLayerIds: new Set(toVisible),
     targetNotReadyLayerIds,
+    readinessAttachedLayerIds: new Set<string>(),
     sectionIsoStableLayerIds: new Set<string>(),
     warnedUnexpectedVisibleLayerIds: new Set(),
     assignmentTraces,

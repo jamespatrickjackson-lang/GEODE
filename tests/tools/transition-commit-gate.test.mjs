@@ -31,6 +31,7 @@ async function loadCommitGateModule() {
 const {
   compareTransitionCommitGraphs,
   createTransitionCommitGate,
+  reapplyReasonBypassesPostCommitSuppression,
 } = await loadCommitGateModule();
 
 function graph(entities = []) {
@@ -177,6 +178,25 @@ test("deferred editor reapply cannot visibly reassert stale target state after f
 
   assert.equal(deferredReapply.allowed, false);
   assert.equal(deferredReapply.suppressed, true);
+});
+
+test("reapply suppression policy only admits async resolves and editor deferred flushes", () => {
+  assert.equal(
+    reapplyReasonBypassesPostCommitSuppression("async-layer-resolve"),
+    true,
+  );
+  assert.equal(
+    reapplyReasonBypassesPostCommitSuppression("editor-deferred-flush"),
+    true,
+  );
+  assert.equal(
+    reapplyReasonBypassesPostCommitSuppression("state-reapply"),
+    false,
+  );
+  assert.equal(
+    reapplyReasonBypassesPostCommitSuppression("duplicate-final-commit"),
+    false,
+  );
 });
 
 test("commit behavior is unchanged by fixture evidence metadata", () => {
@@ -379,12 +399,17 @@ test("post-commit async layer reapply is distinct from duplicate target assertio
   assert.match(sceneManagerSource, /type ReapplyCurrentPageStateReason/);
   assert.match(
     sceneManagerSource,
-    /reapplyCurrentPageState\(\s*reason:\s*ReapplyCurrentPageStateReason\s*=\s*"state-reapply"\s*,?\s*\)/,
+    /reapplyCurrentPageState\(\s*reason:\s*ReapplyCurrentPageStateReason\s*=\s*"state-reapply"/,
   );
   assert.match(sceneManagerSource, /reason === "async-layer-resolve"/);
+  assert.match(sceneManagerSource, /reason === "editor-deferred-flush"/);
   assert.match(
     sceneManagerSource,
-    /!isAsyncLayerResolve[\s\S]*suppressDuplicatePostCommitReapply\(page\)/,
+    /!reapplyReasonBypassesPostCommitSuppression\(reason\)[\s\S]*suppressDuplicatePostCommitReapply\(page\)/,
+  );
+  assert.match(
+    sceneManagerSource,
+    /preserveRunningLayerTweens[\s\S]*isAsyncLayerResolve[\s\S]*isEditorDeferredFlush/,
   );
   assert.match(
     layerLoadersSource,
@@ -397,5 +422,13 @@ test("post-commit async layer reapply is distinct from duplicate target assertio
   assert.doesNotMatch(
     pageControllerSource,
     /reapplyCurrentPageState\("async-layer-resolve"\)/,
+  );
+  assert.match(
+    editorChromeSource,
+    /reapplyCurrentPageState\("editor-deferred-flush"\)/,
+  );
+  assert.match(
+    pageControllerSource,
+    /reapplyReasonBypassesPostCommitSuppression\(reason\)/,
   );
 });

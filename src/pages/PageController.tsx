@@ -35,6 +35,7 @@ import {
   UTAH_FORGE_LEGEND_EXIT_END,
   UTAH_FORGE_LEGEND_LAYOUT_END,
 } from "./pageTransitionUiPolicy";
+import { reapplyReasonBypassesPostCommitSuppression } from "../scene/transitions/transitionCommitGate";
 
 // PageController owns:
 //   - which page is "captured" as current (currentIndex)
@@ -64,7 +65,7 @@ interface PageControllerValue {
   resetToPose: () => void;
   /** Force-tween the camera to an arbitrary pose (used by pose history). */
   tweenToPose: (pose: PresentationPage["camera"]) => void;
-  reapplyCurrentPageState: () => void;
+  reapplyCurrentPageState: (reason?: ReapplyCurrentPageStateReason) => void;
 }
 
 const PageControllerContext = createContext<PageControllerValue | null>(null);
@@ -75,6 +76,11 @@ type NavigationReason =
   | "programmatic"
   | "freelook"
   | "interrupted";
+
+type ReapplyCurrentPageStateReason =
+  | "state-reapply"
+  | "async-layer-resolve"
+  | "editor-deferred-flush";
 
 interface PageTransitionFrame {
   active: boolean;
@@ -2305,74 +2311,86 @@ export function PageControllerProvider({
     [currentPageForReapply, environment, pages, resolvePresentationState],
   );
 
-  const reapplyCurrentPageState = useCallback(() => {
-    const previewPage =
-      authoringPreviewPageId != null
-        ? allEditablePagesRef.current.find(
-            (page) => page.id === authoringPreviewPageId,
-          )
-        : null;
-    const page = previewPage ?? pagesRef.current[currentIndexRef.current];
-    if (!page) return;
-    if (isTransitioningRef.current) {
-      return;
-    }
-    if (
-      sceneHandle.manager.suppressPostCommitTargetAssertion(
-        page.id,
-        "PageController.reapplyCurrentPageState",
-      )
-    ) {
-      return;
-    }
-    const resolved = resolvePresentationState(page, environmentRef.current);
-    // applyEnvironment first so terrain shader uniforms / sun direction
-    // are current before styles/visibility evaluate against them.
-    sceneHandle.manager.applyEnvironment(resolved.environment);
-    sceneHandle.manager.applyEffectiveVisibilityForPage(
-      resolved.environment,
-      resolved.page,
-    );
-    sceneHandle.manager.applyEffectiveStylesForPage(
-      resolved.environment,
-      resolved.page,
-    );
-    sceneHandle.manager.applyPageScene(resolved.page);
-    sceneHandle.manager.applySceneOverlaysForPage(
-      resolved.environment,
-      resolved.page,
-    );
-    const pageCameraKey = `${page.id}:${poseKey(page.camera)}`;
-    if (
-      !isTransitioningRef.current &&
-      currentCameraKeyRef.current !== pageCameraKey
-    ) {
-      const pagePose = poseWithEnvironmentCamera(
-        resolved.page.camera,
+  const reapplyCurrentPageState = useCallback(
+    (reason: ReapplyCurrentPageStateReason = "state-reapply") => {
+      const previewPage =
+        authoringPreviewPageId != null
+          ? allEditablePagesRef.current.find(
+              (page) => page.id === authoringPreviewPageId,
+            )
+          : null;
+      const page = previewPage ?? pagesRef.current[currentIndexRef.current];
+      if (!page) return;
+      if (isTransitioningRef.current) {
+        return;
+      }
+      if (
+        !reapplyReasonBypassesPostCommitSuppression(reason) &&
+        sceneHandle.manager.suppressPostCommitTargetAssertion(
+          page.id,
+          "PageController.reapplyCurrentPageState",
+        )
+      ) {
+        return;
+      }
+      const resolved = resolvePresentationState(page, environmentRef.current);
+      if (reason === "editor-deferred-flush") {
+        sceneHandle.manager.reapplyCurrentPageState(
+          reason,
+          resolved.environment,
+          resolved.page,
+        );
+      } else {
+        // applyEnvironment first so terrain shader uniforms / sun direction
+        // are current before styles/visibility evaluate against them.
+        sceneHandle.manager.applyEnvironment(resolved.environment);
+        sceneHandle.manager.applyEffectiveVisibilityForPage(
+          resolved.environment,
+          resolved.page,
+        );
+        sceneHandle.manager.applyEffectiveStylesForPage(
+          resolved.environment,
+          resolved.page,
+        );
+        sceneHandle.manager.applyPageScene(resolved.page);
+      }
+      sceneHandle.manager.applySceneOverlaysForPage(
         resolved.environment,
+        resolved.page,
       );
-      arrivalPoseRef.current = pagePose;
-      dynamicBasePoseRef.current = pagePose;
-      dynamicPageIdRef.current = null;
-      dynamicStartMsRef.current = null;
-      dynamicOrbitBlendMsRef.current = null;
-      currentCameraKeyRef.current = pageCameraKey;
-    }
-    const envFov = resolved.environment.scene?.camera?.fov;
-    if (typeof envFov === "number" && sceneHandle.camera.fov !== envFov) {
-      sceneHandle.camera.fov = envFov;
-      sceneHandle.camera.updateProjectionMatrix();
-      if (arrivalPoseRef.current) {
-        arrivalPoseRef.current = { ...arrivalPoseRef.current, fov: envFov };
+      const pageCameraKey = `${page.id}:${poseKey(page.camera)}`;
+      if (
+        !isTransitioningRef.current &&
+        currentCameraKeyRef.current !== pageCameraKey
+      ) {
+        const pagePose = poseWithEnvironmentCamera(
+          resolved.page.camera,
+          resolved.environment,
+        );
+        arrivalPoseRef.current = pagePose;
+        dynamicBasePoseRef.current = pagePose;
+        dynamicPageIdRef.current = null;
+        dynamicStartMsRef.current = null;
+        dynamicOrbitBlendMsRef.current = null;
+        currentCameraKeyRef.current = pageCameraKey;
       }
-      if (dynamicBasePoseRef.current) {
-        dynamicBasePoseRef.current = {
-          ...dynamicBasePoseRef.current,
-          fov: envFov,
-        };
+      const envFov = resolved.environment.scene?.camera?.fov;
+      if (typeof envFov === "number" && sceneHandle.camera.fov !== envFov) {
+        sceneHandle.camera.fov = envFov;
+        sceneHandle.camera.updateProjectionMatrix();
+        if (arrivalPoseRef.current) {
+          arrivalPoseRef.current = { ...arrivalPoseRef.current, fov: envFov };
+        }
+        if (dynamicBasePoseRef.current) {
+          dynamicBasePoseRef.current = {
+            ...dynamicBasePoseRef.current,
+            fov: envFov,
+          };
+        }
       }
-    }
-  }, [authoringPreviewPageId, resolvePresentationState, sceneHandle]);
+    },
+    [authoringPreviewPageId, resolvePresentationState, sceneHandle],
+  );
 
   const applyAuthoringPageNow = useCallback(
     (

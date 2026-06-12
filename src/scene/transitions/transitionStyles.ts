@@ -181,6 +181,7 @@ export interface SceneTransitionContext {
   sourceVisibleLayerIds: Set<string>;
   targetVisibleLayerIds: Set<string>;
   targetNotReadyLayerIds: Set<string>;
+  readinessAttachedLayerIds: Set<string>;
   sectionIsoStableLayerIds: Set<string>;
   warnedUnexpectedVisibleLayerIds: Set<string>;
   assignmentTraces: TransitionAssignmentTrace[];

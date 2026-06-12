@@ -100,10 +100,12 @@ import {
 import type { TransitionAssignmentTrace } from "./transitions/transitionRenderGraphAdapter";
 import {
   recordTransitionCommitAttempt as recordTransitionCommitAttemptImpl,
+  reapplyReasonBypassesPostCommitSuppression,
   transitionCommitGraphFromAssignmentTraces,
   type TransitionCommitGraph,
   type TransitionCommitTrace,
 } from "./transitions/transitionCommitGate";
+import { replanTransitionEntityReadiness } from "./transitions/transitionExecutionPlan";
 import {
   AreaOutlineController,
   type AreaOutlinePreview,
@@ -318,6 +320,7 @@ export type {
 // Fade duration matches the markdown overlay panel (OverlayDisplay's
 // FADE_MS) so chapter transitions feel coherent across UI surfaces.
 const DEFAULT_LAYER_FADE_MS = 800;
+const READINESS_ENTER_MIN_REMAINING_MS = 150;
 const DEFAULT_CONTOUR_DISTANCE_FADE_NEAR_M = 80;
 const DEFAULT_CONTOUR_DISTANCE_FADE_FAR_M = 420;
 const DEFAULT_CONTOUR_FAR_LINE_SCALE = 0.28;
@@ -497,7 +500,11 @@ export interface PageCameraMarkerSpec {
 
 interface LateReapplyDebugEvent {
   sequence: number;
-  reason: "async-layer-resolve" | "geology-register";
+  reason:
+    | "state-reapply"
+    | "async-layer-resolve"
+    | "editor-deferred-flush"
+    | "geology-register";
   action:
     | "transition-envelope"
     | "transition-aware-current-page-state"
@@ -519,7 +526,8 @@ interface LateReapplyDebugState {
 
 type ReapplyCurrentPageStateReason =
   | "state-reapply"
-  | "async-layer-resolve";
+  | "async-layer-resolve"
+  | "editor-deferred-flush";
 
 interface SceneSectionApplyDebugState {
   totalMs: number;
@@ -1368,8 +1376,17 @@ export class SceneManager {
       Number.isFinite(material.userData.sectionIsoThresholdOcclusionAttenuation)
         ? clamp01(material.userData.sectionIsoThresholdOcclusionAttenuation)
         : 1;
-    const nextOpacity = clamp01(authoredOpacity * transitionOpacity * occlusion);
+    const helperTransitionOpacity =
+      typeof material.userData?.sectionIsoHelperTransitionOpacity === "number" &&
+      Number.isFinite(material.userData.sectionIsoHelperTransitionOpacity)
+        ? clamp01(material.userData.sectionIsoHelperTransitionOpacity)
+        : 1;
+    const nextOpacity = clamp01(
+      authoredOpacity * transitionOpacity * helperTransitionOpacity * occlusion,
+    );
     material.userData.sectionIsoTransitionOpacity = transitionOpacity;
+    material.userData.sectionIsoHelperTransitionOpacity =
+      helperTransitionOpacity;
     material.userData.sectionIsoLayerRenderOpacity = parentLayerOpacity;
     material.userData.sectionIsoOpacityPolicy =
       transitionOpacity <= 0.001
@@ -1384,6 +1401,32 @@ export class SceneManager {
       material.uniforms.uOpacity.value = nextOpacity;
     }
     material.needsUpdate = true;
+  }
+
+  applySectionIsoHelperTransitionOpacity(
+    material: THREE.Material,
+    helperOpacity: number,
+  ): void {
+    material.userData.sectionIsoHelperTransitionOpacity = clamp01(helperOpacity);
+    const transitionOpacity =
+      typeof material.userData?.sectionIsoTransitionOpacity === "number" &&
+      Number.isFinite(material.userData.sectionIsoTransitionOpacity)
+        ? material.userData.sectionIsoTransitionOpacity
+        : 1;
+    const layerRenderOpacity =
+      typeof material.userData?.sectionIsoLayerRenderOpacity === "number" &&
+      Number.isFinite(material.userData.sectionIsoLayerRenderOpacity)
+        ? material.userData.sectionIsoLayerRenderOpacity
+        : undefined;
+    this.applySectionIsoOverlayMaterialOpacity(
+      material,
+      transitionOpacity,
+      layerRenderOpacity,
+      material.userData?.sectionIsoOpacityPolicy ===
+        "transition-envelope-opacity"
+        ? "transition-envelope"
+        : "layer-render-opacity",
+    );
   }
 
   captureLayerRenderStates(
@@ -2786,6 +2829,7 @@ export class SceneManager {
     sceneSectionHelpers: SceneSectionHelperDebugState;
     productFamilies: ProductTransitionDecision[];
     assignmentTraces: TransitionAssignmentTrace[];
+    readinessAttachedLayerIds: string[];
     sceneOverlays: SceneOverlayDebugState;
     cinematicPost: CinematicSceneTransitionDebugState;
     lateReapply: LateReapplyDebugState;
@@ -2824,6 +2868,9 @@ export class SceneManager {
       sceneSectionHelpers: this.getSceneSectionHelperDebugState(),
       productFamilies: transition?.productFamilies.slice() ?? [],
       assignmentTraces: transition?.assignmentTraces.slice() ?? [],
+      readinessAttachedLayerIds: Array.from(
+        transition?.readinessAttachedLayerIds ?? [],
+      ).sort(),
       sceneOverlays: this.getSceneOverlayDebugState(),
       cinematicPost: this.lastCinematicSceneTransitionDebug,
       lateReapply: this.getLateReapplyDebugState(),
@@ -3099,6 +3146,7 @@ export class SceneManager {
   private reapplyActiveTransitionPageState(
     environment: EnvironmentSetup,
     page: PresentationPage,
+    reason: ReapplyCurrentPageStateReason = "state-reapply",
   ): void {
     this.lastEffectiveEnv = environment;
     this.lastEffectivePage = page;
@@ -3106,6 +3154,13 @@ export class SceneManager {
     this.applyPageScene(page);
 
     const nowMs = performance.now();
+    if (reason === "async-layer-resolve") {
+      this.attachReadyTargetLayersDuringActiveTransition(
+        environment,
+        page,
+        nowMs,
+      );
+    }
     this.sceneSectionReapplySuspended = true;
     try {
       for (const id of this.layers.keys()) {
@@ -3154,6 +3209,63 @@ export class SceneManager {
       this.transitionTerrainOpacityOverrides(),
     );
     this.enforceTransitionVisibilityEnvelope();
+  }
+
+  private attachReadyTargetLayersDuringActiveTransition(
+    environment: EnvironmentSetup,
+    page: PresentationPage,
+    nowMs: number,
+  ): void {
+    const transition = this.activeSceneTransitionContext;
+    if (!transition || transition.targetNotReadyLayerIds.size === 0) return;
+    for (const layerId of Array.from(transition.targetNotReadyLayerIds)) {
+      if (!this.layers.has(layerId)) continue;
+      transition.targetNotReadyLayerIds.delete(layerId);
+      transition.readinessAttachedLayerIds.add(layerId);
+      if (!transition.targetVisibleLayerIds.has(layerId)) continue;
+      if (
+        this.layerTweens.has(layerId) ||
+        this.scalarStyleTweens.has(layerId) ||
+        this.layerTransitionSnapshots.has(layerId)
+      ) {
+        continue;
+      }
+
+      const remainingMs = Math.max(
+        0,
+        transition.startMs + transition.durationMs - nowMs,
+      );
+      const readyEntityKeys = new Set<string>([`layer:${layerId}`, layerId]);
+      if (transition.executionPlan) {
+        replanTransitionEntityReadiness(
+          transition.executionPlan,
+          readyEntityKeys,
+          nowMs,
+          remainingMs,
+        );
+      }
+      const targetOpacity = this.targetOpacityForLayer(environment, page, layerId);
+      this.applyStyle(layerId, effectiveStyle(environment, page, layerId));
+      if (
+        targetOpacity <= 0.001 ||
+        remainingMs <= READINESS_ENTER_MIN_REMAINING_MS
+      ) {
+        this.applyLayerTransitionRenderOpacity(
+          layerId,
+          targetOpacity,
+          targetOpacity > 0.001 ? 1 : 0,
+        );
+        continue;
+      }
+      this.applyLayerTransitionRenderOpacity(layerId, 0, 0);
+      this.layerTweens.set(layerId, {
+        from: 0,
+        to: targetOpacity,
+        startMs: nowMs,
+        durationMs: remainingMs,
+        easing: transition.easing,
+      });
+    }
   }
 
   private listAuthoredScalarSectionIsoTargets(
@@ -4496,15 +4608,24 @@ export class SceneManager {
    */
   reapplyCurrentPageState(
     reason: ReapplyCurrentPageStateReason = "state-reapply",
+    environmentOverride?: EnvironmentSetup,
+    pageOverride?: PresentationPage,
   ): void {
-    const env = this.lastEnv ?? this.lastEffectiveEnv;
-    const page = this.lastEffectivePage;
+    const env = environmentOverride ?? this.lastEnv ?? this.lastEffectiveEnv;
+    const page = pageOverride ?? this.lastEffectivePage;
     const isAsyncLayerResolve = reason === "async-layer-resolve";
+    const isEditorDeferredFlush = reason === "editor-deferred-flush";
+    const preserveRunningLayerTweens =
+      isAsyncLayerResolve || isEditorDeferredFlush;
+    const mayStartAsyncEnterTweens = isAsyncLayerResolve;
     const activeTransitionHasFinalized =
       this.activeSceneTransitionContext?.commitState.hasFinalized === true;
-    if (activeTransitionHasFinalized && !isAsyncLayerResolve) {
+    if (
+      activeTransitionHasFinalized &&
+      !reapplyReasonBypassesPostCommitSuppression(reason)
+    ) {
       this.recordLateReapplyDebugEvent(
-        "async-layer-resolve",
+        reason,
         "transition-envelope",
       );
       this.recordTransitionCommitAttempt({
@@ -4515,12 +4636,12 @@ export class SceneManager {
       return;
     }
     if (
-      !isAsyncLayerResolve &&
+      !reapplyReasonBypassesPostCommitSuppression(reason) &&
       !this.activeSceneTransitionContext &&
       this.suppressDuplicatePostCommitReapply(page)
     ) {
       this.recordLateReapplyDebugEvent(
-        "async-layer-resolve",
+        reason,
         "transition-envelope",
       );
       return;
@@ -4532,15 +4653,15 @@ export class SceneManager {
       page
     ) {
       this.recordLateReapplyDebugEvent(
-        "async-layer-resolve",
+        reason,
         "transition-aware-current-page-state",
       );
-      this.reapplyActiveTransitionPageState(env, page);
+      this.reapplyActiveTransitionPageState(env, page, reason);
       return;
     }
     if (this.activeSceneTransitionContext && !activeTransitionHasFinalized) {
       this.recordLateReapplyDebugEvent(
-        "async-layer-resolve",
+        reason,
         "transition-envelope",
       );
       this.enforceTransitionVisibilityEnvelope();
@@ -4549,14 +4670,14 @@ export class SceneManager {
       return;
     }
     this.recordLateReapplyDebugEvent(
-      "async-layer-resolve",
+      reason,
       "full-current-page-state",
     );
     const previousLayerOpacity = new Map<string, number>();
-    const previousEnterTweens = isAsyncLayerResolve
+    const previousEnterTweens = preserveRunningLayerTweens
       ? new Map(this.layerTweens)
       : null;
-    if (isAsyncLayerResolve && env && page) {
+    if (preserveRunningLayerTweens && env && page) {
       for (const [id, group] of this.layers) {
         previousLayerOpacity.set(
           id,
@@ -4569,7 +4690,7 @@ export class SceneManager {
       this.applyEffectiveVisibilityForPage(env, page);
       this.applyEffectiveStylesForPage(env, page);
       this.applyPageScene(page);
-      if (isAsyncLayerResolve) {
+      if (preserveRunningLayerTweens) {
         // Readiness rule: a layer whose data resolves after the page landed
         // must not flash to full opacity. Async resolves arrive in bursts,
         // and the full style apply above writes full target opacity and
@@ -4597,6 +4718,7 @@ export class SceneManager {
               continue;
             }
           }
+          if (!mayStartAsyncEnterTweens) continue;
           if ((previousLayerOpacity.get(id) ?? 0) > 0.001) continue;
           this.applyLayerRenderOpacity(id, 0);
           this.layerTweens.set(id, {

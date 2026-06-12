@@ -56,6 +56,7 @@ export interface TransitionEntityOperation {
   sourceReadiness: TransitionReadinessState | null;
   targetReadiness: TransitionReadinessState | null;
   traceReasons: string[];
+  startMsOverride?: number;
 }
 
 export interface TransitionExecutionPlan {
@@ -205,10 +206,52 @@ function operationProgress(
   nowMs: number,
 ): { progress: number; done: boolean } {
   if (operation.durationMs <= 0) return { progress: 1, done: true };
-  const raw = (nowMs - startMs) / operation.durationMs;
+  const operationStartMs = operation.startMsOverride ?? startMs;
+  const raw = (nowMs - operationStartMs) / operation.durationMs;
   const done = raw >= 1;
-  const progress = done ? 1 : easeProgress(raw, operation.easing);
+  const progress = done ? 1 : easeProgress(Math.max(0, raw), operation.easing);
   return { progress, done };
+}
+
+const READINESS_REPLAN_MIN_DURATION_MS = 150;
+
+function readinessMatchesOperation(
+  operation: TransitionEntityOperation,
+  readyEntityKeys: ReadonlySet<string>,
+): boolean {
+  if (operation.executorKind === "section-iso-root") return false;
+  if (readyEntityKeys.has(operation.entityKey)) return true;
+  return (
+    operation.parentLayerId !== null && readyEntityKeys.has(operation.parentLayerId)
+  );
+}
+
+export function replanTransitionEntityReadiness(
+  plan: TransitionExecutionPlan,
+  readyEntityKeys: ReadonlySet<string>,
+  nowMs: number,
+  remainingMs: number,
+): string[] {
+  const replannedEntityKeys: string[] = [];
+  for (const operation of plan.operations) {
+    if (!operation.holdUntilReady) continue;
+    if (!readinessMatchesOperation(operation, readyEntityKeys)) continue;
+    const previousMode = operation.executionMode;
+    operation.holdUntilReady = false;
+    operation.executionMode = "enter";
+    operation.assignment = "enter";
+    operation.startMsOverride = nowMs;
+    operation.durationMs = Math.max(
+      READINESS_REPLAN_MIN_DURATION_MS,
+      Math.max(0, remainingMs),
+    );
+    const traceReason = `readiness-replan:${previousMode}->enter`;
+    if (!operation.traceReasons.includes(traceReason)) {
+      operation.traceReasons.push(traceReason);
+    }
+    replannedEntityKeys.push(operation.entityKey);
+  }
+  return replannedEntityKeys;
 }
 
 export function evaluateTransitionExecutionPlan(
@@ -217,11 +260,8 @@ export function evaluateTransitionExecutionPlan(
 ): TransitionEntityFrame[] {
   return plan.operations.map((operation) => {
     const { progress, done } = operationProgress(operation, plan.startMs, nowMs);
-    // hold-until-ready keeps the source visible at full opacity and does not
-    // ramp the target in until the operation is re-planned as enter.
-    const holding = operation.holdUntilReady;
     const enteringOpacityFactor =
-      operation.executionMode === "enter" ? (holding ? 0 : progress) : 1;
+      operation.executionMode === "enter" ? progress : 1;
     const exitingOpacityFactor =
       operation.executionMode === "exit" ? 1 - progress : 1;
     const crossfade =
