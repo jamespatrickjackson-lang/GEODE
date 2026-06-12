@@ -2401,7 +2401,11 @@ gates such as `Forge3d_ANI_PSDM_Stack_Enh.segy` remain non-renderable until a
 complete CRC-valid source is available. L5/L11 trace-header paths may be used
 for placement after plausible State Plane-to-UTM transformation, but must keep
 `canClaimPreciseRegistration: false` and non-validated placement language until
-control-point validation exists.
+control-point validation exists. Legacy L5/L11 SEG-Y headers that declare a
+`7000 ft` processing datum are retained as `sourceHeaderDatumM: 2133.6` and
+rendered against the shared `datumM: 1800` seismic reference frame with
+`datumNormalizationM: -333.6`; do not use the raw header datum as rendered
+scene datum or drop the audit fields.
 
 ## DEC-148 - Approved ANI PSDM surrogate uses source-derived unenhanced volume
 

@@ -1,16 +1,38 @@
 # Graph Annotation Architecture Audit
 
-Status: implementation audit gate
+Status: implemented architecture audit
 
 Date: 2026-06-12
 
 ## Finding
 
-The current seismic figure annotation controls are layer-scoped, while the
-runtime surfaces that need annotation are target-scoped. A single
+The pre-implementation seismic figure annotation controls were layer-scoped,
+while the runtime surfaces that need annotation are target-scoped. A single
 `seismicFigure*` container cannot safely describe Line 301, Line 302, L5, L11,
 3D inline/crossline/sample planes, raymarch volumes, scene-section cuts, and
 item/object graphs at the same time.
+
+## Implementation Outcome
+
+The merged implementation makes Section Options the authoring surface for
+target-scoped graph annotations. New state is stored in
+`graphAnnotationDefaults`, `graphAnnotationProfiles`, and
+`graphAnnotationSelectedTargetKey`; legacy `seismicFigure*` fields remain
+readable fallback defaults for existing pages.
+
+Static seismic section annotations now derive target identity from graph family,
+layer id, product id, object kind, object id, and comparison role. Page ids,
+page titles, page order, and fixture paths are not graph identity. Annotation
+roots and materials expose transition entity metadata so the exact-key entity
+opacity executor can enter/exit figure annotations independently from whole
+seismic layer fades.
+
+Verification anchors:
+
+- `node tests/tools/graph-annotation-model.test.mjs`
+- `node tests/tools/seismic-figure-annotations.test.mjs`
+- `node tests/tools/seismic-section-graph-basis.test.mjs`
+- `node tests/tools/seismic-graph-transition-executor.test.mjs`
 
 ## Target Matrix
 
@@ -35,7 +57,8 @@ item/object graphs at the same time.
 - Mesh geometry: `seismicSectionGraphBasis` from `buildSeismicSectionGraphBasis`.
 - Shader/material: seismic section `ShaderMaterial`; figure annotation text is separate plane meshes with double-sided readable shader.
 - Opacity stack: section source opacity is assigned to product material; annotation root has independent material opacity and is currently present only when the section mesh is visible.
-- Gap: persisted annotation style is global `seismicFigure*`, not target keyed.
+- Resolved: persisted annotation style is target-keyed through graph annotation
+  profiles, with `seismicFigure*` kept as a fallback default source.
 
 3D seismic raymarch volume:
 
