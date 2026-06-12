@@ -1289,7 +1289,7 @@
       "sourceFile": "src/editor/layerControls/seismic/SectionGraphOptionsControls.tsx",
       "sourceAnchor": "testId=\"seismic-section-options\"",
       "scope": "seismic layers",
-      "backedBy": "EditableStyle seismicProductId/seismicProductVisibility/seismicRenderMode/seismicSliceAxis/seismicSliceFraction/seismicComparisonProductId/seismicComparisonMode/seismicMtCoRender/seismicIsoSource/seismicNavigationRoleVisibility/seismicFigure* fields",
+      "backedBy": "EditableStyle seismicProductId/seismicProductVisibility/seismicRenderMode/seismicSliceAxis/seismicSliceFraction/seismicComparisonProductId/seismicComparisonMode/seismicMtCoRender/seismicIsoSource/seismicNavigationRoleVisibility/seismicFigure* fallback fields, graphAnnotationDefaults, graphAnnotationProfiles, graphAnnotationSelectedTargetKey",
       "setterRoute": "SectionGraphOptionsControls commit / commitLayerStyle",
       "approval": {
         "status": "approved",
@@ -1658,7 +1658,19 @@
       "sourceFile": "src/editor/layerControls/seismic/SectionGraphOptionsControls.tsx",
       "sourceAnchor": "data-testid=\"seismic-figure-annotations-visible\"",
       "scope": "seismic layers",
-      "backedBy": "EditableStyle seismicFigure* fields",
+      "backedBy": "EditableStyle seismicFigure* fallback fields, graphAnnotationDefaults, graphAnnotationProfiles, graphAnnotationSelectedTargetKey",
+      "setterRoute": "SectionGraphOptionsControls commitGraphAnnotationProfile / commit",
+      "status": "active"
+    },
+    {
+      "id": "seismic.figure.annotation-target",
+      "label": "Graph target",
+      "kind": "control",
+      "parentId": "seismic.figure.annotations",
+      "sourceFile": "src/editor/layerControls/seismic/SectionGraphOptionsControls.tsx",
+      "sourceAnchor": "data-testid=\"graph-annotation-target-select\"",
+      "scope": "seismic, scene-section, and item graph annotation targets",
+      "backedBy": "EditableStyle.graphAnnotationSelectedTargetKey",
       "setterRoute": "SectionGraphOptionsControls commit",
       "status": "active"
     }

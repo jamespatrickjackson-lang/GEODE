@@ -4,6 +4,7 @@ import { SCALAR_SOURCE_MAX, SCALAR_SOURCE_MIN } from "../scalarSourceRange";
 export interface SeismicProductOption {
   id: string;
   label: string;
+  sections?: SeismicProductSectionOption[];
   lineId?: string;
   lineLabel?: string;
   processingStage?: string;
@@ -38,6 +39,12 @@ export interface SeismicProductOption {
     mean?: number;
   };
   raymarchCapable?: boolean;
+}
+
+export interface SeismicProductSectionOption {
+  id: string;
+  axis?: string;
+  fraction?: number;
 }
 
 export interface SeismicRequiredProductSourceGate {
@@ -212,6 +219,30 @@ export function seismicProductOptions(
       return {
         id: product.id,
         label: canonicalLabel ?? seismicIndustryLabel(product.label),
+        sections: Array.isArray(product.sections)
+          ? product.sections
+              .map((rawSection): SeismicProductSectionOption | null => {
+                if (!rawSection || typeof rawSection !== "object") return null;
+                const section = rawSection as Record<string, unknown>;
+                if (typeof section.id !== "string") return null;
+                return {
+                  id: section.id,
+                  axis:
+                    typeof section.axis === "string"
+                      ? section.axis
+                      : undefined,
+                  fraction:
+                    typeof section.fraction === "number" &&
+                    Number.isFinite(section.fraction)
+                      ? section.fraction
+                      : undefined,
+                };
+              })
+              .filter(
+                (section): section is SeismicProductSectionOption =>
+                  section !== null,
+              )
+          : undefined,
         lineId:
           typeof product.lineId === "string" ? product.lineId : undefined,
         lineLabel:
@@ -1556,6 +1587,20 @@ export function seismicBrowserPatchFromStyle(
       "seismicFigureHorizonColor",
       "#ffcc33",
     ),
+    graphAnnotationDefaults:
+      typeof style.graphAnnotationDefaults === "object" &&
+      style.graphAnnotationDefaults !== null
+        ? style.graphAnnotationDefaults
+        : undefined,
+    graphAnnotationProfiles:
+      typeof style.graphAnnotationProfiles === "object" &&
+      style.graphAnnotationProfiles !== null
+        ? style.graphAnnotationProfiles
+        : undefined,
+    graphAnnotationSelectedTargetKey:
+      typeof style.graphAnnotationSelectedTargetKey === "string"
+        ? style.graphAnnotationSelectedTargetKey
+        : undefined,
     sectionIsoMin: styleNumber(
       style,
       "sectionIsoMin",

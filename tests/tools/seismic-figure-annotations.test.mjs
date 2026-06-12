@@ -172,4 +172,19 @@ async function loadAnnotationModelModule() {
     /seismicGraphBasisKind/,
     "figure roots and materials should expose the basis kind used to construct axes",
   );
+  assert.match(
+    figureStyleSource,
+    /resolveGraphAnnotationProfile/,
+    "figure annotations should resolve target-scoped graph annotation profiles",
+  );
+  assert.match(
+    figureStyleSource,
+    /graphAnnotationTargetKeyFromBasis/,
+    "figure annotations should derive profile targets from graph basis metadata",
+  );
+  assert.match(
+    figureStyleSource,
+    /graphAnnotationTargetKey/,
+    "figure roots and materials should carry target-scoped annotation identity",
+  );
 }

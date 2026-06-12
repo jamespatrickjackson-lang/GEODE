@@ -254,6 +254,34 @@ export interface SeismicProductDisplayState {
   volumeSampleSteps?: number;
 }
 
+export type GraphAnnotationFamily =
+  | "seismic"
+  | "mt-resistivity"
+  | "scene-section"
+  | "item";
+
+export type GraphAnnotationComparisonRole = "primary" | "comparison" | "single";
+
+export interface GraphAnnotationProfile {
+  frameVisible?: boolean;
+  title?: string;
+  caption?: string;
+  scaleLabel?: string;
+  textColor?: string;
+  axisColor?: string;
+  captionBoxColor?: string;
+  captionBoxOpacity?: number;
+  horizonColor?: string;
+  wellColor?: string;
+  wellVisible?: boolean;
+  wellLabel?: string;
+  wellPosition?: number;
+  horizonVisible?: boolean;
+  horizonPoints?: Array<[number, number]>;
+  outsideOffsetM?: number;
+  labelSizeM?: number;
+}
+
 // Style fields the alpha actually applies to the live scene. Loaders read
 // these; the editor writes them. Unknown fields pass through untouched
 // so future polish work can add fields without breaking the loader.
@@ -557,6 +585,9 @@ export interface EditableStyle {
   seismicFigureHorizonPoints?: Array<[number, number]>;
   seismicFigureOutsideOffsetM?: number;
   seismicFigureLabelSizeM?: number;
+  graphAnnotationDefaults?: GraphAnnotationProfile;
+  graphAnnotationProfiles?: Record<string, GraphAnnotationProfile>;
+  graphAnnotationSelectedTargetKey?: string;
   // Utah FORGE scene-wide section plane tool. Stored as a virtual layer style
   // so environment defaults and page overrides can author walkthrough cuts.
   sceneSectionEnabled?: boolean;

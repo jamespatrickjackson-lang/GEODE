@@ -99,6 +99,7 @@ const CATEGORICAL_STYLE_FIELDS: readonly StyleField[] = [
   "seismicFigureAnnotationsVisible",
   "seismicFigureWellVisible",
   "seismicFigureHorizonVisible",
+  "graphAnnotationSelectedTargetKey",
   "sceneSectionEnabled",
   "sceneSectionMode",
   "sceneSectionTargetScope",
@@ -129,6 +130,8 @@ const SEISMIC_GRAPH_CROSSFADE_STYLE_FIELDS: readonly StyleField[] = [
   "seismicFigureCaption",
   "seismicFigureScaleLabel",
   "seismicFigureHorizonPoints",
+  "graphAnnotationDefaults",
+  "graphAnnotationProfiles",
 ];
 
 const SPATIAL_STYLE_FIELDS: readonly StyleField[] = [
@@ -206,6 +209,24 @@ function graphReadinessState(input: {
 
 function derivedPresence(visible: boolean): TransitionRenderGraphLayerState["presenceState"] {
   return visible ? "visible" : "hidden";
+}
+
+function graphAnnotationProfileVisible(style: EffectiveLayerStyle): boolean {
+  if (style.seismicFigureAnnotationsVisible === true) return true;
+  if (style.graphAnnotationDefaults?.frameVisible === true) return true;
+  const selectedTargetKey =
+    typeof style.graphAnnotationSelectedTargetKey === "string"
+      ? style.graphAnnotationSelectedTargetKey
+      : null;
+  if (
+    selectedTargetKey &&
+    style.graphAnnotationProfiles?.[selectedTargetKey]?.frameVisible === true
+  ) {
+    return true;
+  }
+  return Object.values(style.graphAnnotationProfiles ?? {}).some(
+    (profile) => profile?.frameVisible === true,
+  );
 }
 
 function sceneSectionTransitionActiveForStyle(
@@ -639,7 +660,7 @@ function seismicGraphDerivedEntities(input: {
       entityKey: figureEntityKey,
       representationKey: "seismic:figure-annotation",
       derivedFromEntityKey: objectEntityKey,
-      presenceState: derivedPresence(input.style.seismicFigureAnnotationsVisible === true),
+      presenceState: derivedPresence(graphAnnotationProfileVisible(input.style)),
       categoricalChannels,
       scalarChannels,
       colorChannels,
