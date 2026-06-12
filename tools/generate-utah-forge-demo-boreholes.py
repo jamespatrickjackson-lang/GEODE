@@ -8,16 +8,24 @@ manifest consumed by the GeoSee runtime layer.
 
 from __future__ import annotations
 
+import argparse
 import csv
 import json
 import math
 import re
+import sys
 import urllib.request
 import zipfile
 from pathlib import Path
 from typing import Any
 
 from openpyxl import load_workbook
+
+TOOLS_DIR = Path(__file__).resolve().parent
+if str(TOOLS_DIR) not in sys.path:
+    sys.path.insert(0, str(TOOLS_DIR))
+
+from utah_phase2c_wells import audit_phase2c_wells
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -34,6 +42,7 @@ OUTPUT_DIR = (
 OUTPUT_PATH = OUTPUT_DIR / "phase3_demo_boreholes.json"
 
 US_SURVEY_FOOT_M = 1200 / 3937
+PHASE2C_MATCH_TOLERANCE_M = 2.0
 SCENE_ORIGIN_UTM = {
     "easting_m": 341467.35,
     "northing_m": 4273374.5,
@@ -179,6 +188,104 @@ def source_location_records(
         for point_id in point_ids
         if point_id in locations
     ]
+
+
+def load_phase2c_identity_records(input_path: Path) -> list[dict[str, Any]]:
+    audit = audit_phase2c_wells(input_path)
+    return [
+        record
+        for record in audit["records"]
+        if record.get("identity", {}).get("name")
+    ]
+
+
+def recover_phase2c_candidate_identities(
+    candidates: list[dict[str, Any]],
+    records: list[dict[str, Any]],
+    tolerance_m: float = PHASE2C_MATCH_TOLERANCE_M,
+) -> list[dict[str, Any]]:
+    recovered: list[dict[str, Any]] = []
+    for candidate in candidates:
+        next_candidate = dict(candidate)
+        candidate_utm = candidate.get("utm")
+        matches: list[tuple[float, dict[str, Any]]] = []
+        if isinstance(candidate_utm, list) and len(candidate_utm) >= 2:
+            for record in records:
+                identity_name = record.get("identity", {}).get("name")
+                geometry = record.get("geometry", {})
+                if not identity_name:
+                    continue
+                dx = float(candidate_utm[0]) - float(geometry.get("easting_m"))
+                dy = float(candidate_utm[1]) - float(geometry.get("northing_m"))
+                distance_m = math.hypot(dx, dy)
+                if distance_m <= tolerance_m:
+                    matches.append((distance_m, record))
+        if len(matches) == 1:
+            distance_m, record = matches[0]
+            identity = record["identity"]
+            next_candidate["label"] = identity["name"]
+            next_candidate["displayLabel"] = identity["name"]
+            next_candidate["identityRecovery"] = {
+                "status": "matched",
+                "source": "Utah_FORGE_Phase2C_wells",
+                "sourceCrs": "EPSG:26912 / NAD83 UTM Zone 12N",
+                "distanceM": round(distance_m, 3),
+                "identityField": identity["field"],
+                "sourceRecordIndex": record["index"],
+            }
+        else:
+            next_candidate["identityRecovery"] = {
+                "status": "unmatched",
+                "source": "Utah_FORGE_Phase2C_wells",
+                "reason": (
+                    "no-unique-coordinate-match"
+                    if len(matches) == 0
+                    else "ambiguous-coordinate-match"
+                ),
+                "matchCount": len(matches),
+                "toleranceM": tolerance_m,
+            }
+        recovered.append(next_candidate)
+    return recovered
+
+
+def apply_phase2c_identity_recovery(
+    registry: list[dict[str, Any]],
+    phase2c_records: list[dict[str, Any]] | None,
+) -> list[dict[str, Any]]:
+    if not phase2c_records:
+        return registry
+    next_registry = []
+    for entry in registry:
+        if entry.get("id") != "unnamed-possible-seismic-monitoring-well":
+            next_registry.append(entry)
+            continue
+        next_entry = dict(entry)
+        candidates = entry.get("sourceCandidates") or []
+        recovered_candidates = recover_phase2c_candidate_identities(
+            candidates,
+            phase2c_records,
+        )
+        next_entry["sourceCandidates"] = recovered_candidates
+        matched = [
+            candidate
+            for candidate in recovered_candidates
+            if candidate.get("identityRecovery", {}).get("status") == "matched"
+        ]
+        next_entry["identityRecovery"] = {
+            "source": "Utah_FORGE_Phase2C_wells",
+            "status": "partial" if matched else "unmatched",
+            "matchedCandidateIds": [candidate["id"] for candidate in matched],
+        }
+        if matched:
+            next_entry["notes"] = (
+                "GDR 1358 contains BOR1, BOR2, and BOR3 seismic feature rows. "
+                "Validated Phase2C wells shapefile identity recovery supplied "
+                "candidate names for uniquely matched source-location points; "
+                "no trajectory or calibration geometry is claimed."
+            )
+        next_registry.append(next_entry)
+    return next_registry
 
 
 def trajectory_source_location(well: dict[str, Any]) -> dict[str, Any]:
@@ -335,7 +442,9 @@ def summarize(points: list[dict[str, Any]]) -> dict[str, Any]:
 
 
 def build_priority_registry(
-    locations: dict[str, dict[str, Any]], wells: list[dict[str, Any]]
+    locations: dict[str, dict[str, Any]],
+    wells: list[dict[str, Any]],
+    phase2c_records: list[dict[str, Any]] | None = None,
 ) -> list[dict[str, Any]]:
     wells_by_id = {well["id"]: well for well in wells}
     rows_58 = source_location_records(
@@ -350,7 +459,7 @@ def build_priority_registry(
         ["78B-32-WELL", "78B-32-NEC", "78B-32-NWC", "78B-32-SEC", "78B-32-SWC"],
     )
     bor_rows = source_location_records(locations, ["BOR1", "BOR2", "BOR3"])
-    return [
+    registry = [
         {
             "id": "58-32",
             "label": "58-32",
@@ -475,11 +584,17 @@ def build_priority_registry(
             "notes": "GDR 1358 contains BOR1, BOR2, and BOR3 seismic feature rows, but no recovered well identifier is present. Keep as candidates only.",
         },
     ]
+    return apply_phase2c_identity_recovery(registry, phase2c_records)
 
 
-def build_manifest() -> dict[str, Any]:
+def build_manifest(phase2c_wells: Path | None = None) -> dict[str, Any]:
     report_16b = ensure_sources()
     locations = read_location_rows()
+    phase2c_records = (
+        load_phase2c_identity_records(phase2c_wells)
+        if phase2c_wells is not None
+        else None
+    )
     wells = [
         {
             "id": "16A(78)-32",
@@ -515,7 +630,7 @@ def build_manifest() -> dict[str, Any]:
         well["collarUtm"] = first["utm"]
         well["toeUtm"] = last["utm"]
 
-    return {
+    manifest = {
         "schema": "geosee.utahForge.demoBoreholes.v1",
         "label": "Utah FORGE Phase 3 demo boreholes",
         "classification": "demo-orientation",
@@ -549,13 +664,30 @@ def build_manifest() -> dict[str, Any]:
             "orientationBlockVisible": True,
         },
         "orientationBlock": pad_block(locations),
-        "priorityRegistry": build_priority_registry(locations, wells),
+        "priorityRegistry": build_priority_registry(locations, wells, phase2c_records),
         "wells": wells,
     }
+    if phase2c_records is not None:
+        manifest["sources"]["phase2cWells"] = {
+            "submission": "local re-export",
+            "label": "Utah_FORGE_Phase2C_wells shapefile",
+            "url": None,
+            "sourcePage": None,
+        }
+    return manifest
 
 
 def main() -> None:
-    manifest = build_manifest()
+    parser = argparse.ArgumentParser(
+        description="Generate browser-ready Utah FORGE Phase 3 demo borehole geometry.",
+    )
+    parser.add_argument(
+        "--phase2c-wells",
+        type=Path,
+        help="Optional clean local Utah_FORGE_Phase2C_wells shapefile directory or zip for BOR identity recovery.",
+    )
+    args = parser.parse_args()
+    manifest = build_manifest(args.phase2c_wells)
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     OUTPUT_PATH.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
     print(f"Wrote {OUTPUT_PATH.relative_to(REPO_ROOT)}")
