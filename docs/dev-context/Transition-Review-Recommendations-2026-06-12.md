@@ -1427,6 +1427,76 @@ monotonic, no restart), the mutated values present after final commit,
 and commit traces free of duplicate target assertions beyond the
 suppressed ones the gate already counts.
 
+## Agent handoff prompt
+
+Copy-paste prompt for the reviewing/fixing agent:
+
+> Task: review `docs/dev-context/Transition-Review-Recommendations-2026-06-12.md`
+> and independently verify its top findings against current source before
+> planning any fix. This pass is review + audit only - do not edit
+> runtime code. Deliverable: a validated, sequenced fix plan.
+>
+> Read first, in order:
+>
+> 1. `CLAUDE.md` - operating contract, output rail, protected MT
+>    scalar path, page-fixture ban, search-hygiene no-go paths.
+> 2. `docs/dev-context/Transition-Runtime-Operating-Spec.md` - the
+>    active transition operating contract.
+> 3. `docs/dev-context/Page-Transitions-And-Section-Frames.md` -
+>    helper-stability and ISO composition contracts (line references in
+>    it are stale per finding 2.5; trust the rules, not the line
+>    numbers).
+> 4. The review report itself - findings, per-finding fix write-ups,
+>    prioritized fix order, success factors A1-A9.
+>
+> Audit before planning - re-verify each claim in current source (the
+> report's line anchors may have drifted since 2026-06-12):
+>
+> 1. Finding 4.1 (Section ISO double opacity owner): confirm band/line
+>    materials in `src/scene/isoOverlays/sectionIsoOverlay.ts` still
+>    carry both `scalarSectionIsoOverlay` and `sceneSectionHelper`
+>    tags; confirm `applySceneSectionHelperTransitionOpacity` in
+>    `src/scene/section/sceneSectionController.ts` still writes those
+>    materials without occlusion attenuation while
+>    `applySectionIsoOverlayMaterialOpacity` in
+>    `src/scene/SceneManager.ts` writes the composed value. Verify at
+>    runtime during an active-to-active section tween by sampling
+>    `material.userData.sectionIsoComposedOpacity` /
+>    `sectionIsoTransitionOpacity` per frame and looking for two-value
+>    alternation.
+> 2. Findings 2.1 + 3.1 (readiness handoff): confirm
+>    `targetNotReadyLayerIds` is still never pruned mid-transition
+>    (grep for deletions), that `reapplyActiveTransitionPageState`
+>    starts no enter tween, and that no hold->enter re-planner exists in
+>    `transitionExecutionPlan.ts`. Reproduce the two-wave entry with a
+>    target layer whose loader resolves mid-transition.
+> 3. Finding 7.1 (deferred edit flush suppressed): trace
+>    `EditorLiveApplyTransitionBridge` in `src/editor/EditorChrome.tsx`
+>    into `reapplyCurrentPageState` and both suppression branches in
+>    `src/scene/SceneManager.ts`. Reproduce by editing a non-MT layer
+>    style mid-transition and confirming the live scene diverges from
+>    the persisted override after the transition lands.
+> 4. Spot-check at least two "verified-good" entries (helper rebuild
+>    gating, Section ISO root lifecycle) before relying on them.
+>
+> Plan output requirements, per the operating spec's "Required evidence
+> before code": transition state ownership map, render entity/channel
+> inventory, unsupported channel list, first-slice implementation plan,
+> and source guards against page-specific fixes. Use the report's
+> per-finding fix write-ups as the implementation basis; deviate only
+> with stated reasons. Sequence per the report's prioritized fix order
+> (4.1 first, then 2.1/3.1, then 7.1) unless the audit overturns a
+> finding - if it does, record why in the report under a new dated
+> section instead of deleting the finding.
+>
+> Constraints: no page-id/page-index/fixture-pair conditionals; no
+> edits to `projects/*/pages/**` or fixtures; the MT full-density
+> scalar path is protected and must not change; behavior tests use
+> synthetic fixtures only; `npx tsc --noEmit` and
+> `npm run check:workspace` plus the transition opacity regression test
+> gate any later code change; new behavior decisions need
+> `docs/03-decisions.md` entries.
+
 ## Constraints recap for fixing agents
 
 - Verify every step with `npx tsc --noEmit`, `npm run check:workspace`,
