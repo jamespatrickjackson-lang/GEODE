@@ -370,6 +370,21 @@ test("transition runtime emits seismic graph derived entities and channel covera
   );
 
   assert.match(transitionSource, /seismicGraphDerivedEntities/);
+  assert.match(
+    transitionSource,
+    /seismicSurveyGeometryEntityKey/,
+    "survey geometry identity should use the shared product-agnostic role key helper",
+  );
+  assert.match(
+    transitionSource,
+    /seismicFigureAnnotationEntityKey/,
+    "figure annotation identity should wrap the same section graph key used by runtime tags",
+  );
+  assert.doesNotMatch(
+    transitionSource,
+    /function seismicGraphEntityKey\(/,
+    "transition planning must not carry a duplicate seismic graph key builder",
+  );
   for (const representationKey of [
     "seismic:2d-section-line",
     "seismic:3d-volume",

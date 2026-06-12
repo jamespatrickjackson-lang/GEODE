@@ -387,18 +387,36 @@ test("assignments declare execution and idempotent final commit policy", () => {
   assert.equal(result.finalCommitPolicy, "visually-idempotent-target");
 });
 
-test("classifier output is not wired into scene mutation while contract is draft", () => {
-  const runtimeFiles = [
-    "src/scene/transitions/transitionEffectiveLayersForPage.ts",
-    "src/scene/transitions/layerTweenRuntime.ts",
-    "src/scene/SceneManager.ts",
-  ];
-  for (const file of runtimeFiles) {
-    const source = readFileSync(join(process.cwd(), file), "utf8");
-    assert.doesNotMatch(
-      source,
-      /transitionEntityPolicy|classifyTransitionEntityPair|classifyTransitionRenderGraphs|transitionAssignmentForLayer/,
-      `${file} must not consume classifier assignments before execution-layer contract work`,
-    );
-  }
+test("registered execution-layer consumers may use assignments without adding seismic decision ladders", () => {
+  const transitionSource = readFileSync(
+    join(process.cwd(), "src", "scene", "transitions", "transitionEffectiveLayersForPage.ts"),
+    "utf8",
+  );
+  const planSource = readFileSync(
+    join(process.cwd(), "src", "scene", "transitions", "transitionExecutionPlan.ts"),
+    "utf8",
+  );
+  const registrySource = readFileSync(
+    join(process.cwd(), "src", "scene", "transitions", "transitionExecutorRegistry.ts"),
+    "utf8",
+  );
+  const seismicExecutorSource = readFileSync(
+    join(process.cwd(), "src", "scene", "transitions", "seismicGraphTransitionExecutor.ts"),
+    "utf8",
+  );
+
+  assert.match(transitionSource, /buildTransitionExecutionPlan/);
+  assert.match(planSource, /TransitionExecutorKind/);
+  assert.match(registrySource, /seismic-entity/);
+  assert.match(seismicExecutorSource, /transitionEntityKey|applyTransitionEntityOpacityFrames/);
+  assert.doesNotMatch(
+    seismicExecutorSource,
+    /seismicNavigation === true[\s\S]*seismicFigureAnnotationRoot === true/,
+    "seismic execution must not collect broad object kinds instead of exact entity keys",
+  );
+  assert.doesNotMatch(
+    transitionSource,
+    /shouldCrossfadeSeismic|shouldFadeSeismic|seismicPagePair|seismicPageId/,
+    "seismic execution must stay assignment-driven and page-agnostic",
+  );
 });

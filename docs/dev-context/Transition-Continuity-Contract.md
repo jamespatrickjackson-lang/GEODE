@@ -105,10 +105,12 @@ Current allowed implementation scope:
 - Narrow target-active Section ISO derived-root crossfade owner accepted by
   TRD-011 and bounded by TRD-012.
 - Transition execution layer that consumes classifier assignments and dispatches
-  each per-entity operation to an existing interpolation kernel, accepted by
-  TRD-013. The execution layer is the single assignment-driven owner; the
-  TRD-009/010/011/012 owners and the protected MT-scalar kernel are registered
-  channel executors triggered by assignment, with unchanged interpolation math.
+  registered per-entity operations to existing interpolation kernels, accepted
+  by TRD-013 and phase-limited by TRD-014. The current migrated runtime slice is
+  registered entity-opacity execution for exact-key consumers, first seismic
+  survey-geometry and figure-annotation entities. The TRD-009/010/011/012 owners
+  and the protected MT-scalar kernel remain guarded legacy materialization
+  kernels until separate migrations land with dedicated source guards.
 
 Current excluded implementation scope:
 
@@ -123,6 +125,7 @@ Current excluded implementation scope:
 - Page JSON or fixture composition edits.
 - Terrain light-mode ramp, lighting, sun, and full scene mood interpolation.
 
-Per TRD-013, wiring classifier assignments into scene mutation is now in scope
-through the execution layer; the prior classifier-only boundary (TRD-008) is
-superseded.
+Per TRD-013/TRD-014, wiring classifier assignments into scene mutation is now in
+scope through registered execution-layer consumers. The prior classifier-only
+boundary (TRD-008) is superseded, but unregistered independent transition
+deciders remain out of scope.

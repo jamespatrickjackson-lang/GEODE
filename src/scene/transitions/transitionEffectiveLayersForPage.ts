@@ -1,5 +1,11 @@
 import type { EasingName, EnvironmentSetup, PresentationPage } from "../../pages/types";
 import { effectiveStyle, effectiveVisibility } from "../../pages/effective";
+import {
+  seismicFigureAnnotationEntityKey,
+  seismicGraphEntityKey,
+  seismicSurveyGeometryEntityKey,
+  type SeismicSurveyGeometryRole,
+} from "../../geophysics/seismicSectionGraphBasis";
 import { CASE_STUDY_B_DEMO_LAYER_ALIASES } from "../../projectModules/caseStudyB/demoLayerAliases";
 import {
   UTAH_FORGE_MT_RESISTIVITY_FULL_DENSITY_LAYER_ID,
@@ -366,16 +372,79 @@ function styleStringValue(style: EffectiveLayerStyle, field: StyleField): string
   return typeof value === "string" && value.trim() ? value : null;
 }
 
-function seismicGraphEntityKey(input: {
-  layerId: string;
-  productId: string;
-  objectKind: string;
-  objectId: string;
-}): string {
-  return `layer:${input.layerId}:product:${input.productId}:object:${input.objectKind}:${input.objectId}`;
+type SeismicGraphRuntimeSection = {
+  userData?: Record<string, unknown>;
+};
+
+type SeismicGraphRuntimeIndex = {
+  productSummaries: Array<{
+    id: string;
+    surveyKind?: string;
+    raymarchCapable?: boolean;
+  }>;
+  sectionsByProduct: Map<string, SeismicGraphRuntimeSection[]>;
+};
+
+function seismicGraphObjectKindForRuntimeSection(
+  section: SeismicGraphRuntimeSection,
+  surveyKind: string | undefined,
+): "2d-section-line" | "3d-section-plane" {
+  const axis = section.userData?.seismicSectionAxis;
+  return surveyKind === "2d" || surveyKind === "legacy-2d" || axis === "line"
+    ? "2d-section-line"
+    : "3d-section-plane";
 }
 
-function seismicGraphObjectState(style: EffectiveLayerStyle): {
+function selectedSeismicRuntimeSection(input: {
+  style: EffectiveLayerStyle;
+  runtimeIndex: SeismicGraphRuntimeIndex;
+  productId: string;
+  renderMode: "slice" | "raymarch";
+  sliceAxis: "inline" | "crossline" | "sample" | "line";
+  sliceFraction: number;
+}): SeismicGraphRuntimeSection | null {
+  if (input.renderMode === "raymarch") return null;
+  const summary = input.runtimeIndex.productSummaries.find(
+    (product) => product.id === input.productId,
+  );
+  const sections = input.runtimeIndex.sectionsByProduct.get(input.productId) ?? [];
+  if (sections.length === 0) return null;
+  const lineSections = sections.filter(
+    (section) => section.userData?.seismicSectionAxis === "line",
+  );
+  if (summary?.surveyKind !== "3d") {
+    return lineSections[0] ?? sections[0] ?? null;
+  }
+  const sliceAxis = input.sliceAxis === "line" ? "inline" : input.sliceAxis;
+  let axisSections = sections.filter(
+    (section) => section.userData?.seismicSectionAxis === sliceAxis,
+  );
+  if (axisSections.length === 0) {
+    axisSections = sections.filter(
+      (section) => section.userData?.seismicSectionAxis === "inline",
+    );
+  }
+  let closest: SeismicGraphRuntimeSection | null = null;
+  let closestDistance = Number.POSITIVE_INFINITY;
+  for (const section of axisSections) {
+    const fraction =
+      typeof section.userData?.seismicSectionFraction === "number" &&
+      Number.isFinite(section.userData.seismicSectionFraction)
+        ? section.userData.seismicSectionFraction
+        : 0.5;
+    const distance = Math.abs(fraction - input.sliceFraction);
+    if (distance < closestDistance) {
+      closest = section;
+      closestDistance = distance;
+    }
+  }
+  return closest;
+}
+
+function seismicGraphObjectStateForRuntime(
+  style: EffectiveLayerStyle,
+  runtimeIndex: SeismicGraphRuntimeIndex | null,
+): {
   productId: string;
   objectKind: "2d-section-line" | "3d-section-plane" | "3d-volume";
   objectId: string;
@@ -384,7 +453,15 @@ function seismicGraphObjectState(style: EffectiveLayerStyle): {
     | "seismic:3d-section-plane"
     | "seismic:3d-volume";
 } {
-  const productId = styleStringValue(style, "seismicProductId") ?? "default-product";
+  const requestedProductId =
+    styleStringValue(style, "seismicProductId") ?? "default-product";
+  const runtimeProductIds = new Set(
+    runtimeIndex?.productSummaries.map((product) => product.id) ?? [],
+  );
+  const productId =
+    runtimeProductIds.size === 0 || runtimeProductIds.has(requestedProductId)
+      ? requestedProductId
+      : (runtimeIndex?.productSummaries[0]?.id ?? requestedProductId);
   const renderMode = style.seismicRenderMode === "raymarch" ? "raymarch" : "slice";
   const sliceAxis =
     style.seismicSliceAxis === "crossline" ||
@@ -392,6 +469,11 @@ function seismicGraphObjectState(style: EffectiveLayerStyle): {
     style.seismicSliceAxis === "line"
       ? style.seismicSliceAxis
       : "inline";
+  const fraction =
+    typeof style.seismicSliceFraction === "number" &&
+    Number.isFinite(style.seismicSliceFraction)
+      ? style.seismicSliceFraction
+      : 0.5;
   if (renderMode === "raymarch") {
     return {
       productId,
@@ -400,12 +482,34 @@ function seismicGraphObjectState(style: EffectiveLayerStyle): {
       representationKey: "seismic:3d-volume",
     };
   }
+  if (runtimeIndex) {
+    const section = selectedSeismicRuntimeSection({
+      style,
+      runtimeIndex,
+      productId,
+      renderMode,
+      sliceAxis,
+      sliceFraction: fraction,
+    });
+    const runtimeObjectId = section?.userData?.seismicSectionId;
+    if (section && typeof runtimeObjectId === "string" && runtimeObjectId.trim()) {
+      const objectKind = seismicGraphObjectKindForRuntimeSection(
+        section,
+        runtimeIndex.productSummaries.find((product) => product.id === productId)
+          ?.surveyKind,
+      );
+      return {
+        productId,
+        objectKind,
+        objectId: runtimeObjectId,
+        representationKey:
+          objectKind === "2d-section-line"
+            ? "seismic:2d-section-line"
+            : "seismic:3d-section-plane",
+      };
+    }
+  }
   const objectKind = sliceAxis === "line" ? "2d-section-line" : "3d-section-plane";
-  const fraction =
-    typeof style.seismicSliceFraction === "number" &&
-    Number.isFinite(style.seismicSliceFraction)
-      ? style.seismicSliceFraction
-      : 0.5;
   return {
     productId,
     objectKind,
@@ -420,30 +524,25 @@ function seismicGraphObjectState(style: EffectiveLayerStyle): {
 function seismicGraphDerivedEntities(input: {
   layerId: string;
   style: EffectiveLayerStyle;
+  runtimeIndex?: SeismicGraphRuntimeIndex | null;
   ownerKey: string;
   ownerPriority: number;
   readinessState: TransitionRenderGraphLayerState["readinessState"];
   sourceStateOrigin: TransitionRenderGraphLayerState["sourceStateOrigin"];
 }): TransitionRenderGraphDerivedEntityState[] {
   if (input.layerId !== UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID) return [];
-  const objectState = seismicGraphObjectState(input.style);
+  const objectState = seismicGraphObjectStateForRuntime(
+    input.style,
+    input.runtimeIndex ?? null,
+  );
   const objectEntityKey = seismicGraphEntityKey({
     layerId: input.layerId,
     productId: objectState.productId,
     objectKind: objectState.objectKind,
     objectId: objectState.objectId,
   });
-  const figureEntityKey = seismicGraphEntityKey({
-    layerId: input.layerId,
-    productId: objectState.productId,
-    objectKind: "figure-annotation",
-    objectId: objectState.objectId,
-  });
-  const surveyEntityKey = seismicGraphEntityKey({
-    layerId: input.layerId,
-    productId: objectState.productId,
-    objectKind: "survey-geometry",
-    objectId: "navigation",
+  const figureEntityKey = seismicFigureAnnotationEntityKey({
+    sectionEntityKey: objectEntityKey,
   });
   const comparisonEntityKey = seismicGraphEntityKey({
     layerId: input.layerId,
@@ -486,6 +585,40 @@ function seismicGraphDerivedEntities(input: {
     SEISMIC_GRAPH_CROSSFADE_STYLE_FIELDS,
     "style",
   );
+  const navigationVisible = input.style.seismicNavigationVisible !== false;
+  const navigationRoleVisibility =
+    typeof input.style.seismicNavigationRoleVisibility === "object" &&
+    input.style.seismicNavigationRoleVisibility !== null
+      ? input.style.seismicNavigationRoleVisibility
+      : {};
+  const surveyRoles: readonly SeismicSurveyGeometryRole[] = [
+    "navigation",
+    "lines",
+    "sources",
+    "receivers",
+  ];
+  const surveyEntities = surveyRoles.map((role) => {
+    const roleVisible =
+      role === "navigation"
+        ? navigationVisible
+        : navigationVisible && navigationRoleVisibility[role] !== false;
+    return {
+      ...base,
+      entityKey: seismicSurveyGeometryEntityKey({
+        layerId: input.layerId,
+        role,
+      }),
+      representationKey: "seismic:survey-geometry",
+      presenceState: derivedPresence(roleVisible),
+      categoricalChannels,
+      colorChannels,
+      metadata: {
+        objectKind: "survey-geometry",
+        objectId: role,
+        role,
+      },
+    } satisfies TransitionRenderGraphDerivedEntityState;
+  });
   return [
     {
       ...base,
@@ -517,19 +650,7 @@ function seismicGraphDerivedEntities(input: {
         objectId: objectState.objectId,
       },
     },
-    {
-      ...base,
-      entityKey: surveyEntityKey,
-      representationKey: "seismic:survey-geometry",
-      presenceState: derivedPresence(input.style.seismicNavigationVisible !== false),
-      categoricalChannels,
-      colorChannels,
-      metadata: {
-        productId: objectState.productId,
-        objectKind: "survey-geometry",
-        objectId: "navigation",
-      },
-    },
+    ...surveyEntities,
     {
       ...base,
       entityKey: comparisonEntityKey,
@@ -619,6 +740,13 @@ export function transitionEffectiveLayersForPage(
     const sourceState = sourceLayers.get(id);
     const sourceLoaded = !!sourceState;
     const targetLoaded = this.layers.has(id);
+    const group = this.layers.get(id);
+    const seismicRuntimeIndex =
+      id === UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID &&
+      group &&
+      typeof this.seismicBrowserRuntimeIndex === "function"
+        ? (this.seismicBrowserRuntimeIndex(group) as SeismicGraphRuntimeIndex | null)
+        : null;
     const sourceOpacity = sourceState?.opacity ?? 0;
     const targetAuthoredVisible = toVisible.has(id);
     const targetOpacity = targetAuthoredVisible
@@ -685,6 +813,7 @@ export function transitionEffectiveLayersForPage(
         ...seismicGraphDerivedEntities({
           layerId: id,
           style: fromStyle,
+          runtimeIndex: seismicRuntimeIndex,
           ownerKey: sourceOwnerKey,
           ownerPriority: sourceOwnerPriority,
           readinessState: sourceReadiness,
@@ -742,6 +871,7 @@ export function transitionEffectiveLayersForPage(
         ...seismicGraphDerivedEntities({
           layerId: id,
           style: targetStyle,
+          runtimeIndex: seismicRuntimeIndex,
           ownerKey: targetOwnerKey,
           ownerPriority: targetOwnerPriority,
           readinessState: targetReadiness,

@@ -7,6 +7,7 @@ import type {
   SeismicSectionGraphBasis,
   TracePathCurtainGraphBasis,
 } from "../../geophysics/seismicSectionGraphBasis";
+import { seismicFigureAnnotationEntityKey } from "../../geophysics/seismicSectionGraphBasis";
 import type { EditableStyle } from "../../pages/types";
 
 const FIGURE_RENDER_ORDER = 4688;
@@ -19,6 +20,7 @@ type FigureGraphMetadata = {
   entityKey: string;
   representationKey: string;
   basisKind: string;
+  parentLayerId?: string;
 };
 
 function styleColor(
@@ -47,9 +49,12 @@ function graphMetadataFromBasis(
   basis: SeismicSectionGraphBasis,
 ): FigureGraphMetadata {
   return {
-    entityKey: `${basis.entityKey}:figure-annotation`,
+    entityKey: seismicFigureAnnotationEntityKey({
+      sectionEntityKey: basis.entityKey,
+    }),
     representationKey: "seismic:figure-annotation",
     basisKind: basis.kind,
+    parentLayerId: basis.layerId,
   };
 }
 
@@ -61,6 +66,12 @@ function tagFigureObject(
   object.userData.seismicGraphEntityKey = metadata.entityKey;
   object.userData.seismicGraphRepresentationKey = metadata.representationKey;
   object.userData.seismicGraphBasisKind = metadata.basisKind;
+  object.userData.transitionEntityKey = metadata.entityKey;
+  object.userData.transitionRepresentationKey = metadata.representationKey;
+  if (metadata.parentLayerId) {
+    object.userData.transitionParentLayerId = metadata.parentLayerId;
+  }
+  object.userData.transitionObjectKind = "figure-annotation";
   object.userData.geoseePickIgnore = true;
 }
 
@@ -90,6 +101,13 @@ function tagFigureMaterial(
   material.userData.seismicGraphEntityKey = metadata.entityKey;
   material.userData.seismicGraphRepresentationKey = metadata.representationKey;
   material.userData.seismicGraphBasisKind = metadata.basisKind;
+  material.userData.transitionBaseMaterialOpacity = baseOpacity;
+  material.userData.transitionEntityKey = metadata.entityKey;
+  material.userData.transitionRepresentationKey = metadata.representationKey;
+  if (metadata.parentLayerId) {
+    material.userData.transitionParentLayerId = metadata.parentLayerId;
+  }
+  material.userData.transitionObjectKind = "figure-annotation";
 }
 
 function tagFigureTree(

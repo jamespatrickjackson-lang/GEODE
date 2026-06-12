@@ -1,5 +1,10 @@
 import * as THREE from "three";
-import { buildSeismicSectionGraphBasis } from "../geophysics/seismicSectionGraphBasis";
+import {
+  buildSeismicSectionGraphBasis,
+  seismicSurveyGeometryEntityKey,
+  type SeismicSurveyGeometryRole,
+} from "../geophysics/seismicSectionGraphBasis";
+import { UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID } from "../projectModules/utahForge/layerIds";
 import { appAssetUrl } from "../projects/projectPathsRuntime";
 
 const SCENE_SECTION_SHADER_SLOT_COUNT = 8;
@@ -7,6 +12,10 @@ const SOURCE_FIDELITY_MAX_SAMPLE_STEPS = 384;
 
 type Vec3 = [number, number, number];
 type SeismicLodTierName = "coarse" | "standard" | "source";
+type SeismicNavigationPointRole = Exclude<
+  SeismicSurveyGeometryRole,
+  "navigation"
+>;
 type SeismicProductLoadOptions = {
   includeVolume?: boolean;
 };
@@ -150,8 +159,6 @@ interface GeoJsonFeatureCollection {
       | null;
   }>;
 }
-
-type SeismicNavigationRole = "sources" | "receivers" | "lines";
 
 const DEFAULT_SECTION_OPACITY = 0.62;
 const SECTION_RENDER_ORDER = 13.45;
@@ -1139,12 +1146,40 @@ async function buildRaymarchMesh(
   return mesh;
 }
 
+function tagSurveyGeometryEntity(
+  object: THREE.Object3D,
+  role: SeismicSurveyGeometryRole,
+): void {
+  object.userData.transitionEntityKey = seismicSurveyGeometryEntityKey({
+    layerId: UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID,
+    role,
+  });
+  object.userData.transitionRepresentationKey = "seismic:survey-geometry";
+  object.userData.transitionParentLayerId = UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID;
+  object.userData.transitionObjectKind = "survey-geometry";
+  object.userData.transitionRole = role;
+}
+
+function tagSurveyGeometryMaterial(
+  material: THREE.Material,
+  baseOpacity: number,
+): void {
+  const opacity = Number.isFinite(baseOpacity)
+    ? Math.max(0, Math.min(1, baseOpacity))
+    : 1;
+  material.userData.forceTransparent = true;
+  material.userData.preserveMaterialOpacity = true;
+  material.userData.preserveMaterialOpacityBase = opacity;
+  material.userData.transitionBaseMaterialOpacity = opacity;
+}
+
 function buildNavigationObjects(collection: GeoJsonFeatureCollection): THREE.Object3D {
   const group = new THREE.Group();
   group.name = "Seismic navigation";
   group.userData.displayName = "Seismic navigation";
   group.userData.seismicNavigation = true;
   group.userData.seismicNavigationRole = "container";
+  tagSurveyGeometryEntity(group, "navigation");
   group.visible = false;
 
   const sourcePoints: number[] = [];
@@ -1154,6 +1189,7 @@ function buildNavigationObjects(collection: GeoJsonFeatureCollection): THREE.Obj
   lineGroup.userData.displayName = "Seismic survey lines";
   lineGroup.userData.seismicNavigation = true;
   lineGroup.userData.seismicNavigationRole = "lines";
+  tagSurveyGeometryEntity(lineGroup, "lines");
   lineGroup.visible = false;
 
   for (const feature of collection.features) {
@@ -1187,7 +1223,7 @@ function buildNavigationObjects(collection: GeoJsonFeatureCollection): THREE.Obj
       depthWrite: false,
       toneMapped: false,
     });
-    lineMaterial.userData.forceTransparent = true;
+    tagSurveyGeometryMaterial(lineMaterial, 0.82);
     const line = new THREE.Line(lineGeometry, lineMaterial);
     line.renderOrder = NAVIGATION_RENDER_ORDER;
     line.visible = false;
@@ -1202,7 +1238,7 @@ function buildNavigationObjects(collection: GeoJsonFeatureCollection): THREE.Obj
 
   const addPointGroup = (
     points: number[],
-    role: SeismicNavigationRole,
+    role: SeismicNavigationPointRole,
     color: string,
     name: string,
   ) => {
@@ -1212,6 +1248,7 @@ function buildNavigationObjects(collection: GeoJsonFeatureCollection): THREE.Obj
     roleGroup.userData.displayName = name;
     roleGroup.userData.seismicNavigation = true;
     roleGroup.userData.seismicNavigationRole = role;
+    tagSurveyGeometryEntity(roleGroup, role);
     roleGroup.visible = false;
     const pointGeometry = new THREE.BufferGeometry();
     pointGeometry.setAttribute(
@@ -1226,7 +1263,7 @@ function buildNavigationObjects(collection: GeoJsonFeatureCollection): THREE.Obj
       opacity: 0.78,
       depthWrite: false,
     });
-    pointMaterial.userData.forceTransparent = true;
+    tagSurveyGeometryMaterial(pointMaterial, 0.78);
     const pointCloud = new THREE.Points(pointGeometry, pointMaterial);
     pointCloud.renderOrder = NAVIGATION_RENDER_ORDER;
     pointCloud.visible = false;

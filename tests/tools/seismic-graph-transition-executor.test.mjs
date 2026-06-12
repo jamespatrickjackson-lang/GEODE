@@ -42,9 +42,17 @@ async function loadModules() {
     ]),
   );
   writeFileSync(
+    join(tempRoot, "transitionEntityOpacityExecutor.mjs"),
+    transpile("src/scene/transitions/transitionEntityOpacityExecutor.ts"),
+  );
+  writeFileSync(
     join(tempRoot, "seismicGraphTransitionExecutor.mjs"),
     transpile("src/scene/transitions/seismicGraphTransitionExecutor.ts", [
       ['from "./transitionExecutionPlan"', 'from "./transitionExecutionPlan.mjs"'],
+      [
+        'from "./transitionEntityOpacityExecutor"',
+        'from "./transitionEntityOpacityExecutor.mjs"',
+      ],
     ]),
   );
   const plan = await import(
@@ -152,6 +160,29 @@ test("section continuity produces no fade frame", () => {
     seismicAssignment("seismic:3d-section-plane", "preserve-interpolate"),
   ]);
   assert.equal(planSeismicEntityFrames(plan, 1400).length, 0);
+});
+
+test("survey preserve frames do not emit entity opacity writes", () => {
+  const plan = buildPlan([
+    seismicAssignment("seismic:survey-geometry", "preserve-interpolate"),
+  ]);
+  assert.equal(planSeismicEntityFrames(plan, 1400).length, 0);
+});
+
+test("target-only unready seismic entity stays hidden instead of flashing target", () => {
+  const plan = buildPlan([
+    seismicAssignment("seismic:figure-annotation", "hold-source", {
+      assignment: "hold-until-ready",
+      executionMode: "hold-source",
+      sourcePresence: null,
+      sourceReadiness: null,
+      targetPresence: "visible",
+      targetReadiness: "loading",
+    }),
+  ]);
+  const frame = planSeismicEntityFrames(plan, 1400)[0];
+  assert.equal(frame.objectKind, "figure-annotation");
+  assert.equal(frame.opacityFactor, 0);
 });
 
 test("comparison entity is excluded from fade frames", () => {

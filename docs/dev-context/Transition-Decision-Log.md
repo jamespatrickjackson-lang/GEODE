@@ -312,6 +312,7 @@ Evidence: `tests/tools/scene-section-transition-behavior-source.test.mjs`,
 Status: accepted
 
 Supersedes the TRD-008 classifier-only boundary.
+Clarified by TRD-014 for migration phase boundaries.
 
 Problem: The classifier (`classifyTransitionRenderGraphs`) produces correct
 per-entity assignments every navigation, but no scene mutation consumes them.
@@ -363,3 +364,45 @@ Evidence: `tests/tools/transition-execution-plan.test.mjs`,
 `tests/tools/seismic-graph-transition-executor.test.mjs`,
 `tests/tools/transition-entity-channel-policy.test.mjs`. Peer durable decision
 DEC-152 in `docs/03-decisions.md`.
+
+## TRD-014 - Execution Layer Migration Is Phase-Gated By Registered Consumers
+
+Status: accepted
+
+Clarifies TRD-013.
+
+Problem: TRD-013 described the target architecture as though every transition
+channel had already moved under assignment-driven dispatch. Runtime code still
+contains guarded legacy kernels for environment-scene, scene-section,
+Section ISO, working-area focus, and protected MT full-density scalar behavior.
+Treating the target architecture as completed would invite broad rewrites of
+stable paths and hide whether a channel is actually assignment-owned.
+
+Decision: The execution layer is the target spine, but migration is phase-gated
+by registered consumers. The current implementation phase migrates exact-key
+entity-opacity consumers only. The first consumer is the seismic graph survey
+and figure slice: runtime objects expose `transitionEntityKey`,
+`transitionRepresentationKey`, `transitionParentLayerId`,
+`transitionObjectKind`, and optional `transitionRole`; the executor resolves
+objects by exact `transitionEntityKey` and applies
+`baseMaterialOpacity * parentLayerOpacity * entityOpacityFactor`. Survey
+geometry uses product-agnostic role keys (`navigation`, `lines`, `sources`,
+`receivers`), while figure annotations wrap the runtime section graph entity
+key. Existing TRD-009/010/011/012 owners and the protected MT scalar/cloud path
+remain guarded legacy kernels until separate migrations land with dedicated
+tests and source guards.
+
+Consequences: Documentation must distinguish target architecture from migrated
+runtime scope. Source guards may permit registered assignment consumers, but
+must continue blocking page-id/page-title/page-order fixes and broad new
+decision ladders. New tools and objects should implement the generic transition
+entity tag contract instead of adding renderer-specific kind collectors.
+
+Revisit when: A second non-seismic entity-opacity consumer migrates, or when
+one of the guarded TRD-009/010/011/012/MT kernels is ready to move from mirrored
+trace operation to assignment-triggered execution.
+
+Evidence: `tests/tools/transition-entity-opacity-executor.test.mjs`,
+`tests/tools/seismic-graph-transition-executor.test.mjs`,
+`tests/tools/seismic-section-graph-basis.test.mjs`,
+`tests/tools/transition-render-graph-adapter.test.mjs`.

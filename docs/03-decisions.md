@@ -2572,3 +2572,36 @@ boolean move to the assignment-driven equivalent. The MT-scalar/cloud kernel is
 unchanged; only its dispatch trigger moves. Do not introduce page-id,
 page-index, page-title, or page-order branches in the execution layer, and do
 not reimplement interpolation math outside the registered kernels.
+
+## DEC-153 - Transition execution migration is registered and phase-gated
+
+Clarifies DEC-152 and durable peer of TRD-014.
+
+**Considered:** treat DEC-152/TRD-013 as a completed migration for every
+transition channel; abandon the execution-layer spine because only the seismic
+runtime slice is currently executable; or keep the spine while requiring each
+channel to become assignment-driven only through a registered, tested consumer.
+
+**Chose:** keep the execution-layer spine and phase-gate migration by
+registered consumers. The current implemented scope is exact-key entity-opacity
+execution. Runtime objects expose `transitionEntityKey`,
+`transitionRepresentationKey`, `transitionParentLayerId`,
+`transitionObjectKind`, and optional `transitionRole`; the executor resolves
+objects by exact entity key and composes `baseMaterialOpacity *
+parentLayerOpacity * entityOpacityFactor`. The first migrated consumer is the
+seismic graph: survey geometry uses product-agnostic role entities
+(`navigation`, `lines`, `sources`, `receivers`), and figure annotations reuse
+the runtime section graph entity key with a `:figure-annotation` suffix.
+
+**Why:** the execution layer is still the right architecture for new tools and
+objects, but claiming full migration before every channel is registered creates
+false confidence and risks destabilizing protected paths. Exact-key
+entity-opacity execution fixes the observed seismic over-fade without weakening
+the MT scalar/cloud, scene-section, Section ISO, or environment-scene kernels.
+
+**Guard:** new transition-capable tools/objects must prefer the generic
+transition entity tag contract over renderer-specific kind collectors. Existing
+TRD-009/010/011/012 and MT full-density scalar/cloud behavior remain guarded
+legacy kernels until separate migrations land with dedicated tests and source
+guards. Do not use page ids, page titles, page order, project page fixtures, or
+source/target page pairs as runtime identity or proof of app behavior.
