@@ -272,6 +272,7 @@ import {
   transitionFrameOpacityForLayerImpl,
   warnUnexpectedTransitionLayerImpl,
 } from "./transitions/layerTweenRuntime";
+import { tickSeismicGraphTransitionImpl } from "./transitions/seismicGraphTransitionExecutor";
 import { applyStyle as applyStyleImpl } from "./styles/applyLayerStyle";
 import { setMaterialFog } from "./shaders/layerFogShader";
 import {
@@ -785,6 +786,9 @@ export class SceneManager {
     null;
   private lastPostCommitTargetAssertionSuppressed = false;
   sceneSectionReapplySuspended = false;
+  // Execution layer (TRD-013): seismic survey-geometry / figure-annotation
+  // entities currently being faded by the seismic graph executor.
+  seismicGraphTransitionActiveEntities = new Set<string>();
   private materialBaseOpacity = new WeakMap<THREE.Material, number>();
   private currentVisibleLayerIds: ReadonlySet<string> | null = null;
   private readonly sceneOverlayController: SceneOverlaysController;
@@ -3756,6 +3760,18 @@ export class SceneManager {
     return root;
   }
 
+  // Execution layer (TRD-013): seismic graph root for the per-entity transition
+  // executor, or null when the seismic layer is absent.
+  seismicGraphTransitionRoot(): THREE.Object3D | null {
+    const group = this.layers.get(UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID);
+    if (!group) return null;
+    return this.seismicBrowserRoot(group);
+  }
+
+  tickSeismicGraphTransition(nowMs: number): void {
+    tickSeismicGraphTransitionImpl.call(this, nowMs);
+  }
+
   seismicBrowserRuntimeIndex(group: THREE.Group): {
     root: THREE.Object3D;
     productSummaries: Array<{
@@ -4975,6 +4991,7 @@ export class SceneManager {
     stageStart = performance.now();
 
     this.updateSeismicTransientLodState(camera, nowMs);
+    this.tickSeismicGraphTransition(nowMs);
 
     this.sceneOverlayController.tick(nowMs);
     const sceneOverlayTickMs = transitionDebugMs(

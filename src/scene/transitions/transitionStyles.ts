@@ -662,18 +662,24 @@ export function forgeDiscreteDataStyleChanged(
     ]);
   }
   if (layerId === UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID) {
+    // Survey-geometry visibility (seismicNavigationVisible /
+    // seismicNavigationRoleVisibility) is no longer a layer-level discrete
+    // crossfade: the seismic graph executor (TRD-013) owns survey-geometry as an
+    // independent enter/exit entity, so toggling navigation no longer crossfades
+    // the whole seismic layer. seismicDisplayRecipeId is added here so a display
+    // recipe change blends through a snapshot crossfade instead of snapping
+    // mid-transition.
     return styleFieldsChanged(fromStyle, toStyle, [
       "seismicProductId",
       "seismicProductVisibility",
       "seismicRenderMode",
+      "seismicDisplayRecipeId",
       "seismicSliceAxis",
       "seismicSliceFraction",
       "seismicSliceThroughVolume",
       "seismicComparisonProductId",
       "seismicComparisonMode",
       "seismicComparisonSpacingM",
-      "seismicNavigationVisible",
-      "seismicNavigationRoleVisibility",
       "sectionIsoEnabled",
       "sectionIsoTargetIds",
     ]);
