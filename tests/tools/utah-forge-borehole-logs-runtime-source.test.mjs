@@ -154,7 +154,21 @@ test("Utah FORGE borehole logs are registered with loader and style pipelines", 
     "Utah quick legends should sit above presenter overlays so buttons remain clickable",
   );
   assert.match(legendSource, /compactQuickLegendPrimaryButtonBaseStyle/);
-  assert.match(legendSource, /function TrackIcon/);
+  assert.doesNotMatch(
+    legendSource,
+    /function TrackIcon|<TrackIcon|buttonContents\(/,
+    "Borehole quick legend buttons should be text-only and should not carry local SVG icons.",
+  );
+  assert.doesNotMatch(
+    legendSource,
+    /borehole-logs-legend-(?:spine|resistivity|lithology)|label:\s*"RES"|label:\s*"Lith"|Spine/,
+    "Borehole quick legend should not expose non-working Spine, RES, or Lith controls.",
+  );
+  assert.match(
+    legendSource,
+    /TRACKS:[\s\S]{0,520}key:\s*"hcgr"[\s\S]{0,260}key:\s*"hsgr"/,
+    "Borehole quick legend should keep only the working gamma track buttons beside the logs toggle.",
+  );
   assert.match(legendSource, /boreholeLogTrackSelection/);
   assert.match(legendSource, /sceneHandle\.manager\.applyStyle/);
   for (const field of [

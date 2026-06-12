@@ -25,45 +25,26 @@ const UTAH_FORGE_PROJECT_SLUG = "utah-forge";
 const LAYER_ID = UTAH_FORGE_BOREHOLE_LOGS_LAYER_ID;
 const DEFAULT_HCGR_COLOR = "#ffe26d";
 const DEFAULT_HSGR_COLOR = "#ff9f43";
-const DEFAULT_RESISTIVITY_COLOR = "#4dd6ff";
-const DEFAULT_BASELINE_COLOR = "#eef7f2";
-const DEFAULT_LITHOLOGY_COLOR = "#86d279";
 
-type BoreholeLegendTrackKey = "hcgr" | "hsgr" | "resistivity" | "lithology";
+type BoreholeLegendTrackKey = "hcgr" | "hsgr";
 
 const TRACKS: Array<{
   key: BoreholeLegendTrackKey;
   label: string;
   colorField?: keyof EditableStyle;
   fallback: string;
-  icon: "curve" | "column";
 }> = [
   {
     key: "hcgr",
     label: "HCGR",
     colorField: "boreholeLogHcgrColor",
     fallback: DEFAULT_HCGR_COLOR,
-    icon: "curve",
   },
   {
     key: "hsgr",
     label: "HSGR",
     colorField: "boreholeLogHsgrColor",
     fallback: DEFAULT_HSGR_COLOR,
-    icon: "curve",
-  },
-  {
-    key: "resistivity",
-    label: "RES",
-    colorField: "boreholeLogResistivityColor",
-    fallback: DEFAULT_RESISTIVITY_COLOR,
-    icon: "curve",
-  },
-  {
-    key: "lithology",
-    label: "Lith",
-    fallback: DEFAULT_LITHOLOGY_COLOR,
-    icon: "column",
   },
 ];
 
@@ -109,77 +90,6 @@ function buttonStyle(color: string, active: boolean): CSSProperties {
     background: active ? colorWithAlpha(color, 1) : QUICK_LEGEND_INACTIVE_BACKGROUND,
     opacity: active ? 1 : 0.78,
   };
-}
-
-function passiveButtonStyle(color: string): CSSProperties {
-  return {
-    ...compactQuickLegendPrimaryButtonBaseStyle,
-    background: colorWithAlpha(color, 0.72),
-    cursor: "default",
-  };
-}
-
-function TrackIcon({ kind }: { kind: "curve" | "column" | "logs" | "spine" }) {
-  if (kind === "column") {
-    return (
-      <svg width="13" height="13" viewBox="0 0 24 24" aria-hidden="true">
-        <path
-          d="M9 4h6v16H9zM9 8h6M9 12h6M9 16h6"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-        />
-      </svg>
-    );
-  }
-  if (kind === "logs") {
-    return (
-      <svg width="13" height="13" viewBox="0 0 24 24" aria-hidden="true">
-        <path
-          d="M7 19V5M12 19V5M17 19V5"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-        />
-      </svg>
-    );
-  }
-  if (kind === "spine") {
-    return (
-      <svg width="13" height="13" viewBox="0 0 24 24" aria-hidden="true">
-        <path
-          d="M12 4v16"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2.2"
-          strokeLinecap="round"
-        />
-      </svg>
-    );
-  }
-  return (
-    <svg width="13" height="13" viewBox="0 0 24 24" aria-hidden="true">
-      <path
-        d="M4 14c3-6 5 4 8-2s5 4 8-2"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-function buttonContents(label: string, icon: "curve" | "column" | "logs" | "spine") {
-  return (
-    <>
-      <TrackIcon kind={icon} />
-      <span style={{ marginLeft: 6 }}>{label}</span>
-    </>
-  );
 }
 
 export function BoreholeLogsLegend({
@@ -269,11 +179,26 @@ export function BoreholeLogsLegend({
     nextSelection.gamma = nextSelection.hcgr || nextSelection.hsgr;
     setStylePatch({ boreholeLogTrackSelection: nextSelection });
   };
-  const spineColor = styleString(
-    style,
-    "boreholeLogBaselineColor",
-    DEFAULT_BASELINE_COLOR,
-  );
+  const renderTrackButton = (track: (typeof TRACKS)[number]) => {
+    const color = track.colorField
+      ? styleString(style, track.colorField, track.fallback)
+      : track.fallback;
+    const active = selection[track.key];
+    return (
+      <button
+        key={track.key}
+        type="button"
+        aria-label={`Toggle ${track.label}`}
+        aria-pressed={active}
+        title={track.label}
+        data-testid={`borehole-logs-legend-${track.key}`}
+        onClick={() => setTrackVisible(track.key, !active)}
+        style={buttonStyle(color, active)}
+      >
+        {track.label}
+      </button>
+    );
+  };
 
   return (
     <aside
@@ -299,44 +224,13 @@ export function BoreholeLogsLegend({
             onClick={() => setLayerVisible(!layerVisible)}
             style={buttonStyle("#f4f5f7", layerVisible)}
           >
-            {buttonContents("Logs", "logs")}
+            Logs
           </button>
-          <button
-            type="button"
-            aria-label="Lane spine color"
-            aria-disabled="true"
-            title="Spine"
-            data-testid="borehole-logs-legend-spine"
-            tabIndex={-1}
-            style={passiveButtonStyle(spineColor)}
-          >
-            {buttonContents("Spine", "spine")}
-          </button>
+          {TRACKS.slice(0, 1).map(renderTrackButton)}
         </div>
-        {[0, 2].map((start) => (
-          <div style={rowStyle} key={start}>
-            {TRACKS.slice(start, start + 2).map((track) => {
-              const color = track.colorField
-                ? styleString(style, track.colorField, track.fallback)
-                : track.fallback;
-              const active = selection[track.key];
-              return (
-                <button
-                  key={track.key}
-                  type="button"
-                  aria-label={`Toggle ${track.label}`}
-                  aria-pressed={active}
-                  title={track.label}
-                  data-testid={`borehole-logs-legend-${track.key}`}
-                  onClick={() => setTrackVisible(track.key, !active)}
-                  style={buttonStyle(color, active)}
-                >
-                  {buttonContents(track.label, track.icon)}
-                </button>
-              );
-            })}
-          </div>
-        ))}
+        <div style={rowStyle}>
+          {TRACKS.slice(1).map(renderTrackButton)}
+        </div>
       </div>
     </aside>
   );

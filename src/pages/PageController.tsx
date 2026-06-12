@@ -30,6 +30,11 @@ import {
 } from "../scene/cameraFocus";
 import { mergeSceneProperties } from "./effective";
 import { computeDynamicPose } from "./dynamicCameraPose";
+import {
+  PAGE_BOUND_UI_SWITCH_THRESHOLD,
+  UTAH_FORGE_LEGEND_EXIT_END,
+  UTAH_FORGE_LEGEND_LAYOUT_END,
+} from "./pageTransitionUiPolicy";
 
 // PageController owns:
 //   - which page is "captured" as current (currentIndex)
@@ -400,9 +405,6 @@ const DEFAULT_CAMERA_FOCUS_SETTINGS: Required<SceneCameraFocusSettings> = {
   revealScrollBehavior: "smooth",
   rmbExitDragPx: 0,
 };
-const PAGE_BOUND_UI_SWITCH_THRESHOLD = 0.92;
-const UTAH_FORGE_LEGEND_EXIT_END = 0.34;
-const UTAH_FORGE_LEGEND_LAYOUT_END = 0.68;
 const DEFAULT_SMOOTHNESS_TRACE_MAX_MS = 6000;
 const SMOOTHNESS_TRACE_LONG_GAP_MS = 150;
 const SMOOTHNESS_TRACE_TIMER_INTERVAL_MS = 50;

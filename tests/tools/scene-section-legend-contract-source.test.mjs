@@ -9,6 +9,11 @@ function readSource(path) {
 const legendSource = readSource("src/ui/SceneSectionLegend.tsx");
 const sectionIsoLegendSource = readSource("src/ui/SectionIsoLegend.tsx");
 const mtBoundaryLegendSource = readSource("src/ui/MtSurfaceBoundaryLegend.tsx");
+const editorChromeSource = readSource("src/editor/EditorChrome.tsx");
+const pageControllerSource = readSource("src/pages/PageController.tsx");
+const pageTransitionUiPolicySource = readSource(
+  "src/pages/pageTransitionUiPolicy.ts",
+);
 const legendStylesSource = readSource("src/ui/legendStyles.ts");
 const uiVisualStandardsSource = readSource(
   "docs/dev-context/UI-Visual-Standards.md",
@@ -118,6 +123,16 @@ test("section legend exposes per-axis controls and Section Options popout", () =
   );
   assert.match(
     legendSource,
+    /const SCENE_SECTION_AXES = \["z", "x", "y"\] as const;/,
+    "Quick legend should put Z Section on top, followed by X and Y.",
+  );
+  assert.doesNotMatch(
+    legendSource,
+    /iconSpacerStyle|style=\{iconSpacerStyle\}/,
+    "Z section should not reserve a blank ground-trace spacer; its Control frame button should fill the gap.",
+  );
+  assert.match(
+    legendSource,
     /scene-section-legend-\$\{axis\}-show/,
     "Quick legend should expose a per-axis Show button.",
   );
@@ -154,7 +169,7 @@ test("section legend exposes per-axis controls and Section Options popout", () =
   assert.match(
     legendSource,
     /scene-section-legend-\$\{axis\}-show[\s\S]*scene-section-legend-\$\{axis\}-section-options[\s\S]*scene-section-legend-\$\{axis\}-flip[\s\S]*scene-section-legend-\$\{axis\}-axes-visible[\s\S]*scene-section-legend-\$\{axis\}-ground-trace-visible[\s\S]*scene-section-legend-\$\{axis\}-controls-visible/,
-    "Quick legend should order controls as Show, Section Options, Flip, Scale axes, Ground trace, Control frame.",
+    "X/Y quick legend rows should order controls as Show, Section Options, Flip, Scale axes, Ground trace, Control frame.",
   );
   assert.match(
     legendSource,
@@ -275,8 +290,23 @@ test("section legend exposes per-axis controls and Section Options popout", () =
   );
   assert.match(
     legendSource,
-    /style=\{iconButtonStyle\(axisColor, model\.shown\)\}/,
-    "Quick legend section action buttons should use full axis color when their section is on.",
+    /const rowActive = model\.shown;/,
+    "Quick legend rows should derive all button coloring from the section's on/off state.",
+  );
+  assert.match(
+    legendSource,
+    /style=\{axisButtonStyle\(axisColor, rowActive\)\}/,
+    "Quick legend section show buttons should turn gray when the section is off.",
+  );
+  assert.match(
+    legendSource,
+    /style=\{iconButtonStyle\(axisColor, rowActive && Boolean\(seismicLayer\)\)\}/,
+    "Quick legend Section Options buttons should also turn gray when the section is off.",
+  );
+  assert.match(
+    legendSource,
+    /style=\{iconButtonStyle\(axisColor, rowActive\)\}/,
+    "Quick legend child action buttons should use full axis color only when their section is on.",
   );
   assert.doesNotMatch(
     legendSource,
@@ -292,6 +322,139 @@ test("section legend exposes per-axis controls and Section Options popout", () =
     legendSource,
     /P Controle|scene-section-legend-helper-visible|scene-section-legend-\$\{axis\}-controls(?!-visible)/,
     "Quick legend should not keep the global P Controle helper toggle.",
+  );
+});
+
+test("Utah FORGE legend stack keeps ISO rows above scene sections and hides vertical motion for entering/exiting containers", () => {
+  assert.match(
+    editorChromeSource,
+    /LEGEND_PANEL_WIDTH_PX/,
+    "Legend transition slide distance should know the full legend panel width.",
+  );
+  assert.match(
+    editorChromeSource,
+    /const UTAH_FORGE_NON_RESISTIVITY_LEGENDS:[\s\S]{0,80}\[\s*"mt-boundaries"/,
+    "MT threshold surface buttons should be the top-most Utah FORGE quick legend when visible.",
+  );
+  assert.match(
+    editorChromeSource,
+    /const UTAH_FORGE_LEGEND_SLIDE_PX =\s*LEGEND_PANEL_WIDTH_PX \+ LEGEND_PAGE_EDGE_MARGIN_PX;/,
+    "Entering and exiting legend containers should slide fully off-canvas before row resize can be visible.",
+  );
+  assert.match(
+    pageTransitionUiPolicySource,
+    /export const UTAH_FORGE_LEGEND_EXIT_END = 0\.34;/,
+    "Legend transition exit timing should be centralized with page transition UI policy.",
+  );
+  assert.match(
+    pageTransitionUiPolicySource,
+    /export const UTAH_FORGE_LEGEND_LAYOUT_END = 0\.68;/,
+    "Legend transition layout timing should be centralized with page transition UI policy.",
+  );
+  assert.match(
+    editorChromeSource,
+    /from "\.\.\/pages\/pageTransitionUiPolicy"/,
+    "EditorChrome should import shared legend timing constants instead of duplicating them.",
+  );
+  assert.match(
+    pageControllerSource,
+    /from "\.\/pageTransitionUiPolicy"/,
+    "PageController transition debug state should import the same legend timing constants.",
+  );
+  assert.doesNotMatch(
+    editorChromeSource,
+    /const UTAH_FORGE_LEGEND_EXIT_END = 0\.34|const UTAH_FORGE_LEGEND_LAYOUT_END = 0\.68/,
+    "EditorChrome should not duplicate legend timing constants.",
+  );
+  assert.doesNotMatch(
+    pageControllerSource,
+    /const UTAH_FORGE_LEGEND_EXIT_END = 0\.34|const UTAH_FORGE_LEGEND_LAYOUT_END = 0\.68/,
+    "PageController should not duplicate legend timing constants.",
+  );
+  assert.match(
+    editorChromeSource,
+    /function useLocalLegendPresenceTransition/,
+    "Legend stack should animate live visibility toggles outside page transitions.",
+  );
+  assert.match(
+    editorChromeSource,
+    /window\.requestAnimationFrame/,
+    "Live legend presence transitions should use animation frames.",
+  );
+  assert.match(
+    editorChromeSource,
+    /previousPresenceRef/,
+    "Live legend presence transitions should compare previous and next presence.",
+  );
+  assert.match(
+    editorChromeSource,
+    /targetPresenceRef/,
+    "Live legend presence transitions should key off stable presence signatures without cancelling on rerenders.",
+  );
+  assert.match(
+    editorChromeSource,
+    /useLayoutEffect\(\(\) => \{\s*const nextTargetPresence = targetPresenceRef\.current;/,
+    "Live legend presence transitions should be established before paint to avoid one-frame disappearance.",
+  );
+  assert.match(
+    editorChromeSource,
+    /interactive:\s*pageTransition\s*\?\s*progress > PAGE_BOUND_UI_SWITCH_THRESHOLD\s*:\s*true/,
+    "Stable legend rows should remain interactive during local visibility animations.",
+  );
+  assert.match(
+    editorChromeSource,
+    /transitionTargetPresence \?\? currentPresence/,
+    "Local presence animation should reset to the target page presence while page transitions are active.",
+  );
+  assert.doesNotMatch(
+    editorChromeSource,
+    /gridTemplateRows:\s*`\$\{Math\.max\(0\.001, item\.layoutWeight\)\.toFixed\(3\)\}fr`/,
+    "Legend row collapse should not use fr units inside auto-height grid rows.",
+  );
+  assert.match(
+    editorChromeSource,
+    /heightPx: number \| null/,
+    "Legend rows should carry measured pixel heights for stable collapse.",
+  );
+  assert.match(
+    editorChromeSource,
+    /ResizeObserver|getBoundingClientRect\(\)\.height/,
+    "Legend rows should measure rendered content height before pixel-based collapse.",
+  );
+  assert.match(
+    editorChromeSource,
+    /height:\s*resolvedHeightPx !== null\s*\?\s*`\$\{Math\.max\(0, resolvedHeightPx \* item\.layoutWeight\)\.toFixed\(1\)\}px`\s*:\s*undefined/,
+    "Legend row height should collapse in measured pixels.",
+  );
+  assert.match(
+    editorChromeSource,
+    /overflow:\s*"visible"[\s\S]{0,220}clipPath:\s*rowClipPath/,
+    "Legend rows should not horizontally clip panels while they slide left; clipping should come from expanded row clip paths.",
+  );
+  assert.match(
+    editorChromeSource,
+    /inset\(0 -\$\{UTAH_FORGE_LEGEND_SLIDE_PX\}px 0 -\$\{UTAH_FORGE_LEGEND_SLIDE_PX\}px\)/,
+    "Legend row clip paths should expand horizontally enough for off-screen slide motion.",
+  );
+  assert.match(
+    editorChromeSource,
+    /stableLegendPageOverride/,
+    "Same-id stable legend rows should not switch to target content at transition start.",
+  );
+  assert.match(
+    editorChromeSource,
+    /const UTAH_FORGE_NON_RESISTIVITY_LEGENDS:[\s\S]{0,180}"section-iso"[\s\S]{0,80}"scene-section"/,
+    "Section ISO quick legend should stack above Scene Section quick legend.",
+  );
+  assert.match(
+    sectionIsoLegendSource,
+    /useState<ScalarSectionIsoTarget\[\]>\(\(\) => sectionIsoTargetsSnapshot\(sceneHandle\.manager\)\)/,
+    "Section ISO legend should synchronously initialize from current runtime targets to avoid an empty first render.",
+  );
+  assert.match(
+    sectionIsoLegendSource,
+    /function sectionIsoTargetsSnapshot/,
+    "Section ISO target lookup should be centralized for initial and interval refreshes.",
   );
 });
 

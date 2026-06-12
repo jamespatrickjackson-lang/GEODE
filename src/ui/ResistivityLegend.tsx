@@ -727,10 +727,7 @@ export function ResistivityLegend({
     ? "spectrum"
     : "full-cloud";
   const displayedMode = modeTransitionTarget ?? targetMode;
-  const spectrumBodyVisible =
-    pointCloudVisible &&
-    (displayedMode === "spectrum" ||
-      (modeTransitionTarget === "full-cloud" && targetMode === "spectrum"));
+  const rampBodyVisible = pointCloudVisible;
   const controlsAvailable =
     pointCloudVisible &&
     targetMode === "spectrum" &&
@@ -777,7 +774,7 @@ export function ResistivityLegend({
     0,
     1,
   );
-  const thresholdControlsActive = true;
+  const thresholdControlsActive = displayedMode === "spectrum";
   const edgeAverage = clamp(styleNumber(style, "scalarEdgeAverage", 0.45), 0, 1);
   const edgeFillOffset = clamp(
     styleNumber(style, "scalarEdgeFillOffset", 0),
@@ -1134,12 +1131,24 @@ export function ResistivityLegend({
           type="button"
           data-testid={testId("resistivity-legend-master-toggle")}
           aria-pressed={pointCloudVisible}
-          title={pointCloudVisible ? "Hide MT Resistivity Cells" : "Show MT Resistivity Cells"}
+          title={pointCloudVisible ? "Hide MT Cells" : "Show MT Cells"}
           onPointerDown={(event) => event.stopPropagation()}
           onClick={() => setPointCloudVisible(!pointCloudVisible)}
           style={mtCellPointsPrimaryStyle(pointCloudVisible)}
         >
-          MT Resistivity Cells
+          MT Cells
+        </button>
+        <button
+          type="button"
+          data-testid={testId("resistivity-legend-controls-toggle")}
+          aria-expanded={controlsAvailable && edgePopoverOpen}
+          title="MT Resistivity Cells controls"
+          disabled={!controlsAvailable}
+          onPointerDown={(event) => event.stopPropagation()}
+          onClick={() => setEdgePopoverOpen((open) => !open)}
+          style={mtCellPointsIconStyle(edgePopoverOpen, controlsAvailable)}
+        >
+          <MtCellPointsIcon kind="controls" />
         </button>
         <div
           role="radiogroup"
@@ -1187,20 +1196,8 @@ export function ResistivityLegend({
             <MtCellPointsIcon kind="spectrum" />
           </button>
         </div>
-        <button
-          type="button"
-          data-testid={testId("resistivity-legend-controls-toggle")}
-          aria-expanded={controlsAvailable && edgePopoverOpen}
-          title="MT Resistivity Cells controls"
-          disabled={!controlsAvailable}
-          onPointerDown={(event) => event.stopPropagation()}
-          onClick={() => setEdgePopoverOpen((open) => !open)}
-          style={mtCellPointsIconStyle(edgePopoverOpen, controlsAvailable)}
-        >
-          <MtCellPointsIcon kind="controls" />
-        </button>
       </div>
-      {spectrumBodyVisible ? (
+      {rampBodyVisible ? (
         <>
       <div
         ref={rampRef}
@@ -1300,32 +1297,36 @@ export function ResistivityLegend({
             )}
           </>
         ) : null}
-        <button
-          type="button"
-          aria-label="Lower isoline log10 resistivity"
-          data-testid={testId("resistivity-legend-edge-lower")}
-          title="Lower isoline log10 resistivity"
-          onPointerDown={beginEdgeDrag("edgeLower")}
-          onDoubleClick={(event) => {
-            event.preventDefault();
-            event.stopPropagation();
-            setEdgePopoverOpen((open) => !open);
-          }}
-          style={edgeHandleStyle(edgeLowerPercent, edgeLowerColor)}
-        />
-        <button
-          type="button"
-          aria-label="Upper isoline log10 resistivity"
-          data-testid={testId("resistivity-legend-edge-upper")}
-          title="Upper isoline log10 resistivity"
-          onPointerDown={beginEdgeDrag("edgeUpper")}
-          onDoubleClick={(event) => {
-            event.preventDefault();
-            event.stopPropagation();
-            setEdgePopoverOpen((open) => !open);
-          }}
-          style={edgeHandleStyle(edgeUpperPercent, edgeUpperColor)}
-        />
+        {thresholdControlsActive ? (
+          <>
+            <button
+              type="button"
+              aria-label="Lower isoline log10 resistivity"
+              data-testid={testId("resistivity-legend-edge-lower")}
+              title="Lower isoline log10 resistivity"
+              onPointerDown={beginEdgeDrag("edgeLower")}
+              onDoubleClick={(event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                setEdgePopoverOpen((open) => !open);
+              }}
+              style={edgeHandleStyle(edgeLowerPercent, edgeLowerColor)}
+            />
+            <button
+              type="button"
+              aria-label="Upper isoline log10 resistivity"
+              data-testid={testId("resistivity-legend-edge-upper")}
+              title="Upper isoline log10 resistivity"
+              onPointerDown={beginEdgeDrag("edgeUpper")}
+              onDoubleClick={(event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                setEdgePopoverOpen((open) => !open);
+              }}
+              style={edgeHandleStyle(edgeUpperPercent, edgeUpperColor)}
+            />
+          </>
+        ) : null}
       </div>
       <div style={{ ...ticksStyle, color: legendTextColors.body }}>
         <div>

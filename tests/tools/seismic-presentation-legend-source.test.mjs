@@ -128,11 +128,10 @@ test("seismic presentation bar model is claim-safe and uses companion velocity s
   assert.match(componentSource, /seismicPresentationBarVisible/);
   assert.match(componentSource, /seismicLegendVisible/);
   assert.match(componentSource, /resolveTopoMapSettings/);
-  assert.match(componentSource, /page\s*\?\s*effectiveVisibility\(pageEnvironment,\s*page\)/);
-  assert.doesNotMatch(
+  assert.match(
     componentSource,
-    /editingEnvironment\s*\?\s*new Set\(state\.environment\.defaultVisibleLayers\)/,
-    "presentation bar display should follow the active page, not the selected editor panel",
+    /const visible = editingEnvironment\s*\?\s*new Set\(state\.environment\.defaultVisibleLayers\)\s*:\s*page\s*\?\s*effectiveVisibility\(pageEnvironment,\s*page\)/,
+    "presentation bar display should follow active page visibility outside Global Settings.",
   );
 
   assert.match(editorChromeSource, /SeismicPresentationLegendBar/);
@@ -150,6 +149,202 @@ test("seismic presentation bar model is claim-safe and uses companion velocity s
     ],
     [0, 5000],
     "unenhanced PSDM product should carry a 0-5000 m depth sample domain",
+  );
+});
+
+test("seismic presentation legend follows compact quick legend contract", () => {
+  const componentSource = readSourceIfExists(
+    "src",
+    "ui",
+    "SeismicPresentationLegendBar.tsx",
+  );
+  const editorChromeSource = readSource("src", "editor", "EditorChrome.tsx");
+  const visualStandardsSource = readSource(
+    "docs",
+    "dev-context",
+    "UI-Visual-Standards.md",
+  );
+
+  assert.match(
+    componentSource,
+    /compactQuickLegendPrimaryButtonBaseStyle/,
+    "seismic presentation legend should use the shared compact primary pill",
+  );
+  assert.match(
+    componentSource,
+    /compactQuickLegendIconButtonBaseStyle/,
+    "seismic presentation controls should use shared compact icon buttons",
+  );
+  assert.match(
+    componentSource,
+    /data-testid="seismic-presentation-legend-name"/,
+    "seismic presentation legend should expose a compact name pill",
+  );
+  assert.match(
+    componentSource,
+    /const layerVisible = visible\.has\(UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID\);/,
+    "seismic presentation legend should resolve the real seismic layer visibility.",
+  );
+  assert.match(
+    componentSource,
+    /const explicitPageOverride =\s*writePage\?\.visibilityOverrides\?\.\[UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID\] !== undefined;/,
+    "seismic presentation legend should keep an explicit off override available for re-enabling.",
+  );
+  assert.match(
+    componentSource,
+    /if \(!layerVisible && !explicitPageOverride && !editingEnvironment\) return null;/,
+    "seismic presentation legend should not render from presentation-bar opt-in alone.",
+  );
+  assert.match(
+    componentSource,
+    /const setLayerVisible = \(nextVisible: boolean\) => \{/,
+    "seismic presentation name pill should write layer visibility.",
+  );
+  assert.match(
+    componentSource,
+    /toggleEnvDefaultVisible\(UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID\)/,
+    "seismic presentation layer toggle should support Global Settings visibility.",
+  );
+  assert.match(
+    componentSource,
+    /setPageVisibilityOverride\(\s*writePage\.id,\s*UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID,\s*nextVisible,\s*\)/,
+    "seismic presentation layer toggle should write page visibility overrides.",
+  );
+  assert.match(
+    componentSource,
+    /<button[\s\S]{0,260}data-testid="seismic-presentation-legend-name"[\s\S]{0,260}aria-pressed=\{layerVisible\}/,
+    "seismic presentation name pill should be the layer visibility button.",
+  );
+  assert.match(
+    componentSource,
+    /data-testid="seismic-presentation-palette-select"/,
+    "seismic presentation legend should expose the palette dropdown in the header row",
+  );
+  assert.doesNotMatch(
+    componentSource,
+    /<label[\s\S]{0,160}Palette/,
+    "seismic presentation header should not render a visible Palette label",
+  );
+  assert.match(
+    componentSource,
+    /paletteSelectStyle[\s\S]*color:\s*"#101216"/,
+    "seismic presentation palette dropdown should use black readable text",
+  );
+  assert.match(
+    componentSource,
+    /data-testid="seismic-presentation-legend-controls-toggle"/,
+    "seismic presentation legend should expose a compact controls button",
+  );
+  assert.match(
+    componentSource,
+    /data-testid="seismic-presentation-legend-info-toggle"/,
+    "seismic presentation legend should expose a compact information button",
+  );
+  assert.match(
+    componentSource,
+    /data-testid="seismic-presentation-legend-controls-popout"/,
+    "seismic presentation controls should move into a controls popout",
+  );
+  assert.match(
+    componentSource,
+    /const amplitudeRampStyle:[\s\S]{0,180}height:\s*13/,
+    "seismic amplitude color map should match the MT ramp height.",
+  );
+  assert.match(
+    componentSource,
+    /const amplitudeRampWrapStyle:[\s\S]{0,180}height:\s*28/,
+    "seismic amplitude color map wrapper should match the MT slider bar height.",
+  );
+  assert.match(
+    componentSource,
+    /data-testid="seismic-presentation-amplitude-ramp"/,
+    "seismic amplitude should show its color map in the visible legend body.",
+  );
+  assert.match(
+    componentSource,
+    /data-testid="seismic-presentation-amplitude-ticks"/,
+    "seismic amplitude should show numeric tick labels under the color map.",
+  );
+  assert.match(
+    componentSource,
+    /data-testid="seismic-presentation-legend-bar"[\s\S]*data-testid="seismic-presentation-amplitude-ramp"[\s\S]*data-testid="seismic-presentation-amplitude-ticks"[\s\S]*<\/aside>/,
+    "seismic amplitude map and numbers should render in the visible legend body.",
+  );
+  assert.match(
+    componentSource,
+    /\{layerVisible \? \(\s*<div style=\{amplitudeBodyStyle\}>[\s\S]*data-testid="seismic-presentation-amplitude-ramp"[\s\S]*\)\s*:\s*null\}/,
+    "seismic amplitude body should hide when the seismic layer is off.",
+  );
+  assert.doesNotMatch(
+    componentSource,
+    /data-testid="seismic-presentation-legend-bar"[\s\S]*data-testid="seismic-presentation-slice-fraction"[\s\S]*<\/aside>/,
+    "seismic slice axis buttons and slider should not render in the visible legend body.",
+  );
+  const controlsPopoutStart = componentSource.indexOf(
+    'data-testid="seismic-presentation-legend-controls-popout"',
+  );
+  const infoPopoutStart = componentSource.indexOf(
+    'data-testid="seismic-presentation-legend-info-popout"',
+  );
+  assert.ok(controlsPopoutStart >= 0 && infoPopoutStart > controlsPopoutStart);
+  const controlsPopoutSource = componentSource.slice(
+    controlsPopoutStart,
+    infoPopoutStart,
+  );
+  assert.doesNotMatch(
+    controlsPopoutSource,
+    /Seismic Amplitude|model\.amplitudeLabel|seismic-presentation-amplitude-ramp/,
+    "seismic controls popout should not duplicate the visible amplitude map or add a heading.",
+  );
+  assert.match(
+    controlsPopoutSource,
+    /data-testid="seismic-presentation-slice-axis"[\s\S]*data-testid="seismic-presentation-slice-fraction"/,
+    "seismic slice axis buttons and slider should live in the controls popout.",
+  );
+  assert.match(
+    componentSource,
+    /data-testid="seismic-presentation-legend-info-popout"/,
+    "seismic presentation information blocks should move into an info popout",
+  );
+  assert.match(
+    editorChromeSource,
+    /"seismic-presentation"[\s\S]{0,240}"mt-resistivity"/,
+    "Utah FORGE legend stack should keep seismic presentation directly above MT resistivity",
+  );
+  assert.match(
+    editorChromeSource,
+    /<SeismicPresentationLegendBar[\s\S]{0,140}sceneHandle=\{sceneHandle\}[\s\S]{0,140}stacked[\s\S]{0,140}pageOverride=\{pageOverride\}/,
+    "Utah FORGE stack should render seismic presentation as a stacked legend",
+  );
+  assert.match(
+    editorChromeSource,
+    /const seismicLayerVisible =\s*visible\.has\(UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID\);/,
+    "Utah FORGE stack should track seismic layer visibility once.",
+  );
+  assert.match(
+    editorChromeSource,
+    /const seismicPresentationExplicitPageOverride =\s*page\.visibilityOverrides\?\.\[UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID\] !== undefined;/,
+    "Utah FORGE stack should keep explicitly hidden seismic presentation rows available for re-enabling.",
+  );
+  assert.match(
+    editorChromeSource,
+    /seismicPresentationVisible =\s*seismicLegendEnabled &&\s*\(seismicLayerVisible \|\| seismicPresentationExplicitPageOverride \|\| globalSettingsAuthoring\) &&\s*seismicPresentationOptIn;/,
+    "Utah FORGE stack should not let presentation-bar opt-in alone force the compact seismic legend on.",
+  );
+  assert.doesNotMatch(
+    editorChromeSource,
+    /visible\.has\(UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID\)\s*\|\|\s*seismicStyle\.seismicPresentationBarVisible === true/,
+    "Utah FORGE stack should not preserve the stale presentation-bar opt-in visibility rule.",
+  );
+  assert.match(
+    editorChromeSource,
+    /seismic:\s*seismicPresentationVisible\s*\?\s*false\s*:\s*seismicVisible/,
+    "Utah FORGE stack should suppress the legacy seismic amplitude legend when the compact seismic presentation legend is visible.",
+  );
+  assert.match(
+    visualStandardsSource,
+    /Seismic amplitude/,
+    "UI visual standards should document the seismic amplitude quick legend contract",
   );
 });
 

@@ -144,8 +144,9 @@ Current color swatch toggle examples:
 
 ## Compact quick legend geometry
 
-- Scene Section, Section ISO, and MT threshold boundary quick legends use the
-  shared compact quick-legend helpers in `src/ui/legendStyles.ts`.
+- Scene Section, Section ISO, Borehole logs, MT threshold boundary, and
+  Seismic amplitude quick legends use the shared compact quick-legend helpers in
+  `src/ui/legendStyles.ts`.
 - Primary pills are centered compact buttons; icon buttons are centered compact
   circles. Do not hand-tune local quick-legend widths, alignment, font sizes, or
   icon centering without adding a documented exception.
@@ -153,10 +154,30 @@ Current color swatch toggle examples:
   rows keep full color; unavailable child actions may dim only through the
   shared inactive/transparent state.
 - Controls opener buttons use row availability, not popout-open state.
+- Borehole logs use compact text-only buttons. The quick legend exposes the
+  layer toggle plus working gamma track toggles only; non-working spine,
+  resistivity, and lithology controls do not appear in the quick legend.
 - `MT Resistivity Cells` uses the same compact quick-legend geometry. Its title
   toggles only `utah-forge-mt-resistivity-full-density`; volume, slices, QA
   preview, Section ISO, scene sections, and threshold products stay under their
-  own owners.
+  own owners. The MT Cells controls opener sits immediately after the MT Cells
+  title pill, before the All Valid Cells and Log10 Resistivity Window mode
+  buttons.
+- Seismic amplitude uses the same compact quick-legend row. The header shows a
+  `Seismic Amp` name pill, then the visible palette dropdown with no separate
+  `Palette` text label, then a controls opener, then an information opener with
+  an `i` icon. The visible legend body owns only the amplitude ramp and numeric
+  ticks. The controls popout owns the slice axis buttons, slice slider, and
+  secondary controls including the `Presentation-enhanced PSDM surrogate` panel.
+  The information popout owns source, product, provenance, velocity reference,
+  datum, and context readouts.
+- The `Seismic Amp` name pill toggles the seismic browser layer visibility.
+  `seismicPresentationBarVisible` only opts a visible seismic layer into the
+  compact presentation legend; it must not keep the compact legend body or scene
+  content visible when the seismic layer is off.
+- When compact Seismic amplitude is visible, the legacy seismic amplitude panel
+  is suppressed; its ramp and values belong in the compact Seismic amplitude
+  legend, while slice controls belong in the compact controls popout.
 - `All Valid Cells` and `Log10 Resistivity Window` are exclusive MT Resistivity
   Cells modes. All Valid Cells hides the compact log10 resistivity window body
   and shows every valid inversion cell center; Log10 Resistivity Window shows
@@ -204,8 +225,10 @@ Current color swatch toggle examples:
   enough.
 - Section plane legend:
   - Heading: `Section Planes`
-  - Rows: `X Section`, `Y Section`, `Z Section`
-  - Helper visibility row: `P Controle`
+  - Rows: `Z Section`, `X Section`, `Y Section`
+  - Off rows render every row button in the shared inactive gray.
+  - `Z Section` does not reserve a blank ground-trace slot; its Control frame
+    button moves left into the gap.
 - Section ISO legend:
   - Heading: `Section ISO`
   - Main toggle: `ISO overlay`
@@ -214,9 +237,11 @@ Current color swatch toggle examples:
   - Dataset selector belongs in `Options`, not in the main legend body.
   - Do not show selected-target count subtitles such as `2/2 ...`
 - MT resistivity legend:
-  - Live MT inversion cell bar label: `MT Resistivity Cells`.
+  - Live MT inversion cell bar label: `MT Cells`.
   - The title button is full-density cell-center visibility only.
   - `All Valid Cells` and `Log10 Resistivity Window` are exclusive mode buttons.
+  - The MT color gradient bar and numeric ticks stay visible in both modes.
+    `All Valid Cells` hides only Log10 window handles and isoline controls.
   - Volume is handled by a separate owner, not this legend.
 - MT threshold boundaries legend:
   - Heading: `MT Threshold Boundaries`
@@ -224,7 +249,13 @@ Current color swatch toggle examples:
 
 ## Legend Behavior Baseline
 
-- Stacked Utah FORGE viewport legends keep MT resistivity as the bottom legend.
+- MT threshold surface boundary buttons are the top-most Utah FORGE viewport
+  quick legend whenever they are visible.
+- Stacked Utah FORGE viewport legends keep MT resistivity as the bottom legend,
+  with Seismic amplitude directly above it whenever the seismic presentation
+  legend is visible.
+- Section ISO quick legends stack above Scene Section quick legends whenever
+  both are visible.
 - During page transitions, individual legend containers move in sequenced
   straight-line phases.
 - Exiting legend containers first slide left at full row height.
@@ -234,6 +265,8 @@ Current color swatch toggle examples:
 - After the space is open, entering containers slide in from the left.
 - Stable legend containers remain horizontally fixed and only shift vertically
   during the row resize phase.
+- Entering and exiting containers must be fully off-canvas before row resize is
+  visible; those containers should not visibly move up or down.
 - Section plane rows use their circles as show/hide controls for X/Y/Z section
   planes.
 - `P Controle` shows/hides section clipping outlines and push/pull cones. It

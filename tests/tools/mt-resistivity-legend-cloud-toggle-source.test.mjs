@@ -86,8 +86,8 @@ test("MT Resistivity Cells legend is point-cloud-only", () => {
   );
   assert.match(
     legendSource,
-    /MT Resistivity Cells/,
-    "The viewport legend name should be MT Resistivity Cells.",
+    />\s*MT Cells\s*</,
+    "The viewport legend title should be shortened to MT Cells.",
   );
   assert.match(
     layerLabelsSource,
@@ -134,6 +134,11 @@ test("MT Resistivity Cells header has exclusive All Valid Cells and Log10 Resist
   );
   assert.match(
     legendSource,
+    /data-testid=\{testId\("resistivity-legend-master-toggle"\)\}[\s\S]{0,900}data-testid=\{testId\("resistivity-legend-controls-toggle"\)\}[\s\S]{0,900}role="radiogroup"/,
+    "The MT Cells controls button should sit immediately after the cell name pill and before the mode buttons.",
+  );
+  assert.match(
+    legendSource,
     /role="radiogroup"[\s\S]*role="radio"[\s\S]*aria-checked=\{displayedMode === "full-cloud"\}[\s\S]*role="radio"[\s\S]*aria-checked=\{displayedMode === "spectrum"\}/,
     "All Valid Cells and Log10 Resistivity Window should be a one-of-two radio mode group.",
   );
@@ -156,6 +161,21 @@ test("MT Resistivity Cells header has exclusive All Valid Cells and Log10 Resist
     legendSource,
     /controlsAvailable\s*=\s*[\s\S]{0,220}pointCloudVisible[\s\S]{0,220}targetMode === "spectrum"[\s\S]{0,220}modeTransitionTarget === null/,
     "Controls should only open when the point cloud is visible, the target Log10 Resistivity Window mode is selected, and no mode transition is running.",
+  );
+  assert.match(
+    legendSource,
+    /const rampBodyVisible =\s*pointCloudVisible;/,
+    "The MT color gradient bar should stay visible in All Valid Cells mode while the point cloud is visible.",
+  );
+  assert.match(
+    legendSource,
+    /const thresholdControlsActive = displayedMode === "spectrum";/,
+    "All Valid Cells mode should hide only the Log10 window/edge controls, not the color gradient bar.",
+  );
+  assert.match(
+    legendSource,
+    /\{rampBodyVisible \? \(/,
+    "The MT gradient body should be mounted from point-cloud visibility, not only from spectrum mode.",
   );
 });
 
@@ -502,6 +522,11 @@ test("docs and agent directives guard the MT Resistivity Cells mode contract", (
       `${name} should retain the no page-fixture guard.`,
     );
   }
+  assert.match(
+    uiStandardsSource,
+    /MT color gradient bar and numeric ticks stay visible in both modes[\s\S]*All Valid Cells` hides only Log10 window handles and isoline controls/,
+    "UI standards should document that All Valid Cells keeps the color map visible while hiding Log10-only controls.",
+  );
   assert.match(
     decisionsSource,
     /stale local mode animation[\s\S]*page context/,

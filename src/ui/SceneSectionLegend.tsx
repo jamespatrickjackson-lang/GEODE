@@ -46,7 +46,7 @@ const AXIS_COLORS = {
   y: "#35c7e8",
   z: "#f6d76b",
 } as const;
-const SCENE_SECTION_AXES = ["x", "y", "z"] as const;
+const SCENE_SECTION_AXES = ["z", "x", "y"] as const;
 type SceneSectionLegendAxis = (typeof SCENE_SECTION_AXES)[number];
 type LegendToggleKind =
   | "flip"
@@ -87,12 +87,6 @@ const firstRowStyle: CSSProperties = {
 const axisGroupStyle: CSSProperties = {
   ...compactQuickLegendRowStyle,
   minWidth: 0,
-};
-
-const iconSpacerStyle: CSSProperties = {
-  height: 24,
-  flex: "0 0 24px",
-  width: 24,
 };
 
 const closeButtonStyle: CSSProperties = {
@@ -186,7 +180,8 @@ function sectionButtonLabel(
 function axisButtonStyle(color: string, active: boolean): CSSProperties {
   return {
     ...compactQuickLegendPrimaryButtonBaseStyle,
-    background: colorWithAlpha(color, active ? 1 : 0.36),
+    background: active ? colorWithAlpha(color, 1) : QUICK_LEGEND_INACTIVE_BACKGROUND,
+    opacity: active ? 1 : 0.82,
     boxShadow: "none",
   };
 }
@@ -728,6 +723,7 @@ export function SceneSectionLegend({
           const model = axisModel(style, axis);
           const axisColor = AXIS_COLORS[axis];
           const axisLabel = sectionButtonLabel(model.label, axis);
+          const rowActive = model.shown;
           return (
             <div key={axis} style={index === 0 ? firstRowStyle : rowStyle}>
               <div style={axisGroupStyle}>
@@ -742,7 +738,7 @@ export function SceneSectionLegend({
                       enabled: !model.shown,
                     })
                   }
-                  style={axisButtonStyle(axisColor, model.shown)}
+                  style={axisButtonStyle(axisColor, rowActive)}
                 >
                   {axisLabel}
                 </button>
@@ -752,10 +748,10 @@ export function SceneSectionLegend({
                   aria-expanded={popoverOpen}
                   aria-pressed={popoverOpen}
                   title="Section Options"
-                  disabled={!seismicLayer}
+                  disabled={!rowActive || !seismicLayer}
                   data-testid={`scene-section-legend-${axis}-section-options`}
                   onClick={() => setPopoverOpen((current) => !current)}
-                  style={iconButtonStyle(axisColor, Boolean(seismicLayer))}
+                  style={iconButtonStyle(axisColor, rowActive && Boolean(seismicLayer))}
                 >
                   <LegendToggleIcon kind="controls" />
                 </button>
@@ -771,7 +767,7 @@ export function SceneSectionLegend({
                       invert: !model.flipped,
                     })
                   }
-                  style={iconButtonStyle(axisColor, model.shown)}
+                  style={iconButtonStyle(axisColor, rowActive)}
                 >
                   <LegendToggleIcon kind="flip" />
                 </button>
@@ -787,7 +783,7 @@ export function SceneSectionLegend({
                       axesVisible: !model.axesVisible,
                     })
                   }
-                  style={iconButtonStyle(axisColor, model.shown)}
+                  style={iconButtonStyle(axisColor, rowActive)}
                 >
                   <LegendToggleIcon kind="axes" />
                 </button>
@@ -804,13 +800,11 @@ export function SceneSectionLegend({
                         groundTraceVisible: !model.groundTraceVisible,
                       })
                     }
-                    style={iconButtonStyle(axisColor, model.shown)}
+                    style={iconButtonStyle(axisColor, rowActive)}
                   >
                     <LegendToggleIcon kind="groundTrace" />
                   </button>
-                ) : (
-                  <span aria-hidden="true" style={iconSpacerStyle} />
-                )}
+                ) : null}
                 <button
                   type="button"
                   aria-label={`${axisLabel} Control frame`}
@@ -823,7 +817,7 @@ export function SceneSectionLegend({
                       controlsVisible: !model.controlsVisible,
                     })
                   }
-                  style={iconButtonStyle(axisColor, model.shown)}
+                  style={iconButtonStyle(axisColor, rowActive)}
                 >
                   <LegendToggleIcon kind="controlFrame" />
                 </button>

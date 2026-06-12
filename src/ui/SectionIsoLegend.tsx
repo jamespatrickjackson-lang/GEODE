@@ -39,6 +39,12 @@ const ISO_BUTTON_ACTIVE_SUB_INACTIVE_BACKGROUND = "rgba(255, 255, 255, 0.36)";
 const ISO_BUTTON_INACTIVE_BACKGROUND = QUICK_LEGEND_INACTIVE_BACKGROUND;
 const ISO_BUTTON_DISABLED_BACKGROUND = "rgba(128, 134, 145, 0.24)";
 
+function sectionIsoTargetsSnapshot(manager: {
+  listSectionIsoTargets: () => ScalarSectionIsoTarget[];
+}): ScalarSectionIsoTarget[] {
+  return manager.listSectionIsoTargets().filter((target) => target.visible);
+}
+
 const rootStyle: CSSProperties = {
   ...transparentLegendPanelStyle,
   padding: 13,
@@ -444,7 +450,7 @@ export function SectionIsoLegend({
   const { pages, currentIndex, transitionFrame } = usePageController();
   const rootRef = useRef<HTMLElement | null>(null);
   const popoverRef = useRef<HTMLDivElement | null>(null);
-  const [targets, setTargets] = useState<ScalarSectionIsoTarget[]>([]);
+  const [targets, setTargets] = useState<ScalarSectionIsoTarget[]>(() => sectionIsoTargetsSnapshot(sceneHandle.manager));
   const [activeGroup, setActiveGroup] = useState<SectionIsoTargetGroup | "">("");
   const [popoverOpen, setPopoverOpen] = useState(false);
   const [popoverPosition, setPopoverPosition] = useState({
@@ -455,9 +461,7 @@ export function SectionIsoLegend({
   useEffect(() => {
     let lastSignature = "";
     const update = () => {
-      const next = sceneHandle.manager
-        .listSectionIsoTargets()
-        .filter((target) => target.visible);
+      const next = sectionIsoTargetsSnapshot(sceneHandle.manager);
       const nextSignature = targetSignature(next);
       if (nextSignature !== lastSignature) {
         lastSignature = nextSignature;
