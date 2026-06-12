@@ -245,6 +245,19 @@ export const SCALAR_TRANSITION_STYLE_FIELDS: readonly (keyof EditableStyle)[] = 
   "atmosphereDriftDirectionY",
   "atmosphereDriftDirectionZ",
   "atmosphereRenderOrder",
+  "boreholeLogTrackOffsetM",
+  "boreholeLogTrackWidthM",
+  "boreholeLogGammaScaleApi",
+  "boreholeLogResistivityMinOhmM",
+  "boreholeLogResistivityMaxOhmM",
+  "boreholeLogCurveFillCutoff",
+  "boreholeLogCurveOpacity",
+  "boreholeLogCurveLineWidthPx",
+  "boreholeLogDepthMinFt",
+  "boreholeLogDepthMaxFt",
+  "boreholeLogVerticalExaggeration",
+  "boreholeLogLithologyOpacity",
+  "boreholeLogLithologyWidthPx",
 ];
 
 const LOCAL_ATMOSPHERE_DISCRETE_STYLE_FIELDS: readonly (keyof EditableStyle)[] =

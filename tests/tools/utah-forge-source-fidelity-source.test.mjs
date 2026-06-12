@@ -312,8 +312,8 @@ test("Utah FORGE Bore Holes container keeps priority records honest", () => {
   );
   assert.match(
     layerPanelConfig,
-    /title:\s*"Bore Holes",\s*ids:\s*\[UTAH_FORGE_DEMO_BOREHOLES_LAYER_ID\]/,
-    "Forge should expose a Bore Holes container",
+    /title:\s*"Bore Holes",\s*ids:\s*\[[\s\S]*UTAH_FORGE_DEMO_BOREHOLES_LAYER_ID[\s\S]*UTAH_FORGE_BOREHOLE_LOGS_LAYER_ID[\s\S]*\]/,
+    "Forge should expose a Bore Holes container with demo boreholes and borehole logs",
   );
   assert.match(layerPanel, /boreholePriorityRegistry/);
   assert.match(layerPanel, /Source rows:/);

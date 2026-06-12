@@ -143,6 +143,7 @@ import {
   applyGeochemStyle as applyGeochemStyleToLayer,
   applyHyperspectralStyle as applyHyperspectralStyleToLayer,
   applyImageryLidarAoiStyle as applyImageryLidarAoiStyleToLayer,
+  applyUtahForgeBoreholeLogStyle as applyUtahForgeBoreholeLogStyleToLayer,
 } from "./styles/siteDetailStyles";
 import {
   clamp01,
@@ -2558,6 +2559,10 @@ export class SceneManager {
 
   applyDemoBoreholeStyle(layerId: string, style: EditableStyle): void {
     applyDemoBoreholeStyleToLayer.call(this, layerId, style);
+  }
+
+  applyUtahForgeBoreholeLogStyle(layerId: string, style: EditableStyle): void {
+    applyUtahForgeBoreholeLogStyleToLayer.call(this, layerId, style);
   }
 
   applyGeochemStyle(layerId: string, style: EditableStyle): void {

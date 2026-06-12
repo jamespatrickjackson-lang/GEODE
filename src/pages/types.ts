@@ -497,6 +497,37 @@ export interface EditableStyle {
   siteDetailsAlignToTopo?: boolean;
   demoBoreholePipeRadiusM?: number;
   demoBoreholeBlockVisible?: boolean;
+  // Utah FORGE source-derived borehole log controls. These tune how measured
+  // or interpreted tracks are displayed along validated trajectories; source
+  // samples, depth units, and lithology intervals remain unchanged.
+  boreholeLogActiveWell?: string;
+  boreholeLogTrackSelection?: {
+    gamma?: boolean;
+    hcgr?: boolean;
+    hsgr?: boolean;
+    resistivity?: boolean;
+    lithology?: boolean;
+  };
+  boreholeLogHcgrColor?: string;
+  boreholeLogHsgrColor?: string;
+  boreholeLogResistivityColor?: string;
+  boreholeLogBaselineColor?: string;
+  boreholeLogLegendVisible?: boolean;
+  boreholeLogTrackOffsetM?: number;
+  boreholeLogTrackWidthM?: number;
+  boreholeLogGammaScaleApi?: number;
+  boreholeLogResistivityMinOhmM?: number;
+  boreholeLogResistivityMaxOhmM?: number;
+  boreholeLogCurveFillCutoff?: number;
+  boreholeLogCurveOpacity?: number;
+  boreholeLogCurveLineWidthPx?: number;
+  boreholeLogDepthMinFt?: number;
+  boreholeLogDepthMaxFt?: number;
+  boreholeLogVerticalExaggeration?: number;
+  boreholeLogLithologyOpacity?: number;
+  boreholeLogLithologyWidthPx?: number;
+  boreholeLogProvenanceVisible?: boolean;
+  boreholeLogReadoutVisible?: boolean;
   // Utah FORGE authored resistivity slice controls. Vertical scale remains
   // true 1:1; these only show/hide authored section surfaces.
   resistivityHorizontalSlicesVisible?: boolean;

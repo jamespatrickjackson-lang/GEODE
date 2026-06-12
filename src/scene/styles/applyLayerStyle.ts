@@ -173,6 +173,7 @@ export function applyStyle(this: any, id: string, style: EditableStyle): void {
   this.applyImageryLidarAoiStyle(id, style);
   this.applyEzGammaStyle(id, style);
   this.applyDemoBoreholeStyle(id, style);
+  this.applyUtahForgeBoreholeLogStyle(id, style);
   this.applyCaseStudyBDemoLayerAlias(id, style);
   this.applySurfaceGradientStyle(id, style);
   this.applyScalarPreviewStyle(id, style);

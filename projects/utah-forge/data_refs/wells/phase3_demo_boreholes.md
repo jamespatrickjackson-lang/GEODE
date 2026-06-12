@@ -32,6 +32,11 @@ The `FORGE site boundary` control remains under `Site Details`; boreholes now
 have their own container so priority wells can be listed without implying every
 record has renderable trajectory geometry.
 
+`utah-forge-borehole-logs` is a separate, default-hidden source-derived layer
+for log tracks. It consumes this layer's validated 16A and 16B trajectories as
+path references, but it does not replace or promote source-location markers.
+See `projects/utah-forge/data_refs/wells/borehole_logs.md`.
+
 ## Bore Holes Priority Registry
 
 - `58-32`: core characterization and seismic/geologic anchor. GDR 1358 provides well and pad location rows; no active trajectory is rendered.
@@ -40,7 +45,42 @@ record has renderable trajectory geometry.
 - `16B`: production well, relevant to injection/production pair context. GDR 1516 provides the rendered trajectory; no matching GDR 1358 CSV row was found.
 - `Acord-1`: supporting mapped reference well. No active source row or trajectory has been found.
 - `FDST/ FORGE test drill site`: supporting mapped reference site. No active source row or trajectory has been found.
-- `Unnamed`: possible seismic monitoring well. GDR 1358 contains `BOR1`, `BOR2`, and `BOR3` seismic feature rows, but no recovered well identifier is present.
+- `Unnamed`: possible seismic monitoring well. GDR 1358 contains `BOR1`, `BOR2`, and `BOR3` seismic feature rows, but no recovered well identifier is present in that active CSV source.
+
+## Phase2C Wells Identity Recovery
+
+`Utah_FORGE_Phase2C_wells` is treated as an optional local identity-recovery
+source for the `BOR1`, `BOR2`, and `BOR3` candidates only. It is not the active
+borehole source of truth and must not replace GDR 1358 unless a clean binary
+re-export is supplied and passes validation.
+
+Raw Phase2C shapefile packages stay outside committed source under:
+
+```text
+.tmp/source-intake/phase2c-wells/
+```
+
+The validator accepts either one zip package or sidecar files for `.shp`,
+`.shx`, `.dbf`, `.prj`, and `.cpg`. It fails closed when the attribute table is
+missing, binary shapefile components are damaged, record counts disagree, CRS is
+not NAD83 UTM Zone 12N / EPSG:26912, or DBF identity fields are ambiguous.
+
+```bash
+python tools/audit-utah-phase2c-wells-shapefile.py --input .tmp/source-intake/phase2c-wells --out .tmp/phase2c-wells-audit.json
+```
+
+When a clean package is available, the generator can use it as a recovery source:
+
+```bash
+python tools/generate-utah-forge-demo-boreholes.py --phase2c-wells .tmp/source-intake/phase2c-wells
+```
+
+A recovered name is applied only when exactly one Phase2C point with exactly one
+non-empty identity field falls within 2 metres of the `BOR` candidate in
+EPSG:26912 XY space. Unmatched or ambiguous candidates remain labeled `BOR1`,
+`BOR2`, or `BOR3` and retain `claimStatus: do-not-claim-geometry`. The shapefile
+is assumed to contain source-location points only; it adds no trajectory,
+registration, or calibration claim.
 
 ## Public Sources
 
@@ -58,7 +98,8 @@ npm run generate:utah:boreholes
 The generator downloads only the small public survey/location files into local
 staging under `.tmp/utah-forge-boreholes/`, parses them, converts survey feet
 to meters, shifts coordinates into the existing Utah FORGE scene-local frame,
-and rewrites the active artifact.
+and rewrites the active artifact. The optional Phase2C recovery path is local
+intake only and does not commit raw shapefile bytes.
 
 ## Caveat
 

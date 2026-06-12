@@ -2720,3 +2720,105 @@ and object-visibility opacity maps. Scene-section object-visibility
 interpolation must derive missing source/target defaults from scene-section
 targeting state, including legacy product-only seismic ids, so typed
 `:volume` and `:section` targets do not pop during page transitions.
+
+## DEC-158 - Borehole logs render only on validated trajectories
+
+Extends DEC-143 for Utah FORGE borehole-log rendering.
+
+**Considered:** render borehole logs as vertical projections from wellhead
+coordinates, render every parsed LAS/CSV/XLSX track regardless of path status,
+or gate rendering on a measured-depth path that has validated trajectory points.
+
+**Chose:** `utah-forge-borehole-logs` renders only machine-readable
+source-derived tracks mapped by measured depth onto validated as-drilled
+trajectories. Tracks without a validated trajectory remain in the derived
+manifest as explicit source gaps, not display geometry. DLIS and PDF members
+are inventoried but not parsed unless a tested local parser is added.
+
+**Why:** a vertical projection would create false geometry confidence for
+deviated FORGE wells, and rendering parsed logs without a path would weaken the
+source claim boundary. The manifest can still preserve source presence,
+download status, units, sample spacing, and gap status so missing render output
+is auditable.
+
+**Guard:** raw GDR source packages stay in `.tmp/source-intake/utah-forge-borehole-logs/`
+or another ignored local source root. Committed artifacts may include only
+derived manifests, code, tests, docs, and explicit gap metadata. Do not repair
+missing log rendering with page fixtures, vertical fallback geometry, or
+unvalidated trajectory assumptions.
+
+## DEC-159 - Borehole log curves render as fixed-frame UTM ribbons
+
+Extends DEC-158 for the visible rendering method of validated borehole-log
+tracks.
+
+**Considered:** offset each sample in the trajectory-local normal frame, use a
+camera-facing billboard, expose a manual lane azimuth, or compute a fixed
+source-space lane per well.
+
+**Chose:** render each machine-readable track as a flat ribbon in a fixed
+horizontal UTM frame computed from the well trajectory. The trajectory path is
+the ribbon baseline, log amplitude offsets in one constant lane direction, and
+multiple tracks use parallel lane bases in manifest order. Lithology intervals
+render on the path as column/segment geometry, not as amplitude wiggles.
+
+**Why:** local normal offsets rotate through doglegs and produce a false
+helical/DNA visual. A fixed UTM lane keeps gamma amplitude readable while
+preserving measured-depth placement on the as-drilled path. Automatic lanes
+avoid adding an authoring control before a real need for manual azimuth exists.
+
+**Guard:** borehole-log rendering must not use per-sample local/Frenet normals,
+vertical projection fallbacks, page-id-specific fixes, or camera-facing
+billboards for source claims. Display scale controls may tune readability but
+must not change source samples, measured depths, CRS, or trajectory gating.
+
+## DEC-160 - Borehole log ribbons fill from lane-local spines
+
+Supersedes the DEC-159 sentence that described the trajectory path as the
+visible ribbon baseline for every track.
+
+**Considered:** keep filling each track from the original trajectory path to its
+offset curve, soften the page copy to avoid claiming lane separation, or give
+each track its own lane-local baseline spine and fill only within that lane.
+
+**Chose:** each renderable borehole-log track uses a visible fixed-frame
+lane-local spine at its base offset. The ribbon mesh fills only between that
+spine and the track curve edge. Multiple gamma tracks use separated lane bases
+with a clear gap, while measured-depth placement remains anchored to the
+validated as-drilled trajectory.
+
+**Why:** the source HCGR and HSGR curves are distinct, but filling both ribbons
+from the original trajectory made the farther lane cover the nearer lane and
+visually fuse the display into one band. Lane-local spines make the zero line
+visible for each curve and keep the overlay wording honest.
+
+**Guard:** do not claim parallel lanes unless the rendered objects expose
+separated lane bases. Do not use mirrored fills, duplicated source samples, or
+overlapping lane meshes as proof of two measured curves. Lithology remains a
+path column/segment, not an amplitude wiggle.
+
+## DEC-161 - Borehole log legend and colors are layer style channels
+
+Extends DEC-159 and DEC-160 for Utah FORGE borehole-log authoring and page
+transitions.
+
+**Considered:** keep HCGR/HSGR colors hardcoded in the loader, make a
+page-specific quick legend for the showcase page, or promote Borehole Logs
+colors, legend visibility, and track toggles into normal layer style channels.
+
+**Chose:** Borehole Logs track colors, lane-spine color, legend visibility, and
+track toggles live on `EditableStyle.boreholeLog*` fields. The editor panel and
+quick legend write the same fields. The Utah quick-legend stack owns the
+viewport legend transition, while page-to-page transition field lists declare
+Borehole Log color, scalar, and categorical channels explicitly.
+
+**Why:** the layer needs the same authoring and transition behavior as other
+Utah source-derived layers. Hardcoded colors and unregistered style fields make
+the runtime look detached from page transitions and prevent quick legend
+buttons from matching the editor panel.
+
+**Guard:** do not repair Borehole Logs transitions with page ids, page order,
+page titles, or page fixture special cases. New legend controls must use the
+shared compact quick-legend helpers from `src/ui/legendStyles.ts`, and quick
+legend buttons must mutate the same layer style or visibility fields exposed in
+the editor panel.

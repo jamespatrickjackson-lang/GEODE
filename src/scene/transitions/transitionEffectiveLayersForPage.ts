@@ -65,6 +65,10 @@ const COLOR_STYLE_FIELDS: readonly StyleField[] = [
   "seismicFigureCaptionBoxColor",
   "seismicFigureHorizonColor",
   "seismicFigureWellColor",
+  "boreholeLogHcgrColor",
+  "boreholeLogHsgrColor",
+  "boreholeLogResistivityColor",
+  "boreholeLogBaselineColor",
 ];
 
 const CATEGORICAL_STYLE_FIELDS: readonly StyleField[] = [
@@ -115,6 +119,11 @@ const CATEGORICAL_STYLE_FIELDS: readonly StyleField[] = [
   "atmosphereDriftEnabled",
   "atmosphereDepthTest",
   "atmosphereBoundsHelperVisible",
+  "boreholeLogActiveWell",
+  "boreholeLogTrackSelection",
+  "boreholeLogLegendVisible",
+  "boreholeLogProvenanceVisible",
+  "boreholeLogReadoutVisible",
 ];
 
 const SEISMIC_GRAPH_SCALAR_STYLE_FIELDS: readonly StyleField[] = [

@@ -27,6 +27,7 @@ import {
 } from "./layerControls/layout/layoutStyles";
 import {
   ATMOSPHERE_VOLUME_FIELDS,
+  BOREHOLE_LOG_FIELDS,
   CLASSIFICATIONS,
   CONFIDENTIALITIES,
   CONTOUR_DISTANCE_STYLE_CONTROLS,
@@ -109,6 +110,10 @@ import {
   ScalarRampControls,
 } from "./layerControls/scalar/ScalarControls";
 import {
+  BoreholeLogsControls,
+  boreholeLogPatchFromStyle,
+} from "./layerControls/wells/BoreholeLogsControls";
+import {
   effectiveStyle,
   isStyleFieldOverridden,
   isVisibilityOverridden,
@@ -122,6 +127,7 @@ import type {
 import { pageSelectionHasLanded, selectedAuthoringPage } from "./authoringTarget";
 import { SCENE_ORIGIN } from "../constants";
 import {
+  UTAH_FORGE_BOREHOLE_LOGS_LAYER_ID,
   UTAH_FORGE_MT_STATIONS_LAYER_ID,
   UTAH_FORGE_MT_RESISTIVITY_FULL_DENSITY_LAYER_ID,
   UTAH_FORGE_MT_TOP_SURFACE_LAYER_ID,
@@ -438,6 +444,8 @@ export function LayerPanel({
       layer.id === UTAH_FORGE_MT_THRESHOLD_SURFACES_LAYER_ID;
     const isUtahForgeSeismicBrowser =
       layer.id === UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID;
+    const isUtahForgeBoreholeLogs =
+      layer.id === UTAH_FORGE_BOREHOLE_LOGS_LAYER_ID;
     const hasSpecializedOpacityOwner =
       isUtahForgeMtVolume ||
       isUtahForgeMtThresholdSurfaces ||
@@ -504,6 +512,11 @@ export function LayerPanel({
     const atmosphereVolumeOverridden =
       currentPage !== null &&
       ATMOSPHERE_VOLUME_FIELDS.some((field) =>
+        isStyleFieldOverridden(currentPage, layer.id, field),
+      );
+    const boreholeLogsOverridden =
+      currentPage !== null &&
+      BOREHOLE_LOG_FIELDS.some((field) =>
         isStyleFieldOverridden(currentPage, layer.id, field),
       );
 
@@ -2093,6 +2106,40 @@ export function LayerPanel({
                   currentPage={currentPage}
                   layerId={layer.id}
                   sceneHandle={sceneHandle}
+                  setEnvLayerStyle={setEnvLayerStyle}
+                  setPageLayerOverride={setPageLayerOverride}
+                  clearPageLayerOverride={clearPageLayerOverride}
+                />
+              ) : null}
+
+              {isUtahForgeBoreholeLogs ? (
+                <BoreholeLogsControls
+                  style={isEnv ? envStyle : effectiveLayerStyle}
+                  disabled={!isEnv && !boreholeLogsOverridden}
+                  isEnv={isEnv}
+                  currentPage={currentPage}
+                  layerId={layer.id}
+                  onToggleOverride={
+                    currentPage
+                      ? (enabled) => {
+                          if (enabled) {
+                            setPageLayerOverride(
+                              currentPage.id,
+                              layer.id,
+                              boreholeLogPatchFromStyle(effectiveLayerStyle),
+                            );
+                          } else {
+                            for (const field of BOREHOLE_LOG_FIELDS) {
+                              clearPageLayerOverride(
+                                currentPage.id,
+                                layer.id,
+                                field,
+                              );
+                            }
+                          }
+                        }
+                      : undefined
+                  }
                   setEnvLayerStyle={setEnvLayerStyle}
                   setPageLayerOverride={setPageLayerOverride}
                   clearPageLayerOverride={clearPageLayerOverride}
