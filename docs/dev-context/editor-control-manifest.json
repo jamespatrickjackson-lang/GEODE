@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "status": "active-guard",
   "lastReviewedAt": "2026-06-11",
-  "lastReviewNote": "SeismicCapabilityLayerContainers.tsx: removed unused imports and variable, defined applyPsdm58_32DepthWindow helper, dropped spurious prop — no controls added/removed/renamed.",
+  "lastReviewNote": "SeismicCapabilityLayerContainers.tsx: depth-window item reads sceneSectionWindowByAxis.y and sceneSectionFrameByAxis.y from sceneSectionStyle to display current Y-axis geometry in the Window label — no controls added/removed/renamed.",
   "description": "Canonical editor sidebar control manifest. Any user-facing editor sidebar control, command, section, or persisted variable must be represented here before editor-bar source changes are accepted.",
   "approvalPolicy": {
     "removalStatuses": ["removed", "renamed", "hidden"],

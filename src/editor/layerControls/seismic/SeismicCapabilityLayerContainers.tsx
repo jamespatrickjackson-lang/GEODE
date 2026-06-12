@@ -529,34 +529,52 @@ export function SeismicCapabilityLayerContainers({
           })
         }
       >
-        <label style={{ ...nestedControlRowStyle, cursor: "pointer" }}>
-          <span style={nestedFieldLabelStyle}>Window</span>
-          <input
-            data-testid="seismic-capability-depth-window-enabled"
-            type="checkbox"
-            checked={styleBoolean(sceneSectionStyle, "sceneSectionWindowEnabled", false)}
-            disabled={disabled}
-            onChange={(e) =>
-              commitSceneSectionStyle({
-                visible: e.target.checked,
-                sceneSectionEnabled: e.target.checked,
-                sceneSectionFrameEnabled: e.target.checked,
-                sceneSectionWindowEnabled: e.target.checked,
-              })
-            }
-            style={{ opacity: controlOpacity }}
-          />
-          <span
-            style={{
-              flex: 1,
-              color: vibrancyTertiaryLabel,
-              fontSize: 11,
-              opacity: controlOpacity,
-            }}
-          >
-            scene-section y frame
-          </span>
-        </label>
+        {(() => {
+          const yWindow = sceneSectionStyle?.sceneSectionWindowByAxis?.y;
+          const yFrame = sceneSectionStyle?.sceneSectionFrameByAxis?.y;
+          const windowLabel =
+            yWindow !== undefined || yFrame !== undefined
+              ? [
+                  "y section",
+                  yWindow?.bottomElevationM !== undefined
+                    ? `bot ${Math.round(yWindow.bottomElevationM)} m`
+                    : undefined,
+                  yFrame !== undefined ? "frame set" : undefined,
+                ]
+                  .filter((s): s is string => s !== undefined)
+                  .join(" · ")
+              : "scene-section y frame";
+          return (
+            <label style={{ ...nestedControlRowStyle, cursor: "pointer" }}>
+              <span style={nestedFieldLabelStyle}>Window</span>
+              <input
+                data-testid="seismic-capability-depth-window-enabled"
+                type="checkbox"
+                checked={styleBoolean(sceneSectionStyle, "sceneSectionWindowEnabled", false)}
+                disabled={disabled}
+                onChange={(e) =>
+                  commitSceneSectionStyle({
+                    visible: e.target.checked,
+                    sceneSectionEnabled: e.target.checked,
+                    sceneSectionFrameEnabled: e.target.checked,
+                    sceneSectionWindowEnabled: e.target.checked,
+                  })
+                }
+                style={{ opacity: controlOpacity }}
+              />
+              <span
+                style={{
+                  flex: 1,
+                  color: vibrancyTertiaryLabel,
+                  fontSize: 11,
+                  opacity: controlOpacity,
+                }}
+              >
+                {windowLabel}
+              </span>
+            </label>
+          );
+        })()}
         <div style={{ ...nestedControlRowStyle, gap: 6, flexWrap: "wrap" }}>
           <label style={nestedFieldLabelStyle}>Preset</label>
           <button
