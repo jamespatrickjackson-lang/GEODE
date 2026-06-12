@@ -3,6 +3,10 @@ import {
   type TransitionEntityOperation,
   type TransitionExecutionPlan,
 } from "./transitionExecutionPlan";
+import {
+  applyTransitionEntityOpacityFrames,
+  type TransitionEntityOpacityObject,
+} from "./transitionEntityOpacityExecutor";
 
 // Phase 4 of the transition execution layer (TRD-013 / DEC-152). The seismic
 // derived-entity graph is the first fully migrated consumer. The classifier
@@ -50,6 +54,7 @@ export function seismicEntityObjectKind(
 
 export interface SeismicEntityTransitionFrame {
   entityKey: string;
+  parentLayerId: string | null;
   objectKind: SeismicEntityObjectKind;
   opacityFactor: number;
   done: boolean;
@@ -91,14 +96,21 @@ export function planSeismicEntityFrames(
       case "crossfade":
         opacityFactor = frame.crossfadeTargetAlpha;
         break;
-      default:
-        // preserve-interpolate / hold-source: the entity stays present; leave it
-        // at full factor so the layer envelope owns any layer-level fade.
-        opacityFactor = 1;
+      case "hold-source":
+        opacityFactor =
+          operation.sourcePresence === "visible" ||
+          operation.sourcePresence === "ready"
+            ? 1
+            : 0;
         break;
+      default:
+        // preserve-interpolate: no entity opacity write is needed. The layer
+        // envelope owns any parent fade for continuously present entities.
+        continue;
     }
     result.push({
       entityKey: frame.entityKey,
+      parentLayerId: operation.parentLayerId,
       objectKind,
       opacityFactor,
       done: frame.done,
@@ -123,19 +135,12 @@ export function planHasSeismicFadeEntities(
   );
 }
 
-// Structural view of the scene objects the runtime tick touches; avoids a THREE
-// import so this module transpiles in isolation for unit tests.
-interface SeismicTransitionObject {
-  userData?: Record<string, unknown>;
-  traverse(callback: (object: SeismicTransitionObject) => void): void;
-}
-
 // Per-frame runtime apply. Fades survey-geometry and figure-annotation sub-trees
 // to their planned transition opacity, composed with product opacity by
-// applyRenderOpacityToTree. The final transition commit reapplies the seismic
-// style, restoring exact target opacities, so any in-flight factor is transient
-// and self-healing. Typed `this: any` to match the SceneManager impl convention
-// where private members are reached structurally.
+// the generic entity-opacity executor. The final transition commit reapplies
+// the seismic style, restoring exact target opacities, so any in-flight factor
+// is transient and self-healing. Typed `this: any` to match the SceneManager
+// impl convention where private members are reached structurally.
 export function tickSeismicGraphTransitionImpl(
   this: any,
   nowMs: number,
@@ -150,33 +155,19 @@ export function tickSeismicGraphTransitionImpl(
     this.seismicGraphTransitionActiveEntities.clear();
     return;
   }
-  const root = this.seismicGraphTransitionRoot() as SeismicTransitionObject | null;
+  const root = this.seismicGraphTransitionRoot() as TransitionEntityOpacityObject | null;
   if (!root) return;
-  const navigationObjects: SeismicTransitionObject[] = [];
-  const figureRoots: SeismicTransitionObject[] = [];
-  root.traverse((object: SeismicTransitionObject) => {
-    if (object.userData?.seismicNavigation === true) {
-      navigationObjects.push(object);
-    }
-    if (object.userData?.seismicFigureAnnotationRoot === true) {
-      figureRoots.push(object);
-    }
-  });
   for (const frame of frames) {
-    const targets =
-      frame.objectKind === "survey-geometry"
-        ? navigationObjects
-        : frame.objectKind === "figure-annotation"
-          ? figureRoots
-          : [];
-    if (targets.length === 0) continue;
     if (frame.done) {
       this.seismicGraphTransitionActiveEntities.delete(frame.entityKey);
     } else {
       this.seismicGraphTransitionActiveEntities.add(frame.entityKey);
     }
-    for (const object of targets) {
-      this.applyRenderOpacityToTree(object, frame.opacityFactor);
-    }
   }
+  applyTransitionEntityOpacityFrames(root, frames, {
+    parentOpacityForLayer: (layerId) =>
+      typeof this.transitionFrameOpacityForLayer === "function"
+        ? this.transitionFrameOpacityForLayer(layerId)
+        : 1,
+  });
 }

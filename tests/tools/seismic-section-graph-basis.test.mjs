@@ -133,6 +133,43 @@ test("3d inline and crossline path curtains keep item identity separate from pag
   }
 });
 
+test("survey geometry identity is role-aware and product-agnostic", async () => {
+  const { seismicSurveyGeometryEntityKey } = await loadBasisModule();
+
+  assert.equal(
+    seismicSurveyGeometryEntityKey({
+      layerId: "utah-forge-phase3-seismic-browser",
+      role: "navigation",
+    }),
+    "layer:utah-forge-phase3-seismic-browser:object:survey-geometry:navigation",
+  );
+  assert.equal(
+    seismicSurveyGeometryEntityKey({
+      layerId: "utah-forge-phase3-seismic-browser",
+      role: "lines",
+    }),
+    "layer:utah-forge-phase3-seismic-browser:object:survey-geometry:lines",
+  );
+  assert.doesNotMatch(
+    seismicSurveyGeometryEntityKey({
+      layerId: "utah-forge-phase3-seismic-browser",
+      role: "sources",
+    }),
+    /product:/,
+  );
+});
+
+test("figure annotation identity wraps the runtime section graph entity key", async () => {
+  const { seismicFigureAnnotationEntityKey } = await loadBasisModule();
+  const sectionEntityKey =
+    "layer:utah-forge-phase3-seismic-browser:product:gdr-1141:object:3d-section-plane:inline-053";
+
+  assert.equal(
+    seismicFigureAnnotationEntityKey({ sectionEntityKey }),
+    `${sectionEntityKey}:figure-annotation`,
+  );
+});
+
 test("sample plane basis accepts fixed sample domains without vertical depth axis", async () => {
   const { buildSeismicSectionGraphBasis } = await loadBasisModule();
   const basis = buildSeismicSectionGraphBasis(

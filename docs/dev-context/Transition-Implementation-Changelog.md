@@ -5,6 +5,34 @@ Status: draft implementation ledger.
 Log behavior and guardrail changes here after implementation. Link each entry
 to a decision or evidence item. Do not use this file for raw observations.
 
+## 2026-06-12 - Registered Entity-Opacity Execution Slice
+
+Decision links: TRD-013, TRD-014, DEC-152, DEC-153.
+
+Changes:
+
+- Added the generic `transitionEntityKey` runtime object contract for exact-key
+  entity-opacity consumers.
+- Added a generic entity-opacity executor that composes base material opacity,
+  parent layer opacity, and per-entity transition opacity.
+- Migrated seismic survey-geometry and figure-annotation fades onto exact
+  entity keys. Survey geometry now uses product-agnostic role entities, and
+  figure annotation identity wraps the runtime seismic section graph key.
+- Updated execution-layer source guards so registered assignment consumers are
+  allowed while broad seismic kind collectors and page-specific fixes remain
+  blocked.
+- Clarified that environment-scene, scene-section, Section ISO, working-area,
+  and protected MT scalar/cloud paths remain guarded legacy kernels until
+  separately migrated.
+
+Verification:
+
+- `node tests/tools/transition-entity-opacity-executor.test.mjs`
+- `node tests/tools/seismic-graph-transition-executor.test.mjs`
+- `node tests/tools/seismic-section-graph-basis.test.mjs`
+- `node tests/tools/transition-render-graph-adapter.test.mjs`
+- `node tests/tools/transition-entity-channel-policy.test.mjs`
+
 ## 2026-05-31 - Pre-Showcase Transition Stabilization
 
 Decision links: TRD-008.

@@ -13,6 +13,12 @@ export type SeismicGraphObjectKind =
   | "comparison"
   | "figure-annotation";
 
+export type SeismicSurveyGeometryRole =
+  | "navigation"
+  | "lines"
+  | "sources"
+  | "receivers";
+
 export interface SeismicGraphSampleDomain {
   kind?: string;
   unit?: string;
@@ -201,6 +207,32 @@ export function seismicGraphEntityKey(input: {
   objectId: string;
 }): string {
   return `layer:${input.layerId}:product:${input.productId}:object:${input.objectKind}:${input.objectId}`;
+}
+
+export function seismicFigureAnnotationEntityKey(input:
+  | { sectionEntityKey: string }
+  | {
+      layerId: string;
+      productId: string;
+      objectKind: Exclude<
+        SeismicGraphObjectKind,
+        "survey-geometry" | "comparison" | "figure-annotation"
+      >;
+      objectId: string;
+    },
+): string {
+  const sectionEntityKey =
+    "sectionEntityKey" in input
+      ? input.sectionEntityKey
+      : seismicGraphEntityKey(input);
+  return `${sectionEntityKey}:figure-annotation`;
+}
+
+export function seismicSurveyGeometryEntityKey(input: {
+  layerId: string;
+  role: SeismicSurveyGeometryRole;
+}): string {
+  return `layer:${input.layerId}:object:survey-geometry:${input.role}`;
 }
 
 export function sampleToSceneZ(

@@ -1445,7 +1445,7 @@
       "sourceFile": "src/editor/layerControls/seismic/SectionGraphOptionsControls.tsx",
       "sourceAnchor": "testId=\"seismic-section-options\"",
       "scope": "seismic layers",
-      "backedBy": "EditableStyle seismicProductId/seismicProductVisibility/seismicRenderMode/seismicSliceAxis/seismicSliceFraction/seismicComparisonProductId/seismicComparisonMode/seismicMtCoRender/seismicIsoSource/seismicNavigationRoleVisibility/seismicFigure* fallback fields and graphAnnotation* profile fields",
+      "backedBy": "EditableStyle seismicProductId/seismicProductVisibility/seismicRenderMode/seismicSliceAxis/seismicSliceFraction/seismicComparisonProductId/seismicComparisonMode/seismicMtCoRender/seismicIsoSource/seismicNavigationRoleVisibility/seismicFigure* fallback fields, graphAnnotationDefaults, graphAnnotationProfiles, graphAnnotationSelectedTargetKey",
       "setterRoute": "SectionGraphOptionsControls commit / commitLayerStyle",
       "approval": {
         "status": "approved",
