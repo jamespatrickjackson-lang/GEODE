@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import type {
   EditableStyle,
+  SceneProperties,
   SceneSectionAxisAlignment,
   SceneSectionAxisDatum,
 } from "../../pages/types";
@@ -61,6 +62,8 @@ type SceneSectionApplyTransitionFrameOptions = SceneSectionApplyOptions & {
 type SceneSectionSourceFaceFrame = SectionFaceFrameBasis & {
   axis: SceneSectionAxis;
 };
+
+type SceneSectionVisualSettings = NonNullable<SceneProperties["sectionVisuals"]>;
 
 const SCENE_SECTION_AXIS_NORMALS = {
   x: new THREE.Vector3(1, 0, 0),
@@ -302,6 +305,11 @@ function sceneSectionBuiltInFrameId(axis: SceneSectionAxis): string {
   return SCENE_SECTION_BUILT_IN_FRAME_IDS[axis];
 }
 
+function sceneSectionBuiltInAxisForFrameId(id: string): SceneSectionAxis | null {
+  const match = /^axis:([xyz])$/.exec(id);
+  return match ? (match[1] as SceneSectionAxis) : null;
+}
+
 function sceneSectionValidAxis(value: unknown): value is SceneSectionAxis {
   return value === "x" || value === "y" || value === "z";
 }
@@ -534,18 +542,124 @@ function sceneSectionAxisTickOffset(
   return 0;
 }
 
-function sceneSectionOutlineWidthM(width: number, height: number): number {
+function sceneSectionVisualNumber(
+  visuals: SceneSectionVisualSettings | null | undefined,
+  key: keyof SceneSectionVisualSettings,
+  fallback: number,
+  min: number,
+  max: number,
+): number {
+  const value = visuals?.[key];
+  return typeof value === "number" && Number.isFinite(value)
+    ? clampRange(value, min, max)
+    : fallback;
+}
+
+function sceneSectionVisualSettings(this: any): Required<SceneSectionVisualSettings> {
+  const visuals =
+    (this.currentSceneProperties?.sectionVisuals as
+      | SceneSectionVisualSettings
+      | undefined) ?? {};
+  return {
+    outlineWidthScale: sceneSectionVisualNumber(
+      visuals,
+      "outlineWidthScale",
+      SCENE_SECTION_OUTLINE_WIDTH_SCALE,
+      0.004,
+      0.08,
+    ),
+    outlineMinWidthM: sceneSectionVisualNumber(
+      visuals,
+      "outlineMinWidthM",
+      SCENE_SECTION_OUTLINE_MIN_WIDTH_M,
+      40,
+      1200,
+    ),
+    outlineMaxWidthM: sceneSectionVisualNumber(
+      visuals,
+      "outlineMaxWidthM",
+      SCENE_SECTION_OUTLINE_MAX_WIDTH_M,
+      80,
+      2400,
+    ),
+    arrowSpanScale: sceneSectionVisualNumber(
+      visuals,
+      "arrowSpanScale",
+      1.12,
+      0.3,
+      3,
+    ),
+    arrowMinLengthM: sceneSectionVisualNumber(
+      visuals,
+      "arrowMinLengthM",
+      520,
+      120,
+      1600,
+    ),
+    arrowMaxLengthM: sceneSectionVisualNumber(
+      visuals,
+      "arrowMaxLengthM",
+      1120,
+      240,
+      3200,
+    ),
+    arrowRadiusScale: sceneSectionVisualNumber(
+      visuals,
+      "arrowRadiusScale",
+      0.28,
+      0.08,
+      0.7,
+    ),
+    arrowGapScale: sceneSectionVisualNumber(
+      visuals,
+      "arrowGapScale",
+      1.28,
+      0.6,
+      3,
+    ),
+    axisTickLengthScale: sceneSectionVisualNumber(
+      visuals,
+      "axisTickLengthScale",
+      1.25,
+      0.2,
+      4,
+    ),
+    axisTickMinLengthM: sceneSectionVisualNumber(
+      visuals,
+      "axisTickMinLengthM",
+      260,
+      40,
+      1600,
+    ),
+    axisTickMaxLengthM: sceneSectionVisualNumber(
+      visuals,
+      "axisTickMaxLengthM",
+      900,
+      80,
+      3200,
+    ),
+    groundTraceWidthM: sceneSectionVisualNumber(
+      visuals,
+      "groundTraceWidthM",
+      SCENE_SECTION_GROUND_TRACE_WIDTH_DEFAULT_M,
+      SCENE_SECTION_GROUND_TRACE_WIDTH_MIN_M,
+      SCENE_SECTION_GROUND_TRACE_WIDTH_MAX_M,
+    ),
+  };
+}
+
+function sceneSectionVisualOutlineWidthM(
+  width: number,
+  height: number,
+  visuals: Required<SceneSectionVisualSettings>,
+): number {
   const span = Math.max(1, Math.min(Math.abs(width), Math.abs(height)));
   const maxWidth = Math.max(
     16,
-    Math.min(SCENE_SECTION_OUTLINE_MAX_WIDTH_M, span * 0.18),
+    Math.min(visuals.outlineMaxWidthM, span * 0.18),
   );
-  const minWidth = Math.min(SCENE_SECTION_OUTLINE_MIN_WIDTH_M, maxWidth);
-  return clampRange(
-    span * SCENE_SECTION_OUTLINE_WIDTH_SCALE,
-    minWidth,
-    maxWidth,
-  );
+  const minWidth = Math.min(visuals.outlineMinWidthM, maxWidth);
+  return clampRange(span * visuals.outlineWidthScale, minWidth, maxWidth);
 }
 
 function buildSceneSectionOutlineGeometry(
@@ -1279,13 +1393,51 @@ function sceneSectionVec3(value: readonly number[]): THREE.Vector3 {
   return new THREE.Vector3(value[0] ?? 0, value[1] ?? 0, value[2] ?? 0);
 }
 
+function sceneSectionOrthonormalSourceBasis(source: SectionFaceFrameBasis): {
+  center: THREE.Vector3;
+  normal: THREE.Vector3;
+  axisAVector: THREE.Vector3;
+  axisBVector: THREE.Vector3;
+} {
+  const normal = sceneSectionVec3(source.normal);
+  if (normal.lengthSq() < 1e-12) normal.copy(SCENE_SECTION_AXIS_NORMALS.y);
+  normal.normalize();
+
+  const axisA = sceneSectionVec3(source.axisAVector);
+  if (axisA.lengthSq() < 1e-12) axisA.set(1, 0, 0);
+  axisA.addScaledVector(normal, -axisA.dot(normal));
+  if (axisA.lengthSq() < 1e-12) {
+    axisA.crossVectors(
+      Math.abs(normal.z) < 0.9
+        ? SCENE_SECTION_AXIS_NORMALS.z
+        : SCENE_SECTION_AXIS_NORMALS.x,
+      normal,
+    );
+  }
+  axisA.normalize();
+
+  const axisB = new THREE.Vector3().crossVectors(normal, axisA).normalize();
+  const sourceAxisB = sceneSectionVec3(source.axisBVector);
+  if (sourceAxisB.lengthSq() > 1e-12 && axisB.dot(sourceAxisB) < 0) {
+    axisA.multiplyScalar(-1);
+    axisB.crossVectors(normal, axisA).normalize();
+  }
+
+  return {
+    center: sceneSectionVec3(source.center),
+    normal,
+    axisAVector: axisA,
+    axisBVector: axisB,
+  };
+}
+
 function sceneSectionSourceFaceFrame(
   this: any,
   style: EditableStyle,
   entryId: string,
   axis: SceneSectionAxis,
 ): SceneSectionSourceFaceFrame | null {
-  const activeFrameId =
+  const rawActiveFrameId =
     typeof style.sceneSectionActiveFrameId === "string" &&
     style.sceneSectionActiveFrameId.trim()
       ? style.sceneSectionActiveFrameId
@@ -1293,6 +1445,12 @@ function sceneSectionSourceFaceFrame(
   const activeAxis = sceneSectionValidAxis(style.sceneSectionActiveAxis)
     ? style.sceneSectionActiveAxis
     : axis;
+  const activeBuiltInAxis =
+    sceneSectionBuiltInAxisForFrameId(rawActiveFrameId);
+  const activeFrameId =
+    activeBuiltInAxis && activeBuiltInAxis !== activeAxis
+      ? sceneSectionBuiltInFrameId(activeAxis)
+      : rawActiveFrameId;
   if (entryId !== activeFrameId && axis !== activeAxis) return null;
   const layerTargets = this.sceneSectionLayerIds(style) as Set<string>;
   if (!layerTargets.has(UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID)) return null;
@@ -1313,11 +1471,11 @@ function sceneSectionSourceFaceFrame(
       typeof obj.userData?.seismicProductId === "string"
         ? obj.userData.seismicProductId
         : "";
-    if (productTargets.size > 0 && !productTargets.has(productId)) return;
     if (obj.userData?.seismicSectionSelectedForFace === true) {
       selectedBasis = basis;
       return;
     }
+    if (productTargets.size > 0 && !productTargets.has(productId)) return;
     if (!fallbackBasis && obj.visible) fallbackBasis = basis;
   });
   const basis = selectedBasis ?? fallbackBasis;
@@ -1713,6 +1871,7 @@ export function resolveSceneSectionFrames(this: any,
   const windowByAxis = style.sceneSectionWindowByAxis ?? {};
   const frames: ResolvedSceneSectionFrame[] = [];
   const geo = sceneSectionGeoContext.call(this);
+  const visuals = sceneSectionVisualSettings.call(this);
   const explicitFrameEnabled = style.sceneSectionFrameEnabled === true;
   const legacyFrameEnabled =
     explicitFrameEnabled || style.sceneSectionWindowEnabled === true;
@@ -1782,7 +1941,10 @@ export function resolveSceneSectionFrames(this: any,
       Number.isFinite(entry.plane.positionM)
         ? clampRange(entry.plane.positionM, -250_000, 250_000)
         : SCENE_SECTION_DEFAULT_POSITIONS[axis]);
-    const basis = sourceFaceFrame
+    const sourceBasis = sourceFaceFrame
+      ? sceneSectionOrthonormalSourceBasis(sourceFaceFrame)
+      : null;
+    const basis = sourceFaceFrame && sourceBasis
       ? {
           alignment: sceneSectionAlignment(frame?.axisAlignment),
           datum: sceneSectionDatum(frame?.axisDatum),
@@ -1796,11 +1958,11 @@ export function resolveSceneSectionFrames(this: any,
           maxAM,
           minBM,
           maxBM,
-          signedDistanceM: sourceFaceFrame.signedDistanceM,
-          center: sceneSectionVec3(sourceFaceFrame.center),
-          normal: sceneSectionVec3(sourceFaceFrame.normal).normalize(),
-          axisAVector: sceneSectionVec3(sourceFaceFrame.axisAVector).normalize(),
-          axisBVector: sceneSectionVec3(sourceFaceFrame.axisBVector).normalize(),
+          signedDistanceM: sourceBasis.center.dot(sourceBasis.normal),
+          center: sourceBasis.center,
+          normal: sourceBasis.normal,
+          axisAVector: sourceBasis.axisAVector,
+          axisBVector: sourceBasis.axisBVector,
         }
       : sceneSectionResolvedFrameBasis(
           axis,
@@ -1846,7 +2008,7 @@ export function resolveSceneSectionFrames(this: any,
     );
     const groundTraceWidthM = clampRange(
       finiteNumber(frame?.groundTraceWidthM) ??
-        SCENE_SECTION_GROUND_TRACE_WIDTH_DEFAULT_M,
+        visuals.groundTraceWidthM,
       SCENE_SECTION_GROUND_TRACE_WIDTH_MIN_M,
       SCENE_SECTION_GROUND_TRACE_WIDTH_MAX_M,
     );
@@ -2900,7 +3062,8 @@ export function rebuildSceneSectionHelpers(this: any,
     planes.length > 0;
   if (!runtime.group.visible) return;
 
-  const referenceOutlineWidthM = sceneSectionOutlineWidthM(
+  const sectionVisuals = sceneSectionVisualSettings.call(this);
+  const referenceOutlineWidthM = sceneSectionVisualOutlineWidthM(
     Math.max(
       SCENE_SECTION_MIN_HELPER_SIZE_M,
       size.y * SCENE_SECTION_HELPER_PADDING,
@@ -2909,6 +3072,7 @@ export function rebuildSceneSectionHelpers(this: any,
       SCENE_SECTION_MIN_HELPER_SIZE_M,
       size.z * SCENE_SECTION_HELPER_PADDING,
     ),
+    sectionVisuals,
   );
 
   if (showFrameIntersections) {
@@ -3105,10 +3269,14 @@ export function rebuildSceneSectionHelpers(this: any,
           SCENE_SECTION_HANDLE_MAX_SPAN_M,
         );
         const coneLength =
-          clampRange(handleSpan * 1.12, 520, 1120) *
+          clampRange(
+            handleSpan * sectionVisuals.arrowSpanScale,
+            sectionVisuals.arrowMinLengthM,
+            sectionVisuals.arrowMaxLengthM,
+          ) *
           SCENE_SECTION_CONE_VISUAL_SCALE;
-        const coneRadius = coneLength * 0.28;
-        const arrowSpan = coneLength * 1.28;
+        const coneRadius = coneLength * sectionVisuals.arrowRadiusScale;
+        const arrowSpan = coneLength * sectionVisuals.arrowGapScale;
         const preservedPickRadius =
           coneRadius *
           (SCENE_SECTION_HANDLE_VISUAL_SCALE / SCENE_SECTION_CONE_VISUAL_SCALE) *
@@ -3286,7 +3454,11 @@ export function rebuildSceneSectionHelpers(this: any,
         frame.axisIntervalM,
         sceneSectionAxisTickOffset(frame, tangentB, origin),
       );
-      const tickLength = Math.max(referenceOutlineWidthM * 1.25, 260);
+      const tickLength = clampRange(
+        referenceOutlineWidthM * sectionVisuals.axisTickLengthScale,
+        sectionVisuals.axisTickMinLengthM,
+        sectionVisuals.axisTickMaxLengthM,
+      );
       const axisPoints: THREE.Vector3[] = [
         planeCenter
           .clone()

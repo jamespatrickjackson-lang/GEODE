@@ -9,6 +9,7 @@ import {
 } from "./styles";
 import {
   detailsContentStyle,
+  editorDarkSelectStyle,
   EnvStyleRow,
   LayerBooleanStyleControl,
   LayerColorStyleControl,
@@ -2852,6 +2853,7 @@ export function LayerPanel({
                           classification: e.target.value,
                         })
                       }
+                      style={editorDarkSelectStyle}
                     >
                       {CLASSIFICATIONS.map((c) => (
                         <option key={c} value={c}>
@@ -2869,6 +2871,7 @@ export function LayerPanel({
                           confidentiality: e.target.value,
                         })
                       }
+                      style={editorDarkSelectStyle}
                     >
                       {CONFIDENTIALITIES.map((c) => (
                         <option key={c} value={c}>

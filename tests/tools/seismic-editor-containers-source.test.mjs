@@ -176,6 +176,10 @@ test("site details composes seismic survey geometry as a separate container", ()
     /\{seismicSurveyGeometry \?\? null\}/,
     "SiteDetailsPanel should render survey geometry separately from Source Locations",
   );
+  assertOrder(siteDetailsSource, [
+    "{seismicSurveyGeometry ?? null}",
+    'summary="Source Locations"',
+  ]);
 });
 
 test("seismic capability containers follow MT-like data to display order", () => {
@@ -206,23 +210,38 @@ test("seismic capability containers follow MT-like data to display order", () =>
   );
   assert.match(
     containerSource,
-    /data-testid="seismic-capability-psdm-58-32-depth-window"/,
-    "seismic editor should expose the PSDM + MT + 58-32 depth-window preset",
+    /data-testid=\{`seismic-capability-depth-window-preset-\$\{preset\.id\}`\}/,
+    "seismic editor should expose metadata-driven depth-window presets",
   );
   assert.match(
     containerSource,
-    /UTAH_FORGE_SCENE_SECTION_LAYER_ID/,
-    "depth-window shortcut should write the shared scene-section layer",
+    /linkedLayerStylePatches\?\.\[UTAH_FORGE_SCENE_SECTION_LAYER_ID\]/,
+    "depth-window shortcut should be discovered from linked scene-section preset metadata",
   );
   assert.match(
     containerSource,
-    /sceneSectionWindowByAxis/,
-    "depth-window shortcut should reuse scene-section window fields",
+    /const seismicDepthWindowSceneSectionPatch[\s\S]*sceneSectionTargetLayerIds[\s\S]*layerId[\s\S]*sceneSectionTargetProductIds[\s\S]*productId/,
+    "depth-window toggles should target the active seismic layer/product instead of reviving a generic Y window.",
   );
   assert.match(
     containerSource,
-    /sceneSectionFrameByAxis/,
-    "depth-window shortcut should reuse scene-section frame fields",
+    /sceneSectionActiveFrameId:\s*activeFrameId/,
+    "depth-window toggles should preserve an existing Y/source frame id.",
+  );
+  assert.match(
+    containerSource,
+    /commitSceneSectionStyle\(seismicDepthWindowSceneSectionPatch\(visible\)\)/,
+    "depth-window visibility toggles should use the source-aware scene-section patch.",
+  );
+  assert.match(
+    seismicModelSource,
+    /linkedLayerStylePatches/,
+    "seismic model should preserve linked layer patch metadata from capability presets",
+  );
+  assert.match(
+    seismicModelSource,
+    /verticalDatumMode/,
+    "seismic model should preserve preset-owned vertical datum mode",
   );
   assert.doesNotMatch(
     containerSource,
@@ -248,21 +267,27 @@ test("seismic capability containers follow MT-like data to display order", () =>
 
   assertOrder(returnSource, [
     "<SeismicSourceAndRegistrationControls",
-    "<SectionGraphOptionsControls",
-    'title="Seismic rendering"',
+    "<SeismicProductVisibilityControls",
+    'title="3D products"',
+    'title="2D product details"',
+    'title="2D sections"',
     'title="Depth window"',
+    'title="Seismic rendering"',
     'title="Isobands"',
+    'title="Integrated geophysics"',
+    'title="Processing comparison"',
+    'title="Figure annotations"',
     'title="Source-gated products"',
   ]);
-  assert.match(
+  assert.doesNotMatch(
     returnSource,
     /<SectionGraphOptionsControls/,
-    "seismic product, comparison, integrated geophysics, survey, and figure controls should live in shared Section Options",
+    "sidebar Seismic analysis should not render the Section Options aggregate",
   );
   assert.match(
     graphControlsSource,
     /testId="seismic-section-options"/,
-    "section graph controls should expose their own container test id",
+    "quick-legend Section Options should keep its compact component container support",
   );
   assert.match(
     graphControlsSource,
@@ -295,14 +320,19 @@ test("seismic capability containers follow MT-like data to display order", () =>
     /id: "all-2d-sections"|id: "survey-plus-2d-sections"|id: "hide-2d-sections"/,
     "section graph controls should not expose old bulk 2D shortcut actions",
   );
+  assert.match(
+    returnSource,
+    /<SeismicProductVisibilityControls/,
+    "Product visibility should be a first-level seismic peer container",
+  );
   assert.doesNotMatch(
     returnSource,
-    /<SeismicProductVisibilityControls|title="3D products"|title="2D product details"|title="2D sections"|title="Integrated geophysics"|title="Processing comparison"|title="Figure annotations"/,
-    "legacy scattered seismic option containers should be replaced by shared Section Options",
+    /title="Survey Geometry"|title="Seismic survey geometry"|group.heading === "Survey Geometry"/,
+    "survey geometry should not remain in Seismic analysis",
   );
 
   const renderingStart = returnSource.indexOf('title="Seismic rendering"');
-  const renderingEnd = returnSource.indexOf('title="Depth window"', renderingStart);
+  const renderingEnd = returnSource.indexOf('title="Isobands"', renderingStart);
   assert.ok(renderingStart >= 0 && renderingEnd > renderingStart);
   const renderingContainer = returnSource.slice(renderingStart, renderingEnd);
   assert.doesNotMatch(

@@ -2,6 +2,7 @@ import type React from "react";
 import { panelStyles, vibrancyTertiaryLabel } from "../../styles";
 import {
   detailsContentStyle,
+  editorDarkSelectStyle,
   nestedControlRowStyle,
   nestedDetailsStyle,
   nestedFieldLabelStyle,
@@ -247,7 +248,7 @@ export function IsobandControls({
               onChange={(event) =>
                 ensureScenePlane(event.target.value as "x" | "y" | "z")
               }
-              style={{ flex: 1, minWidth: 0, opacity: controlOpacity }}
+              style={{ ...editorDarkSelectStyle, opacity: controlOpacity }}
             >
               <option value="x">X</option>
               <option value="y">Y</option>
@@ -548,8 +549,7 @@ export function IsobandControls({
             })
           }
           style={{
-            flex: 1,
-            minWidth: 0,
+            ...editorDarkSelectStyle,
             opacity: enabled && linesVisible ? controlOpacity : 0.35,
           }}
         >

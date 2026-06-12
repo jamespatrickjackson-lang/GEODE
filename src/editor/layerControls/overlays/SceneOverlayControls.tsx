@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type React from "react";
 import { panelStyles, vibrancyLabel, vibrancySecondaryLabel } from "../../styles";
+import { editorDarkSelectStyle } from "../../styleControls";
 import { TransientSlider } from "../../TransientSlider";
 import { useEditor } from "../../EditorContext";
 import { writeFile } from "../../save";
@@ -224,6 +225,7 @@ export function SceneOverlayRow({
                       .value as (typeof CLASSIFICATIONS_OVERLAY)[number],
                   })
                 }
+                style={editorDarkSelectStyle}
               >
                 {CLASSIFICATIONS_OVERLAY.map((c) => (
                   <option key={c} value={c}>
@@ -421,6 +423,7 @@ export function AddSceneOverlayForm() {
               e.target.value as SceneOverlayDef["provenance"]["classification"],
             )
           }
+          style={editorDarkSelectStyle}
         >
           <option value="observation">observation</option>
           <option value="interpretation">interpretation</option>

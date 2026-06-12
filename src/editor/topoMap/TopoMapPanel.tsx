@@ -4,6 +4,7 @@ import {
   detailsContentStyle,
   drillingAssayDetailsStyle,
   drillingAssaySummaryStyle,
+  editorDarkSelectStyle,
   EditorEyeButton,
   EnvSelectRow,
   EnvStyleRow,
@@ -2291,6 +2292,7 @@ export function TopoMapPanel({
                         classification: event.target.value,
                       })
                     }
+                    style={editorDarkSelectStyle}
                   >
                     {CLASSIFICATIONS.map((classification) => (
                       <option key={classification} value={classification}>
@@ -2308,6 +2310,7 @@ export function TopoMapPanel({
                         confidentiality: event.target.value,
                       })
                     }
+                    style={editorDarkSelectStyle}
                   >
                     {CONFIDENTIALITIES.map((confidentiality) => (
                       <option key={confidentiality} value={confidentiality}>

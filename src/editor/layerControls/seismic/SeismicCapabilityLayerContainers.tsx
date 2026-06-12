@@ -18,9 +18,10 @@ import {
   UTAH_FORGE_SCENE_SECTION_LAYER_ID,
 } from "../../../projectModules/utahForge/layerIds";
 import { IsobandControls } from "../mt/IsobandControls";
-import { SectionGraphOptionsControls } from "./SectionGraphOptionsControls";
+import { SectionGraphOptionGroupControls } from "./SectionGraphOptionsControls";
 import { SeismicCapabilityLayerItem } from "./SeismicCapabilityLayerItem";
 import { SeismicDisplayTuningControls } from "./SeismicDisplayTuningControls";
+import { SeismicProductVisibilityControls } from "./SeismicProductVisibilityControls";
 import { SeismicSourceAndRegistrationControls } from "./SeismicSourceAndRegistrationControls";
 import { SeismicSurveyGeometryControls } from "./SeismicSurveyGeometryControls";
 import {
@@ -132,6 +133,13 @@ export function SeismicSurveyGeometryContainer({
         preset.mtStylePatch,
       );
     }
+    if (preset.linkedLayerStylePatches) {
+      for (const [targetLayerId, patch] of Object.entries(
+        preset.linkedLayerStylePatches,
+      )) {
+        commitLayerStyle(targetLayerId, patch);
+      }
+    }
   };
   const setNavigationRoleVisible = (
     role: "sources" | "receivers" | "lines",
@@ -209,6 +217,24 @@ export function SeismicCapabilityLayerContainers({
     products,
     productId,
   );
+  const threeDimensionalProducts = products.filter(
+    (product) => product.surveyKind === "3d",
+  );
+  const twoDimensionalProducts = products.filter(
+    (product) => product.surveyKind !== "3d",
+  );
+  const visibleThreeDimensionalProducts = threeDimensionalProducts.some(
+    (product) => productVisibility[product.id] === true,
+  );
+  const visibleTwoDimensionalProducts = twoDimensionalProducts.some(
+    (product) => productVisibility[product.id] === true,
+  );
+  const selectedTwoDimensionalProduct =
+    selectedProduct && selectedProduct.surveyKind !== "3d"
+      ? selectedProduct
+      : (twoDimensionalProducts.find(
+          (product) => productVisibility[product.id] === true,
+        ) ?? twoDimensionalProducts[0]);
   const seismicLayerVisible = styleBoolean(style, "visible", true);
   const requestedRenderMode =
     style.seismicRenderMode === "raymarch" ? "raymarch" : "slice";
@@ -254,6 +280,17 @@ export function SeismicCapabilityLayerContainers({
     "seismicPresentationBarVisible",
     false,
   );
+  const comparisonVisible =
+    typeof style.seismicComparisonProductId === "string" &&
+    style.seismicComparisonProductId.trim() !== "";
+  const integratedVisible =
+    style.seismicMtCoRender === "integrated" || style.seismicMtCoRender === "mt";
+  const graphAnnotationsVisible =
+    styleBoolean(style, "seismicFigureAnnotationsVisible", false) ||
+    style.graphAnnotationDefaults?.frameVisible === true ||
+    Object.values(style.graphAnnotationProfiles ?? {}).some(
+      (profile) => profile?.frameVisible === true,
+    );
   const verticalDatumMode = seismicVerticalDatumModeFromStyle(style);
   const currentCapabilityPresetId =
     typeof style.seismicCapabilityPresetId === "string"
@@ -261,6 +298,9 @@ export function SeismicCapabilityLayerContainers({
       : "";
   const activeCapabilityPreset = capabilityPresets.find(
     (preset) => preset.id === currentCapabilityPresetId,
+  );
+  const linkedSceneSectionPresets = capabilityPresets.filter((preset) =>
+    Boolean(preset.linkedLayerStylePatches?.[UTAH_FORGE_SCENE_SECTION_LAYER_ID]),
   );
   const controlOpacity = disabled ? 0.4 : 1;
   const liveSeismicStyleRef = useRef(style);
@@ -299,6 +339,59 @@ export function SeismicCapabilityLayerContainers({
   const setSeismicLayerVisible = (visible: boolean) => {
     commit({ visible });
   };
+  const setProductGroupVisible = (
+    predicate: (product: (typeof products)[number]) => boolean,
+    visible: boolean,
+  ) => {
+    commit({
+      ...(visible ? { visible: true } : {}),
+      seismicProductVisibility: {
+        ...productVisibility,
+        ...Object.fromEntries(
+          products
+            .filter(predicate)
+            .map((product) => [product.id, visible]),
+        ),
+      },
+    });
+  };
+  const showDefaultComparison = (visible: boolean) => {
+    if (!visible) {
+      commit({ seismicComparisonProductId: undefined });
+      return;
+    }
+    const comparisonProduct =
+      products.find((product) => product.id !== productId) ?? products[0];
+    if (!comparisonProduct) return;
+    commit({
+      visible: true,
+      seismicComparisonProductId: comparisonProduct.id,
+      seismicComparisonMode:
+        style.seismicComparisonMode === "side-by-side"
+          ? "side-by-side"
+          : "overlay",
+      seismicProductVisibility: {
+        ...productVisibility,
+        [comparisonProduct.id]: true,
+      },
+      seismicRenderMode: "slice",
+    });
+  };
+  const setIntegratedVisible = (visible: boolean) => {
+    commit({
+      visible: true,
+      seismicMtCoRender: visible ? "integrated" : "seismic",
+    });
+  };
+  const setGraphAnnotationsVisible = (visible: boolean) => {
+    commit({
+      seismicFigureAnnotationsVisible: visible,
+      graphAnnotationDefaults: {
+        ...(style.graphAnnotationDefaults ?? {}),
+        frameVisible: visible,
+      },
+    });
+  };
   const commitSceneSectionStyle = (patch: Partial<EditableStyle>) => {
     if (disabled) return;
     const merged = { ...liveSceneSectionStyleRef.current, ...patch };
@@ -315,6 +408,55 @@ export function SeismicCapabilityLayerContainers({
         patch,
       );
     }
+  };
+  const sceneSectionStringList = (value: unknown): string[] =>
+    Array.isArray(value)
+      ? value.filter((candidate): candidate is string => typeof candidate === "string")
+      : [];
+  const seismicDepthWindowSceneSectionPatch = (
+    visible: boolean,
+  ): Partial<EditableStyle> => {
+    if (!visible) {
+      return {
+        visible: false,
+        sceneSectionEnabled: false,
+        sceneSectionFrameEnabled: false,
+        sceneSectionWindowEnabled: false,
+      };
+    }
+    const currentStyle = liveSceneSectionStyleRef.current;
+    const layerTargets = sceneSectionStringList(
+      currentStyle.sceneSectionTargetLayerIds,
+    );
+    const productTargets = sceneSectionStringList(
+      currentStyle.sceneSectionTargetProductIds,
+    );
+    const activeFrameId =
+      currentStyle.sceneSectionActiveAxis === "y" &&
+      typeof currentStyle.sceneSectionActiveFrameId === "string" &&
+      currentStyle.sceneSectionActiveFrameId.trim()
+        ? currentStyle.sceneSectionActiveFrameId
+        : "axis:y";
+    const nextProductTargets =
+      productId && !productTargets.includes(productId)
+        ? [productId, ...productTargets]
+        : productTargets;
+    return {
+      visible: true,
+      sceneSectionEnabled: true,
+      sceneSectionMode: "cutaway",
+      sceneSectionFrameEnabled: true,
+      sceneSectionWindowEnabled: true,
+      sceneSectionActiveAxis: "y",
+      sceneSectionActiveFrameId: activeFrameId,
+      sceneSectionTargetScope: "selected-targets",
+      sceneSectionTargetLayerIds: layerTargets.includes(layerId)
+        ? layerTargets
+        : [...layerTargets, layerId],
+      ...(nextProductTargets.length > 0
+        ? { sceneSectionTargetProductIds: nextProductTargets }
+        : {}),
+    };
   };
   const applyCapabilityPreset = (presetId: string) => {
     const preset = capabilityPresets.find(
@@ -339,8 +481,6 @@ export function SeismicCapabilityLayerContainers({
       }
     }
   };
-  const applyPsdm58_32DepthWindow = () =>
-    applyCapabilityPreset("psdm-mt-58-32-source-location-tie");
   const renderSourceGatedProductItem = (
     gate: SeismicRequiredProductSourceGate,
   ) => (
@@ -448,6 +588,72 @@ export function SeismicCapabilityLayerContainers({
       ) : null}
     </SeismicCapabilityLayerItem>
   );
+  const renderTwoDimensionalProductDetails = () => {
+    if (!selectedTwoDimensionalProduct) {
+      return (
+        <div style={nestedControlRowStyle}>
+          <span style={nestedFieldLabelStyle}>Selected</span>
+          <span style={{ flex: 1, color: vibrancyTertiaryLabel, fontSize: 11 }}>
+            No 2D product selected
+          </span>
+        </div>
+      );
+    }
+    const detailRows: Array<[string, string]> = [
+      ["Selected", selectedTwoDimensionalProduct.label],
+      [
+        "Line",
+        selectedTwoDimensionalProduct.lineLabel ??
+          selectedTwoDimensionalProduct.lineId ??
+          "unassigned",
+      ],
+      [
+        "Processing",
+        selectedTwoDimensionalProduct.processingStage ?? "source-defined",
+      ],
+      [
+        "Domain",
+        selectedTwoDimensionalProduct.domainUnit ??
+          selectedTwoDimensionalProduct.domainKind ??
+          "source-defined",
+      ],
+      [
+        "Registration",
+        selectedTwoDimensionalProduct.navigationPlacement?.statusLabel ??
+          (selectedTwoDimensionalProduct.navigationPlacement
+            ?.canClaimPreciseRegistration === false
+            ? "approximate; control-point validation not claimed"
+            : "source geometry"),
+      ],
+      [
+        "Source",
+        selectedTwoDimensionalProduct.sourceSubmission ??
+          selectedTwoDimensionalProduct.nameEvidence?.sourceSubmission ??
+          selectedTwoDimensionalProduct.nameEvidence?.sourceFileName ??
+          "source metadata",
+      ],
+    ];
+    return (
+      <div style={detailsContentStyle}>
+        {detailRows.map(([label, value]) => (
+          <div key={label} style={nestedControlRowStyle}>
+            <span style={nestedFieldLabelStyle}>{label}</span>
+            <span
+              style={{
+                flex: 1,
+                color: vibrancyTertiaryLabel,
+                fontSize: 11,
+                lineHeight: 1.35,
+                opacity: controlOpacity,
+              }}
+            >
+              {value}
+            </span>
+          </div>
+        ))}
+      </div>
+    );
+  };
 
   return (
     <>
@@ -475,45 +681,79 @@ export function SeismicCapabilityLayerContainers({
         controlOpacity={controlOpacity}
       />
 
-      <SectionGraphOptionsControls
-        layer={layer}
-        style={style}
+      <SeismicProductVisibilityControls
+        products={products}
+        productVisibility={productVisibility}
+        productId={productId}
         disabled={disabled}
         controlOpacity={controlOpacity}
         commit={commit}
-        commitLayerStyle={commitLayerStyle}
       />
 
       <SeismicCapabilityLayerItem
-        testId="seismic-capability-seismic-rendering"
-        title="Seismic rendering"
-        type="display"
-        visible={seismicLayerVisible}
-        visibilityDisabled={disabled}
-        onVisibleChange={setSeismicLayerVisible}
+        testId="seismic-products-3d"
+        title="3D products"
+        visible={visibleThreeDimensionalProducts}
+        visibilityDisabled={disabled || threeDimensionalProducts.length === 0}
+        onVisibleChange={(visible) =>
+          setProductGroupVisible(
+            (product) => product.surveyKind === "3d",
+            visible,
+          )
+        }
       >
-        <SeismicDisplayTuningControls
+        <SectionGraphOptionGroupControls
+          headings={["3D Volume", "3D Section Plane"]}
+          layer={layer}
+          style={style}
           disabled={disabled}
-          selectedProduct={selectedProduct}
-          amplitudeMin={amplitudeMin}
-          amplitudeMax={amplitudeMax}
-          amplitudeGamma={amplitudeGamma}
-          colormap={colormap}
-          legendVisible={legendVisible}
-          presentationBarVisible={presentationBarVisible}
-          removeBackground={removeBackground}
-          backgroundCutoff={backgroundCutoff}
-          volumeSampleSteps={volumeSampleSteps}
-          timeScale={timeScale}
           controlOpacity={controlOpacity}
           commit={commit}
+          commitLayerStyle={commitLayerStyle}
+        />
+      </SeismicCapabilityLayerItem>
+
+      <SeismicCapabilityLayerItem
+        testId="seismic-products-2d-details"
+        title="2D product details"
+        visible={visibleTwoDimensionalProducts}
+        visibilityDisabled={disabled || twoDimensionalProducts.length === 0}
+        onVisibleChange={(visible) =>
+          setProductGroupVisible(
+            (product) => product.surveyKind !== "3d",
+            visible,
+          )
+        }
+      >
+        {renderTwoDimensionalProductDetails()}
+      </SeismicCapabilityLayerItem>
+
+      <SeismicCapabilityLayerItem
+        testId="seismic-products-2d-sections"
+        title="2D sections"
+        visible={visibleTwoDimensionalProducts}
+        visibilityDisabled={disabled || twoDimensionalProducts.length === 0}
+        onVisibleChange={(visible) =>
+          setProductGroupVisible(
+            (product) => product.surveyKind !== "3d",
+            visible,
+          )
+        }
+      >
+        <SectionGraphOptionGroupControls
+          headings={["2D Section Line"]}
+          layer={layer}
+          style={style}
+          disabled={disabled}
+          controlOpacity={controlOpacity}
+          commit={commit}
+          commitLayerStyle={commitLayerStyle}
         />
       </SeismicCapabilityLayerItem>
 
       <SeismicCapabilityLayerItem
         testId="seismic-capability-depth-window"
         title="Depth window"
-        type="section"
         visible={styleBoolean(
           sceneSectionStyle,
           "sceneSectionWindowEnabled",
@@ -521,12 +761,7 @@ export function SeismicCapabilityLayerContainers({
         )}
         visibilityDisabled={disabled}
         onVisibleChange={(visible) =>
-          commitSceneSectionStyle({
-            visible,
-            sceneSectionEnabled: visible,
-            sceneSectionFrameEnabled: visible,
-            sceneSectionWindowEnabled: visible,
-          })
+          commitSceneSectionStyle(seismicDepthWindowSceneSectionPatch(visible))
         }
       >
         {(() => {
@@ -553,12 +788,9 @@ export function SeismicCapabilityLayerContainers({
                 checked={styleBoolean(sceneSectionStyle, "sceneSectionWindowEnabled", false)}
                 disabled={disabled}
                 onChange={(e) =>
-                  commitSceneSectionStyle({
-                    visible: e.target.checked,
-                    sceneSectionEnabled: e.target.checked,
-                    sceneSectionFrameEnabled: e.target.checked,
-                    sceneSectionWindowEnabled: e.target.checked,
-                  })
+                  commitSceneSectionStyle(
+                    seismicDepthWindowSceneSectionPatch(e.target.checked),
+                  )
                 }
                 style={{ opacity: controlOpacity }}
               />
@@ -575,37 +807,69 @@ export function SeismicCapabilityLayerContainers({
             </label>
           );
         })()}
-        <div style={{ ...nestedControlRowStyle, gap: 6, flexWrap: "wrap" }}>
-          <label style={nestedFieldLabelStyle}>Preset</label>
-          <button
-            type="button"
-            data-testid="seismic-capability-psdm-58-32-depth-window"
-            disabled={disabled}
-            onClick={applyPsdm58_32DepthWindow}
-            style={{
-              ...panelStyles.iconButton,
-              width: "auto",
-              padding: "3px 7px",
-              fontSize: 10,
-              opacity: controlOpacity,
-            }}
-          >
-            PSDM + MT + 58-32
-          </button>
-        </div>
-        <div style={nestedControlRowStyle}>
-          <label style={nestedFieldLabelStyle}>Claim</label>
-          <span
-            style={{
-              flex: 1,
-              color: vibrancyTertiaryLabel,
-              fontSize: 11,
-              opacity: controlOpacity,
-            }}
-          >
-            58-32 source-location-only
-          </span>
-        </div>
+        {linkedSceneSectionPresets.length > 0 ? (
+          <div style={{ ...nestedControlRowStyle, gap: 6, flexWrap: "wrap" }}>
+            <label style={nestedFieldLabelStyle}>Preset</label>
+            {linkedSceneSectionPresets.map((preset) => (
+              <button
+                key={preset.id}
+                type="button"
+                data-testid={`seismic-capability-depth-window-preset-${preset.id}`}
+                disabled={disabled}
+                onClick={() => applyCapabilityPreset(preset.id)}
+                style={{
+                  ...panelStyles.iconButton,
+                  width: "auto",
+                  padding: "3px 7px",
+                  fontSize: 10,
+                  opacity: controlOpacity,
+                }}
+              >
+                {preset.label}
+              </button>
+            ))}
+          </div>
+        ) : null}
+        {activeCapabilityPreset?.summary ? (
+          <div style={nestedControlRowStyle}>
+            <label style={nestedFieldLabelStyle}>Preset</label>
+            <span
+              style={{
+                flex: 1,
+                color: vibrancyTertiaryLabel,
+                fontSize: 11,
+                opacity: controlOpacity,
+              }}
+            >
+              {activeCapabilityPreset.summary}
+            </span>
+          </div>
+        ) : null}
+      </SeismicCapabilityLayerItem>
+
+      <SeismicCapabilityLayerItem
+        testId="seismic-capability-seismic-rendering"
+        title="Seismic rendering"
+        visible={seismicLayerVisible}
+        visibilityDisabled={disabled}
+        onVisibleChange={setSeismicLayerVisible}
+      >
+        <SeismicDisplayTuningControls
+          disabled={disabled}
+          selectedProduct={selectedProduct}
+          amplitudeMin={amplitudeMin}
+          amplitudeMax={amplitudeMax}
+          amplitudeGamma={amplitudeGamma}
+          colormap={colormap}
+          legendVisible={legendVisible}
+          presentationBarVisible={presentationBarVisible}
+          removeBackground={removeBackground}
+          backgroundCutoff={backgroundCutoff}
+          volumeSampleSteps={volumeSampleSteps}
+          timeScale={timeScale}
+          controlOpacity={controlOpacity}
+          commit={commit}
+        />
       </SeismicCapabilityLayerItem>
 
       <SeismicCapabilityLayerItem
@@ -642,6 +906,60 @@ export function SeismicCapabilityLayerContainers({
           setEnvLayerStyle={setEnvLayerStyle}
           setPageLayerOverride={setPageLayerOverride}
           nestedContainer={false}
+        />
+      </SeismicCapabilityLayerItem>
+
+      <SeismicCapabilityLayerItem
+        testId="seismic-integrated-geophysics"
+        title="Integrated geophysics"
+        visible={integratedVisible}
+        visibilityDisabled={disabled}
+        onVisibleChange={setIntegratedVisible}
+      >
+        <SectionGraphOptionGroupControls
+          headings={["Integrated Geophysics"]}
+          layer={layer}
+          style={style}
+          disabled={disabled}
+          controlOpacity={controlOpacity}
+          commit={commit}
+          commitLayerStyle={commitLayerStyle}
+        />
+      </SeismicCapabilityLayerItem>
+
+      <SeismicCapabilityLayerItem
+        testId="seismic-processing-comparison"
+        title="Processing comparison"
+        visible={comparisonVisible}
+        visibilityDisabled={disabled || products.length < 2}
+        onVisibleChange={showDefaultComparison}
+      >
+        <SectionGraphOptionGroupControls
+          headings={["Processing Comparison"]}
+          layer={layer}
+          style={style}
+          disabled={disabled}
+          controlOpacity={controlOpacity}
+          commit={commit}
+          commitLayerStyle={commitLayerStyle}
+        />
+      </SeismicCapabilityLayerItem>
+
+      <SeismicCapabilityLayerItem
+        testId="seismic-figure-annotations"
+        title="Figure annotations"
+        visible={graphAnnotationsVisible}
+        visibilityDisabled={disabled}
+        onVisibleChange={setGraphAnnotationsVisible}
+      >
+        <SectionGraphOptionGroupControls
+          headings={["Figure Annotation"]}
+          layer={layer}
+          style={style}
+          disabled={disabled}
+          controlOpacity={controlOpacity}
+          commit={commit}
+          commitLayerStyle={commitLayerStyle}
         />
       </SeismicCapabilityLayerItem>
 

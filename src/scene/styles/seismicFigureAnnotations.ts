@@ -3,11 +3,15 @@ import {
   buildSeismicFigureAnnotationModel,
   type SeismicFigureSampleDomain,
 } from "../../geophysics/seismicFigureAnnotationModel";
+import {
+  resolveGraphAnnotationProfile,
+  seismicSectionGraphAnnotationTarget,
+} from "../../geophysics/graphAnnotationModel";
 import type {
   SeismicSectionGraphBasis,
   TracePathCurtainGraphBasis,
 } from "../../geophysics/seismicSectionGraphBasis";
-import type { EditableStyle } from "../../pages/types";
+import type { EditableStyle, GraphAnnotationProfile } from "../../pages/types";
 
 const FIGURE_RENDER_ORDER = 4688;
 
@@ -19,23 +23,24 @@ type FigureGraphMetadata = {
   entityKey: string;
   representationKey: string;
   basisKind: string;
+  graphAnnotationTargetKey?: string;
 };
 
-function styleColor(
-  style: EditableStyle,
-  key: keyof EditableStyle,
+function profileColor(
+  profile: GraphAnnotationProfile,
+  key: keyof GraphAnnotationProfile,
   fallback: string,
 ): string {
-  const value = style[key];
+  const value = profile[key];
   return typeof value === "string" && value.trim() ? value : fallback;
 }
 
-function styleNumber(
-  style: EditableStyle,
-  key: keyof EditableStyle,
+function profileNumber(
+  profile: GraphAnnotationProfile,
+  key: keyof GraphAnnotationProfile,
   fallback: number,
 ): number {
-  const value = style[key];
+  const value = profile[key];
   return typeof value === "number" && Number.isFinite(value) ? value : fallback;
 }
 
@@ -45,12 +50,30 @@ function clamp(value: number, min: number, max: number): number {
 
 function graphMetadataFromBasis(
   basis: SeismicSectionGraphBasis,
+  graphAnnotationTargetKey: string | null,
 ): FigureGraphMetadata {
   return {
     entityKey: `${basis.entityKey}:figure-annotation`,
     representationKey: "seismic:figure-annotation",
     basisKind: basis.kind,
+    ...(graphAnnotationTargetKey ? { graphAnnotationTargetKey } : {}),
   };
+}
+
+function graphAnnotationTargetKeyFromBasis(
+  basis: SeismicSectionGraphBasis | undefined,
+): string | null {
+  if (!basis) return null;
+  const objectKind =
+    basis.objectKind === "3d-section-plane"
+      ? "3d-section-plane"
+      : "2d-section-line";
+  return seismicSectionGraphAnnotationTarget({
+    layerId: basis.layerId,
+    productId: basis.productId,
+    objectKind,
+    objectId: basis.objectId,
+  }).targetKey;
 }
 
 function tagFigureObject(
@@ -61,6 +84,9 @@ function tagFigureObject(
   object.userData.seismicGraphEntityKey = metadata.entityKey;
   object.userData.seismicGraphRepresentationKey = metadata.representationKey;
   object.userData.seismicGraphBasisKind = metadata.basisKind;
+  if (metadata.graphAnnotationTargetKey) {
+    object.userData.graphAnnotationTargetKey = metadata.graphAnnotationTargetKey;
+  }
   object.userData.geoseePickIgnore = true;
 }
 
@@ -90,6 +116,9 @@ function tagFigureMaterial(
   material.userData.seismicGraphEntityKey = metadata.entityKey;
   material.userData.seismicGraphRepresentationKey = metadata.representationKey;
   material.userData.seismicGraphBasisKind = metadata.basisKind;
+  if (metadata.graphAnnotationTargetKey) {
+    material.userData.graphAnnotationTargetKey = metadata.graphAnnotationTargetKey;
+  }
 }
 
 function tagFigureTree(
@@ -600,7 +629,14 @@ export function updateSeismicFigureAnnotations(
   mesh: THREE.Mesh,
   style: EditableStyle,
 ): void {
-  if (style.seismicFigureAnnotationsVisible !== true) {
+  const basis = mesh.userData
+    .seismicSectionGraphBasis as SeismicSectionGraphBasis | undefined;
+  const graphAnnotationTargetKey = graphAnnotationTargetKeyFromBasis(basis);
+  const figureProfile = resolveGraphAnnotationProfile(
+    style,
+    graphAnnotationTargetKey,
+  );
+  if (figureProfile.frameVisible !== true) {
     disposeSeismicFigureAnnotations(mesh);
     return;
   }
@@ -624,34 +660,32 @@ export function updateSeismicFigureAnnotations(
   const widthM = frame.widthM;
   const heightM = frame.heightM;
   const offsetM = clamp(
-    styleNumber(style, "seismicFigureOutsideOffsetM", Math.max(160, widthM * 0.06)),
+    profileNumber(figureProfile, "outsideOffsetM", Math.max(160, widthM * 0.06)),
     40,
     1500,
   );
   const labelSizeM = clamp(
-    styleNumber(style, "seismicFigureLabelSizeM", Math.max(150, widthM * 0.075)),
+    profileNumber(figureProfile, "labelSizeM", Math.max(150, widthM * 0.075)),
     60,
     420,
   );
   const normalLift = normal.multiplyScalar(Math.max(12, labelSizeM * 0.08));
-  const textColor = styleColor(style, "seismicFigureTextColor", "#f7f7f2");
-  const axisColor = styleColor(style, "seismicFigureAxisColor", "#f7f7f2");
-  const captionBoxColor = styleColor(
-    style,
-    "seismicFigureCaptionBoxColor",
+  const textColor = profileColor(figureProfile, "textColor", "#f7f7f2");
+  const axisColor = profileColor(figureProfile, "axisColor", "#f7f7f2");
+  const captionBoxColor = profileColor(
+    figureProfile,
+    "captionBoxColor",
     "#050505",
   );
-  const horizonColor = styleColor(
-    style,
-    "seismicFigureHorizonColor",
+  const horizonColor = profileColor(
+    figureProfile,
+    "horizonColor",
     "#ffcc33",
   );
-  const wellColor = styleColor(style, "seismicFigureWellColor", "#5875ff");
+  const wellColor = profileColor(figureProfile, "wellColor", "#5875ff");
   const navigation = mesh.userData.seismicNavigationPlacement as
     | { statusLabel?: unknown; reason?: unknown }
     | undefined;
-  const basis = mesh.userData
-    .seismicSectionGraphBasis as SeismicSectionGraphBasis | undefined;
   const model = buildSeismicFigureAnnotationModel({
     productLabel:
       typeof mesh.userData.seismicProductLabel === "string"
@@ -679,18 +713,18 @@ export function updateSeismicFigureAnnotations(
         : typeof navigation?.reason === "string"
           ? navigation.reason
           : undefined,
-    titleOverride: style.seismicFigureTitle,
-    captionOverride: style.seismicFigureCaption,
-    scaleLabelOverride: style.seismicFigureScaleLabel,
-    wellLabel: style.seismicFigureWellVisible
-      ? style.seismicFigureWellLabel
+    titleOverride: figureProfile.title,
+    captionOverride: figureProfile.caption,
+    scaleLabelOverride: figureProfile.scaleLabel,
+    wellLabel: figureProfile.wellVisible
+      ? figureProfile.wellLabel
       : undefined,
-    wellPositionT: style.seismicFigureWellVisible
-      ? style.seismicFigureWellPosition
+    wellPositionT: figureProfile.wellVisible
+      ? figureProfile.wellPosition
       : undefined,
     horizonPoints:
-      style.seismicFigureHorizonVisible === true
-        ? style.seismicFigureHorizonPoints
+      figureProfile.horizonVisible === true
+        ? figureProfile.horizonPoints
         : undefined,
   });
 
@@ -699,7 +733,7 @@ export function updateSeismicFigureAnnotations(
   root.renderOrder = FIGURE_RENDER_ORDER;
   root.userData.seismicFigureAnnotationRoot = true;
   const graphMetadata = basis
-    ? graphMetadataFromBasis(basis)
+    ? graphMetadataFromBasis(basis, graphAnnotationTargetKey)
     : {
         entityKey: `mesh:${mesh.uuid}:figure-annotation`,
         representationKey: "seismic:figure-annotation",
@@ -908,7 +942,7 @@ export function updateSeismicFigureAnnotations(
         captionWidth,
         captionHeightVec,
         captionBoxColor,
-        clamp(styleNumber(style, "seismicFigureCaptionBoxOpacity", 0.54), 0, 1),
+        clamp(profileNumber(figureProfile, "captionBoxOpacity", 0.54), 0, 1),
       ),
     );
     root.add(

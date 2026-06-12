@@ -4,6 +4,7 @@ import { SCALAR_SOURCE_MAX, SCALAR_SOURCE_MIN } from "../scalarSourceRange";
 export interface SeismicProductOption {
   id: string;
   label: string;
+  sections?: SeismicProductSectionOption[];
   lineId?: string;
   lineLabel?: string;
   processingStage?: string;
@@ -40,6 +41,12 @@ export interface SeismicProductOption {
   raymarchCapable?: boolean;
 }
 
+export interface SeismicProductSectionOption {
+  id: string;
+  axis?: string;
+  fraction?: number;
+}
+
 export interface SeismicRequiredProductSourceGate {
   id: string;
   label: string;
@@ -74,6 +81,7 @@ export interface SeismicAudiencePresetOption {
   backgroundCutoff?: number;
   volumeSampleSteps?: number;
   timeScale?: number;
+  verticalDatumMode?: EditableStyle["seismicVerticalDatumMode"];
   navigationVisible?: boolean;
   navigationRoleVisibility?: EditableStyle["seismicNavigationRoleVisibility"];
   presentationBarVisible?: boolean;
@@ -212,6 +220,30 @@ export function seismicProductOptions(
       return {
         id: product.id,
         label: canonicalLabel ?? seismicIndustryLabel(product.label),
+        sections: Array.isArray(product.sections)
+          ? product.sections
+              .map((rawSection): SeismicProductSectionOption | null => {
+                if (!rawSection || typeof rawSection !== "object") return null;
+                const section = rawSection as Record<string, unknown>;
+                if (typeof section.id !== "string") return null;
+                return {
+                  id: section.id,
+                  axis:
+                    typeof section.axis === "string"
+                      ? section.axis
+                      : undefined,
+                  fraction:
+                    typeof section.fraction === "number" &&
+                    Number.isFinite(section.fraction)
+                      ? section.fraction
+                      : undefined,
+                };
+              })
+              .filter(
+                (section): section is SeismicProductSectionOption =>
+                  section !== null,
+              )
+          : undefined,
         lineId:
           typeof product.lineId === "string" ? product.lineId : undefined,
         lineLabel:
@@ -486,6 +518,12 @@ export function seismicAudiencePresets(
             : undefined,
         timeScale:
           typeof preset.timeScale === "number" ? preset.timeScale : undefined,
+        verticalDatumMode:
+          preset.verticalDatumMode === "source" ||
+          preset.verticalDatumMode === "reference-1800m" ||
+          preset.verticalDatumMode === "terrain-top-preview"
+            ? preset.verticalDatumMode
+            : undefined,
         navigationVisible:
           typeof preset.navigationVisible === "boolean"
             ? preset.navigationVisible
@@ -649,6 +687,7 @@ export function seismicPresetPatch(
         : 96,
     seismicTimeScale:
       typeof preset.timeScale === "number" ? preset.timeScale : 2,
+    seismicVerticalDatumMode: preset.verticalDatumMode,
     seismicNavigationVisible:
       typeof preset.navigationVisible === "boolean"
         ? preset.navigationVisible
@@ -1209,16 +1248,22 @@ export function seismicSectionGraphOptionGroups(
     },
     mtStylePatch: { opacity: 0.36, scalarLegendVisible: true },
   });
-  push(
-    optionFromPreset(
-      "Integrated Geophysics",
-      "PSDM + MT + 58-32 tie",
-      "psdm-mt-58-32-source-location-tie",
-      presets,
-      products,
-      fallbackProductId,
-    ),
-  );
+  for (const preset of presets.filter(
+    (candidate) =>
+      candidate.capabilityGroup === "integrated-geophysics" &&
+      candidate.linkedLayerStylePatches,
+  )) {
+    push(
+      optionFromPreset(
+        "Integrated Geophysics",
+        preset.label,
+        preset.id,
+        presets,
+        products,
+        fallbackProductId,
+      ),
+    );
+  }
   push({
     id: "isoband-source-seismic-amplitude",
     label: "Isoband source: seismic amplitude",
@@ -1556,6 +1601,20 @@ export function seismicBrowserPatchFromStyle(
       "seismicFigureHorizonColor",
       "#ffcc33",
     ),
+    graphAnnotationDefaults:
+      typeof style.graphAnnotationDefaults === "object" &&
+      style.graphAnnotationDefaults !== null
+        ? style.graphAnnotationDefaults
+        : undefined,
+    graphAnnotationProfiles:
+      typeof style.graphAnnotationProfiles === "object" &&
+      style.graphAnnotationProfiles !== null
+        ? style.graphAnnotationProfiles
+        : undefined,
+    graphAnnotationSelectedTargetKey:
+      typeof style.graphAnnotationSelectedTargetKey === "string"
+        ? style.graphAnnotationSelectedTargetKey
+        : undefined,
     sectionIsoMin: styleNumber(
       style,
       "sectionIsoMin",

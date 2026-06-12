@@ -1,5 +1,6 @@
 import { vibrancyTertiaryLabel } from "../../styles";
 import {
+  editorDarkSelectStyle,
   nestedControlRowStyle,
   nestedFieldLabelStyle,
 } from "../../styleControls";
@@ -105,7 +106,7 @@ export function SeismicDisplayTuningControls({
               seismicColormap: seismicColormapFromValue(e.target.value),
             })
           }
-          style={{ flex: 1, minWidth: 0, opacity: controlOpacity }}
+          style={{ ...editorDarkSelectStyle, opacity: controlOpacity }}
         >
           <option value="blue-white-red">Blue-white-red</option>
           <option value="grayscale">Grayscale</option>

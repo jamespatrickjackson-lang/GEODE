@@ -96,6 +96,7 @@ test("editor details containers do not opt into open-by-default behavior", () =>
     "src/editor/topoMap/TopoMapPanel.tsx",
     "src/editor/layerControls/atmosphere/AtmosphereVolumeControls.tsx",
     "src/editor/layerControls/seismic/SceneSectionPlanesContainer.tsx",
+    "src/editor/layerControls/seismic/SectionGraphOptionsControls.tsx",
   ];
 
   for (const path of checkedFiles) {
@@ -118,6 +119,44 @@ test("editor details containers do not opt into open-by-default behavior", () =>
     /<AutoOpenDetails[^>]*\bdefaultOpen\b/,
     "Site Details nested containers should not request defaultOpen",
   );
+});
+
+test("touched editor selects use the shared dark select style", () => {
+  const sharedSource = readSource("src/editor/styleControls.tsx");
+  const renderingSource = readSource(
+    "src/editor/layerControls/seismic/SeismicDisplayTuningControls.tsx",
+  );
+  const graphSource = readSource(
+    "src/editor/layerControls/seismic/SectionGraphOptionsControls.tsx",
+  );
+  const isobandSource = readSource(
+    "src/editor/layerControls/mt/IsobandControls.tsx",
+  );
+  const layerPanelSource = readSource("src/editor/LayerPanel.tsx");
+  const topoMapSource = readSource("src/editor/topoMap/TopoMapPanel.tsx");
+  const sceneOverlaySource = readSource(
+    "src/editor/layerControls/overlays/SceneOverlayControls.tsx",
+  );
+
+  assert.match(
+    sharedSource,
+    /export const editorDarkSelectStyle[\s\S]*background: editorFieldBackground[\s\S]*color: editorFieldText/,
+    "shared dark select style should set readable editor colors",
+  );
+  for (const [source, label] of [
+    [renderingSource, "seismic rendering select"],
+    [graphSource, "section graph selects"],
+    [isobandSource, "isoband selects"],
+    [layerPanelSource, "layer provenance selects"],
+    [topoMapSource, "topo provenance selects"],
+    [sceneOverlaySource, "scene overlay provenance selects"],
+  ]) {
+    assert.match(
+      source,
+      /editorDarkSelectStyle/,
+      `${label} should use the shared dark select style`,
+    );
+  }
 });
 
 test("layer groups are not opened by active visible layers on startup", () => {

@@ -2572,3 +2572,59 @@ boolean move to the assignment-driven equivalent. The MT-scalar/cloud kernel is
 unchanged; only its dispatch trigger moves. Do not introduce page-id,
 page-index, page-title, or page-order branches in the execution layer, and do
 not reimplement interpolation math outside the registered kernels.
+
+## DEC-153 - Graph annotations are target-scoped Section Options state
+
+Extends DEC-150 and DEC-151 for figure/graph annotation authoring.
+
+**Considered:** keep one layer-wide `seismicFigure*` container, add separate
+2D/3D annotation containers, or make annotation profiles target keyed by graph
+object identity.
+
+**Chose:** Section Options owns graph annotation authoring through
+`graphAnnotationDefaults`, `graphAnnotationProfiles`, and
+`graphAnnotationSelectedTargetKey`. Legacy `seismicFigure*` fields remain
+readable/writable fallback defaults for existing pages. Target keys are derived
+from graph family, layer id, product id, object kind, object id, and comparison
+role, not page ids or deck order. Static seismic section annotations resolve
+their profile from `SeismicSectionGraphBasis` and keep using plane-locked mesh
+text with back-face-readable UV flipping.
+
+**Why:** a single figure annotation container cannot describe Line 301, Line
+302, L5, L11, 3D slice planes, volume views, comparison graphs, item graphs,
+and section-cut faces without cross-contaminating titles, captions, scale
+labels, wells, horizons, colors, and offsets. Target-scoped profiles let each
+graph object carry its own page-like annotation while keeping the same Section
+Options control surface in the editor and quick-legend popout.
+
+**Guard:** no Presentation Presets UI or state is introduced for graph
+annotation. Do not repair annotation differences with `projects/*/pages/**`,
+`projects/*/overlays/**`, page id, page title, page index, or page-order
+branches. 3D volume and scene-section cut annotations must use the same target
+profile model and move with their owning graph object or cut frame before any
+visual claim is made.
+
+## DEC-154 - Section helper visual variables are Cinematics scene state
+
+Extends DEC-151 for generic section-helper visual tuning.
+
+**Considered:** keep section helper widths and arrow dimensions as fixed runtime
+constants, expose them as per-section layer controls under Sections, or expose
+generic visual variables under Cinematics scene state.
+
+**Chose:** `SceneProperties.sectionVisuals` owns generic section helper visual
+variables: frame outline width scale/min/max, push-pull arrow length clamp,
+arrow radius and gap scale, scale-axis tick length clamp, and default ground
+trace width. Cinematics -> Post Processing exposes these under `Section
+Visuals`. Runtime scene-section helper generation reads the current effective
+scene after render-preset, page override, and preview patch resolution.
+
+**Why:** these values are visual treatment controls, not per-plane geometry or
+disposable page fixtures. Scene-level ownership lets presentations tune helper
+legibility consistently while per-axis section geometry, visibility, and source
+basis remain under the Sections tool.
+
+**Guard:** do not encode section helper visual tuning in `projects/*/pages/**`,
+`projects/*/overlays/**`, page ids, page titles, page indexes, or page order.
+Per-frame authored values such as explicit `groundTraceWidthM` remain valid
+overrides; generic defaults and clamps come from the effective Cinematics scene.

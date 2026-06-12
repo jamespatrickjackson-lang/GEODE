@@ -67,7 +67,6 @@ const selectableLabels = [
   "Seismic only",
   "MT only",
   "Seismic + MT",
-  "PSDM + MT + 58-32 tie",
   "Isoband source: seismic amplitude",
   "Isoband source: MT resistivity",
   "Sources",
@@ -88,7 +87,7 @@ const selectableLabels = [
   "Text, axis, caption box, horizon, and well colors",
 ];
 
-test("Section Options graph selector has one shared editor and legend component", () => {
+test("Section Options graph selector remains reusable for compact quick legend popout", () => {
   assert.equal(
     existsSync(componentPath),
     true,
@@ -99,15 +98,20 @@ test("Section Options graph selector has one shared editor and legend component"
     /export function SectionGraphOptionsControls/,
     "shared component should be exported",
   );
-  assert.match(
+  assert.doesNotMatch(
     containerSource,
     /<SectionGraphOptionsControls/,
-    "editor seismic Section Options should use the shared component",
+    "editor sidebar should expose peer seismic containers instead of the Section Options aggregate",
   );
   assert.match(
     legendSource,
     /<SectionGraphOptionsControls/,
     "quick legend popout should use the shared component",
+  );
+  assert.match(
+    componentSource,
+    /compact\?\s*:\s*boolean/,
+    "Section Options should preserve compact quick-legend mode",
   );
 });
 
@@ -146,6 +150,8 @@ test("Section Options selectable types patch existing seismic style fields", () 
   assert.match(helperSource, /seismicComparisonProductId/);
   assert.match(helperSource, /seismicComparisonMode/);
   assert.match(helperSource, /seismicMtCoRender/);
+  assert.match(helperSource, /linkedLayerStylePatches/);
+  assert.match(helperSource, /capabilityGroup === "integrated-geophysics"/);
   assert.match(helperSource, /seismicIsoSource/);
   assert.match(helperSource, /seismicNavigationRoleVisibility/);
 });

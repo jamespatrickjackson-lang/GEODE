@@ -109,3 +109,46 @@ test("scene-section frame outlines and cones render as topmost studio overlays",
     "Control cones should render above scene content.",
   );
 });
+
+test("scene-section helper visuals read Cinematics sectionVisuals settings", () => {
+  assert.match(
+    source,
+    /currentSceneProperties\?\.sectionVisuals/,
+    "Scene-section runtime should read sectionVisuals from the current effective scene.",
+  );
+  for (const key of [
+    "outlineWidthScale",
+    "outlineMinWidthM",
+    "outlineMaxWidthM",
+    "arrowSpanScale",
+    "arrowMinLengthM",
+    "arrowMaxLengthM",
+    "arrowRadiusScale",
+    "arrowGapScale",
+    "axisTickLengthScale",
+    "axisTickMinLengthM",
+    "axisTickMaxLengthM",
+    "groundTraceWidthM",
+  ]) {
+    assert.match(
+      source,
+      new RegExp(key),
+      `Scene-section runtime should consume ${key}.`,
+    );
+  }
+  assert.match(
+    source,
+    /sceneSectionVisualOutlineWidthM/,
+    "Frame outline width should route through section visual settings.",
+  );
+  assert.match(
+    source,
+    /handleSpan \* sectionVisuals\.arrowSpanScale/,
+    "Push-pull arrows should use the authored arrow scale.",
+  );
+  assert.match(
+    source,
+    /referenceOutlineWidthM \* sectionVisuals\.axisTickLengthScale/,
+    "Scale-axis ticks should use the authored tick scale.",
+  );
+});
