@@ -136,9 +136,9 @@ export function boreholeLogPatchFromStyle(
   return {
     boreholeLogActiveWell: activeWell(style),
     boreholeLogTrackSelection: trackSelection(style),
-    boreholeLogTrackOffsetM: styleNumber(style, "boreholeLogTrackOffsetM", 54),
-    boreholeLogTrackWidthM: styleNumber(style, "boreholeLogTrackWidthM", 120),
-    boreholeLogGammaScaleApi: styleNumber(style, "boreholeLogGammaScaleApi", 160),
+    boreholeLogTrackOffsetM: styleNumber(style, "boreholeLogTrackOffsetM", 24),
+    boreholeLogTrackWidthM: styleNumber(style, "boreholeLogTrackWidthM", 36),
+    boreholeLogGammaScaleApi: styleNumber(style, "boreholeLogGammaScaleApi", 150),
     boreholeLogResistivityMinOhmM: styleNumber(
       style,
       "boreholeLogResistivityMinOhmM",
@@ -228,12 +228,12 @@ export function BoreholeLogsControls({
         <TrackSelectionRow style={style} disabled={controlsDisabled} onChange={patch} />
 
         <LayerNumberStyleControl
-          label="Track offset"
+          label="Lane base offset"
           field="boreholeLogTrackOffsetM"
-          fallback={54}
+          fallback={24}
           min={0}
-          max={600}
-          step={5}
+          max={220}
+          step={2}
           decimals={0}
           style={style}
           isEnv={isEnv}
@@ -245,12 +245,12 @@ export function BoreholeLogsControls({
           testId="borehole-logs-track-offset"
         />
         <LayerNumberStyleControl
-          label="Track width"
+          label="Amplitude width"
           field="boreholeLogTrackWidthM"
-          fallback={120}
+          fallback={36}
           min={1}
-          max={800}
-          step={5}
+          max={120}
+          step={2}
           decimals={0}
           style={style}
           isEnv={isEnv}
@@ -262,9 +262,9 @@ export function BoreholeLogsControls({
           testId="borehole-logs-track-width"
         />
         <LayerNumberStyleControl
-          label="GR scale"
+          label="GR scale (API)"
           field="boreholeLogGammaScaleApi"
-          fallback={160}
+          fallback={150}
           min={1}
           max={1000}
           step={5}

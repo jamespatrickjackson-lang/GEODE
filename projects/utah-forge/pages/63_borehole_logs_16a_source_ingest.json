@@ -121,9 +121,9 @@
         "resistivity": false,
         "lithology": false
       },
-      "boreholeLogTrackOffsetM": 70,
-      "boreholeLogTrackWidthM": 180,
-      "boreholeLogGammaScaleApi": 180,
+      "boreholeLogTrackOffsetM": 24,
+      "boreholeLogTrackWidthM": 36,
+      "boreholeLogGammaScaleApi": 150,
       "boreholeLogResistivityMinOhmM": 1,
       "boreholeLogResistivityMaxOhmM": 1000,
       "boreholeLogCurveFillCutoff": 0,

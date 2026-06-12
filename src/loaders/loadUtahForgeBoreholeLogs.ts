@@ -68,13 +68,34 @@ interface BoreholeLogManifest {
 }
 
 const RENDER_ORDER = 8.4;
-const DEFAULT_TRACK_OFFSET_M = 54;
-const DEFAULT_TRACK_WIDTH_M = 120;
-const DEFAULT_GAMMA_SCALE_API = 160;
+const DEFAULT_TRACK_OFFSET_M = 24;
+const DEFAULT_TRACK_WIDTH_M = 36;
+const DEFAULT_GAMMA_SCALE_API = 150;
 const DEFAULT_RESISTIVITY_MIN = 1;
 const DEFAULT_RESISTIVITY_MAX = 1000;
 const DEFAULT_LITHOLOGY_LINE_WIDTH = 12;
-const Z_AXIS = new THREE.Vector3(0, 0, 1);
+const TRACK_LANE_GAP_M = 12;
+
+export interface BoreholeLogLaneFrame {
+  laneAxis: THREE.Vector3;
+  trajectoryAxis: THREE.Vector3;
+}
+
+export interface BoreholeLogRibbonGeometry {
+  baseline: THREE.Vector3[];
+  curve: THREE.Vector3[];
+  positions: number[];
+  curvePositions: number[];
+  indices: number[];
+  laneAxis: THREE.Vector3;
+  laneBaseOffsetM: number;
+}
+
+export interface BoreholeLogColumnGeometry {
+  start: THREE.Vector3;
+  end: THREE.Vector3;
+  positions: number[];
+}
 
 function finiteNumber(value: unknown): value is number {
   return typeof value === "number" && Number.isFinite(value);
@@ -122,22 +143,6 @@ export function interpolateTrajectoryByMdFt(
     return vectorFromScene(start).lerp(vectorFromScene(end), t);
   }
   return vectorFromScene(last);
-}
-
-function tangentAtMdFt(points: BoreholeLogTrajectoryPoint[], mdFt: number): THREE.Vector3 {
-  const before = interpolateTrajectoryByMdFt(points, mdFt - 8);
-  const after = interpolateTrajectoryByMdFt(points, mdFt + 8);
-  if (!before || !after || before.distanceToSquared(after) < 0.0001) {
-    return new THREE.Vector3(1, 0, 0);
-  }
-  return after.sub(before).normalize();
-}
-
-function lateralNormal(points: BoreholeLogTrajectoryPoint[], mdFt: number): THREE.Vector3 {
-  const tangent = tangentAtMdFt(points, mdFt);
-  const normal = new THREE.Vector3().crossVectors(Z_AXIS, tangent);
-  if (normal.lengthSq() < 0.0001) return new THREE.Vector3(1, 0, 0);
-  return normal.normalize();
 }
 
 function styleNumber(
@@ -200,6 +205,46 @@ function sampleAmplitude(track: BoreholeLogTrack, value: number, style: Editable
   return value / scale;
 }
 
+export function computeBoreholeLogLaneFrame(
+  trajectory: BoreholeLogTrajectoryPoint[],
+): BoreholeLogLaneFrame {
+  const ordered = sortedTrajectory(trajectory);
+  let trend = new THREE.Vector3();
+  if (ordered.length >= 2) {
+    trend = vectorFromScene(ordered[ordered.length - 1]).sub(vectorFromScene(ordered[0]));
+    trend.z = 0;
+  }
+  if (trend.lengthSq() < 0.0001) {
+    let best = new THREE.Vector3();
+    let bestLengthSq = 0;
+    for (let index = 1; index < ordered.length; index += 1) {
+      const segment = vectorFromScene(ordered[index]).sub(vectorFromScene(ordered[index - 1]));
+      segment.z = 0;
+      const lengthSq = segment.lengthSq();
+      if (lengthSq > bestLengthSq) {
+        best = segment;
+        bestLengthSq = lengthSq;
+      }
+    }
+    trend = best;
+  }
+  if (trend.lengthSq() < 0.0001) {
+    return {
+      laneAxis: new THREE.Vector3(1, 0, 0),
+      trajectoryAxis: new THREE.Vector3(0, 1, 0),
+    };
+  }
+  const trajectoryAxis = trend.normalize();
+  const laneAxis = new THREE.Vector3(-trajectoryAxis.y, trajectoryAxis.x, 0);
+  if (laneAxis.x < -1e-9 || (Math.abs(laneAxis.x) <= 1e-9 && laneAxis.y < 0)) {
+    laneAxis.negate();
+  }
+  return {
+    laneAxis: laneAxis.normalize(),
+    trajectoryAxis,
+  };
+}
+
 function transformedPoint(
   base: THREE.Vector3,
   origin: THREE.Vector3,
@@ -210,13 +255,7 @@ function transformedPoint(
   return point;
 }
 
-function trackPositions(
-  trajectory: BoreholeLogTrajectoryPoint[],
-  track: BoreholeLogTrack,
-  style: EditableStyle,
-): number[] {
-  const positions: number[] = [];
-  const [depthMin, depthMax] = depthWindow(style);
+function trackLaneBaseOffset(style: EditableStyle, trackIndex: number): number {
   const trackOffset = styleNumber(
     style,
     "boreholeLogTrackOffsetM",
@@ -224,6 +263,29 @@ function trackPositions(
     0,
     600,
   );
+  const trackWidth = styleNumber(
+    style,
+    "boreholeLogTrackWidthM",
+    DEFAULT_TRACK_WIDTH_M,
+    1,
+    800,
+  );
+  return trackOffset + Math.max(0, trackIndex) * (trackWidth + TRACK_LANE_GAP_M);
+}
+
+export function buildTrackRibbonGeometry(
+  trajectory: BoreholeLogTrajectoryPoint[],
+  track: BoreholeLogTrack,
+  style: EditableStyle,
+  trackIndex = 0,
+  laneFrame = computeBoreholeLogLaneFrame(trajectory),
+): BoreholeLogRibbonGeometry {
+  const baseline: THREE.Vector3[] = [];
+  const curve: THREE.Vector3[] = [];
+  const positions: number[] = [];
+  const curvePositions: number[] = [];
+  const indices: number[] = [];
+  const [depthMin, depthMax] = depthWindow(style);
   const trackWidth = styleNumber(
     style,
     "boreholeLogTrackWidthM",
@@ -239,34 +301,58 @@ function trackPositions(
     0.25,
     8,
   );
+  const laneBaseOffsetM = trackLaneBaseOffset(style, trackIndex);
   const origin = interpolateTrajectoryByMdFt(trajectory, trajectory[0]?.mdFt ?? 0);
-  if (!origin) return positions;
+  if (!origin) {
+    return { baseline, curve, positions, curvePositions, indices, laneAxis: laneFrame.laneAxis.clone(), laneBaseOffsetM };
+  }
   for (const sample of track.samples) {
     if (sample.mdFt < depthMin || sample.mdFt > depthMax) continue;
     const base = interpolateTrajectoryByMdFt(trajectory, sample.mdFt);
     if (!base) continue;
-    const amplitude = Math.max(cutoff, Math.min(1.4, sampleAmplitude(track, sample.value, style)));
-    const normal = lateralNormal(trajectory, sample.mdFt);
-    const offsetBase = normal.multiplyScalar(trackOffset + amplitude * trackWidth);
-    const point = transformedPoint(base.add(offsetBase), origin, verticalExaggeration);
-    positions.push(point.x, point.y, point.z);
+    const amplitude = Math.max(cutoff, Math.min(1, sampleAmplitude(track, sample.value, style)));
+    const pathPoint = transformedPoint(base, origin, verticalExaggeration);
+    const curvePoint = transformedPoint(
+      base.clone().add(laneFrame.laneAxis.clone().multiplyScalar(laneBaseOffsetM + amplitude * trackWidth)),
+      origin,
+      verticalExaggeration,
+    );
+    baseline.push(pathPoint);
+    curve.push(curvePoint);
+    positions.push(pathPoint.x, pathPoint.y, pathPoint.z, curvePoint.x, curvePoint.y, curvePoint.z);
+    curvePositions.push(curvePoint.x, curvePoint.y, curvePoint.z);
   }
-  return positions;
+  for (let index = 0; index < baseline.length - 1; index += 1) {
+    const a = index * 2;
+    const b = a + 1;
+    const c = a + 2;
+    const d = a + 3;
+    indices.push(a, c, b, b, c, d);
+  }
+  return {
+    baseline,
+    curve,
+    positions,
+    curvePositions,
+    indices,
+    laneAxis: laneFrame.laneAxis.clone(),
+    laneBaseOffsetM,
+  };
 }
 
-function lithologyPositions(
+export function buildLithologyColumnGeometry(
   trajectory: BoreholeLogTrajectoryPoint[],
   interval: BoreholeLogLithologyInterval,
   style: EditableStyle,
-): number[] {
+): BoreholeLogColumnGeometry | null {
   const [depthMin, depthMax] = depthWindow(style);
   const from = Math.max(interval.fromMdFt, depthMin);
   const to = Math.min(interval.toMdFt, depthMax);
-  if (to <= from) return [];
+  if (to <= from) return null;
   const start = interpolateTrajectoryByMdFt(trajectory, from);
   const end = interpolateTrajectoryByMdFt(trajectory, to);
   const origin = interpolateTrajectoryByMdFt(trajectory, trajectory[0]?.mdFt ?? 0);
-  if (!start || !end || !origin) return [];
+  if (!start || !end || !origin) return null;
   const verticalExaggeration = styleNumber(
     style,
     "boreholeLogVerticalExaggeration",
@@ -274,16 +360,21 @@ function lithologyPositions(
     0.25,
     8,
   );
-  const normal = lateralNormal(trajectory, (from + to) * 0.5).multiplyScalar(
-    styleNumber(style, "boreholeLogTrackOffsetM", DEFAULT_TRACK_OFFSET_M, 0, 600) * -0.55,
-  );
-  const a = transformedPoint(start.add(normal), origin, verticalExaggeration);
-  const b = transformedPoint(end.add(normal), origin, verticalExaggeration);
-  return [a.x, a.y, a.z, b.x, b.y, b.z];
+  const a = transformedPoint(start, origin, verticalExaggeration);
+  const b = transformedPoint(end, origin, verticalExaggeration);
+  return {
+    start: a,
+    end: b,
+    positions: [a.x, a.y, a.z, b.x, b.y, b.z],
+  };
 }
 
 function trackColor(track: BoreholeLogTrack): string {
-  return track.kind === "resistivity" ? "#4dd6ff" : "#ffe26d";
+  if (track.kind === "resistivity") return "#4dd6ff";
+  const mnemonic = track.mnemonic.toUpperCase();
+  if (mnemonic.includes("HSGR")) return "#ffb24a";
+  if (mnemonic.includes("HCGR")) return "#ffe26d";
+  return "#ffd166";
 }
 
 function lithologyColor(lithology: string): string {
@@ -313,30 +404,65 @@ function makeLineMaterial(color: string, linewidth: number, opacity: number): Li
   return material;
 }
 
-function makeTrackLine(
+function makeRibbonMaterial(color: string): THREE.MeshBasicMaterial {
+  const material = new THREE.MeshBasicMaterial({
+    color,
+    side: THREE.DoubleSide,
+    transparent: true,
+    opacity: 0.24,
+    depthWrite: false,
+    depthTest: true,
+  });
+  material.userData.forceTransparent = true;
+  material.userData.preserveMaterialColor = true;
+  return material;
+}
+
+function makeTrackObject(
   well: BoreholeLogWell,
   trajectory: BoreholeLogTrajectoryPoint[],
   track: BoreholeLogTrack,
-): Line2 {
-  const geometry = new LineGeometry();
-  const material = makeLineMaterial(trackColor(track), 2.6, 0.92);
-  const line = new Line2(geometry, material);
-  line.name = `${well.id} ${track.mnemonic} borehole log`;
-  line.renderOrder = RENDER_ORDER;
-  line.userData = {
+  trackIndex: number,
+  laneFrame: BoreholeLogLaneFrame,
+): THREE.Group {
+  const color = trackColor(track);
+  const root = new THREE.Group();
+  root.name = `${well.id} ${track.mnemonic} borehole log`;
+  root.renderOrder = RENDER_ORDER;
+  root.userData = {
     utahForgeBoreholeLogTrack: true,
     boreholeLogWellId: well.id,
     boreholeLogTrackKind: track.kind,
     boreholeLogTrajectory: trajectory,
     boreholeLogTrack: track,
+    boreholeLogTrackIndex: trackIndex,
+    boreholeLogLaneFrame: laneFrame,
     displayName: `${well.id} ${track.mnemonic}`,
     sourceSubmission: track.source?.submission,
     sourceFile: track.source?.file,
     sourceMember: track.source?.member,
   };
-  line.userData.utahForgeBoreholeLogTrack = true;
-  updateUtahForgeBoreholeLogObject(line, {});
-  return line;
+
+  const ribbon = new THREE.Mesh(new THREE.BufferGeometry(), makeRibbonMaterial(color));
+  ribbon.name = `${well.id} ${track.mnemonic} borehole log ribbon`;
+  ribbon.renderOrder = RENDER_ORDER - 0.02;
+  ribbon.userData = {
+    boreholeLogPart: "ribbon",
+    displayName: `${well.id} ${track.mnemonic}`,
+  };
+  root.add(ribbon);
+
+  const edge = new Line2(new LineGeometry(), makeLineMaterial(color, 2.6, 0.92));
+  edge.name = `${well.id} ${track.mnemonic} borehole log curve`;
+  edge.renderOrder = RENDER_ORDER;
+  edge.userData = {
+    boreholeLogPart: "curve-edge",
+    displayName: `${well.id} ${track.mnemonic}`,
+  };
+  root.add(edge);
+
+  updateUtahForgeBoreholeLogObject(root, {});
+  return root;
 }
 
 function makeLithologyLine(
@@ -369,6 +495,15 @@ function makeLithologyLine(
   return line;
 }
 
+function childByPart<T extends THREE.Object3D>(
+  obj: THREE.Object3D,
+  part: string,
+): T | undefined {
+  return obj.children.find((child) => child.userData?.boreholeLogPart === part) as
+    | T
+    | undefined;
+}
+
 export function updateUtahForgeBoreholeLogObject(
   obj: THREE.Object3D,
   style: EditableStyle,
@@ -383,12 +518,15 @@ export function updateUtahForgeBoreholeLogObject(
     | BoreholeLogTrajectoryPoint[]
     | undefined;
   if (!trajectory) return;
-  let positions: number[] = [];
   if (kind === "lithology") {
+    let positions: number[] = [];
     const interval = obj.userData.boreholeLogLithologyInterval as
       | BoreholeLogLithologyInterval
       | undefined;
-    if (interval) positions = lithologyPositions(trajectory, interval, style);
+    const column = interval
+      ? buildLithologyColumnGeometry(trajectory, interval, style)
+      : null;
+    if (column) positions = column.positions;
     if (material) {
       material.opacity = styleNumber(style, "boreholeLogLithologyOpacity", 0.72, 0, 1);
       material.linewidth = styleNumber(
@@ -399,23 +537,69 @@ export function updateUtahForgeBoreholeLogObject(
         36,
       );
     }
-  } else {
-    const track = obj.userData.boreholeLogTrack as BoreholeLogTrack | undefined;
-    if (track) positions = trackPositions(trajectory, track, style);
     if (material) {
-      material.opacity = styleNumber(style, "boreholeLogCurveOpacity", 0.92, 0, 1);
-      material.linewidth = styleNumber(style, "boreholeLogCurveLineWidthPx", 2.6, 0.5, 18);
+      material.transparent = true;
+      material.needsUpdate = true;
     }
+    const line = obj as Line2;
+    const geometry = line.geometry as LineGeometry;
+    geometry.setPositions(positions);
+    line.computeLineDistances();
+    obj.visible = selected && positions.length >= 6;
+    return;
   }
-  const line = obj as Line2;
-  const geometry = line.geometry as LineGeometry;
-  geometry.setPositions(positions);
-  line.computeLineDistances();
-  obj.visible = selected && positions.length >= 6;
-  if (material) {
-    material.transparent = true;
-    material.needsUpdate = true;
+
+  const track = obj.userData.boreholeLogTrack as BoreholeLogTrack | undefined;
+  if (!track) {
+    obj.visible = false;
+    return;
   }
+  const trackIndex =
+    typeof obj.userData.boreholeLogTrackIndex === "number"
+      ? obj.userData.boreholeLogTrackIndex
+      : 0;
+  const laneFrame =
+    obj.userData.boreholeLogLaneFrame &&
+    obj.userData.boreholeLogLaneFrame.laneAxis instanceof THREE.Vector3
+      ? (obj.userData.boreholeLogLaneFrame as BoreholeLogLaneFrame)
+      : computeBoreholeLogLaneFrame(trajectory);
+  const ribbon = buildTrackRibbonGeometry(trajectory, track, style, trackIndex, laneFrame);
+  const ribbonMesh = childByPart<THREE.Mesh>(obj, "ribbon");
+  const edgeLine = childByPart<Line2>(obj, "curve-edge");
+  const curveOpacity = styleNumber(style, "boreholeLogCurveOpacity", 0.92, 0, 1);
+  const curveLineWidth = styleNumber(style, "boreholeLogCurveLineWidthPx", 2.6, 0.5, 18);
+  const visible = selected && ribbon.curvePositions.length >= 6;
+
+  if (ribbonMesh) {
+    const geometry = ribbonMesh.geometry as THREE.BufferGeometry;
+    geometry.setAttribute("position", new THREE.Float32BufferAttribute(ribbon.positions, 3));
+    geometry.setIndex(ribbon.indices);
+    geometry.computeBoundingSphere();
+    const meshMaterial = ribbonMesh.material as THREE.MeshBasicMaterial | undefined;
+    if (meshMaterial) {
+      meshMaterial.opacity = Math.min(0.34, curveOpacity * 0.24);
+      meshMaterial.transparent = true;
+      meshMaterial.depthWrite = false;
+      meshMaterial.needsUpdate = true;
+    }
+    ribbonMesh.visible = visible && ribbon.indices.length >= 6;
+  }
+
+  if (edgeLine) {
+    const edgeGeometry = edgeLine.geometry as LineGeometry;
+    edgeGeometry.setPositions(ribbon.curvePositions);
+    edgeLine.computeLineDistances();
+    const edgeMaterial = edgeLine.material as LineMaterial | undefined;
+    if (edgeMaterial) {
+      edgeMaterial.opacity = curveOpacity;
+      edgeMaterial.linewidth = curveLineWidth;
+      edgeMaterial.transparent = true;
+      edgeMaterial.needsUpdate = true;
+    }
+    edgeLine.visible = visible;
+  }
+
+  obj.visible = visible;
 }
 
 export function applyUtahForgeBoreholeLogStyleToGroup(
@@ -441,13 +625,16 @@ export async function loadUtahForgeBoreholeLogs(url: string): Promise<THREE.Grou
   for (const well of manifest.wells ?? []) {
     const trajectory = sortedTrajectory(well.trajectory?.points ?? []);
     if (well.trajectory?.status !== "available" || trajectory.length < 2) continue;
+    const laneFrame = computeBoreholeLogLaneFrame(trajectory);
     const wellGroup = new THREE.Group();
     wellGroup.name = `${well.id} borehole logs`;
     wellGroup.userData.displayName = well.label ?? well.id;
     wellGroup.userData.boreholeLogWellId = well.id;
+    let trackIndex = 0;
     for (const track of well.tracks ?? []) {
       if (track.renderStatus !== "renderable") continue;
-      wellGroup.add(makeTrackLine(well, trajectory, track));
+      wellGroup.add(makeTrackObject(well, trajectory, track, trackIndex, laneFrame));
+      trackIndex += 1;
     }
     for (const interval of well.lithologyIntervals ?? []) {
       if (interval.renderStatus !== "renderable") continue;

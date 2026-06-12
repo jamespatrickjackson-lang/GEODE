@@ -34,6 +34,9 @@ test("Utah FORGE project wires borehole logs as a hidden source-derived layer", 
   const style = environment.layerStyles["utah-forge-borehole-logs"];
   assert.ok(style, "borehole log layer should have default style controls");
   assert.equal(style.boreholeLogVerticalExaggeration, 1);
+  assert.equal(style.boreholeLogTrackOffsetM, 24);
+  assert.equal(style.boreholeLogTrackWidthM, 36);
+  assert.equal(style.boreholeLogGammaScaleApi, 150);
   assert.deepEqual(style.boreholeLogTrackSelection, {
     gamma: true,
     resistivity: true,
@@ -47,10 +50,16 @@ test("Utah FORGE borehole log loader maps samples onto trajectories without vert
   const source = readText(loaderPath);
 
   assert.match(source, /export function interpolateTrajectoryByMdFt/);
+  assert.match(source, /export function computeBoreholeLogLaneFrame/);
+  assert.match(source, /export function buildTrackRibbonGeometry/);
+  assert.match(source, /new THREE\.Mesh\(new THREE\.BufferGeometry\(\), makeRibbonMaterial/);
+  assert.match(source, /indices\.push\(a, c, b, b, c, d\)/);
   assert.match(source, /userData\.utahForgeBoreholeLogTrack/);
   assert.match(source, /kind: "gamma"/);
   assert.match(source, /kind: "resistivity"/);
   assert.match(source, /kind: "lithology"/);
+  assert.doesNotMatch(source, /function lateralNormal/);
+  assert.doesNotMatch(source, /function tangentAtMdFt/);
   assert.doesNotMatch(source, /vertical projection/i);
   assert.doesNotMatch(source, /new THREE\.Vector3\([^)]*0,\s*0,\s*-depth/i);
 });

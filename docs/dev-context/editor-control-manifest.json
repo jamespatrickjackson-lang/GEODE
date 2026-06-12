@@ -1880,7 +1880,7 @@
     },
     {
       "id": "borehole-logs.track-offset",
-      "label": "Track offset",
+      "label": "Lane base offset",
       "kind": "control",
       "parentId": "borehole-logs.controls",
       "sourceFile": "src/editor/layerControls/wells/BoreholeLogsControls.tsx",
@@ -1892,7 +1892,7 @@
     },
     {
       "id": "borehole-logs.track-width",
-      "label": "Track width",
+      "label": "Amplitude width",
       "kind": "control",
       "parentId": "borehole-logs.controls",
       "sourceFile": "src/editor/layerControls/wells/BoreholeLogsControls.tsx",
@@ -1904,7 +1904,7 @@
     },
     {
       "id": "borehole-logs.gr-scale",
-      "label": "GR scale",
+      "label": "GR scale (API)",
       "kind": "control",
       "parentId": "borehole-logs.controls",
       "sourceFile": "src/editor/layerControls/wells/BoreholeLogsControls.tsx",

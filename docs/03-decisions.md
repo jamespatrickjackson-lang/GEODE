@@ -2690,3 +2690,28 @@ or another ignored local source root. Committed artifacts may include only
 derived manifests, code, tests, docs, and explicit gap metadata. Do not repair
 missing log rendering with page fixtures, vertical fallback geometry, or
 unvalidated trajectory assumptions.
+
+## DEC-157 - Borehole log curves render as fixed-frame UTM ribbons
+
+Extends DEC-156 for the visible rendering method of validated borehole-log
+tracks.
+
+**Considered:** offset each sample in the trajectory-local normal frame, use a
+camera-facing billboard, expose a manual lane azimuth, or compute a fixed
+source-space lane per well.
+
+**Chose:** render each machine-readable track as a flat ribbon in a fixed
+horizontal UTM frame computed from the well trajectory. The trajectory path is
+the ribbon baseline, log amplitude offsets in one constant lane direction, and
+multiple tracks use parallel lane bases in manifest order. Lithology intervals
+render on the path as column/segment geometry, not as amplitude wiggles.
+
+**Why:** local normal offsets rotate through doglegs and produce a false
+helical/DNA visual. A fixed UTM lane keeps gamma amplitude readable while
+preserving measured-depth placement on the as-drilled path. Automatic lanes
+avoid adding an authoring control before a real need for manual azimuth exists.
+
+**Guard:** borehole-log rendering must not use per-sample local/Frenet normals,
+vertical projection fallbacks, page-id-specific fixes, or camera-facing
+billboards for source claims. Display scale controls may tune readability but
+must not change source samples, measured depths, CRS, or trajectory gating.
