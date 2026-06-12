@@ -313,6 +313,61 @@ test("editor section frame header uses Show and Controls as separate fields", ()
   );
 });
 
+test("built-in section frame state treats modern per-axis fields as authoritative", () => {
+  assert.match(
+    legendSource,
+    /const nextPlane = \{\s*\.\.\.\(entry\?\.plane \?\? \{\}\),\s*\.\.\.\(style\.sceneSectionPlanes\?\.\[entryAxis\] \?\? \{\}\),\s*\.\.\.\(entryAxis === axis \? planePatch : \{\}\),\s*\};/,
+    "Quick legend frame entries should let sceneSectionPlanes override stale built-in frame plane defaults.",
+  );
+  assert.match(
+    legendSource,
+    /const nextFrame = \{\s*\.\.\.\(entry\?\.frame \?\? \{\}\),\s*\.\.\.\(style\.sceneSectionFrameByAxis\?\.\[entryAxis\] \?\? \{\}\),\s*\.\.\.\(entryAxis === axis \? framePatch : \{\}\),\s*\};/,
+    "Quick legend frame entries should let sceneSectionFrameByAxis override stale built-in frame defaults.",
+  );
+  assert.match(
+    legendSource,
+    /const plane = \{\s*\.\.\.\(entry\?\.plane \?\? \{\}\),\s*\.\.\.\(style\.sceneSectionPlanes\?\.\[axis\] \?\? \{\}\),\s*\};/,
+    "Quick legend row state should read modern per-axis plane fields over stale built-in frame entries.",
+  );
+  assert.match(
+    legendSource,
+    /const frame = \{\s*\.\.\.\(entry\?\.frame \?\? \{\}\),\s*\.\.\.\(style\.sceneSectionFrameByAxis\?\.\[axis\] \?\? \{\}\),\s*\};/,
+    "Quick legend row state should read modern per-axis frame fields over stale built-in frame entries.",
+  );
+  assert.match(
+    editorSource,
+    /const frame = \{\s*\.\.\.\(entry\?\.frame \?\? \{\}\),\s*\.\.\.\(frameByAxis\[axis\] \?\? \{\}\),\s*\};/,
+    "Editor section frame rows should let sceneSectionFrameByAxis override stale built-in frame entries.",
+  );
+  assert.match(
+    editorSource,
+    /plane: \{\s*\.\.\.\(entry\?\.plane \?\? \{\}\),\s*\.\.\.\(planes\[axis\] \?\? \{\}\),\s*\},/,
+    "Editor section frame rows should let sceneSectionPlanes override stale built-in frame entries.",
+  );
+});
+
+test("section face channel toggles do not overwrite seismic render mode", () => {
+  const setFaceChannelMatch = legendSource.match(
+    /const setFaceChannel = \(channel: FaceChannelKey, active: boolean\) => \{[\s\S]*?\n  \};/,
+  );
+  assert.ok(setFaceChannelMatch, "Scene section legend should define setFaceChannel.");
+  assert.match(
+    setFaceChannelMatch[0],
+    /sceneSectionFaceChannels:\s*nextChannels/,
+    "Face channel toggles should still update scene-section face channel state.",
+  );
+  assert.match(
+    setFaceChannelMatch[0],
+    /seismicSliceThroughVolume:\s*nextChannels\.seismic/,
+    "Face channel toggles may still update volume slicing intent.",
+  );
+  assert.doesNotMatch(
+    setFaceChannelMatch[0],
+    /seismicRenderMode/,
+    "Face channel toggles must not switch the seismic renderer between slice and raymarch.",
+  );
+});
+
 test("section ISO legend uses white primary rows with icon sub-controls", () => {
   assert.match(
     sectionIsoLegendSource,

@@ -9,6 +9,7 @@ import { appAssetUrl } from "../projects/projectPathsRuntime";
 
 const SCENE_SECTION_SHADER_SLOT_COUNT = 8;
 const SOURCE_FIDELITY_MAX_SAMPLE_STEPS = 384;
+const SEISMIC_SECTION_DISPLAY_TEXTURE_MAX_DIMENSION = 8192;
 
 type Vec3 = [number, number, number];
 type SeismicLodTierName = "coarse" | "standard" | "source";
@@ -18,6 +19,15 @@ type SeismicNavigationPointRole = Exclude<
 >;
 type SeismicProductLoadOptions = {
   includeVolume?: boolean;
+};
+
+type SeismicSectionDisplayAmplitudeTexture = {
+  texture: THREE.DataTexture;
+  sourceWidth: number;
+  sourceHeight: number;
+  displayWidth: number;
+  displayHeight: number;
+  filter: "mipmapped-prefiltered";
 };
 
 const SEISMIC_DEFAULT_LOD_TIER: SeismicLodTierName = "standard";
@@ -720,30 +730,134 @@ function buildSectionPlaneGeometry(section: SeismicSectionSpec): THREE.BufferGeo
   return buildLegacyCornerGeometry(section);
 }
 
-function buildSectionAmplitudeTexture(
+function displayTextureDimension(sourceDimension: number): number {
+  const safeDimension = Math.max(1, Math.floor(sourceDimension));
+  return Math.min(
+    SEISMIC_SECTION_DISPLAY_TEXTURE_MAX_DIMENSION,
+    THREE.MathUtils.ceilPowerOfTwo(safeDimension),
+  );
+}
+
+function sampleAmplitudeByteBilinear(
   amplitude: Uint8Array,
   width: number,
   height: number,
-): THREE.DataTexture {
+  sourceX: number,
+  sourceY: number,
+): number {
+  const x0 = Math.max(0, Math.min(width - 1, Math.floor(sourceX)));
+  const y0 = Math.max(0, Math.min(height - 1, Math.floor(sourceY)));
+  const x1 = Math.max(0, Math.min(width - 1, x0 + 1));
+  const y1 = Math.max(0, Math.min(height - 1, y0 + 1));
+  const tx = Math.max(0, Math.min(1, sourceX - x0));
+  const ty = Math.max(0, Math.min(1, sourceY - y0));
+  const top =
+    (amplitude[x0 + y0 * width] ?? 0) * (1 - tx) +
+    (amplitude[x1 + y0 * width] ?? 0) * tx;
+  const bottom =
+    (amplitude[x0 + y1 * width] ?? 0) * (1 - tx) +
+    (amplitude[x1 + y1 * width] ?? 0) * tx;
+  return Math.max(0, Math.min(255, Math.round(top * (1 - ty) + bottom * ty)));
+}
+
+function buildSectionDisplayAmplitudeTexture(
+  amplitude: Uint8Array,
+  width: number,
+  height: number,
+): SeismicSectionDisplayAmplitudeTexture {
   const expected = width * height;
-  const textureData = new Uint8Array(expected);
-  textureData.set(amplitude.subarray(0, expected));
+  const sourceData = amplitude.subarray(0, expected);
+  const displayWidth = displayTextureDimension(width);
+  const displayHeight = displayTextureDimension(height);
+  const textureData = new Uint8Array(displayWidth * displayHeight);
+  const sourceMaxX = Math.max(0, width - 1);
+  const sourceMaxY = Math.max(0, height - 1);
+  for (let y = 0; y < displayHeight; y += 1) {
+    const sourceY =
+      displayHeight <= 1 ? 0 : (y / (displayHeight - 1)) * sourceMaxY;
+    for (let x = 0; x < displayWidth; x += 1) {
+      const sourceX =
+        displayWidth <= 1 ? 0 : (x / (displayWidth - 1)) * sourceMaxX;
+      textureData[x + y * displayWidth] = sampleAmplitudeByteBilinear(
+        sourceData,
+        width,
+        height,
+        sourceX,
+        sourceY,
+      );
+    }
+  }
   const texture = new THREE.DataTexture(
     textureData,
-    width,
-    height,
+    displayWidth,
+    displayHeight,
     THREE.RedFormat,
     THREE.UnsignedByteType,
   );
-  texture.minFilter = THREE.LinearFilter;
+  texture.minFilter = THREE.LinearMipmapLinearFilter;
   texture.magFilter = THREE.LinearFilter;
   texture.wrapS = THREE.ClampToEdgeWrapping;
   texture.wrapT = THREE.ClampToEdgeWrapping;
-  texture.generateMipmaps = false;
+  texture.generateMipmaps = true;
   texture.flipY = false;
   texture.unpackAlignment = 1;
+  texture.userData.seismicSectionSourceTextureSize = [width, height];
+  texture.userData.seismicSectionDisplayTextureSize = [
+    displayWidth,
+    displayHeight,
+  ];
+  texture.userData.seismicSectionDisplayTextureFilter =
+    "mipmapped-prefiltered";
   texture.needsUpdate = true;
-  return texture;
+  return {
+    texture,
+    sourceWidth: width,
+    sourceHeight: height,
+    displayWidth,
+    displayHeight,
+    filter: "mipmapped-prefiltered",
+  };
+}
+
+function sampleSectionAmplitudeAtUv(
+  amplitude: Uint8Array,
+  width: number,
+  height: number,
+  u: number,
+  v: number,
+): number {
+  const safeU = Number.isFinite(u) ? Math.max(0, Math.min(1, u)) : 0;
+  const safeV = Number.isFinite(v) ? Math.max(0, Math.min(1, v)) : 0;
+  const x = Math.max(0, Math.min(width - 1, Math.round(safeU * (width - 1))));
+  const y = Math.max(0, Math.min(height - 1, Math.round(safeV * (height - 1))));
+  return (amplitude[x + y * width] ?? 0) / 255;
+}
+
+function buildSectionRawAmplitudeValues(
+  geometry: THREE.BufferGeometry,
+  amplitude: Uint8Array,
+  width: number,
+  height: number,
+): Float32Array | null {
+  const uv = geometry.getAttribute("uv");
+  const position = geometry.getAttribute("position");
+  if (
+    !(uv instanceof THREE.BufferAttribute) ||
+    !(position instanceof THREE.BufferAttribute)
+  ) {
+    return null;
+  }
+  const values = new Float32Array(position.count);
+  for (let i = 0; i < position.count; i += 1) {
+    values[i] = sampleSectionAmplitudeAtUv(
+      amplitude,
+      width,
+      height,
+      uv.getX(i),
+      uv.getY(i),
+    );
+  }
+  return values;
 }
 
 async function buildSectionMesh(
@@ -760,18 +874,36 @@ async function buildSectionMesh(
     );
   }
 
-  const amplitudeMap = buildSectionAmplitudeTexture(
+  const displayAmplitude = buildSectionDisplayAmplitudeTexture(
     amplitude,
     section.width,
     section.height,
   );
   const geometry = buildSectionPlaneGeometry(section);
+  const rawAmplitudeValues = buildSectionRawAmplitudeValues(
+    geometry,
+    amplitude,
+    section.width,
+    section.height,
+  );
+  if (rawAmplitudeValues) {
+    geometry.userData.seismicAmplitudeValues = rawAmplitudeValues;
+  }
+  geometry.userData.seismicAmplitudeSourceTextureSize = [
+    displayAmplitude.sourceWidth,
+    displayAmplitude.sourceHeight,
+  ];
+  geometry.userData.seismicSectionDisplayTextureSize = [
+    displayAmplitude.displayWidth,
+    displayAmplitude.displayHeight,
+  ];
+  geometry.userData.seismicSectionDisplayTextureFilter = displayAmplitude.filter;
 
   const material = new THREE.ShaderMaterial({
     vertexShader: sectionVertexShader(),
     fragmentShader: sectionFragmentShader(),
     uniforms: {
-      uAmplitudeMap: { value: amplitudeMap },
+      uAmplitudeMap: { value: displayAmplitude.texture },
       uOpacity: { value: DEFAULT_SECTION_OPACITY },
       uAmplitudeMin: { value: 0.08 },
       uAmplitudeMax: { value: 0.92 },
@@ -818,6 +950,15 @@ async function buildSectionMesh(
     seismicSection: true,
     seismicTexturePlane: true,
     seismicSectionTextureSize: [section.width, section.height],
+    seismicSectionSourceTextureSize: [
+      displayAmplitude.sourceWidth,
+      displayAmplitude.sourceHeight,
+    ],
+    seismicSectionDisplayTextureSize: [
+      displayAmplitude.displayWidth,
+      displayAmplitude.displayHeight,
+    ],
+    seismicSectionDisplayTextureFilter: "mipmapped-prefiltered",
     seismicSectionIsoDisabledReason: "texture-plane-v1",
     seismicProductId: product.id,
     seismicProductLabel: product.label,

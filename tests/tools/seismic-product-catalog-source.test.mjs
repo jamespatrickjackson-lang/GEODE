@@ -184,7 +184,7 @@ test("seismic browser loader preserves trace-derived section geometry", () => {
   const geometryBuilder = sourceSlice(
     source,
     "function buildSectionPlaneGeometry",
-    "function buildSectionAmplitudeTexture",
+    "function buildSectionDisplayAmplitudeTexture",
   );
   assert.doesNotMatch(
     geometryBuilder,

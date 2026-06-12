@@ -229,6 +229,12 @@ final alpha as `lerp(sourceMaskAlpha, targetMaskAlpha, easedProgress)`.
 `sceneSectionObjectVisibilityByAxis` and
 `sceneSectionObjectVisibilityByFrameId` outside-opacity maps are continuous
 opacity channels and do not by themselves force a discrete snap.
+Seismic scene-section object ids are representation-specific for current
+runtime targets: `product:<layerId>:<productId>:volume` for raymarch volumes
+and `product:<layerId>:<productId>:section` for rendered section-image
+curtains. Transition interpolation must derive missing object-visibility
+defaults from the source or target scene-section targeting state, with legacy
+product-only seismic ids still honored as fallback authored state.
 
 Consequences: Section materials must update shader/uniform state during
 transition frames without rebuilding helper geometry. Ground traces, axes,

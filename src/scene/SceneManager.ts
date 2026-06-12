@@ -443,6 +443,7 @@ export interface SceneSectionObjectTarget {
   label: string;
   layerId: string;
   productId?: string;
+  representationKind?: "section" | "volume";
   supported: boolean;
   visible: boolean;
   axes: SceneSectionAxis[];

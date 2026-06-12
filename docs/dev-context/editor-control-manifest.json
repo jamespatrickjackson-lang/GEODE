@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "status": "active-guard",
   "lastReviewedAt": "2026-06-12",
-  "lastReviewNote": "SeismicCapabilityLayerContainers.tsx: sidebar Section Options aggregate removed; seismic product, rendering, isoband, integrated geophysics, comparison, and figure annotation controls now render as peer containers while the compact quick legend keeps Section Options.",
+  "lastReviewNote": "SceneSectionPlanesContainer.tsx: Section object visibility groups repeated object targets by seismic/MT/station/reference category, with seismic volume and section-image targets split by representation-specific object ids.",
   "description": "Canonical editor sidebar control manifest. Any user-facing editor sidebar control, command, section, or persisted variable must be represented here before editor-bar source changes are accepted.",
   "approvalPolicy": {
     "removalStatuses": ["removed", "renamed", "hidden"],
@@ -345,6 +345,30 @@
       "scope": "scene-section layers",
       "backedBy": "EditableStyle.sceneSectionFrameByAxis.<axis>.axesVisible",
       "setterRoute": "setFrameEntryPatch",
+      "status": "active"
+    },
+    {
+      "id": "sections.scene-section.object-visibility-groups",
+      "label": "Section object visibility groups",
+      "kind": "subsection-family",
+      "parentId": "sections.scene-section",
+      "sourceFile": "src/editor/layerControls/seismic/SceneSectionPlanesContainer.tsx",
+      "sourceAnchor": "data-testid={`scene-section-object-visibility-group-${group.id}`}",
+      "scope": "scene-section layers",
+      "backedBy": "runtime scene-section object targets, including seismic representationKind volume/section ids",
+      "setterRoute": "sceneSectionObjectTargetGroups",
+      "status": "active"
+    },
+    {
+      "id": "sections.scene-section.object-visibility-opacity",
+      "label": "Section object visibility opacity",
+      "kind": "control-family",
+      "parentId": "sections.scene-section",
+      "sourceFile": "src/editor/layerControls/seismic/SceneSectionPlanesContainer.tsx",
+      "sourceAnchor": "data-testid={`scene-section-object-opacity-${controlKey}-${target.objectId}`}",
+      "scope": "scene-section layers",
+      "backedBy": "EditableStyle.sceneSectionObjectVisibilityByFrameId.<frameId>.<objectId>.outsideOpacity, where seismic object ids distinguish :volume and :section",
+      "setterRoute": "setObjectVisibilityOpacity",
       "status": "active"
     },
     {

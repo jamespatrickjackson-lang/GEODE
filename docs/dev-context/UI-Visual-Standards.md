@@ -26,7 +26,10 @@ contract and points to the owning source files. Durable rationale belongs in
 
 - Single-clicking a rendered scene element reveals the corresponding editor row
   using stable target ids such as `layer:<layerId>` and
-  `product:<layerId>:<productId>`.
+  `product:<layerId>:<productId>`. Seismic scene-section object targets add
+  representation identity for current runtime targets, such as
+  `product:<layerId>:<productId>:volume` and
+  `product:<layerId>:<productId>:section`.
 - Reveal opens only the owning top-level workflow and the minimum parent group
   needed to make the row visible. Arrow/disclosure child containers such as
   `Appearance`, `Labels`, and `Provenance` keep their authored state.

@@ -327,8 +327,8 @@ function builtInFrameEntries(
       ...(entryAxis === axis ? planePatch : {}),
     };
     const nextFrame = {
-      ...(style.sceneSectionFrameByAxis?.[entryAxis] ?? {}),
       ...(entry?.frame ?? {}),
+      ...(style.sceneSectionFrameByAxis?.[entryAxis] ?? {}),
       ...(entryAxis === axis ? framePatch : {}),
     };
     return {
@@ -361,8 +361,8 @@ function axisModel(style: EditableStyle, axis: SceneSectionLegendAxis) {
     ...(style.sceneSectionPlanes?.[axis] ?? {}),
   };
   const frame = {
-    ...(style.sceneSectionFrameByAxis?.[axis] ?? {}),
     ...(entry?.frame ?? {}),
+    ...(style.sceneSectionFrameByAxis?.[axis] ?? {}),
   };
   const controlsVisible =
     typeof frame.controlsVisible === "boolean"
@@ -647,7 +647,6 @@ export function SceneSectionLegend({
     });
     commitRuntimeLayerStyle(SEISMIC_LAYER_ID, {
       seismicSliceThroughVolume: nextChannels.seismic,
-      seismicRenderMode: nextChannels.volume ? "raymarch" : "slice",
       sectionIsoEnabled: nextChannels.isobars || nextChannels.mtScalar,
       seismicIsoSource: nextChannels.mtScalar
         ? "mt-resistivity"

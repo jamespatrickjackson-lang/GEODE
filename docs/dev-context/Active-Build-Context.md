@@ -103,6 +103,9 @@ interpolate numeric section values; incompatible section-frame, target, or
 enable-state changes use dual-mask alpha blending on the target page
 transition clock. Section helper geometry is rebuilt only at tween start/final
 commit, while transition frames update material uniforms and helper opacity.
+Seismic scene-section object ids include representation type for current
+runtime targets: raymarch volumes use `:volume`, rendered section-image curtains
+use `:section`, and legacy product-only ids remain fallback authored state.
 Helper snapshots are active-to-active only, so source section-frame controls do
 not bleed into inactive/unrelated target pages. Section-frame outlines and
 push/pull control cones are studio controls and render above scene content in

@@ -2664,3 +2664,59 @@ basis remain under the Sections tool.
 `projects/*/overlays/**`, page ids, page titles, page indexes, or page order.
 Per-frame authored values such as explicit `groundTraceWidthM` remain valid
 overrides; generic defaults and clamps come from the effective Cinematics scene.
+
+## DEC-156 - Seismic section curtains use display textures, not page repairs
+
+Extends DEC-148 and DEC-151 for Utah FORGE seismic section display.
+
+**Considered:** repair the observed panel gaps by editing the affected Utah
+FORGE page, lowering opacity, changing palette defaults, or changing the
+section mesh into independent panels.
+
+**Chose:** section amplitude files remain the source authority, while runtime
+section materials sample a derived, power-of-two, mipmapped display texture.
+Raw amplitude samples remain available separately on geometry metadata for
+diagnostics and section-derived overlays. The displayed curtain stays one
+continuous trace-header-derived mesh.
+
+**Why:** the source `.u8` section data and trace-path geometry are continuous;
+the visible gap pattern is a minification artifact from high-frequency seismic
+amplitude texture sampling on an oblique curtain. A reusable display texture
+policy fixes the render path for every section without turning disposable page
+fixtures into implementation evidence.
+
+**Guard:** do not fix seismic panel continuity by editing
+`projects/*/pages/**`, `projects/*/overlays/**`, `projects/*/project.json`,
+or `projects/*/environment.json`. Exact missing slice coverage, such as a true
+IL-93 source product, must be handled through source preparation and manifest
+generation, not page-level state.
+
+## DEC-157 - Scene sections target seismic representations separately
+
+Extends DEC-151 and DEC-156 for section masking of seismic products.
+
+**Considered:** keep scene-section seismic targets keyed only by product id,
+turn quick-legend section face buttons into seismic render-mode controls, or
+make section object identity include the seismic representation being masked.
+
+**Chose:** seismic scene-section object identity includes representation type:
+raymarch volume targets use `:volume`, rendered section-image curtains use
+`:section`, and legacy product-only ids remain readable fallback authored
+state. Quick-legend face-channel buttons no longer write
+`seismicRenderMode`; the seismic rendering controls and graph presets remain
+the owners of slice versus raymarch mode.
+
+**Why:** the same seismic product can have both a sectionable raymarch volume
+and a rendered 2D section image. Product-only section object ids conflate those
+representations, so sectioning the volume can also hide or fade the rendered
+section image. Separating representation identity lets Section object
+visibility section one representation without destroying the other.
+
+**Guard:** do not repair seismic section/volume separation with
+`projects/*/pages/**`, `projects/*/overlays/**`, page ids, page titles, page
+order, or project fixture branches. New seismic section targets must preserve
+representation kind through runtime target discovery, editor fallback targets,
+and object-visibility opacity maps. Scene-section object-visibility
+interpolation must derive missing source/target defaults from scene-section
+targeting state, including legacy product-only seismic ids, so typed
+`:volume` and `:section` targets do not pop during page transitions.

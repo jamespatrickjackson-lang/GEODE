@@ -98,6 +98,29 @@ test("section object visibility is a continuous opacity channel, not a discrete 
   );
 });
 
+test("section object visibility interpolation derives missing defaults from scene-section targeting", () => {
+  assert.match(
+    sceneSectionController,
+    /function sceneSectionVisibilityDefaultOutsideOpacity\(\s*style: EditableStyle,\s*objectId: string/s,
+    "Object visibility interpolation should derive missing defaults from the full scene-section style.",
+  );
+  assert.match(
+    sceneSectionController,
+    /sceneSectionVisibilityDefaultOutsideOpacity\(\s*fromStyle,\s*objectId\s*\)/,
+    "Source interpolation defaults should use source scene-section targeting.",
+  );
+  assert.match(
+    sceneSectionController,
+    /sceneSectionVisibilityDefaultOutsideOpacity\(\s*toStyle,\s*objectId\s*\)/,
+    "Target interpolation defaults should use target scene-section targeting.",
+  );
+  assert.match(
+    sceneSectionController,
+    /sceneSectionProductObjectParts[\s\S]*representationKind[\s\S]*sceneSectionLegacyProductObjectId/,
+    "Representation-specific seismic object ids should fall back through their legacy product id during interpolation.",
+  );
+});
+
 test("incompatible section changes use a dual-mask fade with the page transition clock", () => {
   assert.match(
     transitionStyles,

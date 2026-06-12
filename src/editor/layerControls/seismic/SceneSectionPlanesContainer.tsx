@@ -36,7 +36,11 @@ import {
   UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID,
 } from "../../../projectModules/utahForge/layerIds";
 import { useEditor } from "../../EditorContext";
-import { seismicDefaultProductId, seismicProductOptions } from "./seismicModel";
+import {
+  seismicDefaultProductId,
+  seismicProductOptions,
+  type SeismicProductOption,
+} from "./seismicModel";
 
 const sceneSectionAxisColors = {
   x: "#ff6b78",
@@ -130,6 +134,14 @@ const frameObjectVisibilityRowStyle: React.CSSProperties = {
   marginBottom: 6,
 };
 
+const frameObjectVisibilityGroupHeadingStyle: React.CSSProperties = {
+  margin: "10px 0 6px",
+  color: "rgba(238, 238, 238, 0.74)",
+  fontSize: 11,
+  fontWeight: 700,
+  letterSpacing: 0,
+};
+
 type SceneSectionAxis = "x" | "y" | "z";
 
 type SceneSectionObjectTarget = {
@@ -137,10 +149,46 @@ type SceneSectionObjectTarget = {
   label: string;
   layerId: string;
   productId?: string;
+  representationKind?: "section" | "volume";
   supported: boolean;
   visible: boolean;
   axes: SceneSectionAxis[];
 };
+
+type SceneSectionObjectTargetGroupId =
+  | "seismic-3d"
+  | "seismic-2d"
+  | "mt"
+  | "station-locations"
+  | "reference-context"
+  | "other";
+
+type SceneSectionObjectTargetGroup = {
+  id: SceneSectionObjectTargetGroupId;
+  label: string;
+  targets: SceneSectionObjectTarget[];
+};
+
+const sceneSectionObjectTargetGroupOrder: Array<{
+  id: SceneSectionObjectTargetGroupId;
+  label: string;
+}> = [
+  { id: "seismic-3d", label: "Seismic 3D" },
+  { id: "seismic-2d", label: "Seismic 2D" },
+  { id: "mt", label: "MT" },
+  { id: "station-locations", label: "Station Locations" },
+  { id: "reference-context", label: "Reference / Context" },
+  { id: "other", label: "Other" },
+];
+
+const sceneSectionMtLayerIds = new Set([
+  UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID,
+  UTAH_FORGE_MT_RESISTIVITY_SLICES_LAYER_ID,
+  UTAH_FORGE_MT_RESISTIVITY_FULL_DENSITY_LAYER_ID,
+  UTAH_FORGE_MT_THRESHOLD_SURFACES_LAYER_ID,
+  UTAH_FORGE_MT_TOP_SURFACE_LAYER_ID,
+  UTAH_FORGE_MT_TOP_CONTACT_SURFACE_LAYER_ID,
+]);
 
 const frameSummaryContentStyle: React.CSSProperties = {
   display: "inline-flex",
@@ -287,8 +335,76 @@ function layerObjectId(layerId: string): string {
   return `layer:${layerId}`;
 }
 
-function productObjectId(layerId: string, productId: string): string {
-  return `product:${layerId}:${productId}`;
+function productObjectId(
+  layerId: string,
+  productId: string,
+  kind: "section" | "volume",
+): string {
+  return `product:${layerId}:${productId}:${kind}`;
+}
+
+function sceneSectionSeismicTargetGroup(
+  target: SceneSectionObjectTarget,
+  productById: Map<string, SeismicProductOption>,
+): SceneSectionObjectTargetGroupId {
+  const product = target.productId ? productById.get(target.productId) : undefined;
+  if (target.representationKind === "volume") return "seismic-3d";
+  if (product?.surveyKind === "3d") return "seismic-3d";
+  if (product?.surveyKind === "2d") return "seismic-2d";
+  const evidence = [
+    target.productId,
+    target.label,
+    product?.label,
+    product?.canonicalLabel,
+    product?.lineId,
+  ]
+    .filter((value): value is string => typeof value === "string")
+    .join(" ")
+    .toLowerCase();
+  if (/\b3d\b|forge3d/.test(evidence)) return "seismic-3d";
+  if (/\b2d\b|forge2d|\bline[-\s]?\d+/i.test(evidence)) return "seismic-2d";
+  return "seismic-2d";
+}
+
+function sceneSectionObjectTargetGroupId(
+  target: SceneSectionObjectTarget,
+  productById: Map<string, SeismicProductOption>,
+): SceneSectionObjectTargetGroupId {
+  if (target.layerId === UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID) {
+    return sceneSectionSeismicTargetGroup(target, productById);
+  }
+  if (target.layerId === UTAH_FORGE_MT_STATIONS_LAYER_ID) {
+    return "station-locations";
+  }
+  if (sceneSectionMtLayerIds.has(target.layerId)) {
+    return "mt";
+  }
+  if (target.layerId === "utah-forge-reference-stage") {
+    return "reference-context";
+  }
+  return "other";
+}
+
+function sceneSectionObjectTargetGroups(
+  targets: SceneSectionObjectTarget[],
+  productById: Map<string, SeismicProductOption>,
+): SceneSectionObjectTargetGroup[] {
+  const targetsByGroup = new Map<
+    SceneSectionObjectTargetGroupId,
+    SceneSectionObjectTarget[]
+  >();
+  for (const target of targets) {
+    const groupId = sceneSectionObjectTargetGroupId(target, productById);
+    const groupTargets = targetsByGroup.get(groupId) ?? [];
+    groupTargets.push(target);
+    targetsByGroup.set(groupId, groupTargets);
+  }
+  return sceneSectionObjectTargetGroupOrder
+    .map((group) => ({
+      ...group,
+      targets: targetsByGroup.get(group.id) ?? [],
+    }))
+    .filter((group) => group.targets.length > 0);
 }
 
 function legacyDefaultObjectOpacity({
@@ -360,8 +476,8 @@ function normalizeSceneSectionFrameEntries(
     const id = builtInFrameId(axis);
     const entry = explicitById.get(id);
     const frame = {
-      ...(frameByAxis[axis] ?? {}),
       ...(entry?.frame ?? {}),
+      ...(frameByAxis[axis] ?? {}),
     };
     const controlsVisible =
       typeof frame.controlsVisible === "boolean"
@@ -380,8 +496,8 @@ function normalizeSceneSectionFrameEntries(
       axis,
       builtIn: true,
       plane: {
-        ...(planes[axis] ?? {}),
         ...(entry?.plane ?? {}),
+        ...(planes[axis] ?? {}),
       },
       frame,
     };
@@ -523,18 +639,42 @@ export function SceneSectionPlanesContainer({
       ? style.sceneSectionActiveFrameId
       : builtInFrameId(activeAxis);
   const fallbackObjectTargets: SceneSectionObjectTarget[] = [
-    ...products.map((product) => ({
-      objectId: productObjectId(
-        UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID,
-        product.id,
-      ),
-      label: `Seismic: ${product.label}`,
-      layerId: UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID,
-      productId: product.id,
-      supported: true,
-      visible: true,
-      axes: ["x", "y", "z"] as SceneSectionAxis[],
-    })),
+    ...products.flatMap((product) => {
+      const targets: SceneSectionObjectTarget[] = [];
+      if (product.raymarchCapable) {
+        targets.push({
+          objectId: productObjectId(
+            UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID,
+            product.id,
+            "volume",
+          ),
+          label: `Seismic volume: ${product.label}`,
+          layerId: UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID,
+          productId: product.id,
+          representationKind: "volume",
+          supported: true,
+          visible: true,
+          axes: ["x", "y", "z"] as SceneSectionAxis[],
+        });
+      }
+      if (product.sections?.length) {
+        targets.push({
+          objectId: productObjectId(
+            UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID,
+            product.id,
+            "section",
+          ),
+          label: `Seismic section image: ${product.label}`,
+          layerId: UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID,
+          productId: product.id,
+          representationKind: "section",
+          supported: true,
+          visible: true,
+          axes: ["x", "y", "z"] as SceneSectionAxis[],
+        });
+      }
+      return targets;
+    }),
     ...[
       UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID,
       UTAH_FORGE_MT_RESISTIVITY_SLICES_LAYER_ID,
@@ -557,7 +697,7 @@ export function SceneSectionPlanesContainer({
                 ? editorLayerLabel(layer)
                 : layerId,
         layerId,
-        supported: layerId !== UTAH_FORGE_MT_STATIONS_LAYER_ID,
+        supported: true,
         visible: true,
         axes: ["x", "y", "z"] as SceneSectionAxis[],
       };
@@ -574,6 +714,11 @@ export function SceneSectionPlanesContainer({
   }
   const objectTargets = Array.from(objectTargetMap.values()).filter((target) =>
     target.axes.length > 0,
+  );
+  const productById = new Map(products.map((product) => [product.id, product]));
+  const objectTargetGroups = sceneSectionObjectTargetGroups(
+    objectTargets,
+    productById,
   );
   const liveStyleRef = useRef(style);
   useEffect(() => {
@@ -1892,64 +2037,74 @@ export function SceneSectionPlanesContainer({
                         Section object visibility
                       </summary>
                       <div style={detailsContentStyle}>
-                        {objectTargets.map((target) => {
-                          const supported =
-                            target.supported && target.axes.includes(axis);
-                          const opacity = objectVisibilityOpacity(
-                            style,
-                            axis,
-                            frame.id,
-                            target,
-                            targetScope,
-                            targetLayerIds,
-                            targetProductIds,
-                          );
-                          const sliderDisabled =
-                            disabled ||
-                            !enabled ||
-                            !planeEnabled ||
-                            !axisFrameEnabled ||
-                            !supported;
-                          return (
+                        {objectTargetGroups.map((group) => (
+                          <div key={group.id}>
                             <div
-                              key={target.objectId}
-                              style={{
-                                ...frameObjectVisibilityRowStyle,
-                                opacity: supported ? 1 : 0.45,
-                              }}
+                              data-testid={`scene-section-object-visibility-group-${group.id}`}
+                              style={frameObjectVisibilityGroupHeadingStyle}
                             >
-                              <span
-                                title={target.label}
-                                style={{
-                                  minWidth: 0,
-                                  overflow: "hidden",
-                                  textOverflow: "ellipsis",
-                                  whiteSpace: "nowrap",
-                                }}
-                              >
-                                {target.label}
-                              </span>
-                              <input
-                                data-testid={`scene-section-object-opacity-${controlKey}-${target.objectId}`}
-                                type="range"
-                                min={0}
-                                max={1}
-                                step={0.01}
-                                disabled={sliderDisabled}
-                                value={opacity}
-                                onChange={(e) =>
-                                  setObjectVisibilityOpacity(
-                                    axis,
-                                    frame.id,
-                                    target.objectId,
-                                    parseFloat(e.target.value),
-                                  )
-                                }
-                                style={{ minWidth: 0 }}
-                              />
+                              {group.label}
                             </div>
-                          );
-                        })}
+                            {group.targets.map((target) => {
+                              const supported =
+                                target.supported && target.axes.includes(axis);
+                              const opacity = objectVisibilityOpacity(
+                                style,
+                                axis,
+                                frame.id,
+                                target,
+                                targetScope,
+                                targetLayerIds,
+                                targetProductIds,
+                              );
+                              const sliderDisabled =
+                                disabled ||
+                                !enabled ||
+                                !planeEnabled ||
+                                !axisFrameEnabled ||
+                                !supported;
+                              return (
+                                <div
+                                  key={target.objectId}
+                                  style={{
+                                    ...frameObjectVisibilityRowStyle,
+                                    opacity: supported ? 1 : 0.45,
+                                  }}
+                                >
+                                  <span
+                                    title={target.label}
+                                    style={{
+                                      minWidth: 0,
+                                      overflow: "hidden",
+                                      textOverflow: "ellipsis",
+                                      whiteSpace: "nowrap",
+                                    }}
+                                  >
+                                    {target.label}
+                                  </span>
+                                  <input
+                                    data-testid={`scene-section-object-opacity-${controlKey}-${target.objectId}`}
+                                    type="range"
+                                    min={0}
+                                    max={1}
+                                    step={0.01}
+                                    disabled={sliderDisabled}
+                                    value={opacity}
+                                    onChange={(e) =>
+                                      setObjectVisibilityOpacity(
+                                        axis,
+                                        frame.id,
+                                        target.objectId,
+                                        parseFloat(e.target.value),
+                                      )
+                                    }
+                                    style={{ minWidth: 0 }}
+                                  />
+                                </div>
+                              );
+                            })}
+                          </div>
+                        ))}
                       </div>
                     </details>
                   </div>

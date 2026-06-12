@@ -7,6 +7,9 @@ import {
 
 test.setTimeout(600_000);
 
+const UTAH_FORGE_URL =
+  process.env.GEOSEE_TEST_BASE_URL ?? "/?project=utah-forge";
+
 async function setRangeInput(
   page: Parameters<typeof sceneSectionState>[0],
   testId: string,
@@ -29,7 +32,7 @@ async function setRangeInput(
 test("scene section frames stay independent across X Y and Z planes", async ({
   page,
 }) => {
-  await page.goto("/?project=utah-forge", { waitUntil: "networkidle" });
+  await page.goto(UTAH_FORGE_URL, { waitUntil: "networkidle" });
   await hidePublicContextLayers(page);
   await page.getByRole("button", { name: "Sections" }).click();
   await openForgeMtResistivityEditorContainers(page);
@@ -171,4 +174,72 @@ test("scene section frames stay independent across X Y and Z planes", async ({
       ),
     )
     .toEqual([{ axis: "x", isFrame: false }]);
+});
+
+test("section object visibility groups section targets and enables stations", async ({
+  page,
+}) => {
+  await page.goto(UTAH_FORGE_URL, { waitUntil: "networkidle" });
+  await hidePublicContextLayers(page);
+  await page.getByRole("button", { name: "Sections" }).click();
+  await openForgeMtResistivityEditorContainers(page);
+
+  await page.getByTestId("scene-section-enabled").setChecked(true);
+  await page.getByTestId("scene-section-plane-z-enabled").setChecked(true);
+  await page.getByTestId("scene-section-frame-z-enabled").setChecked(true);
+
+  const expectedGroups = [
+    "seismic-3d",
+    "seismic-2d",
+    "mt",
+    "station-locations",
+    "reference-context",
+  ];
+  for (const groupId of expectedGroups) {
+    await expect(
+      page
+        .getByTestId(`scene-section-object-visibility-group-${groupId}`)
+        .first(),
+    ).toBeVisible();
+  }
+
+  const sliderIds = [
+    "scene-section-object-opacity-z-product:utah-forge-phase3-seismic-browser:gdr-1141-forge3d-ani-psdm-stack-unenh",
+    "scene-section-object-opacity-z-product:utah-forge-phase3-seismic-browser:gdr-1141-line-301-pdm-enh",
+    "scene-section-object-opacity-z-layer:utah-forge-mt-resistivity-full-density",
+    "scene-section-object-opacity-z-layer:utah-forge-mt-stations",
+  ];
+  for (const sliderId of sliderIds) {
+    await expect(page.getByTestId(sliderId)).toBeEnabled();
+  }
+
+  await setRangeInput(
+    page,
+    "scene-section-object-opacity-z-layer:utah-forge-mt-stations",
+    "0.25",
+  );
+
+  await expect
+    .poll(() =>
+      page.evaluate(() => {
+        const manager = (
+          window as unknown as {
+            __scene?: {
+              manager?: {
+                styleForLayer?: (id: string) => Record<string, unknown>;
+              };
+            };
+          }
+        ).__scene?.manager;
+        const style = manager?.styleForLayer?.(
+          "utah-forge-scene-section-planes",
+        );
+        const byFrame = style?.sceneSectionObjectVisibilityByFrameId as
+          | Record<string, Record<string, { outsideOpacity?: unknown }>>
+          | undefined;
+        return byFrame?.["axis:z"]?.["layer:utah-forge-mt-stations"]
+          ?.outsideOpacity;
+      }),
+    )
+    .toBe(0.25);
 });

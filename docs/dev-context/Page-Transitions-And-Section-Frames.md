@@ -115,6 +115,14 @@ changes use a dual-mask alpha fade:
 uses the target page `transition.duration` and `transition.easing`; it must not
 add `section-mask` or any other section-specific layer kind.
 
+Seismic section masks must distinguish representation identity. Raymarch volume
+targets use `product:<layerId>:<productId>:volume`, while rendered seismic
+section-image curtains use `product:<layerId>:<productId>:section`. During
+transitions, missing object-visibility map entries derive their default outside
+opacity from the source or target scene-section targeting state, including
+legacy product-only seismic ids, so representation-specific targets do not pop
+when entering or leaving sectioned state.
+
 Layer classification compares resolved source and target presentation state in
 [transitionEffectiveLayersForPage.ts:160-166](../../src/scene/transitions/transitionEffectiveLayersForPage.ts#L160-L166)
 and is gated by `transitionEnvelopeAllowsLayer()` at
@@ -247,7 +255,9 @@ Per DEC-071:
 - `sceneSectionObjectVisibilityByAxis` and
   `sceneSectionObjectVisibilityByFrameId` outside-opacity maps are continuous
   opacity channels. Adding, removing, or changing one of these values must fade
-  to the target opacity on the page transition clock.
+  to the target opacity on the page transition clock. Missing object entries
+  must default from the source or target scene-section targeting state, not from
+  a hard-coded unsectioned opacity.
 
 `transitionEffectiveLayersForPage.ts` is the classifier. The crossfade path
 fades **between two pre-built helper snapshots** â€” not between a snapshot and

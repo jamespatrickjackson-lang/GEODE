@@ -882,8 +882,35 @@ function sceneSectionLayerObjectId(layerId: string): string {
   return `layer:${layerId}`;
 }
 
-function sceneSectionProductObjectId(layerId: string, productId: string): string {
+function sceneSectionLegacyProductObjectId(
+  layerId: string,
+  productId: string,
+): string {
   return `product:${layerId}:${productId}`;
+}
+
+function sceneSectionProductObjectId(
+  layerId: string,
+  productId: string,
+  kind: "section" | "volume",
+): string {
+  return `${sceneSectionLegacyProductObjectId(layerId, productId)}:${kind}`;
+}
+
+function sceneSectionProductObjectParts(objectId: string): {
+  layerId: string;
+  productId: string;
+  representationKind?: "section" | "volume";
+} | null {
+  const match = /^product:([^:]+):([^:]+)(?::(section|volume))?$/.exec(
+    objectId,
+  );
+  if (!match) return null;
+  return {
+    layerId: match[1],
+    productId: match[2],
+    representationKind: match[3] as "section" | "volume" | undefined,
+  };
 }
 
 function sceneSectionObjectIdForObject(
@@ -896,9 +923,29 @@ function sceneSectionObjectIdForObject(
     typeof productId === "string" &&
     productId
   ) {
-    return sceneSectionProductObjectId(layerId, productId);
+    if (obj.userData?.seismicRaymarchVolume === true) {
+      return sceneSectionProductObjectId(layerId, productId, "volume");
+    }
+    if (
+      obj.userData?.seismicSection === true ||
+      obj.userData?.seismicTexturePlane === true
+    ) {
+      return sceneSectionProductObjectId(layerId, productId, "section");
+    }
+    return sceneSectionLegacyProductObjectId(layerId, productId);
   }
   return sceneSectionLayerObjectId(layerId);
+}
+
+function sceneSectionLegacyObjectIdForObject(
+  layerId: string,
+  obj: THREE.Object3D,
+): string | null {
+  if (layerId !== UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID) return null;
+  const productId = obj.userData?.seismicProductId;
+  return typeof productId === "string" && productId
+    ? sceneSectionLegacyProductObjectId(layerId, productId)
+    : null;
 }
 
 function sceneSectionTargetLabel(this: any, layerId: string): string {
@@ -948,39 +995,78 @@ export function listSceneSectionObjectTargets(this: any): SceneSectionObjectTarg
   ]) {
     addLayer(layerId, true);
   }
-  addLayer(UTAH_FORGE_MT_STATIONS_LAYER_ID, false);
+  addLayer(UTAH_FORGE_MT_STATIONS_LAYER_ID, true);
 
   const seismicLayer = this.layers.get(
     UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID,
   ) as THREE.Group | undefined;
-  const productLabels = new Map<string, string>();
+  const seismicTargetsByProduct = new Map<
+    string,
+    {
+      label: string;
+      hasSection: boolean;
+      hasVolume: boolean;
+    }
+  >();
   seismicLayer?.traverse((obj: THREE.Object3D) => {
     const productId = obj.userData?.seismicProductId;
     if (typeof productId !== "string" || !productId) return;
-    if (!productLabels.has(productId)) {
-      const displayName = obj.userData?.displayName;
-      productLabels.set(
-        productId,
-        typeof displayName === "string" && displayName.trim()
+    const existing = seismicTargetsByProduct.get(productId);
+    const productLabel = obj.userData?.seismicProductLabel;
+    const displayName = obj.userData?.displayName;
+    const label =
+      existing?.label ??
+      (typeof productLabel === "string" && productLabel.trim()
+        ? productLabel
+        : typeof displayName === "string" && displayName.trim()
           ? displayName
-          : productId,
-      );
-    }
-  });
-  for (const [productId, label] of productLabels) {
-    const objectId = sceneSectionProductObjectId(
-      UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID,
-      productId,
-    );
-    targets.set(objectId, {
-      objectId,
-      label: `Seismic: ${label}`,
-      layerId: UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID,
-      productId,
-      supported: true,
-      visible: seismicLayer?.visible === true,
-      axes: SCENE_SECTION_OBJECT_AXES,
+          : productId);
+    seismicTargetsByProduct.set(productId, {
+      label,
+      hasSection:
+        existing?.hasSection === true ||
+        obj.userData?.seismicSection === true ||
+        obj.userData?.seismicTexturePlane === true,
+      hasVolume:
+        existing?.hasVolume === true ||
+        obj.userData?.seismicRaymarchVolume === true,
     });
+  });
+  for (const [productId, target] of seismicTargetsByProduct) {
+    if (target.hasVolume) {
+      const objectId = sceneSectionProductObjectId(
+        UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID,
+        productId,
+        "volume",
+      );
+      targets.set(objectId, {
+        objectId,
+        label: `Seismic volume: ${target.label}`,
+        layerId: UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID,
+        productId,
+        representationKind: "volume",
+        supported: true,
+        visible: seismicLayer?.visible === true,
+        axes: SCENE_SECTION_OBJECT_AXES,
+      });
+    }
+    if (target.hasSection) {
+      const objectId = sceneSectionProductObjectId(
+        UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID,
+        productId,
+        "section",
+      );
+      targets.set(objectId, {
+        objectId,
+        label: `Seismic section image: ${target.label}`,
+        layerId: UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID,
+        productId,
+        representationKind: "section",
+        supported: true,
+        visible: seismicLayer?.visible === true,
+        axes: SCENE_SECTION_OBJECT_AXES,
+      });
+    }
   }
   return Array.from(targets.values());
 }
@@ -1009,11 +1095,20 @@ function sceneSectionAxisOutsideOpacity(
   axis: SceneSectionAxis,
   objectId: string,
   legacyTargeted: boolean,
+  legacyObjectId?: string | null,
 ): number {
-  const entry = style.sceneSectionObjectVisibilityByAxis?.[axis]?.[objectId];
+  const entries = style.sceneSectionObjectVisibilityByAxis?.[axis];
+  const entry = entries?.[objectId];
+  const legacyEntry =
+    legacyObjectId && legacyObjectId !== objectId
+      ? entries?.[legacyObjectId]
+      : undefined;
   const value = entry?.outsideOpacity;
+  const legacyValue = legacyEntry?.outsideOpacity;
   return typeof value === "number" && Number.isFinite(value)
     ? clamp01(value)
+    : typeof legacyValue === "number" && Number.isFinite(legacyValue)
+      ? clamp01(legacyValue)
     : legacyTargeted
       ? 0
       : 1;
@@ -1171,14 +1266,30 @@ function sceneSectionFrameOutsideOpacity(
   axis: SceneSectionAxis,
   objectId: string,
   legacyTargeted: boolean,
+  legacyObjectId?: string | null,
 ): number {
-  const byFrameValue =
-    style.sceneSectionObjectVisibilityByFrameId?.[frameId]?.[objectId]
-      ?.outsideOpacity;
+  const entries = style.sceneSectionObjectVisibilityByFrameId?.[frameId];
+  const byFrameValue = entries?.[objectId]?.outsideOpacity;
   if (typeof byFrameValue === "number" && Number.isFinite(byFrameValue)) {
     return clamp01(byFrameValue);
   }
-  return sceneSectionAxisOutsideOpacity(style, axis, objectId, legacyTargeted);
+  const legacyByFrameValue =
+    legacyObjectId && legacyObjectId !== objectId
+      ? entries?.[legacyObjectId]?.outsideOpacity
+      : undefined;
+  if (
+    typeof legacyByFrameValue === "number" &&
+    Number.isFinite(legacyByFrameValue)
+  ) {
+    return clamp01(legacyByFrameValue);
+  }
+  return sceneSectionAxisOutsideOpacity(
+    style,
+    axis,
+    objectId,
+    legacyTargeted,
+    legacyObjectId,
+  );
 }
 
 type SceneSectionObjectVisibilityMap =
@@ -1190,12 +1301,86 @@ function sceneSectionVisibilityEntryOutsideOpacity(
   fallback: number,
 ): number {
   const value = entries?.[objectId]?.outsideOpacity;
-  return typeof value === "number" && Number.isFinite(value)
-    ? clamp01(value)
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return clamp01(value);
+  }
+  const parts = sceneSectionProductObjectParts(objectId);
+  const legacyValue =
+    parts?.representationKind && parts.layerId && parts.productId
+      ? entries?.[
+          sceneSectionLegacyProductObjectId(parts.layerId, parts.productId)
+        ]?.outsideOpacity
+      : undefined;
+  return typeof legacyValue === "number" && Number.isFinite(legacyValue)
+    ? clamp01(legacyValue)
     : clamp01(fallback);
 }
 
+function sceneSectionStyleSelectedProductId(style: EditableStyle): string {
+  return typeof style.seismicProductId === "string" &&
+    style.seismicProductId.trim()
+    ? style.seismicProductId
+    : "";
+}
+
+function sceneSectionStyleProductTargeted(
+  style: EditableStyle,
+  productId: string,
+): boolean {
+  if (style.sceneSectionTargetScope === "all-visible") return true;
+  const configured = Array.isArray(style.sceneSectionTargetProductIds)
+    ? style.sceneSectionTargetProductIds.filter(
+        (id): id is string => typeof id === "string",
+      )
+    : [];
+  const selected = sceneSectionStyleSelectedProductId(style);
+  if (style.sceneSectionTargetScope === "active-selection") {
+    return selected ? selected === productId : configured.includes(productId);
+  }
+  return configured.length > 0
+    ? configured.includes(productId)
+    : selected === productId;
+}
+
+function sceneSectionStyleLayerTargeted(
+  style: EditableStyle,
+  layerId: string,
+): boolean {
+  if (style.sceneSectionTargetScope === "all-visible") return true;
+  const configured = Array.isArray(style.sceneSectionTargetLayerIds)
+    ? style.sceneSectionTargetLayerIds.filter(
+        (id): id is string => typeof id === "string",
+      )
+    : [];
+  if (style.sceneSectionTargetScope === "active-selection") {
+    return configured.includes(layerId);
+  }
+  return configured.length > 0
+    ? configured.includes(layerId)
+    : layerId === UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID ||
+        layerId === UTAH_FORGE_MT_RESISTIVITY_FULL_DENSITY_LAYER_ID;
+}
+
+function sceneSectionVisibilityDefaultOutsideOpacity(
+  style: EditableStyle,
+  objectId: string,
+): number {
+  const productParts = sceneSectionProductObjectParts(objectId);
+  if (productParts) {
+    return sceneSectionStyleProductTargeted(style, productParts.productId)
+      ? 0
+      : 1;
+  }
+  const layerMatch = /^layer:([^:]+)$/.exec(objectId);
+  if (layerMatch) {
+    return sceneSectionStyleLayerTargeted(style, layerMatch[1]) ? 0 : 1;
+  }
+  return style.sceneSectionTargetScope === "all-visible" ? 0 : 1;
+}
+
 function interpolatedSceneSectionObjectVisibilityMap(
+  fromStyle: EditableStyle,
+  toStyle: EditableStyle,
   fromEntries: SceneSectionObjectVisibilityMap | undefined,
   toEntries: SceneSectionObjectVisibilityMap | undefined,
   t: number,
@@ -1210,12 +1395,12 @@ function interpolatedSceneSectionObjectVisibilityMap(
     const fromOutsideOpacity = sceneSectionVisibilityEntryOutsideOpacity(
       fromEntries,
       objectId,
-      1,
+      sceneSectionVisibilityDefaultOutsideOpacity(fromStyle, objectId),
     );
     const toOutsideOpacity = sceneSectionVisibilityEntryOutsideOpacity(
       toEntries,
       objectId,
-      1,
+      sceneSectionVisibilityDefaultOutsideOpacity(toStyle, objectId),
     );
     next[objectId] = {
       outsideOpacity:
@@ -1234,6 +1419,8 @@ function interpolatedSceneSectionObjectVisibilityByAxis(
     {};
   for (const axis of sceneSectionAxes()) {
     const entries = interpolatedSceneSectionObjectVisibilityMap(
+      fromStyle,
+      toStyle,
       fromStyle.sceneSectionObjectVisibilityByAxis?.[axis],
       toStyle.sceneSectionObjectVisibilityByAxis?.[axis],
       t,
@@ -1257,6 +1444,8 @@ function interpolatedSceneSectionObjectVisibilityByFrameId(
     {};
   for (const frameId of frameIds) {
     const entries = interpolatedSceneSectionObjectVisibilityMap(
+      fromStyle,
+      toStyle,
       fromStyle.sceneSectionObjectVisibilityByFrameId?.[frameId],
       toStyle.sceneSectionObjectVisibilityByFrameId?.[frameId],
       t,
@@ -1274,6 +1463,7 @@ export function sceneSectionObjectVisibilityForObject(this: any,
   productTargets: Set<string>,
 ): SceneSectionObjectVisibility {
   const objectId = sceneSectionObjectIdForObject(layerId, obj);
+  const legacyObjectId = sceneSectionLegacyObjectIdForObject(layerId, obj);
   const legacyTargeted = sceneSectionLegacyObjectTargeted(
     layerId,
     obj,
@@ -1282,9 +1472,27 @@ export function sceneSectionObjectVisibilityForObject(this: any,
     productTargets,
   );
   const outsideOpacityByAxis = {
-    x: sceneSectionAxisOutsideOpacity(style, "x", objectId, legacyTargeted),
-    y: sceneSectionAxisOutsideOpacity(style, "y", objectId, legacyTargeted),
-    z: sceneSectionAxisOutsideOpacity(style, "z", objectId, legacyTargeted),
+    x: sceneSectionAxisOutsideOpacity(
+      style,
+      "x",
+      objectId,
+      legacyTargeted,
+      legacyObjectId,
+    ),
+    y: sceneSectionAxisOutsideOpacity(
+      style,
+      "y",
+      objectId,
+      legacyTargeted,
+      legacyObjectId,
+    ),
+    z: sceneSectionAxisOutsideOpacity(
+      style,
+      "z",
+      objectId,
+      legacyTargeted,
+      legacyObjectId,
+    ),
   };
   const outsideOpacityByFrameId: Record<string, number> = {};
   for (const entry of sceneSectionResolvedFrameEntries(style)) {
@@ -1294,6 +1502,7 @@ export function sceneSectionObjectVisibilityForObject(this: any,
       entry.axis,
       objectId,
       legacyTargeted,
+      legacyObjectId,
     );
     outsideOpacityByFrameId[entry.id] = value;
     outsideOpacityByAxis[entry.axis] = Math.min(
