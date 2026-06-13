@@ -152,3 +152,43 @@ test("scene-section helper visuals read Cinematics sectionVisuals settings", () 
     "Scale-axis ticks should use the authored tick scale.",
   );
 });
+
+test("scene-section helper disable handoffs exit through a fading snapshot", () => {
+  assert.match(
+    source,
+    /export function sceneSectionHelperExitSnapshotNeeded/,
+    "Active-to-inactive helper handoffs need an explicit exit-snapshot predicate.",
+  );
+  assert.match(
+    source,
+    /sceneSectionHelperActiveForStyle\(fromStyle, this\.editorMode\)\s*&&\s*!sceneSectionHelperActiveForStyle\(toStyle, this\.editorMode\)/,
+    "The exit snapshot fires only when source helpers are active and target helpers are not.",
+  );
+
+  const classifier = readFileSync(
+    "src/scene/transitions/transitionEffectiveLayersForPage.ts",
+    "utf8",
+  );
+  const disableBranch = classifier.slice(
+    classifier.indexOf("!targetSceneSectionTransitionActive)"),
+  );
+  const snapshotAt = disableBranch.indexOf(
+    "beginSceneSectionHelperTransitionSnapshot",
+  );
+  const inactiveApplyAt = disableBranch.indexOf(
+    "this.applySceneSectionPlanes(targetSceneSectionStyle)",
+  );
+  assert.ok(
+    snapshotAt >= 0,
+    "The active-to-inactive section branch must create the helper exit snapshot.",
+  );
+  assert.ok(
+    inactiveApplyAt > snapshotAt,
+    "The exit snapshot must be taken before the inactive target apply clears the live helper group.",
+  );
+  assert.match(
+    classifier,
+    /sceneSectionHelperExitSnapshotNeeded\?\.\(\s*fromSceneSectionStyle,\s*targetSceneSectionStyle,\s*\)/,
+    "Both the tween branch and the disable branch must route through the shared exit predicate.",
+  );
+});

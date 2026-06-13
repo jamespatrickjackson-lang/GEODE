@@ -377,6 +377,16 @@ function classifyOpacityJump(product) {
         "Scene-section helper handoff is represented by the helper translation/style tween path.",
     };
   }
+  if (policy === "interpolate-full-density-scalar") {
+    return {
+      ...product,
+      classification: "policy-covered-full-density-scalar",
+      visualPolicy: "interpolate-full-density-scalar",
+      risk: "low",
+      classificationReason:
+        "Full-density MT scalar handoffs interpolate layer opacity inside the protected scalar style tween (interpolatedScalarStyleImpl lerps style.opacity).",
+    };
+  }
   if (policy === "preserve") {
     return {
       ...product,
@@ -445,9 +455,13 @@ function classifySceneSectionGroundTraceHandoff(product) {
   const helpers = product.sceneSectionHelpers ?? {};
   const snapshotGroundTraceCount =
     numberOrNull(helpers.snapshotGroundTraceCount) ?? 0;
+  // Covered when an exit/crossfade snapshot is active during the handoff:
+  // the snapshot owns the helper fade, and delayed ground traces mirror
+  // into it on arrival, so trace-count zero with an active snapshot is a
+  // sampling artifact (traces absent or not yet resolved), not a gap.
   const covered =
     helpers.groundTracePolicy === SCENE_SECTION_GROUND_TRACE_SNAPSHOT_POLICY &&
-    snapshotGroundTraceCount > 0;
+    (helpers.snapshotActive === true || snapshotGroundTraceCount > 0);
   return {
     ...product,
     groundTracePolicy: helpers.groundTracePolicy ?? null,

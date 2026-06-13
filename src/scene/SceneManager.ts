@@ -186,6 +186,7 @@ import {
   sceneSectionClippingPlanes as sceneSectionClippingPlanesImpl,
   sceneSectionFrameClippingPlanes as sceneSectionFrameClippingPlanesImpl,
   sceneSectionFrameForObject as sceneSectionFrameForObjectImpl,
+  sceneSectionHelperExitSnapshotNeeded as sceneSectionHelperExitSnapshotNeededImpl,
   sceneSectionHelperOpacityForTween as sceneSectionHelperOpacityForTweenImpl,
   sceneSectionHelperSnapshotAllowedForTween as sceneSectionHelperSnapshotAllowedForTweenImpl,
   sceneSectionMaskTransitionForTween as sceneSectionMaskTransitionForTweenImpl,
@@ -2310,6 +2311,17 @@ export class SceneManager {
     tween: SceneSectionStyleTween,
   ): boolean {
     return sceneSectionHelperSnapshotAllowedForTweenImpl.call(this, tween);
+  }
+
+  sceneSectionHelperExitSnapshotNeeded(
+    fromStyle: EditableStyle,
+    toStyle: EditableStyle,
+  ): boolean {
+    return sceneSectionHelperExitSnapshotNeededImpl.call(
+      this,
+      fromStyle,
+      toStyle,
+    );
   }
 
   sceneSectionMaskTransitionForTween(

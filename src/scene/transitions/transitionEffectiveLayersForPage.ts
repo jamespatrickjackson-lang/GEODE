@@ -1060,9 +1060,13 @@ export function transitionEffectiveLayersForPage(
     this.sceneSectionHelperTransitionOpacity =
       this.sceneSectionHelperOpacityForTween(this.sceneSectionStyleTween, 0);
     if (
-      sceneSectionDiscreteChanged &&
-      this.sceneSectionHelperSnapshotAllowedForTween?.(
-        this.sceneSectionStyleTween,
+      (sceneSectionDiscreteChanged &&
+        this.sceneSectionHelperSnapshotAllowedForTween?.(
+          this.sceneSectionStyleTween,
+        )) ||
+      this.sceneSectionHelperExitSnapshotNeeded?.(
+        fromSceneSectionStyle,
+        targetSceneSectionStyle,
       )
     ) {
       this.beginSceneSectionHelperTransitionSnapshot?.(now, duration, easing);
@@ -1070,6 +1074,21 @@ export function transitionEffectiveLayersForPage(
   } else if (sceneSectionStyleChanged && !targetSceneSectionTransitionActive) {
     this.sceneSectionStyleTween = null;
     this.sceneSectionHelperTransitionOpacity = 0;
+    // The live runtime applies the inactive target at transition start
+    // (section rules: no source carry). The exit visual is owned by a
+    // transition snapshot fading on the page clock; without it helpers,
+    // frames, axes, and async ground traces pop off in one frame. The
+    // snapshot must be taken before the inactive apply clears the live
+    // helper group.
+    if (
+      duration > 0 &&
+      this.sceneSectionHelperExitSnapshotNeeded?.(
+        fromSceneSectionStyle,
+        targetSceneSectionStyle,
+      )
+    ) {
+      this.beginSceneSectionHelperTransitionSnapshot?.(now, duration, easing);
+    }
     this.applySceneSectionPlanes(targetSceneSectionStyle);
   }
   if (sceneSectionStyleChanged) {

@@ -2952,6 +2952,23 @@ export function sceneSectionHelperSnapshotAllowedForTween(
   return targetActive && sourceActive && tween.discreteChanged === true;
 }
 
+// Active-to-inactive helper handoff: the live runtime applies the
+// inactive target at transition start (no source carry, per the section
+// rules in the operating spec), so the exit visual must be owned by a
+// transition snapshot that fades on the page clock. Without it, helpers,
+// frames, axes, and ground traces pop off in one frame, and delayed
+// ground-trace geometry has no snapshot to mirror into.
+export function sceneSectionHelperExitSnapshotNeeded(
+  this: any,
+  fromStyle: EditableStyle,
+  toStyle: EditableStyle,
+): boolean {
+  return (
+    sceneSectionHelperActiveForStyle(fromStyle, this.editorMode) &&
+    !sceneSectionHelperActiveForStyle(toStyle, this.editorMode)
+  );
+}
+
 export function sceneSectionHelperOpacityForTween(this: any, 
   tween: SceneSectionStyleTween,
   eased: number,
