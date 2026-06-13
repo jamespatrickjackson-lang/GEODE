@@ -30,6 +30,7 @@ import {
   forgeDiscreteDataStyleChanged,
   scalarTransitionStyleChanged,
   sceneSectionDiscreteStyleChanged,
+  sceneSectionFramePartition,
   sceneSectionTransitionStyleChanged,
   type LayerTransitionKind,
   type NavigationReason,
@@ -1048,6 +1049,21 @@ export function transitionEffectiveLayersForPage(
     duration > 0 &&
     targetSceneSectionTransitionActive
   ) {
+    // DEC-164: partition frames per stable id. Surviving frames move; only
+    // changed frames dissolve. A non-frame discrete change (e.g. target scope)
+    // with no per-frame change falls back to dissolving every active frame so
+    // the global retargeting still cross-fades rather than snapping.
+    const sectionPartition = sceneSectionFramePartition(
+      fromSceneSectionStyle,
+      targetSceneSectionStyle,
+    );
+    let movingFrameIds = sectionPartition.movingFrameIds;
+    let dissolveFrameIds = sectionPartition.dissolveFrameIds;
+    if (sceneSectionDiscreteChanged && dissolveFrameIds.size === 0) {
+      dissolveFrameIds = new Set<string>(movingFrameIds);
+      movingFrameIds = new Set<string>();
+    }
+    const sectionHasDissolve = dissolveFrameIds.size > 0;
     this.sceneSectionStyleTween = {
       fromStyle: fromSceneSectionStyle,
       toStyle: targetSceneSectionStyle,
@@ -1055,7 +1071,9 @@ export function transitionEffectiveLayersForPage(
       durationMs: duration,
       easing,
       discreteChanged: sceneSectionDiscreteChanged,
-      maskMode: sceneSectionDiscreteChanged ? "dual-mask" : "interpolated",
+      maskMode: sectionHasDissolve ? "dual-mask" : "interpolated",
+      movingFrameIds,
+      dissolveFrameIds,
     };
     this.sceneSectionHelperTransitionOpacity =
       this.sceneSectionHelperOpacityForTween(this.sceneSectionStyleTween, 0);

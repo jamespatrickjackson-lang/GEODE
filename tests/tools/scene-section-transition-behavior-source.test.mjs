@@ -129,8 +129,8 @@ test("incompatible section changes use a dual-mask fade with the page transition
   );
   assert.match(
     transitionEffectiveLayers,
-    /maskMode:\s*sceneSectionDiscreteChanged\s*\?\s*"dual-mask"\s*:\s*"interpolated"/,
-    "Incompatible section transitions should select the dual-mask path.",
+    /maskMode:\s*sectionHasDissolve\s*\?\s*"dual-mask"\s*:\s*"interpolated"/,
+    "Section transitions select the dual-mask path per-frame (DEC-164): the mask runs only when there are dissolve frames, not whenever any discrete field changed.",
   );
   assert.match(
     layerTweenRuntime,

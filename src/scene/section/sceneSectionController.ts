@@ -2901,7 +2901,9 @@ export function currentSceneSectionStyle(this: any, nowMs = performance.now()): 
   if (!tween) return this.styleForLayer(UTAH_FORGE_SCENE_SECTION_LAYER_ID);
   const t =
     tween.durationMs <= 0 ? 1 : (nowMs - tween.startMs) / tween.durationMs;
-  if (t >= 1 || tween.discreteChanged) return tween.toStyle;
+  // DEC-164: never snap the whole section because one frame changed. Surviving
+  // frames interpolate; dissolve frames are handled by the dual-mask, not here.
+  if (t >= 1) return tween.toStyle;
   return this.interpolatedSceneSectionStyle(
     tween.fromStyle,
     tween.toStyle,
@@ -2987,15 +2989,199 @@ export function sceneSectionHelperOpacityForTween(this: any,
   return 1;
 }
 
+function dissolveFrameAxis(id: string): SceneSectionAxis | null {
+  if (id === "axis:x") return "x";
+  if (id === "axis:y") return "y";
+  if (id === "axis:z") return "z";
+  return null;
+}
+
+// Build a section style where every dissolve-frame slot carries `src`'s state
+// and every surviving frame keeps `base`'s (interpolated) geometry. Fed as the
+// dual-mask source/target, surviving frames are identical on both sides — they
+// ride the interpolated clip and move, never dissolve — while only dissolve
+// frames blend between source and target. DEC-164.
+function withDissolveFrameStateFromStyle(
+  base: EditableStyle,
+  dissolveFrameIds: ReadonlySet<string>,
+  src: EditableStyle,
+): EditableStyle {
+  if (dissolveFrameIds.size === 0) return base;
+  const next: EditableStyle = { ...base };
+  const planes: Record<string, unknown> = { ...(base.sceneSectionPlanes ?? {}) };
+  const frameByAxis: Record<string, unknown> = {
+    ...(base.sceneSectionFrameByAxis ?? {}),
+  };
+  const windowByAxis: Record<string, unknown> = {
+    ...(base.sceneSectionWindowByAxis ?? {}),
+  };
+  const visByAxis: Record<string, unknown> = {
+    ...(base.sceneSectionObjectVisibilityByAxis ?? {}),
+  };
+  const visByFrameId: Record<string, unknown> = {
+    ...(base.sceneSectionObjectVisibilityByFrameId ?? {}),
+  };
+  const srcPlanes = (src.sceneSectionPlanes ?? {}) as Record<string, unknown>;
+  const srcFrameByAxis = (src.sceneSectionFrameByAxis ?? {}) as Record<
+    string,
+    unknown
+  >;
+  const srcWindowByAxis = (src.sceneSectionWindowByAxis ?? {}) as Record<
+    string,
+    unknown
+  >;
+  const srcVisByAxis = (src.sceneSectionObjectVisibilityByAxis ?? {}) as Record<
+    string,
+    unknown
+  >;
+  const srcVisByFrameId = (src.sceneSectionObjectVisibilityByFrameId ??
+    {}) as Record<string, unknown>;
+  const srcFramesById = new Map(
+    (Array.isArray(src.sceneSectionFrames) ? src.sceneSectionFrames : [])
+      .filter((entry) => typeof entry?.id === "string")
+      .map((entry) => [entry.id as string, entry]),
+  );
+  let explicit = (
+    Array.isArray(base.sceneSectionFrames) ? base.sceneSectionFrames : []
+  ).slice();
+  const assignAxis = (
+    target: Record<string, unknown>,
+    source: Record<string, unknown>,
+    axis: SceneSectionAxis,
+  ) => {
+    if (source[axis] !== undefined) target[axis] = source[axis];
+    else delete target[axis];
+  };
+  for (const id of dissolveFrameIds) {
+    const axis = dissolveFrameAxis(id);
+    if (axis) {
+      assignAxis(planes, srcPlanes, axis);
+      assignAxis(frameByAxis, srcFrameByAxis, axis);
+      assignAxis(windowByAxis, srcWindowByAxis, axis);
+      assignAxis(visByAxis, srcVisByAxis, axis);
+    }
+    if (srcVisByFrameId[id] !== undefined) visByFrameId[id] = srcVisByFrameId[id];
+    else delete visByFrameId[id];
+    explicit = explicit.filter((entry) => entry?.id !== id);
+    const srcEntry = srcFramesById.get(id);
+    if (srcEntry) explicit.push(srcEntry);
+  }
+  next.sceneSectionPlanes =
+    planes as NonNullable<EditableStyle["sceneSectionPlanes"]>;
+  next.sceneSectionFrameByAxis =
+    frameByAxis as NonNullable<EditableStyle["sceneSectionFrameByAxis"]>;
+  next.sceneSectionWindowByAxis =
+    windowByAxis as NonNullable<EditableStyle["sceneSectionWindowByAxis"]>;
+  next.sceneSectionObjectVisibilityByAxis =
+    visByAxis as NonNullable<EditableStyle["sceneSectionObjectVisibilityByAxis"]>;
+  next.sceneSectionObjectVisibilityByFrameId =
+    visByFrameId as NonNullable<
+      EditableStyle["sceneSectionObjectVisibilityByFrameId"]
+    >;
+  next.sceneSectionFrames = explicit;
+  return next;
+}
+
+// A moving frame whose `invert` flips between pages slides on the SOURCE
+// kept-side for the duration of the glide; the target flip is applied at commit
+// (DEC-164). Interpolating a flip would snap the kept half-space at t=0, so the
+// invert is held to the source value while the position interpolates. For
+// non-flip moving frames this is a no-op (source invert == target invert).
+function holdMovingFrameInvertFromSource(
+  style: EditableStyle,
+  movingFrameIds: ReadonlySet<string> | undefined,
+  src: EditableStyle,
+): EditableStyle {
+  if (!movingFrameIds || movingFrameIds.size === 0) return style;
+  const srcPlanes = (src.sceneSectionPlanes ?? {}) as Record<
+    string,
+    { invert?: boolean } | undefined
+  >;
+  const srcExplicitById = new Map(
+    (Array.isArray(src.sceneSectionFrames) ? src.sceneSectionFrames : [])
+      .filter((entry) => typeof entry?.id === "string")
+      .map((entry) => [entry.id as string, entry]),
+  );
+  const planes: Record<string, { invert?: boolean } | undefined> = {
+    ...((style.sceneSectionPlanes ?? {}) as Record<
+      string,
+      { invert?: boolean } | undefined
+    >),
+  };
+  let explicit = Array.isArray(style.sceneSectionFrames)
+    ? style.sceneSectionFrames.slice()
+    : null;
+  let changed = false;
+  for (const id of movingFrameIds) {
+    const axis = dissolveFrameAxis(id);
+    if (axis) {
+      const srcInvert = srcPlanes[axis]?.invert === true;
+      const cur = planes[axis];
+      if (cur && (cur.invert === true) !== srcInvert) {
+        planes[axis] = { ...cur, invert: srcInvert };
+        changed = true;
+      }
+    }
+    if (explicit) {
+      const srcInvert = srcExplicitById.get(id)?.plane?.invert === true;
+      explicit = explicit.map((entry) => {
+        if (entry?.id !== id || !entry.plane) return entry;
+        if ((entry.plane.invert === true) === srcInvert) return entry;
+        changed = true;
+        return { ...entry, plane: { ...entry.plane, invert: srcInvert } };
+      });
+    }
+  }
+  if (!changed) return style;
+  const next: EditableStyle = { ...style };
+  next.sceneSectionPlanes =
+    planes as NonNullable<EditableStyle["sceneSectionPlanes"]>;
+  if (explicit) next.sceneSectionFrames = explicit;
+  return next;
+}
+
+// The section style to apply mid-tween: interpolated numeric geometry for
+// surviving frames, with moving-frame invert held to the source kept-side so a
+// flip slides instead of snapping. Shared by the tick and the dual-mask build
+// so both agree on the surviving-frame clip. DEC-164.
+export function sceneSectionTweenStyle(
+  this: any,
+  tween: SceneSectionStyleTween,
+  eased: number,
+): EditableStyle {
+  return holdMovingFrameInvertFromSource(
+    this.interpolatedSceneSectionStyle(tween.fromStyle, tween.toStyle, eased),
+    tween.movingFrameIds,
+    tween.fromStyle,
+  );
+}
+
 export function sceneSectionMaskTransitionForTween(
   this: any,
   tween: SceneSectionStyleTween,
   eased: number,
 ): SceneSectionStyleMaskTransition {
+  const progress = clamp01(eased);
+  const dissolveFrameIds = tween.dissolveFrameIds ?? new Set<string>();
+  // Surviving frames ride the interpolated geometry identically on both sides
+  // (they move, never dissolve). Only dissolve frames keep distinct source/
+  // target state, so just those cross-fade. DEC-164 / DEC-071.
+  const interpolated = this.sceneSectionTweenStyle(tween, progress);
+  if (dissolveFrameIds.size === 0) {
+    return { fromStyle: interpolated, toStyle: interpolated, progress };
+  }
   return {
-    fromStyle: tween.fromStyle,
-    toStyle: tween.toStyle,
-    progress: clamp01(eased),
+    fromStyle: withDissolveFrameStateFromStyle(
+      interpolated,
+      dissolveFrameIds,
+      tween.fromStyle,
+    ),
+    toStyle: withDissolveFrameStateFromStyle(
+      interpolated,
+      dissolveFrameIds,
+      tween.toStyle,
+    ),
+    progress,
   };
 }
 
@@ -3402,10 +3588,24 @@ export function rebuildSceneSectionHelpers(this: any,
     const halfHeight = paddedHeight * 0.5;
     const planeCenter = frame?.center.clone() ?? plane.point.clone();
     const basisNormal = plane.normal.clone().normalize();
+    // The control-group orientation MUST be a proper (right-handed) rotation:
+    // makeBasis + setFromRotationMatrix silently mangle the quaternion when the
+    // basis is left-handed. The resolved (tangentA, tangentB, normal) triple is
+    // left-handed for the Y axis (tangentA x tangentB = -normal), which dropped
+    // the entire Y frame helper group (outline, handles, ground trace, labels)
+    // into the X-Y plane -- coincident with Z, 90deg from the real Y cut.
+    // Derive the third column from tangentA x tangentB so the rotation is always
+    // proper. This leaves X/Z identical (already right-handed) and only corrects
+    // Y; tangentA/tangentB are untouched, so all world-space helper positions and
+    // the true plane normal (basisNormal, passed separately) stay correct.
+    // DEC-165.
+    const orientationNormal = new THREE.Vector3()
+      .crossVectors(tangentA, tangentB)
+      .normalize();
     const planeBasis = new THREE.Matrix4().makeBasis(
       tangentA,
       tangentB,
-      basisNormal,
+      orientationNormal,
     );
     const planeQuaternion = new THREE.Quaternion().setFromRotationMatrix(
       planeBasis,

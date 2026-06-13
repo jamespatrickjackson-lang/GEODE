@@ -171,6 +171,7 @@ import {
   getSceneSectionWindowNormal as getSceneSectionWindowNormalImpl,
   getSceneSectionWindowValue as getSceneSectionWindowValueImpl,
   interpolatedSceneSectionStyle as interpolatedSceneSectionStyleImpl,
+  sceneSectionTweenStyle as sceneSectionTweenStyleImpl,
   listSceneSectionObjectTargets as listSceneSectionObjectTargetsImpl,
   listSceneSectionPlanePickables as listSceneSectionPlanePickablesImpl,
   previewSceneSectionPlane as previewSceneSectionPlaneImpl,
@@ -2294,6 +2295,13 @@ export class SceneManager {
     amount: number,
   ): EditableStyle {
     return interpolatedSceneSectionStyleImpl.call(this, fromStyle, toStyle, amount);
+  }
+
+  sceneSectionTweenStyle(
+    tween: SceneSectionStyleTween,
+    eased: number,
+  ): EditableStyle {
+    return sceneSectionTweenStyleImpl.call(this, tween, eased);
   }
 
   currentSceneSectionStyle(nowMs = performance.now()): EditableStyle {

@@ -122,6 +122,12 @@ Move channels include:
 
 If geometry cannot be morphed safely, use a declared crossfade, not an accidental rebuild/snap.
 
+Move is decided **per frame**, not per section (DEC-164). A frame whose
+discrete identity matches on both pages moves even when a *different* frame on
+the same section is added, removed, or toggled. Only the changed frame
+crossfades. A section-wide snap because one axis toggled is the recurring
+"Y-section" regression; see `sceneSectionFramePartition`.
+
 ## Derived entities
 
 Derived entities follow their source unless explicitly promoted to independent transition ownership.

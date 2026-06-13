@@ -3,7 +3,6 @@ import type {
   EditableStyle,
   EasingName,
   ProjectLayerSpec,
-  SceneSectionFrameState,
 } from "../../pages/types";
 import {
   UTAH_FORGE_MT_RESISTIVITY_FULL_DENSITY_LAYER_ID,
@@ -29,11 +28,21 @@ import type { TransitionCommitGateState } from "./transitionCommitGate";
 import type { TransitionAssignmentTrace } from "./transitionRenderGraphAdapter";
 import type { TransitionExecutionPlan } from "./transitionExecutionPlan";
 import { easeProgress } from "./transitionEasing";
+import { sceneSectionFrameDiscreteSignature } from "./sceneSectionFrameSignature";
 
 // Re-exported so existing `import { easeProgress } from "./transitionStyles"`
 // call sites keep working; the implementation lives in the dependency-free
 // transitionEasing module.
 export { easeProgress };
+
+// Pure per-frame section identity/partition logic moved to its own
+// dependency-free module (DEC-164) so it is unit-testable; re-exported here so
+// existing `import { sceneSectionFramePartition } from "./transitionStyles"`
+// call sites keep working.
+export {
+  sceneSectionFramePartition,
+  type SceneSectionFramePartition,
+} from "./sceneSectionFrameSignature";
 
 const MT_SURFACE_MASK_DEFAULT_DEPTH_M = 25;
 const MT_SURFACE_MASK_DEFAULT_FEATHER_M = 175;
@@ -203,6 +212,12 @@ export interface SceneSectionStyleTween {
   easing: EasingName;
   discreteChanged: boolean;
   maskMode: "interpolated" | "dual-mask";
+  // Per-frame partition (DEC-164): frame ids whose cut geometry matches on both
+  // pages interpolate (move); the rest cross-dissolve. The dual-mask is built
+  // from `dissolveFrameIds` only, so a single removed/added/flipped axis no
+  // longer snaps the surviving planes or the data they clip.
+  movingFrameIds?: ReadonlySet<string>;
+  dissolveFrameIds?: ReadonlySet<string>;
   appliedDiscreteTarget?: boolean;
 }
 
@@ -430,170 +445,6 @@ export const SCENE_SECTION_AFFECTED_LAYER_IDS = new Set<string>([
   UTAH_FORGE_MT_TOP_CONTACT_SURFACE_LAYER_ID,
   UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID,
 ]);
-
-function sceneSectionFrameAlignmentSignature(
-  frame: Partial<SceneSectionFrameState>,
-): "utm" | "cardinal" {
-  return frame.axisAlignment === "cardinal" ? "cardinal" : "utm";
-}
-
-function sceneSectionFrameDatumSignature(
-  frame: Partial<SceneSectionFrameState>,
-): "utm" | "local" | "latlon" {
-  return frame.axisDatum === "local" || frame.axisDatum === "latlon"
-    ? frame.axisDatum
-    : "utm";
-}
-
-function finiteSceneSectionFrameNumber(value: unknown): number | null {
-  return typeof value === "number" && Number.isFinite(value) ? value : null;
-}
-
-function sceneSectionFrameDiscreteSignature(style: EditableStyle): Array<{
-  id: string;
-  axis: string | null;
-  enabled: boolean;
-  invert: boolean;
-  frameEnabled: boolean | null;
-  controlsVisible: boolean | null;
-  groundTraceVisible: boolean | null;
-  axisAHeading: string | null;
-  axisBHeading: string | null;
-  axisHeadingColor: string | null;
-  axisAlignment: string | null;
-  axisDatum: string | null;
-  axisDatumOriginEastingM: number | null;
-  axisDatumOriginNorthingM: number | null;
-  axisDatumLatLonDecimals: number | null;
-}> {
-  const planes = style.sceneSectionPlanes ?? {};
-  const frames = style.sceneSectionFrameByAxis ?? {};
-  const explicit = Array.isArray(style.sceneSectionFrames)
-    ? style.sceneSectionFrames
-    : [];
-  const explicitById = new Map(
-    explicit
-      .filter((entry) => typeof entry?.id === "string" && entry.id.trim())
-      .map((entry) => [entry.id, entry]),
-  );
-  const signatures: Array<{
-    id: string;
-    axis: string | null;
-    enabled: boolean;
-    invert: boolean;
-    frameEnabled: boolean | null;
-    controlsVisible: boolean | null;
-    groundTraceVisible: boolean | null;
-    axisAHeading: string | null;
-    axisBHeading: string | null;
-    axisHeadingColor: string | null;
-    axisAlignment: string | null;
-    axisDatum: string | null;
-    axisDatumOriginEastingM: number | null;
-    axisDatumOriginNorthingM: number | null;
-    axisDatumLatLonDecimals: number | null;
-  }> = [];
-  for (const axis of ["x", "y", "z"] as const) {
-    const id = `axis:${axis}`;
-    const explicitEntry = explicitById.get(id);
-    const plane = { ...(explicitEntry?.plane ?? {}), ...(planes[axis] ?? {}) };
-    const frame = { ...(frames[axis] ?? {}), ...(explicitEntry?.frame ?? {}) };
-    const axisDatum = sceneSectionFrameDatumSignature(frame);
-    signatures.push({
-      id,
-      axis,
-      enabled: plane.enabled === true,
-      invert: plane.invert === true,
-      frameEnabled:
-        typeof frame.enabled === "boolean" ? frame.enabled : null,
-      controlsVisible:
-        typeof frame.controlsVisible === "boolean"
-          ? frame.controlsVisible
-          : null,
-      groundTraceVisible:
-        typeof frame.groundTraceVisible === "boolean"
-          ? frame.groundTraceVisible
-          : null,
-      axisAHeading:
-        typeof frame.axisAHeading === "string" ? frame.axisAHeading : null,
-      axisBHeading:
-        typeof frame.axisBHeading === "string" ? frame.axisBHeading : null,
-      axisHeadingColor:
-        typeof frame.axisHeadingColor === "string"
-          ? frame.axisHeadingColor
-          : null,
-      axisAlignment: sceneSectionFrameAlignmentSignature(frame),
-      axisDatum,
-      axisDatumOriginEastingM:
-        axisDatum === "local"
-          ? finiteSceneSectionFrameNumber(frame.axisDatumOriginEastingM)
-          : null,
-      axisDatumOriginNorthingM:
-        axisDatum === "local"
-          ? finiteSceneSectionFrameNumber(frame.axisDatumOriginNorthingM)
-          : null,
-      axisDatumLatLonDecimals:
-        axisDatum === "latlon"
-          ? finiteSceneSectionFrameNumber(frame.axisDatumLatLonDecimals) ?? 3
-          : null,
-    });
-  }
-  for (const entry of explicit) {
-    if (
-      !entry ||
-      typeof entry.id !== "string" ||
-      !entry.id.trim() ||
-      entry.id.startsWith("axis:")
-    ) {
-      continue;
-    }
-    const plane = entry.plane ?? {};
-    const frame = entry.frame ?? {};
-    const axisDatum = sceneSectionFrameDatumSignature(frame);
-    signatures.push({
-      id: entry.id,
-      axis:
-        entry.axis === "x" || entry.axis === "y" || entry.axis === "z"
-          ? entry.axis
-          : null,
-      enabled: plane.enabled === true,
-      invert: plane.invert === true,
-      frameEnabled:
-        typeof frame.enabled === "boolean" ? frame.enabled : null,
-      controlsVisible:
-        typeof frame.controlsVisible === "boolean"
-          ? frame.controlsVisible
-          : null,
-      groundTraceVisible:
-        typeof frame.groundTraceVisible === "boolean"
-          ? frame.groundTraceVisible
-          : null,
-      axisAHeading:
-        typeof frame.axisAHeading === "string" ? frame.axisAHeading : null,
-      axisBHeading:
-        typeof frame.axisBHeading === "string" ? frame.axisBHeading : null,
-      axisHeadingColor:
-        typeof frame.axisHeadingColor === "string"
-          ? frame.axisHeadingColor
-          : null,
-      axisAlignment: sceneSectionFrameAlignmentSignature(frame),
-      axisDatum,
-      axisDatumOriginEastingM:
-        axisDatum === "local"
-          ? finiteSceneSectionFrameNumber(frame.axisDatumOriginEastingM)
-          : null,
-      axisDatumOriginNorthingM:
-        axisDatum === "local"
-          ? finiteSceneSectionFrameNumber(frame.axisDatumOriginNorthingM)
-          : null,
-      axisDatumLatLonDecimals:
-        axisDatum === "latlon"
-          ? finiteSceneSectionFrameNumber(frame.axisDatumLatLonDecimals) ?? 3
-          : null,
-    });
-  }
-  return signatures.sort((a, b) => a.id.localeCompare(b.id));
-}
 
 export function sceneSectionDiscreteSignature(style: EditableStyle): string {
   return JSON.stringify({

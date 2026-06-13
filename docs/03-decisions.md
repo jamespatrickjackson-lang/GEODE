@@ -2860,3 +2860,75 @@ own decision entry. The legend landed gate must stay shared
 The MT mode animation cancels its RAF when a page transition starts;
 final persistence still writes only `scalarLegendVisible` plus
 `scalarInclusionMode`.
+
+## DEC-164 - Scene-section transitions partition frames per stable id
+
+**Chose:** a page-to-page scene-section transition decides move-vs-dissolve
+**per frame**, not for the whole section. Frames present on both pages with an
+identical discrete identity (`sceneSectionFrameDiscreteSignature` — enable,
+axis, flip, headings, alignment, datum; numeric geometry deliberately
+excluded) interpolate their plane position / crop bounds / window (they slide
+to meet, the extent moves in/out). Only added, removed, or
+identity-changed frames cross-dissolve through the dual-mask. The dual-mask
+source/target styles carry the interpolated geometry for surviving frames on
+both sides, so those frames move with no dissolve, while
+`dissolveFrameIds` frames blend source→target. A non-frame discrete change
+(e.g. target scope) with no per-frame change falls back to dissolving every
+active frame. Pure logic lives in the dependency-free
+`src/scene/transitions/sceneSectionFrameSignature.ts`
+(`sceneSectionFramePartition`); the tween carries `movingFrameIds` /
+`dissolveFrameIds`; `currentSceneSectionStyle` no longer snaps the whole
+section to `toStyle` on any discrete change.
+
+**Why:** the runtime used a single global `sceneSectionDiscreteStyleChanged`
+signature. Any one frame differing (typically a Y plane toggling on/off
+between pages) flipped it true, routing the **entire** section through the
+dual-mask dissolve — so a surviving X plane that only moved snapped, and the
+MT volume it clips snapped with it. This is the recurring "Y-section snap":
+prior fixes adjusted the global flag or helper opacity but never made the
+clip decision per-frame, so it kept regressing. DEC-071 already intends
+"interpolate numeric frame geometry by stable frame id"; this aligns the
+implementation with that intent.
+
+**Supersedes** the global discrete-mask routing for scene sections (refines
+DEC-071, DEC-098). **Guard:** the move-vs-dissolve decision must stay
+per-frame; do not reintroduce a section-wide snap on `discreteChanged`.
+Locked by `tests/tools/scene-section-frame-partition-source.test.mjs`. The
+helper-stability contract (no per-tick `rebuildSceneSectionHelpers`) is
+unchanged.
+
+## DEC-165 - Scene-section frame helper orientation must be a proper rotation
+
+**Decision:** the scene-section frame helper group orientation
+(`planeQuaternion` in `rebuildSceneSectionHelpers`,
+`src/scene/section/sceneSectionController.ts`) derives its third basis column
+from `tangentA x tangentB`, not from the raw plane normal, so
+`Matrix4.makeBasis` always receives a right-handed (proper) basis.
+
+**Why:** the resolved per-axis basis is right-handed for X and Z but
+**left-handed for Y** (`axisA=east(X)`, `axisB=up(Z)`, `normal=north(Y)`, and
+`X x Z = -Y`). Feeding `(tangentA, tangentB, normal)` to `makeBasis` produced a
+reflection (determinant -1) for Y, and `Quaternion.setFromRotationMatrix`
+cannot represent a reflection — it silently mangled the quaternion, mapping the
+outline's local +Z to world +Z instead of +Y. The entire Y frame helper group
+(outline, push/pull handle cones, axis ticks/labels/headings, ground trace)
+dropped into the X-Y plane: coincident with the Z frame and 90deg from the
+actual Y cut. The section CLIP was always correct (it uses the normal directly,
+which is handedness-agnostic); only the helper VISUALS were wrong, which is why
+re-authoring/"purging section data" would not have fixed it — the data is
+correct, the bug was in helper rendering. Verified live: the Y frame mesh world
+bounding box was flat in Z before, flat in Y after.
+
+`tangentA`/`tangentB` are untouched, so all world-space helper positions and the
+separately-passed true normal (`basisNormal`, used for camera-facing text) are
+unchanged; X and Z orientation is byte-identical (already right-handed). Only Y
+is corrected.
+
+**Latent issue (not changed):** `sceneSectionBasisVectors` hand-codes the
+default per-axis basis and is left-handed for Y, while the source-face path
+(`sceneSectionOrthonormalSourceBasis`) derives `axisB = normal x axisA` and is
+right-handed. Making the default basis right-handed would change the resolved
+`axisB` sign for Y and thus reinterpret authored B-extents/positions, so it is
+deferred; the orientation fix is the safe resolution. **Guard:** any
+`makeBasis` fed a frame basis must guarantee a right-handed triple. Locked by
+`tests/tools/scene-section-frame-orientation-source.test.mjs`.

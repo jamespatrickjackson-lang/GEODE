@@ -242,6 +242,17 @@ top of that crop.
 
 ## Frame compatibility: continuous interpolation vs crossfade
 
+The move-vs-dissolve decision is **per frame, not section-wide** (DEC-164).
+`sceneSectionFramePartition` (in the dependency-free
+`src/scene/transitions/sceneSectionFrameSignature.ts`) compares the per-frame
+discrete signature of each frame id across the two pages and returns
+`movingFrameIds` / `dissolveFrameIds`, stored on `SceneSectionStyleTween`. A
+single toggled axis must not snap the surviving planes: surviving frames ride
+the interpolated geometry on both dual-mask sides (they slide; the data and MT
+volume they clip slide with them), and only `dissolveFrameIds` cross-fade. Do
+not reintroduce a global `discreteChanged` short-circuit that snaps the whole
+section. Locked by `tests/tools/scene-section-frame-partition-source.test.mjs`.
+
 Per DEC-071:
 
 - **Compatible** section-frame transitions interpolate numeric frame geometry
