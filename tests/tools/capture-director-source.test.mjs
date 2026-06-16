@@ -296,6 +296,11 @@ test("Capture Director exposes Scroll Animation shell without renderer endpoints
   ]) {
     assert.ok(provider.includes(expected), `provider should include ${expected}`);
   }
+  assert.match(
+    provider,
+    /const stopScrollPreview = useCallback\(\(\) => \{[\s\S]*const scrollPreviewResetFrame =\s*scrollRangeMode === "frame-range"\s*\?\s*Math\.max\(0,\s*scrollStartFrame\)\s*:\s*0;[\s\S]*setScrollCurrentFrame\(scrollPreviewResetFrame\);[\s\S]*\}, \[scrollRangeMode, scrollStartFrame\]\);/,
+    "Stop preview should reset to frame 0 for full-video and selected start for frame-range",
+  );
   for (const expected of [
     "scroll-animation",
     "Scroll Animation",

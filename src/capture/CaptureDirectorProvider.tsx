@@ -1604,9 +1604,11 @@ export function CaptureDirectorProvider({
   }, []);
 
   const stopScrollPreview = useCallback(() => {
+    const scrollPreviewResetFrame =
+      scrollRangeMode === "frame-range" ? Math.max(0, scrollStartFrame) : 0;
     setScrollPreviewState("idle");
-    setScrollCurrentFrame(Math.max(0, scrollStartFrame));
-  }, [scrollStartFrame]);
+    setScrollCurrentFrame(scrollPreviewResetFrame);
+  }, [scrollRangeMode, scrollStartFrame]);
 
   const acceptScrollRenderShell = useCallback(() => {
     const destination =
