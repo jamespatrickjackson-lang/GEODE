@@ -4,21 +4,21 @@
   "subtitle": "Proposed / needs_review implementation checkpoint",
   "camera": {
     "position": [
-      -6033.459112379705,
-      -25017.785602936186,
-      262.7076486817401
+      149443.87186949464,
+      -8441.905321636714,
+      70106.43083807509
     ],
     "target": [
       -8588.24744807484,
-      -5347.326952714163,
-      -454.355434924057
+      -5347.326952714164,
+      -454.35543492405714
     ],
     "up": [
       0,
       0,
       1
     ],
-    "fov": 52
+    "fov": 70
   },
   "transition": {
     "duration": 3000,
@@ -65,8 +65,8 @@
       "sceneSectionWindowActiveAxis": "x",
       "sceneSectionWindowByAxis": {
         "x": {
-          "minAlongM": -21610.600515343645,
-          "maxAlongM": 8977.002314020912,
+          "minAlongM": -48862.778919337215,
+          "maxAlongM": 46704.29517811635,
           "bottomElevationM": -48201.44350664524
         },
         "y": {
@@ -78,7 +78,7 @@
       "sceneSectionPlanes": {
         "x": {
           "enabled": true,
-          "positionM": 28292.52873631695,
+          "positionM": 1888.6727698697287,
           "invert": false
         },
         "y": {
@@ -103,10 +103,10 @@
           "axisAHeading": "Latitude (°)",
           "axisBHeading": "Elevation (km)",
           "axisDatum": "latlon",
-          "maxAM": 8977.002314020912,
+          "maxAM": 46704.29517811635,
           "maxBM": 5259.487289179248,
           "minBM": -48201.44350664524,
-          "minAM": -21610.600515343645
+          "minAM": -48862.778919337215
         }
       },
       "sceneSectionLegendVisible": false,
@@ -118,7 +118,7 @@
           "axis": "x",
           "plane": {
             "enabled": true,
-            "positionM": 28292.52873631695,
+            "positionM": 1888.6727698697287,
             "invert": false
           },
           "frame": {
@@ -126,10 +126,10 @@
             "axisAHeading": "Latitude (°)",
             "axisBHeading": "Elevation (km)",
             "axisDatum": "latlon",
-            "maxAM": 8977.002314020912,
+            "maxAM": 46704.29517811635,
             "maxBM": 5259.487289179248,
             "minBM": -48201.44350664524,
-            "minAM": -21610.600515343645
+            "minAM": -48862.778919337215
           }
         },
         {
