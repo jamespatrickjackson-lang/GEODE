@@ -36,6 +36,7 @@ const requiredCaptureFiles = [
   "captureJobRuntime.ts",
   "captureJobDiagnostics.ts",
   "externalVideoRenderJob.ts",
+  "localScrollPackageRunner.ts",
   "captureScrollTimeline.ts",
   "scrollHandoffPackage.ts",
   "captureVideoSaveOptions.ts",
@@ -264,7 +265,7 @@ test("Capture Director production types expose panel, still, save, and fidelity 
   }
 });
 
-test("Capture Director exposes Scroll Animation shell without renderer endpoints", () => {
+test("Capture Director exposes Scroll Animation path-based package controls", () => {
   const provider = readSource("src", "capture", "CaptureDirectorProvider.tsx");
   const toolbar = readSource("src", "capture", "CaptureDirectorToolbar.tsx");
   for (const expected of [
@@ -296,11 +297,26 @@ test("Capture Director exposes Scroll Animation shell without renderer endpoints
   ]) {
     assert.ok(provider.includes(expected), `provider should include ${expected}`);
   }
-  assert.match(
-    provider,
-    /const stopScrollPreview = useCallback\(\(\) => \{[\s\S]*const scrollPreviewResetFrame =\s*scrollRangeMode === "frame-range"\s*\?\s*Math\.max\(0,\s*scrollStartFrame\)\s*:\s*0;[\s\S]*setScrollCurrentFrame\(scrollPreviewResetFrame\);[\s\S]*\}, \[scrollRangeMode, scrollStartFrame\]\);/,
-    "Stop preview should reset to frame 0 for full-video and selected start for frame-range",
+  const stopPreviewStart = provider.indexOf("const stopScrollPreview = useCallback");
+  const stopPreviewEnd = provider.indexOf("const acceptScrollRenderShell = useCallback", stopPreviewStart);
+  assert.ok(
+    stopPreviewStart >= 0 && stopPreviewEnd > stopPreviewStart,
+    "stopScrollPreview block should exist before acceptScrollRenderShell",
   );
+  const stopPreviewBlock = provider.slice(stopPreviewStart, stopPreviewEnd);
+  for (const expected of [
+    "stopScrollPreviewPlayback();",
+    "plan?.request.frameRange.startFrame",
+    'scrollRangeMode === "frame-range" ? Math.max(0, scrollStartFrame) : 0',
+    "applyScrollPreviewFrame(",
+    "setScrollCurrentFrame(scrollPreviewResetFrame)",
+    'setScrollPreviewState("idle")',
+  ]) {
+    assert.ok(
+      stopPreviewBlock.includes(expected),
+      `Stop preview should reset through the path preview flow: ${expected}`,
+    );
+  }
   assert.match(
     provider,
     /if \(panel === "closed"\) \{[\s\S]*setScrollRecordPopoutOpen\(false\);[\s\S]*setScrollPreviewState\("idle"\);[\s\S]*\}/,
@@ -373,20 +389,11 @@ test("Capture Director exposes Scroll Animation shell without renderer endpoints
   const scrollEnd = toolbar.indexOf('panelTestId="capture-camera-path-panel"', scrollStart);
   assert.ok(scrollEnd > scrollStart, "scroll panel block should precede camera path panel");
   const scrollBlock = toolbar.slice(scrollStart, scrollEnd);
-  for (const forbidden of [
-    "startLocalVideoRenderJob",
-    "createExternalVideoRenderJob",
-    "/api/capture/render-video",
-    "/api/capture/video-output",
-    "render-capture-video-job.mjs",
-    "capture-video-outputs",
-  ]) {
-    assert.equal(
-      scrollBlock.includes(forbidden),
-      false,
-      `Scroll Animation UI shell must not call renderer endpoint ${forbidden}`,
-    );
-  }
+  assert.equal(
+    scrollBlock.includes("startLocalVideoRenderJob"),
+    false,
+    "Scroll Animation UI controls should not call the old local video runner directly",
+  );
 });
 
 test("Capture Director scroll animation timeline and handoff package contracts exist", () => {
@@ -429,20 +436,38 @@ test("Capture Director scroll animation timeline and handoff package contracts e
   }
 });
 
-test("Capture Director scroll accept logic creates package diagnostics without renderer endpoints", () => {
+test("Capture Director scroll preview and accept logic use path package rendering", () => {
   const provider = readSource("src", "capture", "CaptureDirectorProvider.tsx");
+  for (const expected of [
+    "scrollPreviewPlaybackUnsubscribeRef",
+    "sceneHandle.onTick",
+    "sampleCaptureScrollTimeline",
+    "sampleCaptureCameraPathV3",
+    "sceneHandle.setCameraPose",
+    "validateCaptureCameraPathV3Playback",
+    "resolveCaptureCameraPathV3Timeline",
+    "setScrollPreviewState(\"paused\")",
+    "setScrollPreviewState(\"idle\")",
+  ]) {
+    assert.ok(provider.includes(expected), `scroll preview should include ${expected}`);
+  }
+
+  const planStart = provider.indexOf("const buildScrollRecordPlan = useCallback");
+  assert.ok(planStart >= 0, "buildScrollRecordPlan block should exist");
   const acceptStart = provider.indexOf("const acceptScrollRenderShell = useCallback");
   const acceptEnd = provider.indexOf("const overlayContext = useCallback", acceptStart);
   assert.ok(acceptStart >= 0, "acceptScrollRenderShell block should exist");
   assert.ok(acceptEnd > acceptStart, "acceptScrollRenderShell block should have a clear end");
-  const acceptBlock = provider.slice(acceptStart, acceptEnd);
+  const acceptBlock = provider.slice(planStart, acceptEnd);
 
   for (const expected of [
     "createScrollRecordRequest",
     "validateScrollRecordRequest",
     "createPendingScrollHandoffManifest",
+    "startLocalScrollPackageRenderJob",
+    "pollLocalScrollPackageRenderJob",
+    "cancelLocalScrollPackageRenderJob",
     "DEFAULT_CAPTURE_SCROLL_FPS",
-    "deterministicDurationSeconds",
     "pageTimelineDurationSeconds",
     "durationFrames - 1",
     "pageSource",
@@ -454,26 +479,27 @@ test("Capture Director scroll accept logic creates package diagnostics without r
     "setError",
     "setScrollRecordPopoutOpen(false)",
     "beginCaptureJob",
+    "updateCaptureJob",
     "completeCaptureJob",
     "kind: \"scroll-package\"",
     "request",
     "manifest",
+    "outputUrl",
+    "manifestUrl",
   ]) {
     assert.ok(acceptBlock.includes(expected), `scroll accept should include ${expected}`);
   }
 
   for (const forbidden of [
     "startLocalVideoRenderJob",
-    "createExternalVideoRenderJob",
     "/api/capture/render-video",
     "/api/capture/video-output",
-    "render-capture-video-job.mjs",
     "capture-video-outputs",
   ]) {
     assert.equal(
       acceptBlock.includes(forbidden),
       false,
-      `scroll accept logic must not call renderer boundary ${forbidden}`,
+      `scroll accept logic must not call old renderer boundary ${forbidden}`,
     );
   }
 });
@@ -2584,4 +2610,80 @@ test("4K deterministic video has external job and encoder-stall guardrails", () 
   ]) {
     assert.ok(cli.includes(expected), `external video CLI should include ${expected}`);
   }
+});
+
+test("Scroll package renderer has isolated endpoints, frame retention, and frame offsets", () => {
+  const localScrollRunner = readSource("src", "capture", "localScrollPackageRunner.ts");
+  for (const expected of [
+    "startLocalScrollPackageRenderJob",
+    "pollLocalScrollPackageRenderJob",
+    "cancelLocalScrollPackageRenderJob",
+    "localScrollPackageRendererAvailable",
+    "scrollPackageOutputUrl",
+    "/api/capture/scroll-package/start",
+    "/api/capture/scroll-package/status",
+    "/api/capture/scroll-package/cancel",
+    "/api/capture/scroll-package-output",
+    "/api/capture/scroll-package/availability",
+    "sourceFrameStart",
+  ]) {
+    assert.ok(localScrollRunner.includes(expected), `local scroll runner should include ${expected}`);
+  }
+
+  const provider = readSource("src", "capture", "CaptureDirectorProvider.tsx");
+  for (const expected of [
+    "startLocalScrollPackageRenderJob",
+    "pollLocalScrollPackageRenderJob",
+    "cancelLocalScrollPackageRenderJob",
+    "scrollPackageAbortRef",
+    "scrollPackageLocalRunIdRef",
+    "Scroll package render complete",
+  ]) {
+    assert.ok(provider.includes(expected), `provider should include ${expected}`);
+  }
+
+  const authorWritePlugin = readSource("plugins", "vite-plugin-author-write.ts");
+  for (const expected of [
+    "/api/capture/scroll-package/start",
+    "/api/capture/scroll-package/status",
+    "/api/capture/scroll-package/cancel",
+    "/api/capture/scroll-package-output",
+    "/api/capture/scroll-package/availability",
+    "capture-scroll-outputs",
+    "scroll-manifest.json",
+    "createFinalScrollHandoffManifest",
+    "status: \"cancelled\"",
+    "status: \"failed\"",
+    "countCompletedFrames",
+  ]) {
+    assert.ok(authorWritePlugin.includes(expected), `scroll package endpoint should include ${expected}`);
+  }
+
+  const cli = readSource("tools", "render-capture-video-job.mjs");
+  for (const expected of [
+    "sourceFrameStart",
+    "frameDirOverride",
+    "--frame-dir",
+    "--frames-only",
+    "actualFrameIndex",
+    "frameInputStartNumber",
+    "dense-keyframes",
+  ]) {
+    assert.ok(cli.includes(expected), `render CLI should include ${expected}`);
+  }
+
+  assert.equal(
+    authorWritePlugin.includes("fs.rm(run.outputPath"),
+    true,
+    "old video endpoint may still clean old video outputs",
+  );
+  const scrollCancelStart = authorWritePlugin.indexOf('url === "/api/capture/scroll-package/cancel"');
+  const scrollCancelEnd = authorWritePlugin.indexOf('if (url === "/api/write-file")', scrollCancelStart);
+  assert.ok(scrollCancelStart >= 0 && scrollCancelEnd > scrollCancelStart);
+  const scrollCancelBlock = authorWritePlugin.slice(scrollCancelStart, scrollCancelEnd);
+  assert.equal(
+    scrollCancelBlock.includes("fs.rm("),
+    false,
+    "scroll package cancel must preserve frames and diagnostics",
+  );
 });

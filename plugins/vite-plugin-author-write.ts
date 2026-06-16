@@ -9,10 +9,19 @@ import {
   isAbsolute,
   normalize,
   posix,
+  relative,
   resolve,
   sep,
 } from "node:path";
 import type { IncomingMessage, ServerResponse } from "node:http";
+import {
+  createFinalScrollHandoffManifest,
+  createPendingScrollHandoffManifest,
+  validateScrollHandoffManifest,
+  validateScrollRecordRequest,
+  type CaptureScrollRecordRequestV1,
+  type ScrollHandoffPackageV1,
+} from "./scroll-package-contract";
 
 // Dev-only authoring write endpoint. Decision #022.
 //
@@ -34,6 +43,7 @@ import type { IncomingMessage, ServerResponse } from "node:http";
 // these endpoints because they only ever see the published build.
 
 const ALLOWED_PREFIX = "projects/";
+const DEFAULT_SCROLL_PACKAGE_OUTPUT_DIR = ".tmp/capture-scroll-outputs";
 
 interface WriteBody {
   path: string;
@@ -107,6 +117,49 @@ interface CaptureVideoRunRecord {
   masterPath?: string | null;
   masterUrl?: string | null;
   frameSequenceDir?: string | null;
+}
+
+interface CaptureScrollPackageRenderBody {
+  request: unknown;
+  manifest?: unknown;
+  renderJob: unknown;
+  synthetic?: boolean;
+}
+
+interface CaptureScrollPackageRunBody {
+  runId: string;
+}
+
+interface CaptureScrollPackageRunRecord {
+  runId: string;
+  status: CaptureVideoRunStatus | "finalizing";
+  phase: CaptureVideoRunStatus | "finalizing";
+  startedAt: string;
+  completedAt?: string | null;
+  packageName: string;
+  packagePath: string;
+  manifestPath: string;
+  manifestUrl: string | null;
+  outputUrl: string | null;
+  diagnosticsPath: string;
+  jobPath: string;
+  request: CaptureScrollRecordRequestV1;
+  manifest: ScrollHandoffPackageV1;
+  renderJob: any;
+  stdout: string;
+  stderr: string;
+  error?: string | null;
+  exitCode?: number | null;
+  child?: Pick<ChildProcess, "kill">;
+  renderedFrames?: number;
+  totalFrames?: number | null;
+  renderer?: string | null;
+  superscale?: number | null;
+  mediaPath?: string | null;
+  mediaUrl?: string | null;
+  mediaRelativePath?: string | null;
+  frameSequenceDir?: string | null;
+  warnings?: string[];
 }
 
 function badRequest(res: ServerResponse, msg: string, status = 400) {
@@ -402,6 +455,165 @@ function captureVideoRunPublicStatus(
   };
 }
 
+function captureScrollPackageRunPublicStatus(
+  run: CaptureScrollPackageRunRecord,
+): Omit<
+  CaptureScrollPackageRunRecord,
+  "child" | "stdout" | "stderr" | "jobPath" | "request" | "manifest" | "renderJob"
+> & {
+  elapsedSeconds: number;
+} {
+  const elapsedSeconds = Math.max(
+    0,
+    Math.floor(
+      ((run.completedAt ? Date.parse(run.completedAt) : Date.now()) -
+        Date.parse(run.startedAt)) /
+        1000,
+    ),
+  );
+  return {
+    runId: run.runId,
+    status: run.status,
+    phase: run.phase,
+    startedAt: run.startedAt,
+    completedAt: run.completedAt ?? null,
+    packageName: run.packageName,
+    packagePath: run.packagePath,
+    manifestPath: run.manifestPath,
+    manifestUrl: run.manifestUrl,
+    outputUrl: run.outputUrl,
+    diagnosticsPath: run.diagnosticsPath,
+    error: run.error ?? null,
+    exitCode: run.exitCode ?? null,
+    elapsedSeconds,
+    renderedFrames: run.renderedFrames ?? 0,
+    totalFrames: run.totalFrames ?? null,
+    renderer: run.renderer ?? null,
+    superscale: run.superscale ?? null,
+    mediaPath: run.mediaPath ?? null,
+    mediaUrl: run.mediaUrl ?? null,
+    frameSequenceDir: run.frameSequenceDir ?? null,
+    warnings: run.warnings ?? [],
+  };
+}
+
+function pathIsInside(parent: string, child: string): boolean {
+  const relativePath = relative(parent, child);
+  return (
+    relativePath === "" ||
+    (!relativePath.startsWith("..") && !isAbsolute(relativePath))
+  );
+}
+
+function resolveContainedRelativePath(projectRoot: string, requested: string): string {
+  if (typeof requested !== "string" || requested.trim().length === 0) {
+    throw new Error("path is required");
+  }
+  const normalized = normalize(requested).replace(/\\/g, "/");
+  if (isAbsolute(normalized) || normalized.split("/").includes("..")) {
+    throw new Error("path must be relative and stay inside the project root");
+  }
+  const abs = resolve(projectRoot, normalized);
+  if (!pathIsInside(projectRoot, abs)) {
+    throw new Error("path resolves outside the project root");
+  }
+  return abs;
+}
+
+function packageRelativePath(value: string): string {
+  const normalized = normalize(value).replace(/\\/g, "/");
+  if (
+    normalized.length === 0 ||
+    isAbsolute(normalized) ||
+    normalized.split("/").includes("..") ||
+    /^[A-Za-z][A-Za-z0-9+.-]*:/.test(normalized)
+  ) {
+    throw new Error("package path must be package-relative");
+  }
+  return normalized;
+}
+
+function scrollMediaRelativePath(request: CaptureScrollRecordRequestV1): string | null {
+  if (request.format === "png-sequence") return null;
+  if (request.format === "webm") return "media/scroll-master.webm";
+  if (request.format === "scroll-friendly-video") return "media/scroll-friendly.mp4";
+  return "media/scroll-master.mp4";
+}
+
+async function countCompletedFrames(frameDir: string): Promise<number> {
+  const entries = await fs.readdir(frameDir).catch(() => []);
+  return entries.filter((entry) => /^frame-\d{6}\.png$/i.test(entry)).length;
+}
+
+function frameRelativePath(frameIndex: number): string {
+  return `frames/frame-${String(frameIndex).padStart(6, "0")}.png`;
+}
+
+async function createScrollPosters(
+  packageDir: string,
+  request: CaptureScrollRecordRequestV1,
+): Promise<ScrollHandoffPackageV1["posters"]> {
+  const frames = [
+    ["first", request.frameRange.startFrame],
+    [
+      "middle",
+      Math.floor((request.frameRange.startFrame + request.frameRange.endFrame) / 2),
+    ],
+    ["last", request.frameRange.endFrame],
+  ] as const;
+  const posters: ScrollHandoffPackageV1["posters"] = [];
+  await fs.mkdir(resolve(packageDir, "posters"), { recursive: true });
+  for (const [anchorId, frame] of frames) {
+    const source = resolve(packageDir, frameRelativePath(frame));
+    const stats = await fs.lstat(source).catch(() => null);
+    if (!stats?.isFile()) continue;
+    const path = `posters/${anchorId}-frame-${String(frame).padStart(6, "0")}.png`;
+    await fs.copyFile(source, resolve(packageDir, path));
+    posters.push({ anchorId, frame, path });
+  }
+  return posters;
+}
+
+async function writeScrollManifest(
+  run: CaptureScrollPackageRunRecord,
+  manifest: ScrollHandoffPackageV1,
+): Promise<void> {
+  const validation = validateScrollHandoffManifest(manifest);
+  if (!validation.valid) {
+    throw new Error(`Invalid scroll manifest: ${validation.errors.join(" ")}`);
+  }
+  run.manifest = manifest;
+  await fs.writeFile(run.manifestPath, `${JSON.stringify(manifest, null, 2)}\n`, "utf8");
+}
+
+async function writeScrollDiagnostics(
+  run: CaptureScrollPackageRunRecord,
+  status: CaptureScrollPackageRunRecord["status"],
+  error?: string | null,
+): Promise<void> {
+  const diagnostics = {
+    schema: "ScrollPackageRenderDiagnosticsV1",
+    status,
+    runId: run.runId,
+    packageName: run.packageName,
+    packagePath: run.packagePath,
+    request: run.request,
+    renderJob: run.renderJob,
+    manifestPath: run.manifestPath,
+    mediaPath: run.mediaPath ?? null,
+    frameSequenceDir: run.frameSequenceDir ?? null,
+    renderedFrames: run.renderedFrames ?? 0,
+    totalFrames: run.totalFrames ?? null,
+    renderer: run.renderer ?? null,
+    superscale: run.superscale ?? null,
+    error: error ?? run.error ?? null,
+    stdout: run.stdout.slice(-4000),
+    stderr: run.stderr.slice(-4000),
+  };
+  await fs.mkdir(dirname(run.diagnosticsPath), { recursive: true });
+  await fs.writeFile(run.diagnosticsPath, `${JSON.stringify(diagnostics, null, 2)}\n`, "utf8");
+}
+
 // The external render tool prints `@progress {json}` lines per phase/frame.
 // Translate them into live run-record fields the Capture Director polls.
 function applyCaptureVideoProgress(run: CaptureVideoRunRecord, payload: unknown): void {
@@ -587,6 +799,284 @@ async function startCaptureVideoRun({
   return run;
 }
 
+async function startCaptureScrollPackageRun({
+  projectRoot,
+  runs,
+  body,
+}: {
+  projectRoot: string;
+  runs: Map<string, CaptureScrollPackageRunRecord>;
+  body: CaptureScrollPackageRenderBody;
+}): Promise<CaptureScrollPackageRunRecord> {
+  const requestValidation = validateScrollRecordRequest(body.request);
+  if (!requestValidation.valid) {
+    throw new Error(requestValidation.errors.join("; "));
+  }
+  const request = body.request as CaptureScrollRecordRequestV1;
+  const manifest =
+    body.manifest && validateScrollHandoffManifest(body.manifest).valid
+      ? (body.manifest as ScrollHandoffPackageV1)
+      : createPendingScrollHandoffManifest(request);
+  const renderJob = body.renderJob as any;
+  const renderFormat = request.format === "webm" ? "webm" : "mp4";
+  const scrollRenderJob = {
+    ...renderJob,
+    video: {
+      ...renderJob?.video,
+      format: renderFormat,
+      fps: request.timeline.fps,
+      totalFrames: request.frameRange.totalFrames,
+      durationSeconds: request.frameRange.totalFrames / request.timeline.fps,
+      sourceFrameStart: request.frameRange.startFrame,
+      sourceFrameEnd: request.frameRange.endFrame,
+      encodingProfile:
+        request.format === "scroll-friendly-video"
+          ? "scroll-friendly-video"
+          : undefined,
+    },
+  };
+  const renderErrors = validateLocalCaptureVideoJob(scrollRenderJob);
+  if (renderErrors.length > 0) {
+    throw new Error(renderErrors.join("; "));
+  }
+
+  const runId = randomUUID();
+  const destinationDir = resolveContainedRelativePath(
+    projectRoot,
+    request.destination || DEFAULT_SCROLL_PACKAGE_OUTPUT_DIR,
+  );
+  const packageDir = resolve(destinationDir, request.packageName);
+  if (!pathIsInside(destinationDir, packageDir)) {
+    throw new Error("scroll package path escapes destination");
+  }
+  if (request.cleanRender) {
+    await fs.rm(packageDir, { recursive: true, force: true });
+  }
+  await fs.mkdir(resolve(packageDir, "media"), { recursive: true });
+  await fs.mkdir(resolve(packageDir, "frames"), { recursive: true });
+  await fs.mkdir(resolve(packageDir, "diagnostics"), { recursive: true });
+  const jobsDir = resolve(projectRoot, ".tmp", "capture-scroll-package-jobs");
+  await fs.mkdir(jobsDir, { recursive: true });
+
+  const mediaRelativePath = scrollMediaRelativePath(request);
+  const mediaPath = mediaRelativePath ? resolve(packageDir, mediaRelativePath) : null;
+  const manifestPath = resolve(packageDir, "scroll-manifest.json");
+  const diagnosticsPath = resolve(packageDir, "diagnostics", `${request.packageName}.json`);
+  const jobPath = resolve(jobsDir, `${runId}.json`);
+  const frameDir = resolve(packageDir, "frames");
+  const manifestUrl =
+    `/api/capture/scroll-package-output?runId=${encodeURIComponent(runId)}` +
+    "&variant=manifest";
+  const mediaUrl = mediaRelativePath
+    ? `/api/capture/scroll-package-output?runId=${encodeURIComponent(runId)}` +
+      `&variant=media&path=${encodeURIComponent(mediaRelativePath)}`
+    : null;
+
+  await fs.writeFile(jobPath, `${JSON.stringify(scrollRenderJob, null, 2)}\n`, "utf8");
+  await fs.writeFile(
+    resolve(packageDir, "diagnostics", "scroll-request.json"),
+    `${JSON.stringify(request, null, 2)}\n`,
+    "utf8",
+  );
+
+  const run: CaptureScrollPackageRunRecord = {
+    runId,
+    status: "preparing",
+    phase: "preparing",
+    startedAt: new Date().toISOString(),
+    completedAt: null,
+    packageName: request.packageName,
+    packagePath: packageDir,
+    manifestPath,
+    manifestUrl,
+    outputUrl: mediaUrl ?? manifestUrl,
+    diagnosticsPath,
+    jobPath,
+    request,
+    manifest,
+    renderJob: scrollRenderJob,
+    stdout: "",
+    stderr: "",
+    totalFrames: request.frameRange.totalFrames,
+    renderedFrames: 0,
+    mediaPath,
+    mediaUrl,
+    mediaRelativePath,
+    frameSequenceDir: frameDir,
+    warnings: [],
+  };
+  runs.set(runId, run);
+  await writeScrollManifest(run, manifest);
+  await writeScrollDiagnostics(run, "preparing");
+
+  const args = [
+    "tools/render-capture-video-job.mjs",
+    "--job",
+    jobPath,
+    "--diagnostics",
+    diagnosticsPath,
+    "--frame-dir",
+    frameDir,
+  ];
+  if (mediaPath) {
+    args.push("--out", mediaPath);
+  }
+  if (request.format === "png-sequence") {
+    args.push("--frames-only");
+  }
+  if (typeof scrollRenderJob?.app?.url === "string" && scrollRenderJob.app.url.length > 0) {
+    args.push("--app-url", scrollRenderJob.app.url);
+  }
+  if (body.synthetic === true) {
+    args.push("--synthetic");
+  }
+  args.push("--master", "none");
+
+  const child = spawn(process.execPath, args, {
+    cwd: projectRoot,
+    windowsHide: true,
+    stdio: ["ignore", "pipe", "pipe"],
+  });
+  run.child = child;
+  run.status = "rendering";
+  run.phase = "rendering";
+
+  let stdoutLineBuffer = "";
+  child.stdout.on("data", (chunk) => {
+    const text = String(chunk);
+    run.stdout += text;
+    stdoutLineBuffer += text;
+    let newlineIndex = stdoutLineBuffer.indexOf("\n");
+    while (newlineIndex >= 0) {
+      const line = stdoutLineBuffer.slice(0, newlineIndex);
+      stdoutLineBuffer = stdoutLineBuffer.slice(newlineIndex + 1);
+      const marker = line.indexOf("@progress ");
+      if (marker >= 0) {
+        try {
+          applyCaptureVideoProgress(
+            run as unknown as CaptureVideoRunRecord,
+            JSON.parse(line.slice(marker + 10)),
+          );
+        } catch {
+          // Ignore malformed progress from renderer stdout.
+        }
+      }
+      newlineIndex = stdoutLineBuffer.indexOf("\n");
+    }
+  });
+  child.stderr.on("data", (chunk) => {
+    run.stderr += String(chunk);
+    const text = String(chunk);
+    if (/frame=\s*\d+/i.test(text) && run.status !== "cancelled") {
+      run.phase = "encoding";
+      run.status = "encoding";
+    }
+  });
+  child.on("error", async (error: NodeJS.ErrnoException) => {
+    run.status = "failed";
+    run.phase = "failed";
+    run.error = error.message || error.code || "failed to start renderer";
+    run.completedAt = new Date().toISOString();
+    run.child = undefined;
+    const frameCount = await countCompletedFrames(frameDir);
+    run.renderedFrames = frameCount;
+    const failedManifest = createFinalScrollHandoffManifest({
+      manifest: run.manifest,
+      status: "failed",
+      frames: { directory: "frames", pattern: "frame-%06d.png", count: frameCount },
+      diagnosticsPath: `diagnostics/${request.packageName}.json`,
+      warnings: [run.error],
+    });
+    await writeScrollDiagnostics(run, "failed", run.error);
+    await writeScrollManifest(run, failedManifest);
+  });
+  child.on("close", async (code) => {
+    run.exitCode = code;
+    run.completedAt = new Date().toISOString();
+    run.child = undefined;
+    if (run.status === "cancelled") return;
+
+    const frameCount = await countCompletedFrames(frameDir);
+    run.renderedFrames = frameCount;
+    if (code !== 0) {
+      run.status = "failed";
+      run.phase = "failed";
+      run.error =
+        run.stderr.trim() ||
+        run.stdout.trim() ||
+        `scroll package renderer exited with code ${code}`;
+      const failedManifest = createFinalScrollHandoffManifest({
+        manifest: run.manifest,
+        status: "failed",
+        frames: { directory: "frames", pattern: "frame-%06d.png", count: frameCount },
+        diagnosticsPath: `diagnostics/${request.packageName}.json`,
+        warnings: [run.error],
+      });
+      await writeScrollDiagnostics(run, "failed", run.error);
+      await writeScrollManifest(run, failedManifest);
+      return;
+    }
+
+    try {
+      const mediaStats = mediaPath ? await fs.lstat(mediaPath).catch(() => null) : null;
+      if (mediaPath && (!mediaStats?.isFile() || mediaStats.size <= 0)) {
+        throw new Error("scroll package renderer completed without media output");
+      }
+      const posters = await createScrollPosters(packageDir, request);
+      run.status = "complete";
+      run.phase = "complete";
+      run.error = null;
+      run.renderedFrames = request.frameRange.totalFrames;
+      const completeManifest = createFinalScrollHandoffManifest({
+        manifest: run.manifest,
+        status: "complete",
+        media:
+          mediaRelativePath && mediaStats?.isFile()
+            ? [
+                {
+                  role:
+                    request.format === "webm"
+                      ? "delivery"
+                      : request.format === "scroll-friendly-video"
+                        ? "scroll-friendly"
+                        : "primary",
+                  path: mediaRelativePath,
+                  mimeType: request.format === "webm" ? "video/webm" : "video/mp4",
+                  byteLength: mediaStats.size,
+                },
+              ]
+            : [],
+        frames: {
+          directory: "frames",
+          pattern: "frame-%06d.png",
+          count: frameCount,
+        },
+        posters,
+        contactSheetPath: null,
+        diagnosticsPath: `diagnostics/${request.packageName}.json`,
+        warnings: run.warnings,
+      });
+      await writeScrollDiagnostics(run, "complete");
+      await writeScrollManifest(run, completeManifest);
+    } catch (error) {
+      run.status = "failed";
+      run.phase = "failed";
+      run.error = error instanceof Error ? error.message : String(error);
+      const failedManifest = createFinalScrollHandoffManifest({
+        manifest: run.manifest,
+        status: "failed",
+        frames: { directory: "frames", pattern: "frame-%06d.png", count: frameCount },
+        diagnosticsPath: `diagnostics/${request.packageName}.json`,
+        warnings: [run.error],
+      });
+      await writeScrollDiagnostics(run, "failed", run.error);
+      await writeScrollManifest(run, failedManifest);
+    }
+  });
+
+  return run;
+}
+
 export function authorWritePlugin(): Plugin {
   return {
     name: "author-write",
@@ -594,6 +1084,7 @@ export function authorWritePlugin(): Plugin {
     configureServer(server: ViteDevServer) {
       const projectRoot = server.config.root;
       const captureVideoRuns = new Map<string, CaptureVideoRunRecord>();
+      const captureScrollPackageRuns = new Map<string, CaptureScrollPackageRunRecord>();
 
       server.middlewares.use(async (req, res, next) => {
         const url = req.url ?? "";
@@ -695,6 +1186,77 @@ export function authorWritePlugin(): Plugin {
           return;
         }
 
+        if (req.method === "GET" && url.startsWith("/api/capture/scroll-package-output")) {
+          try {
+            const parsedUrl = new URL(url, "http://127.0.0.1");
+            const runId = parsedUrl.searchParams.get("runId") ?? "";
+            const variant = parsedUrl.searchParams.get("variant") ?? "manifest";
+            const run = captureScrollPackageRuns.get(runId);
+            if (!run) {
+              badRequest(res, "unknown scroll package run", 404);
+              return;
+            }
+            let servePath = "";
+            let downloadName = "";
+            let contentType = "application/octet-stream";
+            if (variant === "manifest" || variant === "package") {
+              servePath = run.manifestPath;
+              downloadName = "scroll-manifest.json";
+              contentType = "application/json";
+            } else if (variant === "diagnostics") {
+              servePath = run.diagnosticsPath;
+              downloadName = basename(run.diagnosticsPath);
+              contentType = "application/json";
+            } else if (variant === "media") {
+              if (run.status !== "complete") {
+                badRequest(res, "scroll package media is not complete", 409);
+                return;
+              }
+              const requestedPath = parsedUrl.searchParams.get("path") ?? "";
+              const relativePath = requestedPath
+                ? packageRelativePath(requestedPath)
+                : packageRelativePath(run.mediaRelativePath ?? "");
+              servePath = resolve(run.packagePath, relativePath);
+              if (!pathIsInside(run.packagePath, servePath)) {
+                throw new Error("media path escapes package");
+              }
+              downloadName = basename(servePath);
+              contentType = downloadName.toLowerCase().endsWith(".webm")
+                ? "video/webm"
+                : "video/mp4";
+            } else if (variant === "frame") {
+              const relativePath = packageRelativePath(
+                parsedUrl.searchParams.get("path") ?? "",
+              );
+              servePath = resolve(run.packagePath, relativePath);
+              if (!pathIsInside(run.packagePath, servePath)) {
+                throw new Error("frame path escapes package");
+              }
+              downloadName = basename(servePath);
+              contentType = "image/png";
+            } else {
+              badRequest(res, "unsupported scroll package output variant", 400);
+              return;
+            }
+            const stats = servePath ? await fs.lstat(servePath).catch(() => null) : null;
+            if (!stats?.isFile() || stats.size <= 0) {
+              badRequest(res, "scroll package output is missing", 404);
+              return;
+            }
+            res.statusCode = 200;
+            res.setHeader("content-type", contentType);
+            res.setHeader(
+              "content-disposition",
+              `attachment; filename="${downloadName.replace(/"/g, "")}"`,
+            );
+            res.end(await fs.readFile(servePath));
+          } catch (e) {
+            const msg = e instanceof Error ? e.message : String(e);
+            badRequest(res, msg, 400);
+          }
+          return;
+        }
+
         if (!url.startsWith("/api/")) return next();
         if (req.method !== "POST") {
           badRequest(res, "method not allowed", 405);
@@ -747,6 +1309,66 @@ export function authorWritePlugin(): Plugin {
               ]);
             }
             ok(res, captureVideoRunPublicStatus(run));
+            return;
+          }
+
+          if (url === "/api/capture/scroll-package/availability") {
+            ok(res, { available: true });
+            return;
+          }
+
+          if (url === "/api/capture/scroll-package/start") {
+            const body = await readJsonBody<CaptureScrollPackageRenderBody>(req);
+            const run = await startCaptureScrollPackageRun({
+              projectRoot,
+              runs: captureScrollPackageRuns,
+              body,
+            });
+            ok(res, captureScrollPackageRunPublicStatus(run));
+            return;
+          }
+
+          if (url === "/api/capture/scroll-package/status") {
+            const body = await readJsonBody<CaptureScrollPackageRunBody>(req);
+            const run = captureScrollPackageRuns.get(body.runId);
+            if (!run) {
+              badRequest(res, "unknown scroll package run", 404);
+              return;
+            }
+            ok(res, captureScrollPackageRunPublicStatus(run));
+            return;
+          }
+
+          if (url === "/api/capture/scroll-package/cancel") {
+            const body = await readJsonBody<CaptureScrollPackageRunBody>(req);
+            const run = captureScrollPackageRuns.get(body.runId);
+            if (!run) {
+              badRequest(res, "unknown scroll package run", 404);
+              return;
+            }
+            if (run.child && run.status !== "complete") {
+              run.status = "cancelled";
+              run.phase = "cancelled";
+              run.completedAt = new Date().toISOString();
+              run.child.kill();
+              run.child = undefined;
+              const frameCount = await countCompletedFrames(resolve(run.packagePath, "frames"));
+              run.renderedFrames = frameCount;
+              const cancelledManifest = createFinalScrollHandoffManifest({
+                manifest: run.manifest,
+                status: "cancelled",
+                frames: {
+                  directory: "frames",
+                  pattern: "frame-%06d.png",
+                  count: frameCount,
+                },
+                diagnosticsPath: `diagnostics/${run.request.packageName}.json`,
+                warnings: ["cancelled by user"],
+              });
+              await writeScrollDiagnostics(run, "cancelled", "cancelled by user");
+              await writeScrollManifest(run, cancelledManifest);
+            }
+            ok(res, captureScrollPackageRunPublicStatus(run));
             return;
           }
 

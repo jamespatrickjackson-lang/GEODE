@@ -118,6 +118,7 @@ import type {
   CaptureFeatureAvailability,
   CaptureFps,
   CaptureMode,
+  CaptureQualityPreset,
   CaptureRecorderController,
   CaptureRecorderOutputContext,
   CaptureRecorderResult,
@@ -150,8 +151,11 @@ import {
   DEFAULT_CAPTURE_SCROLL_FPS,
   captureScrollQualityForPreset,
   createScrollRecordRequest,
+  sampleCaptureScrollTimeline,
   validateScrollRecordRequest,
   type CaptureScrollRenderRouteIntent,
+  type CaptureScrollRecordQuality,
+  type CaptureScrollTimelineV1,
 } from "./captureScrollTimeline";
 import { createPendingScrollHandoffManifest } from "./scrollHandoffPackage";
 import {
@@ -191,6 +195,12 @@ import {
   type LocalVideoRenderRunStatus,
 } from "./localVideoRenderRunner";
 import {
+  cancelLocalScrollPackageRenderJob,
+  pollLocalScrollPackageRenderJob,
+  startLocalScrollPackageRenderJob,
+  type LocalScrollPackageRunStatus,
+} from "./localScrollPackageRunner";
+import {
   capturePathJobDiagnostics,
   captureVideoOutputDiagnostics,
 } from "./captureJobDiagnostics";
@@ -207,7 +217,7 @@ import {
   updateCaptureJobStatus,
 } from "./captureJobRuntime";
 import type {
-  CaptureJobKind,
+  CaptureJobCreateOptions,
   CaptureJobProgress,
   CaptureJobRecord,
   CaptureJobStatus,
@@ -551,6 +561,29 @@ function scrollFrameNumber(value: number): number {
 
 function scrollJoinPath(base: string, leaf: string): string {
   return `${base.replace(/[\\/]+$/g, "")}/${leaf}`;
+}
+
+function scrollPackageDirectory(destination: string, packageName: string): string {
+  return scrollJoinPath(destination, packageName);
+}
+
+function scrollRecipeQualityPreset(
+  quality: CaptureScrollRecordQuality,
+): CaptureQualityPreset {
+  if (quality.preset === "1440p") return "sharp-1440";
+  if (quality.preset === "8k") return "render-8k";
+  if (quality.width >= 3840 || quality.height >= 2160) return "marketing";
+  return "preview";
+}
+
+function scrollQualityLabel(quality: CaptureScrollRecordQuality): string {
+  return quality.preset.toUpperCase();
+}
+
+function scrollVideoFormat(
+  format: CaptureScrollOutputFormat,
+): CaptureDeterministicExportFormat {
+  return format === "webm" ? "webm" : "mp4";
 }
 
 const DETERMINISTIC_EXPORT_DURATION_SECONDS = 4;
@@ -970,6 +1003,9 @@ export function CaptureDirectorProvider({
   const cameraPathPlaybackStartMsRef = useRef<number | null>(null);
   const cameraPathPlaybackStartScrubSecondsRef = useRef(0);
   const cameraPathPlaybackCompleteRef = useRef<(() => void) | null>(null);
+  const scrollPreviewPlaybackUnsubscribeRef = useRef<(() => void) | null>(null);
+  const scrollPreviewPlaybackStartMsRef = useRef<number | null>(null);
+  const scrollPreviewPlaybackStartFrameRef = useRef(0);
   const realtimeCameraPathRecorderRef = useRef<CaptureCameraPathV2Recorder | null>(
     null,
   );
@@ -977,8 +1013,10 @@ export function CaptureDirectorProvider({
   const pathPreviewMp4AbortRef = useRef<AbortController | null>(null);
   const deterministicAbortRef = useRef<AbortController | null>(null);
   const pathRenderAbortRef = useRef<AbortController | null>(null);
+  const scrollPackageAbortRef = useRef<AbortController | null>(null);
   const deterministicLocalVideoRunIdRef = useRef<string | null>(null);
   const pathRenderLocalVideoRunIdRef = useRef<string | null>(null);
+  const scrollPackageLocalRunIdRef = useRef<string | null>(null);
   const pathRenderEncodingTimerRef = useRef<number | null>(null);
   const deterministicRuntimeHandleRef =
     useRef<BrowserFfmpegRuntimeHandle | null>(null);
@@ -1408,12 +1446,7 @@ export function CaptureDirectorProvider({
   );
 
   const beginCaptureJob = useCallback(
-    (options: {
-      kind: CaptureJobKind;
-      label: string;
-      abortController?: AbortController;
-      diagnostics?: Record<string, unknown>;
-    }) => {
+    (options: CaptureJobCreateOptions) => {
       if (!canStartCaptureJob(captureJobs)) {
         throw new Error("Another capture job is already running.");
       }
@@ -1611,39 +1644,21 @@ export function CaptureDirectorProvider({
     setCameraPathTimelinePlaying(false);
   }, []);
 
-  const setDirectorPanel = useCallback(
-    (panel: CaptureDirectorPanel) => {
-      setDirectorPanelState(panel);
-      if (panel === "closed") {
-        const scrollPreviewResetFrame =
-          scrollRangeMode === "frame-range" ? Math.max(0, scrollStartFrame) : 0;
-        stopCameraPathPlayback();
-        setCameraPathFocusPickNodeId(null);
-        setScrollRecordPopoutOpen(false);
-        setScrollPreviewState("idle");
-        setScrollCurrentFrame(scrollPreviewResetFrame);
-        sceneHandle.clearCaptureCameraPathOverlay();
-      }
-    },
-    [sceneHandle, scrollRangeMode, scrollStartFrame, stopCameraPathPlayback],
-  );
-
-  const playScrollPreview = useCallback(() => {
-    setScrollPreviewState("playing");
+  const stopScrollPreviewPlayback = useCallback(() => {
+    scrollPreviewPlaybackUnsubscribeRef.current?.();
+    scrollPreviewPlaybackUnsubscribeRef.current = null;
+    scrollPreviewPlaybackStartMsRef.current = null;
   }, []);
 
-  const pauseScrollPreview = useCallback(() => {
-    setScrollPreviewState("paused");
-  }, []);
+  const buildScrollRecordPlan = useCallback(() => {
+    const pathValidation = validateCaptureCameraPathV3Playback(captureCameraPathV3);
+    if (!pathValidation.valid) {
+      return { plan: null, errors: pathValidation.errors };
+    }
 
-  const stopScrollPreview = useCallback(() => {
-    const scrollPreviewResetFrame =
-      scrollRangeMode === "frame-range" ? Math.max(0, scrollStartFrame) : 0;
-    setScrollPreviewState("idle");
-    setScrollCurrentFrame(scrollPreviewResetFrame);
-  }, [scrollRangeMode, scrollStartFrame]);
-
-  const acceptScrollRenderShell = useCallback(() => {
+    const normalizedPath = normalizeCaptureCameraPathV3(captureCameraPathV3);
+    const pathTimeline = resolveCaptureCameraPathV3Timeline(normalizedPath);
+    const durationSeconds = Math.max(0.1, pathTimeline.durationSeconds);
     const destination =
       scrollSaveDestination.trim() || ".tmp/capture-scroll-outputs";
     const packageName = scrollPackageNameSlug(scrollOutputPackageName);
@@ -1660,7 +1675,18 @@ export function CaptureDirectorProvider({
         ),
       0,
     );
-    const cameraPathCanRender = cameraPathPlaybackValidation.valid;
+    if (
+      enabledPageClips.length > 0 &&
+      pageTimelineDurationSeconds > durationSeconds + 0.000_001
+    ) {
+      return {
+        plan: null,
+        errors: [
+          "Page Bar clip timing extends beyond the authored Camera Path duration.",
+        ],
+      };
+    }
+
     const range =
       scrollRangeMode === "frame-range"
         ? {
@@ -1669,10 +1695,6 @@ export function CaptureDirectorProvider({
             endFrame: scrollFrameNumber(scrollEndFrame),
           }
         : { mode: "full" as const };
-    const durationSeconds =
-      enabledPageClips.length > 0
-        ? Math.max(0.1, pageTimelineDurationSeconds)
-        : Math.max(0.1, deterministicDurationSeconds);
     const durationFrames = Math.max(
       1,
       Math.ceil(durationSeconds * DEFAULT_CAPTURE_SCROLL_FPS),
@@ -1705,23 +1727,21 @@ export function CaptureDirectorProvider({
       enabledPageClips.length > 0
         ? { mode: "page-bar" as const, fallback: "current-page" as const }
         : { mode: "current-page" as const, fallback: "none" as const };
-    const cameraSource = cameraPathCanRender
-      ? {
-          mode: "camera-path" as const,
-          pathId: captureCameraPathV3.id,
-        }
-      : { mode: "current-camera" as const, pathId: null };
-    const request = createScrollRecordRequest({
-      timeline: {
-        version: 1,
-        fps: DEFAULT_CAPTURE_SCROLL_FPS,
-        durationSeconds,
-        range,
-        pageSource,
-        cameraSource,
-        anchors,
-        outputProfileId: `scroll-${scrollOutputFormat}`,
+    const timeline: CaptureScrollTimelineV1 = {
+      version: 1,
+      fps: DEFAULT_CAPTURE_SCROLL_FPS,
+      durationSeconds,
+      range,
+      pageSource,
+      cameraSource: {
+        mode: "camera-path",
+        pathId: normalizedPath.id,
       },
+      anchors,
+      outputProfileId: `scroll-${scrollOutputFormat}`,
+    };
+    const request = createScrollRecordRequest({
+      timeline,
       format: scrollOutputFormat,
       quality,
       destination,
@@ -1732,79 +1752,29 @@ export function CaptureDirectorProvider({
         includeDiagnostics: true,
         manualFallbackAccepted: false,
         pageClipCount: enabledPageClips.length,
-        cameraPathNodeCount: captureCameraPathV3.nodes.length,
+        cameraPathNodeCount: normalizedPath.nodes.length,
+        pathDurationSeconds: durationSeconds,
       },
     });
     const validation = validateScrollRecordRequest(request);
     if (!validation.valid) {
-      setScrollRecordValidationErrors(validation.errors);
-      setLastScrollPackagePath(null);
-      setLastScrollManifestPath(null);
-      setError(null);
-      setScrollRecordPopoutOpen(true);
-      return;
+      return { plan: null, errors: validation.errors };
     }
-
-    let manifest;
-    let job;
-    try {
-      manifest = createPendingScrollHandoffManifest(request);
-      job = beginCaptureJob({
-        kind: "scroll-package",
-        label: "Scroll package",
-        diagnostics: { request, manifest },
-      });
-    } catch (errorValue) {
-      const message = formatCaptureError(errorValue);
-      setScrollRecordValidationErrors([message]);
-      setLastScrollPackagePath(null);
-      setLastScrollManifestPath(null);
-      setError(message);
-      setScrollRecordPopoutOpen(true);
-      return;
-    }
-
-    const packagePath = scrollJoinPath(
-      destination,
-      `${request.packageName}.scroll-package.json`,
-    );
-    const manifestPath = scrollJoinPath(
-      destination,
-      `${request.packageName}.scroll-manifest.json`,
-    );
-    finishCaptureJob(job.id, (entry) =>
-      completeCaptureJob(entry, {
-        output: {
-          filename: `${request.packageName}.scroll-package.json`,
-          mimeType: "application/json",
-          byteLength: 0,
-        },
-        diagnostics: {
-          request,
-          manifest,
-          packagePath,
-          manifestPath,
-        },
-        progress: {
-          phase: "complete",
-          percent: 1,
-          message: "Scroll package manifest prepared.",
-        },
-      }),
-    );
-    setLastScrollPackagePath(packagePath);
-    setLastScrollManifestPath(manifestPath);
-    setScrollRecordValidationErrors([]);
-    setError(null);
-    setScrollRecordPopoutOpen(false);
+    const packagePath = scrollPackageDirectory(destination, request.packageName);
+    return {
+      plan: {
+        request,
+        normalizedPath,
+        quality,
+        packagePath,
+        manifestPath: scrollJoinPath(packagePath, "scroll-manifest.json"),
+      },
+      errors: [],
+    };
   }, [
-    beginCaptureJob,
     captureCameraPathV3,
-    cameraPathPlaybackValidation,
     captureTimeline,
     currentPage,
-    deterministicDurationSeconds,
-    finishCaptureJob,
     scrollEndFrame,
     scrollOutputFormat,
     scrollOutputPackageName,
@@ -1812,6 +1782,440 @@ export function CaptureDirectorProvider({
     scrollRangeMode,
     scrollSaveDestination,
     scrollStartFrame,
+  ]);
+
+  const setDirectorPanel = useCallback(
+    (panel: CaptureDirectorPanel) => {
+      setDirectorPanelState(panel);
+      if (panel === "closed") {
+        const scrollPreviewResetFrame =
+          scrollRangeMode === "frame-range" ? Math.max(0, scrollStartFrame) : 0;
+        stopCameraPathPlayback();
+        stopScrollPreviewPlayback();
+        setCameraPathFocusPickNodeId(null);
+        setScrollRecordPopoutOpen(false);
+        setScrollPreviewState("idle");
+        setScrollCurrentFrame(scrollPreviewResetFrame);
+        sceneHandle.clearCaptureCameraPathOverlay();
+      }
+    },
+    [
+      sceneHandle,
+      scrollRangeMode,
+      scrollStartFrame,
+      stopCameraPathPlayback,
+      stopScrollPreviewPlayback,
+    ],
+  );
+
+  const applyScrollPreviewFrame = useCallback(
+    (
+      timeline: CaptureScrollTimelineV1,
+      path: CaptureCameraPathV3,
+      frameIndex: number,
+    ) => {
+      const timelineSample = sampleCaptureScrollTimeline(timeline, frameIndex);
+      const cameraSample = sampleCaptureCameraPathV3(
+        path,
+        timelineSample.timeSeconds,
+      );
+      sceneHandle.setCameraPose(cameraSample);
+      setScrollCurrentFrame(timelineSample.clampedFrameIndex);
+      return timelineSample;
+    },
+    [sceneHandle],
+  );
+
+  const playScrollPreview = useCallback(() => {
+    if (!cameraPathPlaybackValidation.valid) {
+      setScrollRecordValidationErrors(cameraPathPlaybackValidation.errors);
+      setError(cameraPathPlaybackValidation.errors.join(" "));
+      return;
+    }
+    const { plan, errors } = buildScrollRecordPlan();
+    if (!plan) {
+      setScrollRecordValidationErrors(errors);
+      setError(errors.join(" "));
+      return;
+    }
+    stopCameraPathPlayback();
+    stopScrollPreviewPlayback();
+    const rangeStart = plan.request.frameRange.startFrame;
+    const rangeEnd = plan.request.frameRange.endFrame;
+    const startFrame =
+      scrollPreviewState === "paused"
+        ? Math.max(rangeStart, Math.min(scrollCurrentFrame, rangeEnd))
+        : rangeStart;
+    scrollPreviewPlaybackStartFrameRef.current = startFrame;
+    scrollPreviewPlaybackStartMsRef.current = null;
+    applyScrollPreviewFrame(plan.request.timeline, plan.normalizedPath, startFrame);
+    setScrollRecordValidationErrors([]);
+    setError(null);
+    setScrollPreviewState("playing");
+    scrollPreviewPlaybackUnsubscribeRef.current = sceneHandle.onTick((timeMs) => {
+      if (scrollPreviewPlaybackStartMsRef.current === null) {
+        scrollPreviewPlaybackStartMsRef.current = timeMs;
+      }
+      const elapsedSeconds =
+        (timeMs - scrollPreviewPlaybackStartMsRef.current) / 1000;
+      const elapsedFrames = Math.floor(
+        elapsedSeconds * plan.request.timeline.fps,
+      );
+      const nextFrame = Math.min(
+        rangeEnd,
+        scrollPreviewPlaybackStartFrameRef.current + elapsedFrames,
+      );
+      applyScrollPreviewFrame(plan.request.timeline, plan.normalizedPath, nextFrame);
+      if (nextFrame >= rangeEnd) {
+        stopScrollPreviewPlayback();
+        setScrollPreviewState("paused");
+      }
+    }, "CaptureDirectorScrollPreview");
+  }, [
+    applyScrollPreviewFrame,
+    buildScrollRecordPlan,
+    cameraPathPlaybackValidation,
+    sceneHandle,
+    scrollCurrentFrame,
+    scrollPreviewState,
+    stopCameraPathPlayback,
+    stopScrollPreviewPlayback,
+  ]);
+
+  const pauseScrollPreview = useCallback(() => {
+    stopScrollPreviewPlayback();
+    setScrollPreviewState("paused");
+  }, [stopScrollPreviewPlayback]);
+
+  const stopScrollPreview = useCallback(() => {
+    stopScrollPreviewPlayback();
+    const { plan } = buildScrollRecordPlan();
+    const scrollPreviewResetFrame =
+      plan?.request.frameRange.startFrame ??
+      (scrollRangeMode === "frame-range" ? Math.max(0, scrollStartFrame) : 0);
+    if (plan) {
+      applyScrollPreviewFrame(
+        plan.request.timeline,
+        plan.normalizedPath,
+        scrollPreviewResetFrame,
+      );
+    } else {
+      setScrollCurrentFrame(scrollPreviewResetFrame);
+    }
+    setScrollPreviewState("idle");
+  }, [
+    applyScrollPreviewFrame,
+    buildScrollRecordPlan,
+    scrollRangeMode,
+    scrollStartFrame,
+    stopScrollPreviewPlayback,
+  ]);
+
+  const acceptScrollRenderShell = useCallback(() => {
+    void (async () => {
+      if (
+        isRecording ||
+        isDeterministicExporting ||
+        screenCaptureStatus === "rendering" ||
+        isCaptureJobRunning(activeCaptureJob)
+      ) {
+        setError("Another capture job is already running.");
+        return;
+      }
+      if (!cameraPathPlaybackValidation.valid) {
+        setScrollRecordValidationErrors(cameraPathPlaybackValidation.errors);
+        setLastScrollPackagePath(null);
+        setLastScrollManifestPath(null);
+        setError(null);
+        setScrollRecordPopoutOpen(true);
+        return;
+      }
+
+      const { plan, errors } = buildScrollRecordPlan();
+      if (!plan) {
+        setScrollRecordValidationErrors(errors);
+        setLastScrollPackagePath(null);
+        setLastScrollManifestPath(null);
+        setError(null);
+        setScrollRecordPopoutOpen(true);
+        return;
+      }
+
+      const validation = validateScrollRecordRequest(plan.request);
+      if (!validation.valid) {
+        setScrollRecordValidationErrors(validation.errors);
+        setLastScrollPackagePath(null);
+        setLastScrollManifestPath(null);
+        setError(null);
+        setScrollRecordPopoutOpen(true);
+        return;
+      }
+
+      let manifest;
+      let job;
+      const abortController = new AbortController();
+      try {
+        manifest = createPendingScrollHandoffManifest(plan.request);
+        job = beginCaptureJob({
+          kind: "scroll-package",
+          label: "Scroll package",
+          abortController,
+          diagnostics: { request: plan.request, manifest },
+          progress: {
+            phase: "preparing",
+            renderedFrames: 0,
+            totalFrames: plan.request.frameRange.totalFrames,
+          },
+        });
+      } catch (errorValue) {
+        const message = formatCaptureError(errorValue);
+        setScrollRecordValidationErrors([message]);
+        setLastScrollPackagePath(null);
+        setLastScrollManifestPath(null);
+        setError(message);
+        setScrollRecordPopoutOpen(true);
+        return;
+      }
+
+      const recipeLayerState = captureRecipeLayerState({
+        environment: state.environment,
+        page: currentPage,
+        layerIds: state.manifest.layers.map((layer) => layer.id),
+      });
+      const recipe = createCaptureRecipeFromCurrentState({
+        projectSlug: state.projectSlug ?? state.manifest.id,
+        pageId: currentPage?.id ?? null,
+        mode: "scene-only",
+        resolution: {
+          width: plan.quality.width,
+          height: plan.quality.height,
+          label: scrollQualityLabel(plan.quality),
+          qualityPreset: scrollRecipeQualityPreset(plan.quality),
+        },
+        previewResolution,
+        fps: DEFAULT_CAPTURE_SCROLL_FPS,
+        durationSeconds: plan.request.timeline.durationSeconds,
+        camera: capturePose(sceneHandle.camera, sceneHandle.controls),
+        cameraKeyframes: cameraPathV3ToRecipeKeyframes(
+          plan.normalizedPath,
+          DEFAULT_CAPTURE_SCROLL_FPS,
+        ),
+        cameraPath: plan.normalizedPath,
+        layerVisibility: recipeLayerState.layerVisibility,
+        layerStyles: recipeLayerState.layerStyles,
+        environmentState: state.environment,
+        visualPreset: null,
+        supersampleScale: 1,
+        qualityPreset: scrollRecipeQualityPreset(plan.quality),
+        renderFidelity: "max-detail-render",
+        captureScope: "current-page",
+        pageRangeStartId: null,
+        pageRangeEndId: null,
+        pageRangeTiming: "authored",
+        equalHoldSeconds: null,
+        captureTimeline,
+        createdAt: plan.request.createdAt,
+      });
+      const renderJob = createExternalVideoRenderJob({
+        recipe,
+        format: scrollVideoFormat(scrollOutputFormat),
+        appUrl:
+          typeof window === "undefined"
+            ? null
+            : `${window.location.origin}${window.location.pathname}?project=${encodeURIComponent(
+                recipe.projectSlug,
+              )}`,
+        createdAt: plan.request.createdAt,
+      });
+
+      const scrollJobId = job.id;
+      scrollPackageAbortRef.current = abortController;
+      stopScrollPreviewPlayback();
+      setError(null);
+      setScrollRecordValidationErrors([]);
+
+      try {
+        const started = await startLocalScrollPackageRenderJob({
+          request: plan.request,
+          manifest,
+          renderJob,
+        });
+        scrollPackageLocalRunIdRef.current = started.runId;
+        setLastScrollPackagePath(started.packagePath || plan.packagePath);
+        setLastScrollManifestPath(started.manifestPath || plan.manifestPath);
+        setScrollRecordPopoutOpen(false);
+        updateCaptureJob(scrollJobId, (entry) =>
+          ({
+            ...updateCaptureJobStatus(entry, "rendering", {
+              progress: {
+                phase: "rendering",
+                renderedFrames: started.renderedFrames ?? 0,
+                totalFrames:
+                  started.totalFrames ?? plan.request.frameRange.totalFrames,
+                percent: 0.02,
+                message: `Scroll package renderer started: ${started.packagePath}`,
+              },
+            }),
+            diagnostics: {
+              ...entry.diagnostics,
+              localScrollPackageRunId: started.runId,
+              packagePath: started.packagePath,
+              manifestPath: started.manifestPath,
+              manifestUrl: started.manifestUrl,
+              outputUrl: started.outputUrl,
+              diagnosticsPath: started.diagnosticsPath,
+            },
+          }),
+        );
+
+        let latest: LocalScrollPackageRunStatus = started;
+        while (
+          latest.status !== "complete" &&
+          latest.status !== "failed" &&
+          latest.status !== "cancelled"
+        ) {
+          if (abortController.signal.aborted) {
+            await cancelLocalScrollPackageRenderJob(latest.runId).catch(() => null);
+            throw new DOMException("Scroll package render was cancelled.", "AbortError");
+          }
+          await new Promise<void>((resolve) => {
+            window.setTimeout(resolve, 1000);
+          });
+          latest = await pollLocalScrollPackageRenderJob(latest.runId);
+          const liveTotal =
+            latest.totalFrames ?? plan.request.frameRange.totalFrames;
+          const liveRendered = latest.renderedFrames ?? 0;
+          const isEncoding =
+            latest.status === "encoding" || latest.phase === "encoding";
+          const percent = isEncoding
+            ? Math.max(0.9, Math.min(0.98, 0.9 + (liveRendered / liveTotal) * 0.08))
+            : Math.max(0.02, Math.min(0.88, (liveRendered / liveTotal) * 0.88));
+          updateCaptureJob(scrollJobId, (entry) =>
+            ({
+              ...updateCaptureJobStatus(
+                entry,
+                isEncoding ? "encoding" : "rendering",
+                {
+                  progress: {
+                    phase: isEncoding ? "encoding" : "rendering",
+                    renderedFrames: liveRendered,
+                    totalFrames: liveTotal,
+                    percent,
+                    message: isEncoding
+                      ? `Encoding scroll package ${liveTotal} frames.`
+                      : `Rendering scroll package frame ${liveRendered}/${liveTotal}.`,
+                  },
+                },
+              ),
+              diagnostics: {
+                ...entry.diagnostics,
+                localScrollPackageRunId: latest.runId,
+                packagePath: latest.packagePath,
+                manifestPath: latest.manifestPath,
+                manifestUrl: latest.manifestUrl,
+                outputUrl: latest.outputUrl,
+                diagnosticsPath: latest.diagnosticsPath,
+                frameSequenceDir: latest.frameSequenceDir ?? null,
+                mediaPath: latest.mediaPath ?? null,
+                renderer: latest.renderer ?? null,
+                superscale: latest.superscale ?? null,
+                scrollPackageStatus: latest.status,
+              },
+            }),
+          );
+        }
+
+        scrollPackageLocalRunIdRef.current = null;
+        if (latest.status === "failed") {
+          throw new Error(latest.error ?? "Scroll package renderer failed.");
+        }
+        if (latest.status === "cancelled") {
+          throw new DOMException("Scroll package render was cancelled.", "AbortError");
+        }
+        setLastScrollPackagePath(latest.packagePath || plan.packagePath);
+        setLastScrollManifestPath(latest.manifestPath || plan.manifestPath);
+        finishCaptureJob(scrollJobId, (entry) =>
+          completeCaptureJob(entry, {
+            output: {
+              url: latest.outputUrl ?? latest.manifestUrl,
+              filename:
+                scrollOutputFormat === "png-sequence"
+                  ? "scroll-manifest.json"
+                  : scrollOutputFormat === "webm"
+                    ? "scroll-master.webm"
+                    : scrollOutputFormat === "scroll-friendly-video"
+                      ? "scroll-friendly.mp4"
+                      : "scroll-master.mp4",
+              mimeType:
+                scrollOutputFormat === "png-sequence"
+                  ? "application/json"
+                  : scrollOutputFormat === "webm"
+                    ? "video/webm"
+                    : "video/mp4",
+            },
+            diagnostics: {
+              ...entry.diagnostics,
+              localScrollPackageRunId: latest.runId,
+              packagePath: latest.packagePath,
+              manifestPath: latest.manifestPath,
+              manifestUrl: latest.manifestUrl,
+              outputUrl: latest.outputUrl,
+              diagnosticsPath: latest.diagnosticsPath,
+              frameSequenceDir: latest.frameSequenceDir ?? null,
+              mediaPath: latest.mediaPath ?? null,
+              warnings: latest.warnings ?? [],
+            },
+            progress: {
+              phase: "complete",
+              renderedFrames:
+                latest.renderedFrames ?? plan.request.frameRange.totalFrames,
+              totalFrames: plan.request.frameRange.totalFrames,
+              percent: 1,
+              message: "Scroll package render complete.",
+            },
+          }),
+        );
+      } catch (scrollError) {
+        scrollPackageLocalRunIdRef.current = null;
+        if (
+          abortController.signal.aborted ||
+          (scrollError instanceof DOMException &&
+            scrollError.name === "AbortError")
+        ) {
+          setError("Scroll package render was cancelled.");
+          finishCaptureJob(scrollJobId, (entry) =>
+            cancelCaptureJob(entry, { reason: "Scroll package render was cancelled." }),
+          );
+        } else {
+          setError(formatCaptureError(scrollError));
+          finishCaptureJob(scrollJobId, (entry) =>
+            failCaptureJob(entry, scrollError),
+          );
+        }
+      } finally {
+        scrollPackageAbortRef.current = null;
+      }
+    })();
+  }, [
+    activeCaptureJob,
+    beginCaptureJob,
+    buildScrollRecordPlan,
+    cameraPathPlaybackValidation,
+    captureTimeline,
+    currentPage,
+    finishCaptureJob,
+    isDeterministicExporting,
+    isRecording,
+    previewResolution,
+    sceneHandle,
+    screenCaptureStatus,
+    scrollOutputFormat,
+    state.environment,
+    state.manifest.id,
+    state.manifest.layers,
+    state.projectSlug,
+    stopScrollPreviewPlayback,
+    updateCaptureJob,
   ]);
 
   const overlayContext = useCallback(

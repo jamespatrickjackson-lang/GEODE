@@ -435,10 +435,14 @@ test("scroll handoff pending manifests derive valid partial package contracts fr
   assert.equal(manifest.packageId, "valid-4k-scroll");
   assert.equal(manifest.createdAt, request.createdAt);
   assert.deepEqual(manifest.frameRange, request.frameRange);
-  assert.deepEqual(manifest.frames, { directory: null, pattern: null, count: 0 });
+  assert.deepEqual(manifest.frames, {
+    directory: "frames",
+    pattern: "frame-%06d.png",
+    count: request.frameRange.totalFrames,
+  });
   assert.equal(manifest.media.length, 1);
   assert.equal(manifest.media[0].role, "primary");
-  assert.equal(manifest.media[0].path, "media/valid-4k-scroll.mp4");
+  assert.equal(manifest.media[0].path, "media/scroll-master.mp4");
   assert.equal(manifest.diagnosticsPath, "diagnostics/valid-4k-scroll.json");
   assert.equal(manifest.sourceContract.request.schema, "CaptureScrollRecordRequestV1");
   assert.equal(validateScrollHandoffManifest(manifest).valid, true);
@@ -488,13 +492,13 @@ test("scroll handoff pending manifests assign media roles by scroll output forma
   } = await importBundled("src/capture/scrollHandoffPackage.ts");
 
   const cases = [
-    ["mp4", "primary", "video/mp4", "media/media-role-mp4.mp4"],
-    ["webm", "delivery", "video/webm", "media/media-role-webm.webm"],
+    ["mp4", "primary", "video/mp4", "media/scroll-master.mp4"],
+    ["webm", "delivery", "video/webm", "media/scroll-master.webm"],
     [
       "scroll-friendly-video",
       "scroll-friendly",
       "video/mp4",
-      "media/media-role-scroll-friendly-video.scroll.mp4",
+      "media/scroll-friendly.mp4",
     ],
   ];
 
@@ -674,6 +678,83 @@ test("scroll handoff packages validate explicit status and complete outputs", as
   });
   assert.equal(arraySourceContract.valid, false);
   assert.match(arraySourceContract.errors.join("\n"), /sourceContract/);
+});
+
+test("scroll handoff complete, cancelled, and failed manifests retain package evidence", async () => {
+  const {
+    createScrollRecordRequest,
+  } = await importBundled("src/capture/captureScrollTimeline.ts");
+  const {
+    createFinalScrollHandoffManifest,
+    createPendingScrollHandoffManifest,
+    validateScrollHandoffManifest,
+  } = await importBundled("src/capture/scrollHandoffPackage.ts");
+
+  const request = createScrollRecordRequest({
+    timeline: validScrollTimeline({
+      durationSeconds: 3,
+      range: { mode: "frame-range", startFrame: 60, endFrame: 89 },
+    }),
+    format: "mp4",
+    quality: { preset: "1080p", width: 1920, height: 1080 },
+    destination: ".tmp/capture-scroll-outputs",
+    packageName: "complete-scroll",
+    cleanRender: true,
+    renderRouteIntent: "browser-inline",
+    advancedOptions: { includeDiagnostics: true },
+    createdAt: "2026-06-16T00:00:00.000Z",
+  });
+  const pending = createPendingScrollHandoffManifest(request);
+  const complete = createFinalScrollHandoffManifest({
+    manifest: pending,
+    status: "complete",
+    media: [
+      {
+        role: "primary",
+        path: "media/scroll-master.mp4",
+        mimeType: "video/mp4",
+        byteLength: 2048,
+      },
+    ],
+    frames: { directory: "frames", pattern: "frame-%06d.png", count: 30 },
+    diagnosticsPath: "diagnostics/complete-scroll.json",
+    posters: [
+      { anchorId: "first", frame: 60, path: "posters/frame-000060.png" },
+      { anchorId: "last", frame: 89, path: "posters/frame-000089.png" },
+    ],
+    contactSheetPath: "posters/contact-sheet.png",
+    warnings: ["kept source frames"],
+  });
+
+  assert.equal(complete.status, "complete");
+  assert.deepEqual(complete.frameRange, { startFrame: 60, endFrame: 89, totalFrames: 30 });
+  assert.equal(complete.media[0].byteLength, 2048);
+  assert.equal(complete.frames.count, 30);
+  assert.equal(complete.posters.length, 2);
+  assert.equal(complete.contactSheetPath, "posters/contact-sheet.png");
+  assert.equal(validateScrollHandoffManifest(complete).valid, true);
+
+  const cancelled = createFinalScrollHandoffManifest({
+    manifest: pending,
+    status: "cancelled",
+    frames: { directory: "frames", pattern: "frame-%06d.png", count: 12 },
+    diagnosticsPath: "diagnostics/complete-scroll.json",
+    warnings: ["cancelled by user"],
+  });
+  assert.equal(cancelled.status, "cancelled");
+  assert.equal(cancelled.frames.count, 12);
+  assert.equal(validateScrollHandoffManifest(cancelled).valid, true);
+
+  const failed = createFinalScrollHandoffManifest({
+    manifest: pending,
+    status: "failed",
+    frames: { directory: "frames", pattern: "frame-%06d.png", count: 3 },
+    diagnosticsPath: "diagnostics/complete-scroll.json",
+    warnings: ["renderer exited"],
+  });
+  assert.equal(failed.status, "failed");
+  assert.equal(failed.frames.count, 3);
+  assert.equal(validateScrollHandoffManifest(failed).valid, true);
 });
 
 test("CaptureCameraPath validates, normalizes, samples, and moves spline-owned keyframes", async () => {
@@ -3538,4 +3619,117 @@ test("local video render runner starts, polls, and cancels the dev renderer endp
   );
   assert.equal(calls[1].body.job.schema, "CaptureVideoRenderJobV1");
   assert.equal(calls[1].body.outputFilename, job.video.filename);
+});
+
+test("local scroll package runner starts, polls, downloads, and cancels package endpoint", async () => {
+  const {
+    cancelLocalScrollPackageRenderJob,
+    localScrollPackageRendererAvailable,
+    pollLocalScrollPackageRenderJob,
+    scrollPackageOutputUrl,
+    startLocalScrollPackageRenderJob,
+  } = await importBundled("src/capture/localScrollPackageRunner.ts");
+  const {
+    createScrollRecordRequest,
+  } = await importBundled("src/capture/captureScrollTimeline.ts");
+  const {
+    createPendingScrollHandoffManifest,
+  } = await importBundled("src/capture/scrollHandoffPackage.ts");
+  const {
+    createExternalVideoRenderJob,
+  } = await importBundled("src/capture/externalVideoRenderJob.ts");
+
+  const request = createScrollRecordRequest({
+    timeline: validScrollTimeline({
+      durationSeconds: 2,
+      range: { mode: "frame-range", startFrame: 30, endFrame: 59 },
+    }),
+    format: "mp4",
+    quality: { preset: "1080p", width: 1920, height: 1080 },
+    destination: ".tmp/capture-scroll-outputs",
+    packageName: "runner-scroll",
+    cleanRender: true,
+    renderRouteIntent: "browser-inline",
+    advancedOptions: { includeDiagnostics: true },
+    createdAt: "2026-06-16T00:00:00.000Z",
+  });
+  const manifest = createPendingScrollHandoffManifest(request);
+  const renderJob = createExternalVideoRenderJob({
+    recipe: validRecipe({
+      mode: "scene-only",
+      resolution: { width: 1920, height: 1080, label: "1080p" },
+      durationSeconds: 2,
+      fps: 60,
+    }),
+    format: "mp4",
+    appUrl: "http://127.0.0.1:5194/?project=runtime-test",
+    createdAt: "2026-06-16T00:00:00.000Z",
+  });
+
+  const calls = [];
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async (url, options = {}) => {
+    const body = options.body ? JSON.parse(String(options.body)) : null;
+    calls.push({ url: String(url), body });
+    if (String(url).endsWith("/scroll-package/availability")) {
+      return new Response(JSON.stringify({ available: true }), { status: 200 });
+    }
+    return new Response(
+      JSON.stringify({
+        runId: body?.runId ?? "scroll-run-1",
+        status: String(url).endsWith("/cancel") ? "cancelled" : "rendering",
+        phase: "rendering",
+        startedAt: "2026-06-16T00:00:00.000Z",
+        completedAt: null,
+        packageName: "runner-scroll",
+        packagePath: "C:\\GeoSee\\GeoSee_Dev\\.tmp\\capture-scroll-outputs\\runner-scroll",
+        manifestPath:
+          "C:\\GeoSee\\GeoSee_Dev\\.tmp\\capture-scroll-outputs\\runner-scroll\\scroll-manifest.json",
+        manifestUrl:
+          "/api/capture/scroll-package-output?runId=scroll-run-1&variant=manifest",
+        outputUrl:
+          "/api/capture/scroll-package-output?runId=scroll-run-1&variant=media&path=media%2Fscroll-master.mp4",
+        diagnosticsPath:
+          "C:\\GeoSee\\GeoSee_Dev\\.tmp\\capture-scroll-outputs\\runner-scroll\\diagnostics\\runner-scroll.json",
+        renderedFrames: 12,
+        totalFrames: 30,
+        warnings: [],
+      }),
+      { status: 200 },
+    );
+  };
+
+  try {
+    const availability = await localScrollPackageRendererAvailable();
+    assert.equal(availability.available, true);
+    const started = await startLocalScrollPackageRenderJob({
+      request,
+      manifest,
+      renderJob,
+      synthetic: true,
+    });
+    assert.equal(started.runId, "scroll-run-1");
+    assert.match(started.manifestUrl ?? "", /\/api\/capture\/scroll-package-output/);
+    assert.match(scrollPackageOutputUrl(started.runId, "manifest"), /variant=manifest/);
+    const polled = await pollLocalScrollPackageRenderJob(started.runId);
+    assert.equal(polled.status, "rendering");
+    const cancelled = await cancelLocalScrollPackageRenderJob(started.runId);
+    assert.equal(cancelled.status, "cancelled");
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+
+  assert.deepEqual(
+    calls.map((call) => call.url),
+    [
+      "/api/capture/scroll-package/availability",
+      "/api/capture/scroll-package/start",
+      "/api/capture/scroll-package/status",
+      "/api/capture/scroll-package/cancel",
+    ],
+  );
+  assert.equal(calls[1].body.request.schema, "CaptureScrollRecordRequestV1");
+  assert.equal(calls[1].body.manifest.schema, "ScrollHandoffPackageV1");
+  assert.equal(calls[1].body.renderJob.schema, "CaptureVideoRenderJobV1");
+  assert.equal(calls[1].body.renderJob.video.sourceFrameStart, 30);
 });

@@ -119,11 +119,11 @@ function mediaForScrollRequest(
     Exclude<CaptureScrollRecordFormat, "png-sequence">,
     { role: ScrollHandoffPackageV1["media"][number]["role"]; extension: string; mimeType: string }
   > = {
-    mp4: { role: "primary", extension: "mp4", mimeType: "video/mp4" },
-    webm: { role: "delivery", extension: "webm", mimeType: "video/webm" },
+    mp4: { role: "primary", extension: "scroll-master.mp4", mimeType: "video/mp4" },
+    webm: { role: "delivery", extension: "scroll-master.webm", mimeType: "video/webm" },
     "scroll-friendly-video": {
       role: "scroll-friendly",
-      extension: "scroll.mp4",
+      extension: "scroll-friendly.mp4",
       mimeType: "video/mp4",
     },
   };
@@ -133,7 +133,7 @@ function mediaForScrollRequest(
   return [
     {
       role: spec.role,
-      path: `media/${request.packageName}.${spec.extension}`,
+      path: `media/${spec.extension}`,
       mimeType: spec.mimeType,
     },
   ];
@@ -156,16 +156,49 @@ export function createPendingScrollHandoffManifest(
     durationSeconds: request.timeline.durationSeconds,
     frameRange: request.frameRange,
     media: mediaForScrollRequest(request),
-    frames:
-      request.format === "png-sequence"
-        ? {
-            directory: "frames",
-            pattern: "frame-%06d.png",
-            count: request.frameRange.totalFrames,
-          }
-        : { directory: null, pattern: null, count: 0 },
+    frames: {
+      directory: "frames",
+      pattern: "frame-%06d.png",
+      count: request.frameRange.totalFrames,
+    },
     diagnosticsPath: `diagnostics/${request.packageName}.json`,
     sourceContract: { request },
+  });
+}
+
+export function createFinalScrollHandoffManifest({
+  manifest,
+  status,
+  media,
+  frames,
+  posters,
+  contactSheetPath,
+  diagnosticsPath,
+  hashes,
+  warnings,
+}: {
+  manifest: ScrollHandoffPackageV1;
+  status: Exclude<ScrollHandoffPackageStatus, "partial">;
+  media?: ScrollHandoffPackageV1["media"];
+  frames?: ScrollHandoffPackageV1["frames"];
+  posters?: ScrollHandoffPackageV1["posters"];
+  contactSheetPath?: string | null;
+  diagnosticsPath?: string | null;
+  hashes?: ScrollHandoffPackageV1["hashes"];
+  warnings?: string[];
+}): ScrollHandoffPackageV1 {
+  return createScrollHandoffManifest({
+    ...manifest,
+    status,
+    media: media ?? manifest.media,
+    frames: frames ?? manifest.frames,
+    posters: posters ?? manifest.posters,
+    contactSheetPath:
+      contactSheetPath === undefined ? manifest.contactSheetPath : contactSheetPath,
+    diagnosticsPath:
+      diagnosticsPath === undefined ? manifest.diagnosticsPath : diagnosticsPath,
+    hashes: hashes ?? manifest.hashes,
+    warnings: warnings ?? manifest.warnings,
   });
 }
 
