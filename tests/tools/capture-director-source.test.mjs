@@ -301,6 +301,23 @@ test("Capture Director exposes Scroll Animation shell without renderer endpoints
     /const stopScrollPreview = useCallback\(\(\) => \{[\s\S]*const scrollPreviewResetFrame =\s*scrollRangeMode === "frame-range"\s*\?\s*Math\.max\(0,\s*scrollStartFrame\)\s*:\s*0;[\s\S]*setScrollCurrentFrame\(scrollPreviewResetFrame\);[\s\S]*\}, \[scrollRangeMode, scrollStartFrame\]\);/,
     "Stop preview should reset to frame 0 for full-video and selected start for frame-range",
   );
+  assert.match(
+    provider,
+    /if \(panel === "closed"\) \{[\s\S]*setScrollRecordPopoutOpen\(false\);[\s\S]*setScrollPreviewState\("idle"\);[\s\S]*\}/,
+    "closing Capture Director should clear transient scroll popout and preview state",
+  );
+  const panelCloseBlock =
+    provider.match(/if \(panel === "closed"\) \{([\s\S]*?)\n      \}/)?.[1] ?? "";
+  for (const forbidden of [
+    "setLastScrollPackagePath",
+    "setLastScrollManifestPath",
+  ]) {
+    assert.equal(
+      panelCloseBlock.includes(forbidden),
+      false,
+      `panel close must preserve scroll output path state: ${forbidden}`,
+    );
+  }
   for (const expected of [
     "scroll-animation",
     "Scroll Animation",
@@ -331,6 +348,23 @@ test("Capture Director exposes Scroll Animation shell without renderer endpoints
     "Output package name",
     "Estimated frame count",
     "Render size",
+    "scrollPopoutDialogRef",
+    "scrollPopoutRestoreFocusRef",
+    "closeScrollRecordPopout",
+    "openScrollRecordPopout",
+    "getScrollDialogFocusableElements",
+    "scrollRecordPopoutOpen &&",
+    "scrollPopoutDialogRef.current",
+    "event.key === \"Escape\"",
+    "event.key !== \"Tab\"",
+    "event.shiftKey",
+    ".focus()",
+    "document.addEventListener(\"keydown\"",
+    "document.removeEventListener(\"keydown\"",
+    "role=\"dialog\"",
+    "aria-modal=\"true\"",
+    "tabIndex={-1}",
+    "ref={scrollPopoutDialogRef}",
   ]) {
     assert.ok(toolbar.includes(expected), `toolbar should include ${expected}`);
   }

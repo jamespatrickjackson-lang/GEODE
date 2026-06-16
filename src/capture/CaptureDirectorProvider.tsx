@@ -1587,12 +1587,17 @@ export function CaptureDirectorProvider({
     (panel: CaptureDirectorPanel) => {
       setDirectorPanelState(panel);
       if (panel === "closed") {
+        const scrollPreviewResetFrame =
+          scrollRangeMode === "frame-range" ? Math.max(0, scrollStartFrame) : 0;
         stopCameraPathPlayback();
         setCameraPathFocusPickNodeId(null);
+        setScrollRecordPopoutOpen(false);
+        setScrollPreviewState("idle");
+        setScrollCurrentFrame(scrollPreviewResetFrame);
         sceneHandle.clearCaptureCameraPathOverlay();
       }
     },
-    [sceneHandle, stopCameraPathPlayback],
+    [sceneHandle, scrollRangeMode, scrollStartFrame, stopCameraPathPlayback],
   );
 
   const playScrollPreview = useCallback(() => {

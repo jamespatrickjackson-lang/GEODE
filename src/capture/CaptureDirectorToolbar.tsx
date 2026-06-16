@@ -1,4 +1,12 @@
-import { useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from "react";
 import {
   CAPTURE_PREVIEW_RESOLUTION_PRESET_ORDER,
   CAPTURE_REALTIME_FPS_OPTIONS,
@@ -636,10 +644,30 @@ function CollapsibleCaptureSection({
   );
 }
 
+function getScrollDialogFocusableElements(dialog: HTMLElement | null) {
+  if (!dialog) {
+    return [];
+  }
+  const selectors = [
+    "button:not([disabled])",
+    "input:not([disabled])",
+    "select:not([disabled])",
+    "textarea:not([disabled])",
+    "a[href]",
+    "[tabindex]:not([tabindex='-1'])",
+  ].join(",");
+  return Array.from(dialog.querySelectorAll<HTMLElement>(selectors)).filter(
+    (element) =>
+      element.tabIndex >= 0 && element.getAttribute("aria-disabled") !== "true",
+  );
+}
+
 export function CaptureDirectorToolbar() {
   const { state: editorState } = useEditor();
   const recipeFileInputRef = useRef<HTMLInputElement | null>(null);
   const pathFileInputRef = useRef<HTMLInputElement | null>(null);
+  const scrollPopoutDialogRef = useRef<HTMLDivElement | null>(null);
+  const scrollPopoutRestoreFocusRef = useRef<HTMLElement | null>(null);
   const [expandedSections, setExpandedSections] = useState<
     Record<CaptureDirectorSectionId, boolean>
   >({
@@ -828,6 +856,71 @@ export function CaptureDirectorToolbar() {
     cancelDeterministicExport,
     resetRecording,
   } = useCaptureDirector();
+
+  const closeScrollRecordPopout = useCallback(() => {
+    setScrollRecordPopoutOpen(false);
+  }, [setScrollRecordPopoutOpen]);
+
+  const openScrollRecordPopout = useCallback(() => {
+    if (typeof document !== "undefined") {
+      const activeElement = document.activeElement;
+      scrollPopoutRestoreFocusRef.current =
+        activeElement instanceof HTMLElement ? activeElement : null;
+    }
+    setScrollRecordPopoutOpen(true);
+  }, [setScrollRecordPopoutOpen]);
+
+  useEffect(() => {
+    if (!scrollRecordPopoutOpen) {
+      return undefined;
+    }
+
+    const focusableElements = getScrollDialogFocusableElements(
+      scrollPopoutDialogRef.current,
+    );
+    (focusableElements[0] ?? scrollPopoutDialogRef.current)?.focus();
+
+    const handleScrollPopoutKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        closeScrollRecordPopout();
+        return;
+      }
+      if (event.key !== "Tab") {
+        return;
+      }
+
+      const dialog = scrollPopoutDialogRef.current;
+      const dialogFocusableElements = getScrollDialogFocusableElements(dialog);
+      if (dialogFocusableElements.length === 0) {
+        event.preventDefault();
+        dialog?.focus();
+        return;
+      }
+
+      const firstFocusableElement = dialogFocusableElements[0];
+      const lastFocusableElement =
+        dialogFocusableElements[dialogFocusableElements.length - 1];
+      const activeElement = document.activeElement;
+      if (event.shiftKey && activeElement === firstFocusableElement) {
+        event.preventDefault();
+        lastFocusableElement.focus();
+      } else if (!event.shiftKey && activeElement === lastFocusableElement) {
+        event.preventDefault();
+        firstFocusableElement.focus();
+      }
+    };
+
+    document.addEventListener("keydown", handleScrollPopoutKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleScrollPopoutKeyDown);
+      const restoreFocusElement = scrollPopoutRestoreFocusRef.current;
+      scrollPopoutRestoreFocusRef.current = null;
+      if (restoreFocusElement && document.contains(restoreFocusElement)) {
+        restoreFocusElement.focus();
+      }
+    };
+  }, [closeScrollRecordPopout, scrollRecordPopoutOpen]);
 
   const open = directorPanel !== "closed";
   const gui = editorState.environment.scene?.gui ?? {};
@@ -1657,7 +1750,7 @@ export function CaptureDirectorToolbar() {
                       <button
                         data-testid="capture-scroll-record"
                         type="button"
-                        onClick={() => setScrollRecordPopoutOpen(true)}
+                        onClick={openScrollRecordPopout}
                         style={primaryButtonStyle}
                       >
                         Record
@@ -1665,7 +1758,7 @@ export function CaptureDirectorToolbar() {
                       <button
                         data-testid="capture-scroll-record-popout"
                         type="button"
-                        onClick={() => setScrollRecordPopoutOpen(true)}
+                        onClick={openScrollRecordPopout}
                         style={buttonStyle}
                       >
                         Open Record Popout
@@ -1698,7 +1791,7 @@ export function CaptureDirectorToolbar() {
                             lastScrollManifestPath ??
                             "Scroll output placeholder"
                           }
-                          onClick={() => setScrollRecordPopoutOpen(true)}
+                          onClick={openScrollRecordPopout}
                           style={outputLinkStyle}
                         >
                           Open Output
@@ -2609,16 +2702,18 @@ export function CaptureDirectorToolbar() {
               style={popoutBackdropStyle}
             >
               <div
+                ref={scrollPopoutDialogRef}
                 role="dialog"
                 aria-modal="true"
                 aria-label="Scroll Animation record options"
+                tabIndex={-1}
                 style={recordPopoutStyle}
               >
                 <div style={headingStyle}>
                   <span>Scroll Animation</span>
                   <button
                     type="button"
-                    onClick={() => setScrollRecordPopoutOpen(false)}
+                    onClick={closeScrollRecordPopout}
                     style={buttonStyle}
                   >
                     Close
@@ -2839,7 +2934,7 @@ export function CaptureDirectorToolbar() {
                         lastScrollManifestPath ??
                         "Scroll output placeholder"
                       }
-                      onClick={() => setScrollRecordPopoutOpen(false)}
+                      onClick={closeScrollRecordPopout}
                       style={outputLinkStyle}
                     >
                       Open Output
