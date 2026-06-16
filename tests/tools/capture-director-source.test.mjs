@@ -229,6 +229,25 @@ test("Capture Director production types expose panel, still, save, and fidelity 
     '"render-out"',
     '"still-capture"',
     '"camera-path"',
+    '"scroll-animation"',
+    "CaptureScrollOutputFormat",
+    '"mp4"',
+    '"webm"',
+    '"scroll-friendly-video"',
+    '"png-sequence"',
+    "CaptureScrollQualityPreset",
+    '"1080p"',
+    '"1440p"',
+    '"4k"',
+    '"6k"',
+    '"8k"',
+    "CaptureScrollRangeMode",
+    '"full-video"',
+    '"frame-range"',
+    "CaptureScrollPreviewState",
+    '"idle"',
+    '"playing"',
+    '"paused"',
     "CaptureStillType",
     '"png"',
     '"webp"',
@@ -242,6 +261,92 @@ test("Capture Director production types expose panel, still, save, and fidelity 
     '"external-job"',
   ]) {
     assert.ok(source.includes(expected), `captureTypes should include ${expected}`);
+  }
+});
+
+test("Capture Director exposes Scroll Animation shell without renderer endpoints", () => {
+  const provider = readSource("src", "capture", "CaptureDirectorProvider.tsx");
+  const toolbar = readSource("src", "capture", "CaptureDirectorToolbar.tsx");
+  for (const expected of [
+    "scrollOutputFormat",
+    "setScrollOutputFormat",
+    "scrollQualityPreset",
+    "setScrollQualityPreset",
+    "scrollRangeMode",
+    "setScrollRangeMode",
+    "scrollStartFrame",
+    "setScrollStartFrame",
+    "scrollEndFrame",
+    "setScrollEndFrame",
+    "scrollSaveDestination",
+    "setScrollSaveDestination",
+    "scrollOutputPackageName",
+    "setScrollOutputPackageName",
+    "scrollAdvancedOpen",
+    "setScrollAdvancedOpen",
+    "scrollPreviewState",
+    "playScrollPreview",
+    "pauseScrollPreview",
+    "stopScrollPreview",
+    "scrollRecordPopoutOpen",
+    "setScrollRecordPopoutOpen",
+    "lastScrollPackagePath",
+    "lastScrollManifestPath",
+    "acceptScrollRenderShell",
+  ]) {
+    assert.ok(provider.includes(expected), `provider should include ${expected}`);
+  }
+  for (const expected of [
+    "scroll-animation",
+    "Scroll Animation",
+    "capture-scroll-panel",
+    "capture-scroll-play",
+    "capture-scroll-pause",
+    "capture-scroll-stop",
+    "capture-scroll-record",
+    "capture-scroll-record-popout",
+    "capture-scroll-advanced-toggle",
+    "Accept and Render",
+    "Open Output",
+    "MP4",
+    "WebM",
+    "Scroll-Friendly Video",
+    "PNG Sequence",
+    "1080p",
+    "1440p",
+    "4K",
+    "6K",
+    "8K",
+    "Full video",
+    "Frame range",
+    "Format",
+    "Quality",
+    "Range",
+    "Save destination",
+    "Output package name",
+    "Estimated frame count",
+    "Render size",
+  ]) {
+    assert.ok(toolbar.includes(expected), `toolbar should include ${expected}`);
+  }
+  const scrollStart = toolbar.indexOf('data-testid="capture-scroll-panel"');
+  assert.ok(scrollStart >= 0, "scroll panel block should exist");
+  const scrollEnd = toolbar.indexOf('panelTestId="capture-camera-path-panel"', scrollStart);
+  assert.ok(scrollEnd > scrollStart, "scroll panel block should precede camera path panel");
+  const scrollBlock = toolbar.slice(scrollStart, scrollEnd);
+  for (const forbidden of [
+    "startLocalVideoRenderJob",
+    "createExternalVideoRenderJob",
+    "/api/capture/render-video",
+    "/api/capture/video-output",
+    "render-capture-video-job.mjs",
+    "capture-video-outputs",
+  ]) {
+    assert.equal(
+      scrollBlock.includes(forbidden),
+      false,
+      `Scroll Animation UI shell must not call renderer endpoint ${forbidden}`,
+    );
   }
 });
 

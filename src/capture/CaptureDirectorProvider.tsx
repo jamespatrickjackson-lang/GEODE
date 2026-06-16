@@ -126,6 +126,10 @@ import type {
   CapturePreviewResolutionPresetId,
   CaptureRenderResolutionPresetId,
   CaptureScreenCaptureStatus,
+  CaptureScrollOutputFormat,
+  CaptureScrollPreviewState,
+  CaptureScrollQualityPreset,
+  CaptureScrollRangeMode,
 } from "./captureTypes";
 import {
   resolveCapturePageRange,
@@ -408,6 +412,32 @@ interface CaptureDirectorContextValue {
   pathRenderOutputFilename: string | null;
   pathRenderProgress: CaptureJobProgress;
   pathRenderSaveMessage: string | null;
+  scrollOutputFormat: CaptureScrollOutputFormat;
+  setScrollOutputFormat(format: CaptureScrollOutputFormat): void;
+  scrollQualityPreset: CaptureScrollQualityPreset;
+  setScrollQualityPreset(preset: CaptureScrollQualityPreset): void;
+  scrollRangeMode: CaptureScrollRangeMode;
+  setScrollRangeMode(mode: CaptureScrollRangeMode): void;
+  scrollStartFrame: number;
+  setScrollStartFrame(frame: number): void;
+  scrollEndFrame: number;
+  setScrollEndFrame(frame: number): void;
+  scrollCurrentFrame: number;
+  scrollSaveDestination: string;
+  setScrollSaveDestination(destination: string): void;
+  scrollOutputPackageName: string;
+  setScrollOutputPackageName(name: string): void;
+  scrollAdvancedOpen: boolean;
+  setScrollAdvancedOpen(open: boolean): void;
+  scrollPreviewState: CaptureScrollPreviewState;
+  playScrollPreview(): void;
+  pauseScrollPreview(): void;
+  stopScrollPreview(): void;
+  scrollRecordPopoutOpen: boolean;
+  setScrollRecordPopoutOpen(open: boolean): void;
+  lastScrollPackagePath: string | null;
+  lastScrollManifestPath: string | null;
+  acceptScrollRenderShell(): void;
   error: string | null;
   availability: CaptureFeatureAvailability;
   startRecording(): Promise<void>;
@@ -487,6 +517,14 @@ function recorderOutputContextForMode({
           height: resolution.height,
         }),
   };
+}
+
+function scrollPackageNameSlug(value: string): string {
+  const slug = value
+    .trim()
+    .replace(/[^A-Za-z0-9._-]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+  return slug || "geosee-scroll-animation";
 }
 
 const DETERMINISTIC_EXPORT_DURATION_SECONDS = 4;
@@ -859,6 +897,31 @@ export function CaptureDirectorProvider({
     useState<string | null>(null);
   const [pathRenderSaveMessage, setPathRenderSaveMessage] =
     useState<string | null>(null);
+  const [scrollOutputFormat, setScrollOutputFormat] =
+    useState<CaptureScrollOutputFormat>("mp4");
+  const [scrollQualityPreset, setScrollQualityPreset] =
+    useState<CaptureScrollQualityPreset>("4k");
+  const [scrollRangeMode, setScrollRangeMode] =
+    useState<CaptureScrollRangeMode>("full-video");
+  const [scrollStartFrame, setScrollStartFrame] = useState(0);
+  const [scrollEndFrame, setScrollEndFrame] = useState(239);
+  const [scrollCurrentFrame, setScrollCurrentFrame] = useState(0);
+  const [scrollSaveDestination, setScrollSaveDestination] = useState(
+    ".tmp/capture-scroll-outputs",
+  );
+  const [scrollOutputPackageName, setScrollOutputPackageName] = useState(
+    "geosee-scroll-animation",
+  );
+  const [scrollAdvancedOpen, setScrollAdvancedOpen] = useState(false);
+  const [scrollPreviewState, setScrollPreviewState] =
+    useState<CaptureScrollPreviewState>("idle");
+  const [scrollRecordPopoutOpen, setScrollRecordPopoutOpen] = useState(false);
+  const [lastScrollPackagePath, setLastScrollPackagePath] = useState<string | null>(
+    null,
+  );
+  const [lastScrollManifestPath, setLastScrollManifestPath] = useState<string | null>(
+    null,
+  );
   const [error, setError] = useState<string | null>(null);
   const [availability, setAvailability] =
     useState<CaptureFeatureAvailability>(() => readAvailability());
@@ -1531,6 +1594,36 @@ export function CaptureDirectorProvider({
     },
     [sceneHandle, stopCameraPathPlayback],
   );
+
+  const playScrollPreview = useCallback(() => {
+    setScrollPreviewState("playing");
+  }, []);
+
+  const pauseScrollPreview = useCallback(() => {
+    setScrollPreviewState("paused");
+  }, []);
+
+  const stopScrollPreview = useCallback(() => {
+    setScrollPreviewState("idle");
+    setScrollCurrentFrame(Math.max(0, scrollStartFrame));
+  }, [scrollStartFrame]);
+
+  const acceptScrollRenderShell = useCallback(() => {
+    const destination =
+      scrollSaveDestination.trim() || ".tmp/capture-scroll-outputs";
+    const packageName = scrollPackageNameSlug(scrollOutputPackageName);
+    const formatSlug =
+      scrollOutputFormat === "scroll-friendly-video"
+        ? "scroll-friendly"
+        : scrollOutputFormat;
+    setLastScrollPackagePath(
+      `${destination}/${packageName}-${formatSlug}.scroll-package.json`,
+    );
+    setLastScrollManifestPath(
+      `${destination}/${packageName}-${formatSlug}.scroll-manifest.json`,
+    );
+    setScrollRecordPopoutOpen(false);
+  }, [scrollOutputFormat, scrollOutputPackageName, scrollSaveDestination]);
 
   const overlayContext = useCallback(
     (pageOverride?: PresentationPage | null, pageIndexOverride?: number) => {
@@ -5088,6 +5181,32 @@ export function CaptureDirectorProvider({
       pathRenderOutputFilename,
       pathRenderProgress,
       pathRenderSaveMessage,
+      scrollOutputFormat,
+      setScrollOutputFormat,
+      scrollQualityPreset,
+      setScrollQualityPreset,
+      scrollRangeMode,
+      setScrollRangeMode,
+      scrollStartFrame,
+      setScrollStartFrame,
+      scrollEndFrame,
+      setScrollEndFrame,
+      scrollCurrentFrame,
+      scrollSaveDestination,
+      setScrollSaveDestination,
+      scrollOutputPackageName,
+      setScrollOutputPackageName,
+      scrollAdvancedOpen,
+      setScrollAdvancedOpen,
+      scrollPreviewState,
+      playScrollPreview,
+      pauseScrollPreview,
+      stopScrollPreview,
+      scrollRecordPopoutOpen,
+      setScrollRecordPopoutOpen,
+      lastScrollPackagePath,
+      lastScrollManifestPath,
+      acceptScrollRenderShell,
       error,
       availability,
       startRecording,
@@ -5228,6 +5347,23 @@ export function CaptureDirectorProvider({
       pathRenderProgress,
       pathRenderStatus,
       pathRenderSaveMessage,
+      scrollOutputFormat,
+      scrollQualityPreset,
+      scrollRangeMode,
+      scrollStartFrame,
+      scrollEndFrame,
+      scrollCurrentFrame,
+      scrollSaveDestination,
+      scrollOutputPackageName,
+      scrollAdvancedOpen,
+      scrollPreviewState,
+      playScrollPreview,
+      pauseScrollPreview,
+      stopScrollPreview,
+      scrollRecordPopoutOpen,
+      lastScrollPackagePath,
+      lastScrollManifestPath,
+      acceptScrollRenderShell,
       previewResolution,
       previewResolutionPresetId,
       recipeOutputFilename,

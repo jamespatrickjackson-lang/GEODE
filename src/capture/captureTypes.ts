@@ -14,7 +14,25 @@ export type CaptureDirectorPanel =
   | "realtime"
   | "render-out"
   | "still-capture"
+  | "scroll-animation"
   | "camera-path";
+
+export type CaptureScrollOutputFormat =
+  | "mp4"
+  | "webm"
+  | "scroll-friendly-video"
+  | "png-sequence";
+
+export type CaptureScrollQualityPreset =
+  | "1080p"
+  | "1440p"
+  | "4k"
+  | "6k"
+  | "8k";
+
+export type CaptureScrollRangeMode = "full-video" | "frame-range";
+
+export type CaptureScrollPreviewState = "idle" | "playing" | "paused";
 
 export type CaptureStillType = "png" | "webp" | "jpeg";
 

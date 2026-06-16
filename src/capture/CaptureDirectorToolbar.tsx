@@ -13,6 +13,9 @@ import {
   type CaptureFps,
   type CapturePreviewResolutionPresetId,
   type CaptureRenderResolutionPresetId,
+  type CaptureScrollOutputFormat,
+  type CaptureScrollQualityPreset,
+  type CaptureScrollRangeMode,
 } from "./captureTypes";
 import {
   CAPTURE_PAGE_RANGE_TIMING_LABELS,
@@ -299,6 +302,54 @@ const outputLinkStyle: CSSProperties = {
   textDecoration: "none",
 };
 
+const fieldHelpStyle: CSSProperties = {
+  color: "rgba(226, 232, 240, 0.58)",
+  fontSize: 11,
+  lineHeight: 1.35,
+};
+
+const popoutBackdropStyle: CSSProperties = {
+  position: "absolute",
+  inset: 0,
+  zIndex: 49,
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  padding: 24,
+  pointerEvents: "auto",
+  background: "rgba(4, 7, 10, 0.34)",
+};
+
+const recordPopoutStyle: CSSProperties = {
+  width: "min(620px, calc(100vw - 48px))",
+  maxHeight: "calc(100vh - 96px)",
+  overflowY: "auto",
+  boxSizing: "border-box",
+  display: "flex",
+  flexDirection: "column",
+  gap: 12,
+  padding: 14,
+  borderRadius: 12,
+  border: "1px solid rgba(255,255,255,0.2)",
+  background: "rgba(18, 21, 24, 0.9)",
+  boxShadow: "0 28px 90px rgba(0,0,0,0.42)",
+  backdropFilter: "blur(20px) saturate(145%)",
+  WebkitBackdropFilter: "blur(20px) saturate(145%)",
+};
+
+const popoutGridStyle: CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))",
+  gap: 10,
+};
+
+const popoutFieldStyle: CSSProperties = {
+  display: "flex",
+  flexDirection: "column",
+  gap: 5,
+  minWidth: 0,
+};
+
 const recipeActionsStyle: CSSProperties = {
   display: "flex",
   alignItems: "center",
@@ -398,7 +449,34 @@ const modeOptions: readonly ActiveCaptureMode[] = [
   "full-ui",
 ];
 
-type CaptureDirectorSectionId = "realtime" | "render" | "still" | "camera-path";
+type ScrollQualityOption = {
+  id: CaptureScrollQualityPreset;
+  label: string;
+  width: number;
+  height: number;
+};
+
+const scrollFormatOptions: Array<{ id: CaptureScrollOutputFormat; label: string }> = [
+  { id: "mp4", label: "MP4" },
+  { id: "webm", label: "WebM" },
+  { id: "scroll-friendly-video", label: "Scroll-Friendly Video" },
+  { id: "png-sequence", label: "PNG Sequence" },
+];
+
+const scrollQualityOptions: readonly ScrollQualityOption[] = [
+  { id: "1080p", label: "1080p", width: 1920, height: 1080 },
+  { id: "1440p", label: "1440p", width: 2560, height: 1440 },
+  { id: "4k", label: "4K", width: 3840, height: 2160 },
+  { id: "6k", label: "6K", width: 6144, height: 3456 },
+  { id: "8k", label: "8K", width: 7680, height: 4320 },
+];
+
+type CaptureDirectorSectionId =
+  | "realtime"
+  | "render"
+  | "still"
+  | "scroll-animation"
+  | "camera-path";
 
 function formatElapsed(seconds: number): string {
   const safeSeconds = Math.max(0, Math.floor(seconds));
@@ -455,6 +533,7 @@ function captureSectionIconName(title: string): CaptureIconName {
   if (t.includes("realtime")) return "realtime";
   if (t.includes("render")) return "render";
   if (t.includes("still")) return "still";
+  if (t.includes("scroll")) return "timeline";
   if (t.includes("camera path") || t.includes("path")) return "camera-path";
   if (t.includes("timeline")) return "timeline";
   return "render";
@@ -567,6 +646,7 @@ export function CaptureDirectorToolbar() {
     realtime: false,
     render: false,
     still: false,
+    "scroll-animation": false,
     "camera-path": false,
   });
   const {
@@ -706,6 +786,32 @@ export function CaptureDirectorToolbar() {
     pathRenderOutputFilename,
     pathRenderProgress,
     pathRenderSaveMessage,
+    scrollOutputFormat,
+    setScrollOutputFormat,
+    scrollQualityPreset,
+    setScrollQualityPreset,
+    scrollRangeMode,
+    setScrollRangeMode,
+    scrollStartFrame,
+    setScrollStartFrame,
+    scrollEndFrame,
+    setScrollEndFrame,
+    scrollCurrentFrame,
+    scrollSaveDestination,
+    setScrollSaveDestination,
+    scrollOutputPackageName,
+    setScrollOutputPackageName,
+    scrollAdvancedOpen,
+    setScrollAdvancedOpen,
+    scrollPreviewState,
+    playScrollPreview,
+    pauseScrollPreview,
+    stopScrollPreview,
+    scrollRecordPopoutOpen,
+    setScrollRecordPopoutOpen,
+    lastScrollPackagePath,
+    lastScrollManifestPath,
+    acceptScrollRenderShell,
     error,
     availability,
     startRecording,
@@ -754,9 +860,24 @@ export function CaptureDirectorToolbar() {
           )}, ${capturePageRange.totalFrames} frames`
         : capturePageRange.errors.join(" ")
       : `Current page, ${formatSeconds(deterministicDurationSeconds)}, ${Math.max(
-          1,
-          Math.ceil(deterministicDurationSeconds * fps),
-        )} frames`;
+           1,
+           Math.ceil(deterministicDurationSeconds * fps),
+         )} frames`;
+  const scrollQuality =
+    scrollQualityOptions.find((option) => option.id === scrollQualityPreset) ??
+    scrollQualityOptions[2];
+  const scrollFrameStart = Math.max(0, Math.floor(scrollStartFrame));
+  const scrollFrameEnd = Math.max(scrollFrameStart, Math.floor(scrollEndFrame));
+  const scrollFullFrameCount = Math.max(
+    1,
+    Math.ceil(deterministicDurationSeconds * fps),
+  );
+  const scrollEstimatedFrameCount =
+    scrollRangeMode === "frame-range"
+      ? scrollFrameEnd - scrollFrameStart + 1
+      : scrollFullFrameCount;
+  const scrollRenderSizeLabel = `${scrollQuality.width} x ${scrollQuality.height}`;
+  const scrollOutputReady = Boolean(lastScrollPackagePath || lastScrollManifestPath);
   const stillQualityDisabled = screenCaptureType === "png";
   const cameraPathTimeline = useMemo(
     () => resolveCaptureCameraPathV3Timeline(captureCameraPathV3),
@@ -1482,6 +1603,111 @@ export function CaptureDirectorToolbar() {
                 )}
               </div>
               </CollapsibleCaptureSection>
+
+              <section data-testid="capture-scroll-panel" style={barStyle}>
+                <button
+                  data-testid="capture-scroll-header"
+                  type="button"
+                  aria-expanded={expandedSections["scroll-animation"]}
+                  onClick={() => {
+                    setDirectorPanel("scroll-animation");
+                    updateSectionExpanded("scroll-animation");
+                  }}
+                  style={barHeaderButtonStyle}
+                >
+                  <CaptureBarHeading
+                    title="Scroll Animation"
+                    expanded={expandedSections["scroll-animation"]}
+                  />
+                  <span style={statusStyle}>
+                    {scrollPreviewState === "playing"
+                      ? `Playing frame ${scrollCurrentFrame}`
+                      : scrollPreviewState === "paused"
+                        ? `Paused frame ${scrollCurrentFrame}`
+                        : "Idle"}
+                  </span>
+                </button>
+                {expandedSections["scroll-animation"] && (
+                  <div style={barContentStyle}>
+                    <div style={rowStyle}>
+                      <button
+                        data-testid="capture-scroll-play"
+                        type="button"
+                        onClick={playScrollPreview}
+                        style={buttonStyle}
+                      >
+                        Play
+                      </button>
+                      <button
+                        data-testid="capture-scroll-pause"
+                        type="button"
+                        onClick={pauseScrollPreview}
+                        style={buttonStyle}
+                      >
+                        Pause
+                      </button>
+                      <button
+                        data-testid="capture-scroll-stop"
+                        type="button"
+                        onClick={stopScrollPreview}
+                        style={buttonStyle}
+                      >
+                        Stop
+                      </button>
+                      <button
+                        data-testid="capture-scroll-record"
+                        type="button"
+                        onClick={() => setScrollRecordPopoutOpen(true)}
+                        style={primaryButtonStyle}
+                      >
+                        Record
+                      </button>
+                      <button
+                        data-testid="capture-scroll-record-popout"
+                        type="button"
+                        onClick={() => setScrollRecordPopoutOpen(true)}
+                        style={buttonStyle}
+                      >
+                        Open Record Popout
+                      </button>
+                      <button
+                        data-testid="capture-scroll-advanced-toggle"
+                        type="button"
+                        aria-expanded={scrollAdvancedOpen}
+                        onClick={() => setScrollAdvancedOpen(!scrollAdvancedOpen)}
+                        style={buttonStyle}
+                      >
+                        Advanced
+                      </button>
+                    </div>
+                    <div style={sectionStyle}>
+                      <span style={sectionLabelStyle}>Range</span>
+                      <span style={statusStyle}>
+                        {scrollRangeMode === "frame-range"
+                          ? `Frame range ${scrollFrameStart}-${scrollFrameEnd}`
+                          : `Full video, ${scrollEstimatedFrameCount} frames`}
+                      </span>
+                      <span style={sectionLabelStyle}>Render size</span>
+                      <span style={statusStyle}>{scrollRenderSizeLabel}</span>
+                      {scrollOutputReady && (
+                        <button
+                          data-testid="capture-scroll-open-output"
+                          type="button"
+                          title={
+                            lastScrollPackagePath ??
+                            lastScrollManifestPath ??
+                            "Scroll output placeholder"
+                          }
+                          onClick={() => setScrollRecordPopoutOpen(true)}
+                          style={outputLinkStyle}
+                        >
+                          Open Output
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </section>
 
               <CollapsibleCaptureSection
                 panelTestId="capture-camera-path-panel"
@@ -2377,6 +2603,258 @@ export function CaptureDirectorToolbar() {
             </div>
             </div>
           </div>
+          {scrollRecordPopoutOpen && (
+            <div
+              data-testid="capture-scroll-record-popout-shell"
+              style={popoutBackdropStyle}
+            >
+              <div
+                role="dialog"
+                aria-modal="true"
+                aria-label="Scroll Animation record options"
+                style={recordPopoutStyle}
+              >
+                <div style={headingStyle}>
+                  <span>Scroll Animation</span>
+                  <button
+                    type="button"
+                    onClick={() => setScrollRecordPopoutOpen(false)}
+                    style={buttonStyle}
+                  >
+                    Close
+                  </button>
+                </div>
+                <div style={popoutGridStyle}>
+                  <label style={popoutFieldStyle}>
+                    <span>Format</span>
+                    <select
+                      data-testid="capture-scroll-format-select"
+                      value={scrollOutputFormat}
+                      onChange={(event) =>
+                        setScrollOutputFormat(
+                          event.currentTarget.value as CaptureScrollOutputFormat,
+                        )
+                      }
+                      style={{ ...fieldStyle, width: "100%" }}
+                    >
+                      {scrollFormatOptions.map((option) => (
+                        <option key={option.id} value={option.id}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                    <span style={fieldHelpStyle}>
+                      Delivery type for the future render handoff.
+                    </span>
+                  </label>
+                  <label style={popoutFieldStyle}>
+                    <span>Quality</span>
+                    <select
+                      data-testid="capture-scroll-quality-select"
+                      value={scrollQualityPreset}
+                      onChange={(event) =>
+                        setScrollQualityPreset(
+                          event.currentTarget.value as CaptureScrollQualityPreset,
+                        )
+                      }
+                      style={{ ...fieldStyle, width: "100%" }}
+                    >
+                      {scrollQualityOptions.map((option) => (
+                        <option key={option.id} value={option.id}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                    <span style={fieldHelpStyle}>
+                      Size preset used by the placeholder package.
+                    </span>
+                  </label>
+                  <label style={popoutFieldStyle}>
+                    <span>Range</span>
+                    <select
+                      data-testid="capture-scroll-range-select"
+                      value={scrollRangeMode}
+                      onChange={(event) =>
+                        setScrollRangeMode(
+                          event.currentTarget.value as CaptureScrollRangeMode,
+                        )
+                      }
+                      style={{ ...fieldStyle, width: "100%" }}
+                    >
+                      <option value="full-video">Full video</option>
+                      <option value="frame-range">Frame range</option>
+                    </select>
+                    <span style={fieldHelpStyle}>
+                      Full video uses duration; frame range uses inclusive frames.
+                    </span>
+                  </label>
+                  <label style={popoutFieldStyle}>
+                    <span>Save destination</span>
+                    <input
+                      data-testid="capture-scroll-save-destination"
+                      type="text"
+                      value={scrollSaveDestination}
+                      onChange={(event) =>
+                        setScrollSaveDestination(event.currentTarget.value)
+                      }
+                      style={{ ...fieldStyle, width: "100%", paddingRight: 9 }}
+                    />
+                    <span style={fieldHelpStyle}>
+                      Placeholder folder path; no renderer is started.
+                    </span>
+                  </label>
+                  <label style={popoutFieldStyle}>
+                    <span>Output package name</span>
+                    <input
+                      data-testid="capture-scroll-output-package-name"
+                      type="text"
+                      value={scrollOutputPackageName}
+                      onChange={(event) =>
+                        setScrollOutputPackageName(event.currentTarget.value)
+                      }
+                      style={{ ...fieldStyle, width: "100%", paddingRight: 9 }}
+                    />
+                    <span style={fieldHelpStyle}>
+                      Base name for package and manifest placeholders.
+                    </span>
+                  </label>
+                  {scrollRangeMode === "frame-range" && (
+                    <>
+                      <label style={popoutFieldStyle}>
+                        <span>Start frame</span>
+                        <input
+                          data-testid="capture-scroll-start-frame"
+                          type="number"
+                          min={0}
+                          step={1}
+                          value={scrollStartFrame}
+                          onChange={(event) =>
+                            setScrollStartFrame(Number(event.currentTarget.value))
+                          }
+                          style={{ ...fieldStyle, width: "100%", paddingRight: 9 }}
+                        />
+                        <span style={fieldHelpStyle}>
+                          First inclusive frame in the selected range.
+                        </span>
+                      </label>
+                      <label style={popoutFieldStyle}>
+                        <span>End frame</span>
+                        <input
+                          data-testid="capture-scroll-end-frame"
+                          type="number"
+                          min={0}
+                          step={1}
+                          value={scrollEndFrame}
+                          onChange={(event) =>
+                            setScrollEndFrame(Number(event.currentTarget.value))
+                          }
+                          style={{ ...fieldStyle, width: "100%", paddingRight: 9 }}
+                        />
+                        <span style={fieldHelpStyle}>
+                          Last inclusive frame in the selected range.
+                        </span>
+                      </label>
+                    </>
+                  )}
+                </div>
+                <div style={sectionStyle}>
+                  <span style={sectionLabelStyle}>Estimated frame count</span>
+                  <span style={statusStyle}>{scrollEstimatedFrameCount}</span>
+                  <span style={sectionLabelStyle}>Render size</span>
+                  <span style={statusStyle}>{scrollRenderSizeLabel}</span>
+                </div>
+                {scrollAdvancedOpen && (
+                  <div data-testid="capture-scroll-advanced-fields" style={sectionStyle}>
+                    {scrollOutputFormat === "mp4" && (
+                      <label style={popoutFieldStyle}>
+                        <span>MP4 bitrate guide</span>
+                        <input
+                          type="text"
+                          value="High profile placeholder"
+                          readOnly
+                          style={{ ...fieldStyle, width: "100%", paddingRight: 9 }}
+                        />
+                        <span style={fieldHelpStyle}>
+                          MP4-specific delivery notes only.
+                        </span>
+                      </label>
+                    )}
+                    {scrollOutputFormat === "webm" && (
+                      <label style={popoutFieldStyle}>
+                        <span>WebM codec guide</span>
+                        <input
+                          type="text"
+                          value="VP9 placeholder"
+                          readOnly
+                          style={{ ...fieldStyle, width: "100%", paddingRight: 9 }}
+                        />
+                        <span style={fieldHelpStyle}>
+                          WebM-specific delivery notes only.
+                        </span>
+                      </label>
+                    )}
+                    {scrollOutputFormat === "scroll-friendly-video" && (
+                      <label style={popoutFieldStyle}>
+                        <span>Scroll seam padding</span>
+                        <input
+                          type="text"
+                          value="Loop-safe placeholder"
+                          readOnly
+                          style={{ ...fieldStyle, width: "100%", paddingRight: 9 }}
+                        />
+                        <span style={fieldHelpStyle}>
+                          Scroll-friendly-video fields stay format-scoped.
+                        </span>
+                      </label>
+                    )}
+                    {scrollOutputFormat === "png-sequence" && (
+                      <label style={popoutFieldStyle}>
+                        <span>PNG filename pattern</span>
+                        <input
+                          type="text"
+                          value="frame-####.png"
+                          readOnly
+                          style={{ ...fieldStyle, width: "100%", paddingRight: 9 }}
+                        />
+                        <span style={fieldHelpStyle}>
+                          PNG Sequence fields stay format-scoped.
+                        </span>
+                      </label>
+                    )}
+                  </div>
+                )}
+                <div style={rowStyle}>
+                  <button
+                    type="button"
+                    onClick={acceptScrollRenderShell}
+                    style={primaryButtonStyle}
+                  >
+                    Accept and Render
+                  </button>
+                  {scrollOutputReady && (
+                    <button
+                      type="button"
+                      title={
+                        lastScrollPackagePath ??
+                        lastScrollManifestPath ??
+                        "Scroll output placeholder"
+                      }
+                      onClick={() => setScrollRecordPopoutOpen(false)}
+                      style={outputLinkStyle}
+                    >
+                      Open Output
+                    </button>
+                  )}
+                </div>
+                {(lastScrollPackagePath || lastScrollManifestPath) && (
+                  <span data-testid="capture-scroll-output-paths" style={statusStyle}>
+                    {lastScrollPackagePath ?? "Package path pending"} /{" "}
+                    {lastScrollManifestPath ?? "Manifest path pending"}
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
           <CameraPathTimeline
             path={captureCameraPathV3}
             timeline={cameraPathTimeline}
