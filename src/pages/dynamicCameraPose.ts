@@ -41,6 +41,26 @@ function dynamicOrbitEnabled(dynamic: DynamicCamera | undefined): boolean {
   return dynamic?.enabled === true && dynamic.orbitEnabled !== false;
 }
 
+// Camera policy: a dynamic orbit radius is authored relative to the page's
+// framing distance (baseRadius = the authored camera's horizontal offset from
+// the POI). A runaway authored value (fat-fingered, or a control/scroll
+// overflow) can fling the camera entirely out of the scene, collapsing every
+// layer to a sub-pixel speck. Clamp the orbit radius to a generous multiple of
+// the authored framing distance so no single page can push the camera out of
+// the world. Legit authored ratios across the deck top out near ~2.2x; 8x
+// leaves wide headroom while still catching order-of-magnitude runaways.
+export const MAX_ORBIT_RADIUS_FRAMING_FACTOR = 8;
+
+export function clampDynamicOrbitRadius(
+  authoredRadius: number,
+  baseRadius: number,
+): number {
+  const safeBase =
+    Number.isFinite(baseRadius) && baseRadius > 0 ? baseRadius : 1;
+  if (!Number.isFinite(authoredRadius) || authoredRadius <= 0) return safeBase;
+  return Math.min(authoredRadius, safeBase * MAX_ORBIT_RADIUS_FRAMING_FACTOR);
+}
+
 function dynamicZoomEnabled(
   dynamic: DynamicCamera | undefined,
   basePose: Pose,
@@ -203,7 +223,10 @@ export function computeDynamicPose(
     const baseDx = basePose.position[0] - poi[0];
     const baseDy = basePose.position[1] - poi[1];
     const baseRadius = Math.max(1, Math.hypot(baseDx, baseDy));
-    const radius = positiveNumber(dynamic.orbitRadius, baseRadius);
+    const radius = clampDynamicOrbitRadius(
+      positiveNumber(dynamic.orbitRadius, baseRadius),
+      baseRadius,
+    );
     const height = finiteNumber(
       dynamic.orbitHeight,
       basePose.position[2] - poi[2],
