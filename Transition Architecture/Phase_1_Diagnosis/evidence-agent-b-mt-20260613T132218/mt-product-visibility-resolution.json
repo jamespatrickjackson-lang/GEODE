@@ -1,0 +1,1232 @@
+{
+  "reportId": "PHASE1-B-MT-20260613T132218",
+  "capturedAt": "2026-06-13T20:43:45.567Z",
+  "url": "http://127.0.0.1:5173/?project=utah-forge",
+  "controllerInfo": {
+    "keys": [
+      "goto",
+      "next",
+      "prev",
+      "startSmoothnessTrace",
+      "stopSmoothnessTrace",
+      "getState"
+    ],
+    "stateKeys": [
+      "currentIndex",
+      "currentPageId",
+      "targetIndex",
+      "targetPageId",
+      "transitionProgress",
+      "transitionFrame",
+      "isTransitioning",
+      "transitionContext",
+      "sceneTransition",
+      "transitionRun",
+      "lastTransitionRun"
+    ],
+    "startState": {
+      "currentIndex": 0,
+      "currentPageId": "156_page",
+      "targetIndex": null,
+      "targetPageId": null,
+      "isTransitioning": false
+    }
+  },
+  "warningsAndErrors": [
+    {
+      "type": "warning",
+      "text": "[.WebGL-0x3ed4001ad400]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels"
+    },
+    {
+      "type": "warning",
+      "text": "[.WebGL-0x3ed4001ad400]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels"
+    },
+    {
+      "type": "warning",
+      "text": "[.WebGL-0x3ed4001ad400]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels"
+    },
+    {
+      "type": "warning",
+      "text": "[.WebGL-0x3ed4001ad400]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels (this message will no longer repeat)"
+    }
+  ],
+  "runtime": [
+    {
+      "pageId": "42_resistivity_volume_overview",
+      "index": 33,
+      "nav": {
+        "ok": true,
+        "index": 33
+      },
+      "settled": true,
+      "settleState": {
+        "pc": {
+          "currentIndex": 33,
+          "currentPageId": "42_resistivity_volume_overview",
+          "targetIndex": null,
+          "targetPageId": null,
+          "isTransitioning": false
+        },
+        "active": false
+      },
+      "authored": {
+        "id": "42_resistivity_volume_overview",
+        "title": "3D Resistivity Volume",
+        "hidden": false,
+        "visibilityOverrides": {
+          "utah-forge-mt-resistivity-full-density": true,
+          "utah-forge-mt-resistivity-volume": false,
+          "utah-forge-mt-resistivity-threshold-surfaces": false,
+          "utah-forge-mt-resistivity-slices": false,
+          "utah-forge-mt-top-surface": false,
+          "utah-forge-mt-top-contact-surface": false
+        },
+        "layerOverrides": {
+          "utah-forge-mt-resistivity-full-density": {
+            "scalarLegendVisible": true,
+            "opacity": 0.86,
+            "pointSizePx": 1.18,
+            "scalarInclusionMode": "all-valid"
+          },
+          "utah-forge-mt-resistivity-volume": {
+            "scalarLegendVisible": false,
+            "scalarVolumeProductId": "mt-resistivity-forge-focused-volume"
+          },
+          "utah-forge-mt-resistivity-threshold-surfaces": null,
+          "utah-forge-mt-resistivity-slices": null,
+          "utah-forge-mt-top-surface": null,
+          "utah-forge-mt-top-contact-surface": null
+        }
+      },
+      "runtime": {
+        "pageControllerState": {
+          "currentIndex": 33,
+          "currentPageId": "42_resistivity_volume_overview",
+          "targetIndex": null,
+          "targetPageId": null,
+          "isTransitioning": false
+        },
+        "transition": {
+          "active": false,
+          "sourcePageId": null,
+          "targetPageId": null,
+          "scalarTweenCount": 0,
+          "layerTweenCount": 0,
+          "snapshotCount": 0
+        },
+        "visibleLayerIds": [],
+        "layerVisibleMembership": {
+          "utah-forge-mt-resistivity-full-density": false,
+          "utah-forge-mt-resistivity-volume": false,
+          "utah-forge-mt-resistivity-threshold-surfaces": false,
+          "utah-forge-mt-resistivity-slices": false,
+          "utah-forge-mt-top-surface": false,
+          "utah-forge-mt-top-contact-surface": false
+        },
+        "managerLayerGroups": {
+          "utah-forge-mt-resistivity-full-density": {
+            "name": "utah-forge-mt-resistivity-full-density",
+            "type": "Group",
+            "visible": true,
+            "childCount": 1
+          },
+          "utah-forge-mt-resistivity-volume": {
+            "name": "utah-forge-mt-resistivity-volume",
+            "type": "Group",
+            "visible": false,
+            "childCount": 1
+          },
+          "utah-forge-mt-resistivity-threshold-surfaces": {
+            "name": "utah-forge-mt-resistivity-threshold-surfaces",
+            "type": "Group",
+            "visible": false,
+            "childCount": 1
+          },
+          "utah-forge-mt-resistivity-slices": {
+            "name": "utah-forge-mt-resistivity-slices",
+            "type": "Group",
+            "visible": false,
+            "childCount": 1
+          },
+          "utah-forge-mt-top-surface": {
+            "name": "utah-forge-mt-top-surface",
+            "type": "Group",
+            "visible": false,
+            "childCount": 1
+          },
+          "utah-forge-mt-top-contact-surface": {
+            "name": "utah-forge-mt-top-contact-surface",
+            "type": "Group",
+            "visible": false,
+            "childCount": 1
+          }
+        },
+        "objectSamples": {
+          "fullDensity": {
+            "counts": {
+              "total": 1,
+              "visible": 1
+            },
+            "samples": [
+              {
+                "name": "tile_0000",
+                "type": "Points",
+                "visible": true,
+                "materialOpacity": 0.86,
+                "renderOrder": 12.15
+              }
+            ]
+          },
+          "volume": {
+            "counts": {
+              "total": 2,
+              "visible": 1
+            },
+            "samples": [
+              {
+                "name": "MT resistivity full-extent volume - raymarched scalar volume",
+                "type": "Mesh",
+                "visible": false,
+                "materialOpacity": 0,
+                "renderOrder": 12.95
+              },
+              {
+                "name": "MT resistivity FORGE-focused volume - raymarched scalar volume",
+                "type": "Mesh",
+                "visible": true,
+                "materialOpacity": 0,
+                "renderOrder": 12.95
+              }
+            ]
+          },
+          "threshold": {
+            "counts": {
+              "total": 43,
+              "visible": 3
+            },
+            "samples": [
+              {
+                "name": "utah-forge-site-boundary",
+                "type": "Group",
+                "visible": true,
+                "materialOpacity": null,
+                "renderOrder": 0
+              },
+              {
+                "name": "FORGE site boundary",
+                "type": "Group",
+                "visible": true,
+                "materialOpacity": null,
+                "renderOrder": 4590
+              },
+              {
+                "name": "utah-forge-site-boundary fill",
+                "type": "Mesh",
+                "visible": true,
+                "materialOpacity": 0.08,
+                "renderOrder": 4589.9
+              },
+              {
+                "name": "<=1.38 Ohm-m boundary",
+                "type": "Mesh",
+                "visible": false,
+                "materialOpacity": 0,
+                "renderOrder": 11.8
+              },
+              {
+                "name": "<=2.19 Ohm-m boundary",
+                "type": "Mesh",
+                "visible": false,
+                "materialOpacity": 0,
+                "renderOrder": 11.8
+              }
+            ]
+          },
+          "slices": {
+            "counts": {
+              "total": 6,
+              "visible": 0
+            },
+            "samples": [
+              {
+                "name": "Horizontal MT slice +1500 m elevation",
+                "type": "Mesh",
+                "visible": false,
+                "materialOpacity": 0,
+                "renderOrder": 11.8
+              },
+              {
+                "name": "Horizontal MT slice 0 m elevation",
+                "type": "Mesh",
+                "visible": false,
+                "materialOpacity": 0,
+                "renderOrder": 11.8
+              },
+              {
+                "name": "Horizontal MT slice -2500 m elevation",
+                "type": "Mesh",
+                "visible": false,
+                "materialOpacity": 0,
+                "renderOrder": 11.8
+              },
+              {
+                "name": "Horizontal MT slice -5000 m elevation",
+                "type": "Mesh",
+                "visible": false,
+                "materialOpacity": 0,
+                "renderOrder": 11.8
+              },
+              {
+                "name": "Horizontal MT slice -10000 m elevation",
+                "type": "Mesh",
+                "visible": false,
+                "materialOpacity": 0,
+                "renderOrder": 11.8
+              }
+            ]
+          },
+          "topSurface": {
+            "counts": {
+              "total": 2,
+              "visible": 2
+            },
+            "samples": [
+              {
+                "name": "Utah FORGE Phase 3 MT observed top-envelope surface",
+                "type": "Group",
+                "visible": true,
+                "materialOpacity": null,
+                "renderOrder": 0
+              },
+              {
+                "name": "Utah FORGE Phase 3 MT observed top-envelope surface",
+                "type": "Mesh",
+                "visible": true,
+                "materialOpacity": 0,
+                "renderOrder": 11.8
+              }
+            ]
+          },
+          "topContact": {
+            "counts": {
+              "total": 3,
+              "visible": 2
+            },
+            "samples": [
+              {
+                "name": "utah-forge-mt-top-contact-surface",
+                "type": "Group",
+                "visible": false,
+                "materialOpacity": null,
+                "renderOrder": 0
+              },
+              {
+                "name": "Utah FORGE Phase 3 MT full-density top-contact surface",
+                "type": "Group",
+                "visible": true,
+                "materialOpacity": null,
+                "renderOrder": 0
+              },
+              {
+                "name": "Utah FORGE Phase 3 MT full-density top-contact surface",
+                "type": "Mesh",
+                "visible": true,
+                "materialOpacity": 0,
+                "renderOrder": 11.8
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "pageId": "43_resistivity_depth_elevation_slices",
+      "index": 39,
+      "nav": {
+        "ok": true,
+        "index": 39
+      },
+      "settled": true,
+      "settleState": {
+        "pc": {
+          "currentIndex": 39,
+          "currentPageId": "43_resistivity_depth_elevation_slices",
+          "targetIndex": null,
+          "targetPageId": null,
+          "isTransitioning": false
+        },
+        "active": false
+      },
+      "authored": {
+        "id": "43_resistivity_depth_elevation_slices",
+        "title": "Resistivity Depth Slices",
+        "hidden": false,
+        "visibilityOverrides": {
+          "utah-forge-mt-resistivity-full-density": false,
+          "utah-forge-mt-resistivity-volume": false,
+          "utah-forge-mt-resistivity-threshold-surfaces": false,
+          "utah-forge-mt-resistivity-slices": true,
+          "utah-forge-mt-top-surface": false,
+          "utah-forge-mt-top-contact-surface": false
+        },
+        "layerOverrides": {
+          "utah-forge-mt-resistivity-full-density": {
+            "scalarLegendVisible": false
+          },
+          "utah-forge-mt-resistivity-volume": {
+            "scalarLegendVisible": false
+          },
+          "utah-forge-mt-resistivity-threshold-surfaces": null,
+          "utah-forge-mt-resistivity-slices": {
+            "opacity": 0.82,
+            "resistivityHorizontalSlicesVisible": true,
+            "resistivityVerticalSectionsVisible": false,
+            "resistivitySliceVisibility": {
+              "horizontal_elev_1500m": true,
+              "horizontal_elev_0m": true,
+              "horizontal_elev_minus2500m": true,
+              "horizontal_elev_minus5000m": false,
+              "horizontal_elev_minus10000m": false,
+              "horizontal_elev_minus25000m": false,
+              "vertical_ew_station_centroid": false,
+              "vertical_ns_station_centroid": false
+            },
+            "scalarLegendVisible": true
+          },
+          "utah-forge-mt-top-surface": null,
+          "utah-forge-mt-top-contact-surface": null
+        }
+      },
+      "runtime": {
+        "pageControllerState": {
+          "currentIndex": 39,
+          "currentPageId": "43_resistivity_depth_elevation_slices",
+          "targetIndex": null,
+          "targetPageId": null,
+          "isTransitioning": false
+        },
+        "transition": {
+          "active": false,
+          "sourcePageId": null,
+          "targetPageId": null,
+          "scalarTweenCount": 0,
+          "layerTweenCount": 0,
+          "snapshotCount": 0
+        },
+        "visibleLayerIds": [],
+        "layerVisibleMembership": {
+          "utah-forge-mt-resistivity-full-density": false,
+          "utah-forge-mt-resistivity-volume": false,
+          "utah-forge-mt-resistivity-threshold-surfaces": false,
+          "utah-forge-mt-resistivity-slices": false,
+          "utah-forge-mt-top-surface": false,
+          "utah-forge-mt-top-contact-surface": false
+        },
+        "managerLayerGroups": {
+          "utah-forge-mt-resistivity-full-density": {
+            "name": "utah-forge-mt-resistivity-full-density",
+            "type": "Group",
+            "visible": true,
+            "childCount": 1
+          },
+          "utah-forge-mt-resistivity-volume": {
+            "name": "utah-forge-mt-resistivity-volume",
+            "type": "Group",
+            "visible": false,
+            "childCount": 1
+          },
+          "utah-forge-mt-resistivity-threshold-surfaces": {
+            "name": "utah-forge-mt-resistivity-threshold-surfaces",
+            "type": "Group",
+            "visible": false,
+            "childCount": 1
+          },
+          "utah-forge-mt-resistivity-slices": {
+            "name": "utah-forge-mt-resistivity-slices",
+            "type": "Group",
+            "visible": false,
+            "childCount": 1
+          },
+          "utah-forge-mt-top-surface": {
+            "name": "utah-forge-mt-top-surface",
+            "type": "Group",
+            "visible": false,
+            "childCount": 1
+          },
+          "utah-forge-mt-top-contact-surface": {
+            "name": "utah-forge-mt-top-contact-surface",
+            "type": "Group",
+            "visible": false,
+            "childCount": 1
+          }
+        },
+        "objectSamples": {
+          "fullDensity": {
+            "counts": {
+              "total": 1,
+              "visible": 1
+            },
+            "samples": [
+              {
+                "name": "tile_0000",
+                "type": "Points",
+                "visible": true,
+                "materialOpacity": 0.05,
+                "renderOrder": 12.15
+              }
+            ]
+          },
+          "volume": {
+            "counts": {
+              "total": 2,
+              "visible": 1
+            },
+            "samples": [
+              {
+                "name": "MT resistivity full-extent volume - raymarched scalar volume",
+                "type": "Mesh",
+                "visible": true,
+                "materialOpacity": 0,
+                "renderOrder": 12.95
+              },
+              {
+                "name": "MT resistivity FORGE-focused volume - raymarched scalar volume",
+                "type": "Mesh",
+                "visible": false,
+                "materialOpacity": 0,
+                "renderOrder": 12.95
+              }
+            ]
+          },
+          "threshold": {
+            "counts": {
+              "total": 43,
+              "visible": 3
+            },
+            "samples": [
+              {
+                "name": "utah-forge-site-boundary",
+                "type": "Group",
+                "visible": true,
+                "materialOpacity": null,
+                "renderOrder": 0
+              },
+              {
+                "name": "FORGE site boundary",
+                "type": "Group",
+                "visible": true,
+                "materialOpacity": null,
+                "renderOrder": 4590
+              },
+              {
+                "name": "utah-forge-site-boundary fill",
+                "type": "Mesh",
+                "visible": true,
+                "materialOpacity": 0.08,
+                "renderOrder": 4589.9
+              },
+              {
+                "name": "<=1.38 Ohm-m boundary",
+                "type": "Mesh",
+                "visible": false,
+                "materialOpacity": 0,
+                "renderOrder": 11.8
+              },
+              {
+                "name": "<=2.19 Ohm-m boundary",
+                "type": "Mesh",
+                "visible": false,
+                "materialOpacity": 0,
+                "renderOrder": 11.8
+              }
+            ]
+          },
+          "slices": {
+            "counts": {
+              "total": 6,
+              "visible": 0
+            },
+            "samples": [
+              {
+                "name": "Horizontal MT slice +1500 m elevation",
+                "type": "Mesh",
+                "visible": false,
+                "materialOpacity": 0,
+                "renderOrder": 11.8
+              },
+              {
+                "name": "Horizontal MT slice 0 m elevation",
+                "type": "Mesh",
+                "visible": false,
+                "materialOpacity": 0,
+                "renderOrder": 11.8
+              },
+              {
+                "name": "Horizontal MT slice -2500 m elevation",
+                "type": "Mesh",
+                "visible": false,
+                "materialOpacity": 0,
+                "renderOrder": 11.8
+              },
+              {
+                "name": "Horizontal MT slice -5000 m elevation",
+                "type": "Mesh",
+                "visible": false,
+                "materialOpacity": 0,
+                "renderOrder": 11.8
+              },
+              {
+                "name": "Horizontal MT slice -10000 m elevation",
+                "type": "Mesh",
+                "visible": false,
+                "materialOpacity": 0,
+                "renderOrder": 11.8
+              }
+            ]
+          },
+          "topSurface": {
+            "counts": {
+              "total": 2,
+              "visible": 2
+            },
+            "samples": [
+              {
+                "name": "Utah FORGE Phase 3 MT observed top-envelope surface",
+                "type": "Group",
+                "visible": true,
+                "materialOpacity": null,
+                "renderOrder": 0
+              },
+              {
+                "name": "Utah FORGE Phase 3 MT observed top-envelope surface",
+                "type": "Mesh",
+                "visible": true,
+                "materialOpacity": 0,
+                "renderOrder": 11.8
+              }
+            ]
+          },
+          "topContact": {
+            "counts": {
+              "total": 3,
+              "visible": 2
+            },
+            "samples": [
+              {
+                "name": "utah-forge-mt-top-contact-surface",
+                "type": "Group",
+                "visible": false,
+                "materialOpacity": null,
+                "renderOrder": 0
+              },
+              {
+                "name": "Utah FORGE Phase 3 MT full-density top-contact surface",
+                "type": "Group",
+                "visible": true,
+                "materialOpacity": null,
+                "renderOrder": 0
+              },
+              {
+                "name": "Utah FORGE Phase 3 MT full-density top-contact surface",
+                "type": "Mesh",
+                "visible": true,
+                "materialOpacity": 0,
+                "renderOrder": 11.8
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "pageId": "45_resistivity_isosurfaces",
+      "index": 27,
+      "nav": {
+        "ok": true,
+        "index": 27
+      },
+      "settled": true,
+      "settleState": {
+        "pc": {
+          "currentIndex": 27,
+          "currentPageId": "45_resistivity_isosurfaces",
+          "targetIndex": null,
+          "targetPageId": null,
+          "isTransitioning": false
+        },
+        "active": false
+      },
+      "authored": {
+        "id": "45_resistivity_isosurfaces",
+        "title": "Resistivity Isosurfaces",
+        "hidden": true,
+        "visibilityOverrides": {
+          "utah-forge-mt-resistivity-full-density": true,
+          "utah-forge-mt-resistivity-volume": false,
+          "utah-forge-mt-resistivity-threshold-surfaces": true,
+          "utah-forge-mt-resistivity-slices": false,
+          "utah-forge-mt-top-surface": false,
+          "utah-forge-mt-top-contact-surface": false
+        },
+        "layerOverrides": {
+          "utah-forge-mt-resistivity-full-density": {
+            "scalarLegendVisible": false,
+            "opacity": 0.15,
+            "pointSizePx": 1,
+            "scalarInclusionMode": "all-valid"
+          },
+          "utah-forge-mt-resistivity-volume": {
+            "scalarLegendVisible": false
+          },
+          "utah-forge-mt-resistivity-threshold-surfaces": null,
+          "utah-forge-mt-resistivity-slices": {
+            "scalarLegendVisible": false
+          },
+          "utah-forge-mt-top-surface": null,
+          "utah-forge-mt-top-contact-surface": null
+        }
+      },
+      "runtime": {
+        "pageControllerState": {
+          "currentIndex": 27,
+          "currentPageId": "45_resistivity_isosurfaces",
+          "targetIndex": null,
+          "targetPageId": null,
+          "isTransitioning": false
+        },
+        "transition": {
+          "active": false,
+          "sourcePageId": null,
+          "targetPageId": null,
+          "scalarTweenCount": 0,
+          "layerTweenCount": 0,
+          "snapshotCount": 0
+        },
+        "visibleLayerIds": [],
+        "layerVisibleMembership": {
+          "utah-forge-mt-resistivity-full-density": false,
+          "utah-forge-mt-resistivity-volume": false,
+          "utah-forge-mt-resistivity-threshold-surfaces": false,
+          "utah-forge-mt-resistivity-slices": false,
+          "utah-forge-mt-top-surface": false,
+          "utah-forge-mt-top-contact-surface": false
+        },
+        "managerLayerGroups": {
+          "utah-forge-mt-resistivity-full-density": {
+            "name": "utah-forge-mt-resistivity-full-density",
+            "type": "Group",
+            "visible": true,
+            "childCount": 1
+          },
+          "utah-forge-mt-resistivity-volume": {
+            "name": "utah-forge-mt-resistivity-volume",
+            "type": "Group",
+            "visible": false,
+            "childCount": 1
+          },
+          "utah-forge-mt-resistivity-threshold-surfaces": {
+            "name": "utah-forge-mt-resistivity-threshold-surfaces",
+            "type": "Group",
+            "visible": false,
+            "childCount": 1
+          },
+          "utah-forge-mt-resistivity-slices": {
+            "name": "utah-forge-mt-resistivity-slices",
+            "type": "Group",
+            "visible": false,
+            "childCount": 1
+          },
+          "utah-forge-mt-top-surface": {
+            "name": "utah-forge-mt-top-surface",
+            "type": "Group",
+            "visible": false,
+            "childCount": 1
+          },
+          "utah-forge-mt-top-contact-surface": {
+            "name": "utah-forge-mt-top-contact-surface",
+            "type": "Group",
+            "visible": false,
+            "childCount": 1
+          }
+        },
+        "objectSamples": {
+          "fullDensity": {
+            "counts": {
+              "total": 1,
+              "visible": 1
+            },
+            "samples": [
+              {
+                "name": "tile_0000",
+                "type": "Points",
+                "visible": true,
+                "materialOpacity": 0.15,
+                "renderOrder": 12.15
+              }
+            ]
+          },
+          "volume": {
+            "counts": {
+              "total": 2,
+              "visible": 1
+            },
+            "samples": [
+              {
+                "name": "MT resistivity full-extent volume - raymarched scalar volume",
+                "type": "Mesh",
+                "visible": true,
+                "materialOpacity": 0,
+                "renderOrder": 12.95
+              },
+              {
+                "name": "MT resistivity FORGE-focused volume - raymarched scalar volume",
+                "type": "Mesh",
+                "visible": false,
+                "materialOpacity": 0,
+                "renderOrder": 12.95
+              }
+            ]
+          },
+          "threshold": {
+            "counts": {
+              "total": 43,
+              "visible": 3
+            },
+            "samples": [
+              {
+                "name": "utah-forge-site-boundary",
+                "type": "Group",
+                "visible": true,
+                "materialOpacity": null,
+                "renderOrder": 0
+              },
+              {
+                "name": "FORGE site boundary",
+                "type": "Group",
+                "visible": true,
+                "materialOpacity": null,
+                "renderOrder": 4590
+              },
+              {
+                "name": "utah-forge-site-boundary fill",
+                "type": "Mesh",
+                "visible": true,
+                "materialOpacity": 0.08,
+                "renderOrder": 4589.9
+              },
+              {
+                "name": "<=1.38 Ohm-m boundary",
+                "type": "Mesh",
+                "visible": false,
+                "materialOpacity": 0,
+                "renderOrder": 11.8
+              },
+              {
+                "name": "<=2.19 Ohm-m boundary",
+                "type": "Mesh",
+                "visible": false,
+                "materialOpacity": 0,
+                "renderOrder": 11.8
+              }
+            ]
+          },
+          "slices": {
+            "counts": {
+              "total": 6,
+              "visible": 0
+            },
+            "samples": [
+              {
+                "name": "Horizontal MT slice +1500 m elevation",
+                "type": "Mesh",
+                "visible": false,
+                "materialOpacity": 0,
+                "renderOrder": 11.8
+              },
+              {
+                "name": "Horizontal MT slice 0 m elevation",
+                "type": "Mesh",
+                "visible": false,
+                "materialOpacity": 0,
+                "renderOrder": 11.8
+              },
+              {
+                "name": "Horizontal MT slice -2500 m elevation",
+                "type": "Mesh",
+                "visible": false,
+                "materialOpacity": 0,
+                "renderOrder": 11.8
+              },
+              {
+                "name": "Horizontal MT slice -5000 m elevation",
+                "type": "Mesh",
+                "visible": false,
+                "materialOpacity": 0,
+                "renderOrder": 11.8
+              },
+              {
+                "name": "Horizontal MT slice -10000 m elevation",
+                "type": "Mesh",
+                "visible": false,
+                "materialOpacity": 0,
+                "renderOrder": 11.8
+              }
+            ]
+          },
+          "topSurface": {
+            "counts": {
+              "total": 2,
+              "visible": 2
+            },
+            "samples": [
+              {
+                "name": "Utah FORGE Phase 3 MT observed top-envelope surface",
+                "type": "Group",
+                "visible": true,
+                "materialOpacity": null,
+                "renderOrder": 0
+              },
+              {
+                "name": "Utah FORGE Phase 3 MT observed top-envelope surface",
+                "type": "Mesh",
+                "visible": true,
+                "materialOpacity": 0,
+                "renderOrder": 11.8
+              }
+            ]
+          },
+          "topContact": {
+            "counts": {
+              "total": 3,
+              "visible": 2
+            },
+            "samples": [
+              {
+                "name": "utah-forge-mt-top-contact-surface",
+                "type": "Group",
+                "visible": false,
+                "materialOpacity": null,
+                "renderOrder": 0
+              },
+              {
+                "name": "Utah FORGE Phase 3 MT full-density top-contact surface",
+                "type": "Group",
+                "visible": true,
+                "materialOpacity": null,
+                "renderOrder": 0
+              },
+              {
+                "name": "Utah FORGE Phase 3 MT full-density top-contact surface",
+                "type": "Mesh",
+                "visible": true,
+                "materialOpacity": 0,
+                "renderOrder": 11.8
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "pageId": "08_mt_threshold_surfaces",
+      "index": 36,
+      "nav": {
+        "ok": true,
+        "index": 36
+      },
+      "settled": true,
+      "settleState": {
+        "pc": {
+          "currentIndex": 36,
+          "currentPageId": "08_mt_threshold_surfaces",
+          "targetIndex": null,
+          "targetPageId": null,
+          "isTransitioning": false
+        },
+        "active": false
+      },
+      "authored": {
+        "id": "08_mt_threshold_surfaces",
+        "title": "MT Threshold Surfaces",
+        "hidden": false,
+        "visibilityOverrides": {
+          "utah-forge-mt-resistivity-full-density": false,
+          "utah-forge-mt-resistivity-volume": false,
+          "utah-forge-mt-resistivity-threshold-surfaces": true,
+          "utah-forge-mt-resistivity-slices": false,
+          "utah-forge-mt-top-surface": false
+        },
+        "layerOverrides": {
+          "utah-forge-mt-resistivity-full-density": null,
+          "utah-forge-mt-resistivity-volume": {
+            "scalarLegendVisible": false
+          },
+          "utah-forge-mt-resistivity-threshold-surfaces": {
+            "mtThresholdSurfaceVisibility": {
+              "conductive-le-10-ohm-m": true,
+              "conductive-le-30-ohm-m": true,
+              "resistive-ge-1000-ohm-m": false
+            },
+            "mtThresholdSurfaceWireframe": false,
+            "opacity": 0.82,
+            "mtIsosurfaceProductId": "mt-isosurface-forge-focused",
+            "affectedByFog": false,
+            "showLabels": false,
+            "mtThresholdSurfaceRoughness": 0.64,
+            "mtThresholdSurfaceMetalness": 0,
+            "mtThresholdSurfaceSide": "double",
+            "mtThresholdSurfaceSmoothNormals": true,
+            "mtThresholdSurfaceEmissiveBoost": 0.08,
+            "mtThresholdSurfaceWireframeColor": "#f8f4e8",
+            "mtThresholdSurfaceWireframeOpacity": 0.42
+          },
+          "utah-forge-mt-resistivity-slices": {
+            "scalarLegendVisible": false
+          },
+          "utah-forge-mt-top-surface": null,
+          "utah-forge-mt-top-contact-surface": null
+        }
+      },
+      "runtime": {
+        "pageControllerState": {
+          "currentIndex": 36,
+          "currentPageId": "08_mt_threshold_surfaces",
+          "targetIndex": null,
+          "targetPageId": null,
+          "isTransitioning": false
+        },
+        "transition": {
+          "active": false,
+          "sourcePageId": null,
+          "targetPageId": null,
+          "scalarTweenCount": 0,
+          "layerTweenCount": 0,
+          "snapshotCount": 0
+        },
+        "visibleLayerIds": [],
+        "layerVisibleMembership": {
+          "utah-forge-mt-resistivity-full-density": false,
+          "utah-forge-mt-resistivity-volume": false,
+          "utah-forge-mt-resistivity-threshold-surfaces": false,
+          "utah-forge-mt-resistivity-slices": false,
+          "utah-forge-mt-top-surface": false,
+          "utah-forge-mt-top-contact-surface": false
+        },
+        "managerLayerGroups": {
+          "utah-forge-mt-resistivity-full-density": {
+            "name": "utah-forge-mt-resistivity-full-density",
+            "type": "Group",
+            "visible": true,
+            "childCount": 1
+          },
+          "utah-forge-mt-resistivity-volume": {
+            "name": "utah-forge-mt-resistivity-volume",
+            "type": "Group",
+            "visible": false,
+            "childCount": 1
+          },
+          "utah-forge-mt-resistivity-threshold-surfaces": {
+            "name": "utah-forge-mt-resistivity-threshold-surfaces",
+            "type": "Group",
+            "visible": false,
+            "childCount": 1
+          },
+          "utah-forge-mt-resistivity-slices": {
+            "name": "utah-forge-mt-resistivity-slices",
+            "type": "Group",
+            "visible": false,
+            "childCount": 1
+          },
+          "utah-forge-mt-top-surface": {
+            "name": "utah-forge-mt-top-surface",
+            "type": "Group",
+            "visible": false,
+            "childCount": 1
+          },
+          "utah-forge-mt-top-contact-surface": {
+            "name": "utah-forge-mt-top-contact-surface",
+            "type": "Group",
+            "visible": false,
+            "childCount": 1
+          }
+        },
+        "objectSamples": {
+          "fullDensity": {
+            "counts": {
+              "total": 1,
+              "visible": 1
+            },
+            "samples": [
+              {
+                "name": "tile_0000",
+                "type": "Points",
+                "visible": true,
+                "materialOpacity": 0.05,
+                "renderOrder": 12.15
+              }
+            ]
+          },
+          "volume": {
+            "counts": {
+              "total": 2,
+              "visible": 1
+            },
+            "samples": [
+              {
+                "name": "MT resistivity full-extent volume - raymarched scalar volume",
+                "type": "Mesh",
+                "visible": true,
+                "materialOpacity": 0,
+                "renderOrder": 12.95
+              },
+              {
+                "name": "MT resistivity FORGE-focused volume - raymarched scalar volume",
+                "type": "Mesh",
+                "visible": false,
+                "materialOpacity": 0,
+                "renderOrder": 12.95
+              }
+            ]
+          },
+          "threshold": {
+            "counts": {
+              "total": 43,
+              "visible": 3
+            },
+            "samples": [
+              {
+                "name": "utah-forge-site-boundary",
+                "type": "Group",
+                "visible": true,
+                "materialOpacity": null,
+                "renderOrder": 0
+              },
+              {
+                "name": "FORGE site boundary",
+                "type": "Group",
+                "visible": true,
+                "materialOpacity": null,
+                "renderOrder": 4590
+              },
+              {
+                "name": "utah-forge-site-boundary fill",
+                "type": "Mesh",
+                "visible": true,
+                "materialOpacity": 0.08,
+                "renderOrder": 4589.9
+              },
+              {
+                "name": "<=1.38 Ohm-m boundary",
+                "type": "Mesh",
+                "visible": false,
+                "materialOpacity": 0,
+                "renderOrder": 11.8
+              },
+              {
+                "name": "<=2.19 Ohm-m boundary",
+                "type": "Mesh",
+                "visible": false,
+                "materialOpacity": 0,
+                "renderOrder": 11.8
+              }
+            ]
+          },
+          "slices": {
+            "counts": {
+              "total": 6,
+              "visible": 0
+            },
+            "samples": [
+              {
+                "name": "Horizontal MT slice +1500 m elevation",
+                "type": "Mesh",
+                "visible": false,
+                "materialOpacity": 0,
+                "renderOrder": 11.8
+              },
+              {
+                "name": "Horizontal MT slice 0 m elevation",
+                "type": "Mesh",
+                "visible": false,
+                "materialOpacity": 0,
+                "renderOrder": 11.8
+              },
+              {
+                "name": "Horizontal MT slice -2500 m elevation",
+                "type": "Mesh",
+                "visible": false,
+                "materialOpacity": 0,
+                "renderOrder": 11.8
+              },
+              {
+                "name": "Horizontal MT slice -5000 m elevation",
+                "type": "Mesh",
+                "visible": false,
+                "materialOpacity": 0,
+                "renderOrder": 11.8
+              },
+              {
+                "name": "Horizontal MT slice -10000 m elevation",
+                "type": "Mesh",
+                "visible": false,
+                "materialOpacity": 0,
+                "renderOrder": 11.8
+              }
+            ]
+          },
+          "topSurface": {
+            "counts": {
+              "total": 2,
+              "visible": 2
+            },
+            "samples": [
+              {
+                "name": "Utah FORGE Phase 3 MT observed top-envelope surface",
+                "type": "Group",
+                "visible": true,
+                "materialOpacity": null,
+                "renderOrder": 0
+              },
+              {
+                "name": "Utah FORGE Phase 3 MT observed top-envelope surface",
+                "type": "Mesh",
+                "visible": true,
+                "materialOpacity": 0,
+                "renderOrder": 11.8
+              }
+            ]
+          },
+          "topContact": {
+            "counts": {
+              "total": 3,
+              "visible": 2
+            },
+            "samples": [
+              {
+                "name": "utah-forge-mt-top-contact-surface",
+                "type": "Group",
+                "visible": false,
+                "materialOpacity": null,
+                "renderOrder": 0
+              },
+              {
+                "name": "Utah FORGE Phase 3 MT full-density top-contact surface",
+                "type": "Group",
+                "visible": true,
+                "materialOpacity": null,
+                "renderOrder": 0
+              },
+              {
+                "name": "Utah FORGE Phase 3 MT full-density top-contact surface",
+                "type": "Mesh",
+                "visible": true,
+                "materialOpacity": 0,
+                "renderOrder": 11.8
+              }
+            ]
+          }
+        }
+      }
+    }
+  ]
+}

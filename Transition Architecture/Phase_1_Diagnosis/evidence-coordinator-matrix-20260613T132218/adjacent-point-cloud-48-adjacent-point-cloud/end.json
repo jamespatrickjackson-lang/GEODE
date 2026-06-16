@@ -1,0 +1,3397 @@
+{
+  "caseId": "adjacent-point-cloud-48",
+  "caseName": "adjacent-point-cloud",
+  "surfaces": "feature-family coverage: point clouds, seismic products. Page ids are disposable fixture evidence; remediation must target the shared transition rule.",
+  "phase": "end",
+  "fromIndex": 47,
+  "toIndex": 48,
+  "sourcePageId": "57_legacy_line_l11_seismic_products",
+  "targetPageId": "58_legacy_line_l5_seismic_products",
+  "capturedAt": "2026-06-13T20:29:16.971Z",
+  "state": {
+    "currentIndex": 48,
+    "currentPageId": "58_legacy_line_l5_seismic_products",
+    "targetIndex": null,
+    "targetPageId": null,
+    "transitionProgress": 1,
+    "transitionFrame": {
+      "active": false,
+      "sourceIndex": 48,
+      "targetIndex": null,
+      "sourcePageId": "58_legacy_line_l5_seismic_products",
+      "targetPageId": null,
+      "progress": 1,
+      "rawProgress": 1,
+      "reason": null,
+      "runId": null
+    },
+    "isTransitioning": false,
+    "transitionContext": null,
+    "sceneTransition": {
+      "active": false,
+      "sourcePageId": null,
+      "targetPageId": null,
+      "reason": null,
+      "activeDataTransitionCount": 0,
+      "snapshotCount": 0,
+      "scalarTweenCount": 0,
+      "layerTweenCount": 0,
+      "workingAreaFocusTweenActive": false,
+      "sceneSectionStyleTweenActive": false,
+      "sceneSectionHelperTransitionSnapshotActive": false,
+      "sceneSectionHelperTransitionOpacity": 1,
+      "layerTweenTick": {
+        "timestampMs": 317966.5,
+        "totalMs": 0,
+        "sceneSectionMs": 0,
+        "sceneSectionApply": null,
+        "workingAreaMs": 0,
+        "scalarMs": 0,
+        "layerMs": 0,
+        "snapshotMs": 0,
+        "helperSnapshotMs": 0,
+        "envelopeMs": 0,
+        "activeSceneTransition": false,
+        "sceneSectionApplyMode": "none",
+        "layerTweenIds": [],
+        "scalarTweenIds": [],
+        "snapshotIds": [],
+        "layerTweenCountBefore": 0,
+        "scalarTweenCountBefore": 0,
+        "snapshotCountBefore": 0,
+        "sceneSectionStyleTweenActiveBefore": false,
+        "helperSnapshotActiveBefore": false,
+        "workingAreaFocusTweenActiveBefore": false
+      },
+      "frameUpdate": {
+        "timestampMs": 317966.5,
+        "totalMs": 0.4,
+        "cameraLockedSunMs": 0,
+        "layerTweensMs": 0,
+        "environmentSceneMs": 0,
+        "cinematicPostMs": 0.1,
+        "boreLensMs": 0,
+        "lightingStudioScaleMs": 0,
+        "dynamicCameraOrbitCenterScaleMs": 0,
+        "pageCameraMarkerScaleMs": 0,
+        "ezGammaBillboardMs": 0,
+        "sceneSectionTextFacingMs": 0,
+        "sectionIsoThresholdOcclusionMs": 0.1,
+        "topoGridCameraVisibilityMs": 0,
+        "localAtmosphereMs": 0,
+        "sceneOverlayTickMs": 0.2,
+        "activeSceneTransition": false
+      },
+      "sectionIsoOverlays": {
+        "opacityPolicy": "split-section-iso-overlay-opacity-from-layer-opacity",
+        "overlayMaterialCount": 16,
+        "independentOverlayMaterialCount": 0,
+        "transitionEnvelopeOverlayMaterialCount": 0,
+        "hiddenWithParentMaterialCount": 16,
+        "layerRenderOpacityMin": 0,
+        "layerRenderOpacityMax": 0,
+        "transitionOpacityMin": 0,
+        "transitionOpacityMax": 0
+      },
+      "sceneSectionHelpers": {
+        "groundTracePolicy": "mirror-delayed-ground-trace-into-helper-snapshot",
+        "liveGroundTraceCount": 0,
+        "snapshotGroundTraceCount": 0,
+        "snapshotActive": false,
+        "transitionOpacity": 1
+      },
+      "productFamilies": [],
+      "assignmentTraces": [],
+      "readinessAttachedLayerIds": [],
+      "sceneOverlays": {
+        "policy": "transition-clock-linear-fade",
+        "fadeDurationMs": 800,
+        "lastTransitionClockDurationMs": 3000,
+        "registeredHandleCount": 0,
+        "activeTweenCount": 0,
+        "activeOutlineTweenCount": 0,
+        "visibleHandleCount": 0,
+        "lastPhase": "transition-end",
+        "lastPageId": "58_legacy_line_l5_seismic_products",
+        "lastResolvedCount": 0,
+        "handles": []
+      },
+      "cinematicPost": {
+        "active": false,
+        "transitionKind": "continuous-post",
+        "sourcePageId": null,
+        "targetPageId": null,
+        "progress": null,
+        "policyCount": 13,
+        "channelPolicies": [
+          {
+            "key": "colorGrade",
+            "transitionKind": "continuous"
+          },
+          {
+            "key": "vignette",
+            "transitionKind": "continuous"
+          },
+          {
+            "key": "depthOfField",
+            "transitionKind": "continuous"
+          },
+          {
+            "key": "tiltShift",
+            "transitionKind": "continuous"
+          },
+          {
+            "key": "lensEffects",
+            "transitionKind": "continuous"
+          },
+          {
+            "key": "motionTrails",
+            "transitionKind": "continuous"
+          },
+          {
+            "key": "presentationFrame",
+            "transitionKind": "continuous"
+          },
+          {
+            "key": "compositionGuides",
+            "transitionKind": "continuous"
+          },
+          {
+            "key": "camera.lensPreset",
+            "transitionKind": "discrete"
+          },
+          {
+            "key": "dynamicCamera.dolly",
+            "transitionKind": "timed-shot"
+          },
+          {
+            "key": "dynamicCamera.truck",
+            "transitionKind": "timed-shot"
+          },
+          {
+            "key": "dynamicCamera.crane",
+            "transitionKind": "timed-shot"
+          },
+          {
+            "key": "dynamicCamera.handheld",
+            "transitionKind": "timed-shot"
+          }
+        ]
+      },
+      "lateReapply": {
+        "totalCount": 43,
+        "duringTransitionCount": 10,
+        "events": [
+          {
+            "sequence": 19,
+            "reason": "async-layer-resolve",
+            "action": "full-current-page-state",
+            "pageId": null,
+            "duringTransition": false,
+            "transitionSourcePageId": null,
+            "transitionTargetPageId": null,
+            "transitionReason": null,
+            "transitionProgress": null,
+            "timeMs": 3912.9000000003725
+          },
+          {
+            "sequence": 20,
+            "reason": "async-layer-resolve",
+            "action": "full-current-page-state",
+            "pageId": null,
+            "duringTransition": false,
+            "transitionSourcePageId": null,
+            "transitionTargetPageId": null,
+            "transitionReason": null,
+            "transitionProgress": null,
+            "timeMs": 3951.9000000003725
+          },
+          {
+            "sequence": 21,
+            "reason": "async-layer-resolve",
+            "action": "full-current-page-state",
+            "pageId": null,
+            "duringTransition": false,
+            "transitionSourcePageId": null,
+            "transitionTargetPageId": null,
+            "transitionReason": null,
+            "transitionProgress": null,
+            "timeMs": 3951.9000000003725
+          },
+          {
+            "sequence": 22,
+            "reason": "async-layer-resolve",
+            "action": "full-current-page-state",
+            "pageId": null,
+            "duringTransition": false,
+            "transitionSourcePageId": null,
+            "transitionTargetPageId": null,
+            "transitionReason": null,
+            "transitionProgress": null,
+            "timeMs": 3951.9000000003725
+          },
+          {
+            "sequence": 23,
+            "reason": "async-layer-resolve",
+            "action": "full-current-page-state",
+            "pageId": null,
+            "duringTransition": false,
+            "transitionSourcePageId": null,
+            "transitionTargetPageId": null,
+            "transitionReason": null,
+            "transitionProgress": null,
+            "timeMs": 4996.10000000149
+          },
+          {
+            "sequence": 24,
+            "reason": "state-reapply",
+            "action": "transition-aware-current-page-state",
+            "pageId": "157_page",
+            "duringTransition": true,
+            "transitionSourcePageId": "156_page",
+            "transitionTargetPageId": "157_page",
+            "transitionReason": "page-click",
+            "transitionProgress": 0.4144997098046884,
+            "timeMs": 14345.900000000373
+          },
+          {
+            "sequence": 25,
+            "reason": "async-layer-resolve",
+            "action": "transition-aware-current-page-state",
+            "pageId": "61_psdm_mt_58_32_source_location_tie",
+            "duringTransition": true,
+            "transitionSourcePageId": "63_borehole_logs_16a_source_ingest",
+            "transitionTargetPageId": "61_psdm_mt_58_32_source_location_tie",
+            "transitionReason": "page-click",
+            "transitionProgress": 1,
+            "timeMs": 109844.30000000075
+          },
+          {
+            "sequence": 26,
+            "reason": "async-layer-resolve",
+            "action": "full-current-page-state",
+            "pageId": "61_psdm_mt_58_32_source_location_tie",
+            "duringTransition": false,
+            "transitionSourcePageId": null,
+            "transitionTargetPageId": null,
+            "transitionReason": null,
+            "transitionProgress": null,
+            "timeMs": 112107.60000000149
+          },
+          {
+            "sequence": 27,
+            "reason": "async-layer-resolve",
+            "action": "transition-aware-current-page-state",
+            "pageId": "176_page",
+            "duringTransition": true,
+            "transitionSourcePageId": "61_psdm_mt_58_32_source_location_tie",
+            "transitionTargetPageId": "176_page",
+            "transitionReason": "page-click",
+            "transitionProgress": 1,
+            "timeMs": 121310.90000000037
+          },
+          {
+            "sequence": 28,
+            "reason": "async-layer-resolve",
+            "action": "transition-aware-current-page-state",
+            "pageId": "176_page",
+            "duringTransition": true,
+            "transitionSourcePageId": "61_psdm_mt_58_32_source_location_tie",
+            "transitionTargetPageId": "176_page",
+            "transitionReason": "page-click",
+            "transitionProgress": 1,
+            "timeMs": 121516.60000000149
+          },
+          {
+            "sequence": 29,
+            "reason": "async-layer-resolve",
+            "action": "full-current-page-state",
+            "pageId": "176_page",
+            "duringTransition": false,
+            "transitionSourcePageId": null,
+            "transitionTargetPageId": null,
+            "transitionReason": null,
+            "transitionProgress": null,
+            "timeMs": 123156
+          },
+          {
+            "sequence": 30,
+            "reason": "async-layer-resolve",
+            "action": "full-current-page-state",
+            "pageId": "176_page",
+            "duringTransition": false,
+            "transitionSourcePageId": null,
+            "transitionTargetPageId": null,
+            "transitionReason": null,
+            "transitionProgress": null,
+            "timeMs": 128892.5
+          },
+          {
+            "sequence": 31,
+            "reason": "async-layer-resolve",
+            "action": "full-current-page-state",
+            "pageId": "176_page",
+            "duringTransition": false,
+            "transitionSourcePageId": null,
+            "transitionTargetPageId": null,
+            "transitionReason": null,
+            "transitionProgress": null,
+            "timeMs": 129985.5
+          },
+          {
+            "sequence": 32,
+            "reason": "async-layer-resolve",
+            "action": "full-current-page-state",
+            "pageId": "176_page",
+            "duringTransition": false,
+            "transitionSourcePageId": null,
+            "transitionTargetPageId": null,
+            "transitionReason": null,
+            "transitionProgress": null,
+            "timeMs": 131158.5
+          },
+          {
+            "sequence": 33,
+            "reason": "async-layer-resolve",
+            "action": "full-current-page-state",
+            "pageId": "176_page",
+            "duringTransition": false,
+            "transitionSourcePageId": null,
+            "transitionTargetPageId": null,
+            "transitionReason": null,
+            "transitionProgress": null,
+            "timeMs": 137703.40000000037
+          },
+          {
+            "sequence": 34,
+            "reason": "async-layer-resolve",
+            "action": "full-current-page-state",
+            "pageId": "176_page",
+            "duringTransition": false,
+            "transitionSourcePageId": null,
+            "transitionTargetPageId": null,
+            "transitionReason": null,
+            "transitionProgress": null,
+            "timeMs": 140041.1000000015
+          },
+          {
+            "sequence": 35,
+            "reason": "async-layer-resolve",
+            "action": "full-current-page-state",
+            "pageId": "176_page",
+            "duringTransition": false,
+            "transitionSourcePageId": null,
+            "transitionTargetPageId": null,
+            "transitionReason": null,
+            "transitionProgress": null,
+            "timeMs": 141289.5
+          },
+          {
+            "sequence": 36,
+            "reason": "async-layer-resolve",
+            "action": "transition-aware-current-page-state",
+            "pageId": "143_page",
+            "duringTransition": true,
+            "transitionSourcePageId": "176_page",
+            "transitionTargetPageId": "143_page",
+            "transitionReason": "page-click",
+            "transitionProgress": 0.02510344827586207,
+            "timeMs": 143507.40000000037
+          },
+          {
+            "sequence": 37,
+            "reason": "async-layer-resolve",
+            "action": "transition-aware-current-page-state",
+            "pageId": "143_page",
+            "duringTransition": true,
+            "transitionSourcePageId": "176_page",
+            "transitionTargetPageId": "143_page",
+            "transitionReason": "page-click",
+            "transitionProgress": 0.6327586206896552,
+            "timeMs": 147912.90000000037
+          },
+          {
+            "sequence": 38,
+            "reason": "async-layer-resolve",
+            "action": "transition-aware-current-page-state",
+            "pageId": "143_page",
+            "duringTransition": true,
+            "transitionSourcePageId": "176_page",
+            "transitionTargetPageId": "143_page",
+            "transitionReason": "page-click",
+            "transitionProgress": 0.6567724137930521,
+            "timeMs": 148087
+          },
+          {
+            "sequence": 39,
+            "reason": "async-layer-resolve",
+            "action": "transition-aware-current-page-state",
+            "pageId": "143_page",
+            "duringTransition": true,
+            "transitionSourcePageId": "176_page",
+            "transitionTargetPageId": "143_page",
+            "transitionReason": "page-click",
+            "transitionProgress": 0.6819172413793617,
+            "timeMs": 148269.30000000075
+          },
+          {
+            "sequence": 40,
+            "reason": "async-layer-resolve",
+            "action": "transition-aware-current-page-state",
+            "pageId": "143_page",
+            "duringTransition": true,
+            "transitionSourcePageId": "176_page",
+            "transitionTargetPageId": "143_page",
+            "transitionReason": "page-click",
+            "transitionProgress": 0.7071448275863097,
+            "timeMs": 148452.20000000112
+          },
+          {
+            "sequence": 41,
+            "reason": "async-layer-resolve",
+            "action": "transition-aware-current-page-state",
+            "pageId": "143_page",
+            "duringTransition": true,
+            "transitionSourcePageId": "176_page",
+            "transitionTargetPageId": "143_page",
+            "transitionReason": "page-click",
+            "transitionProgress": 0.731889655172568,
+            "timeMs": 148631.6000000015
+          },
+          {
+            "sequence": 42,
+            "reason": "async-layer-resolve",
+            "action": "full-current-page-state",
+            "pageId": "143_page",
+            "duringTransition": false,
+            "transitionSourcePageId": null,
+            "transitionTargetPageId": null,
+            "transitionReason": null,
+            "transitionProgress": null,
+            "timeMs": 154297.70000000112
+          },
+          {
+            "sequence": 43,
+            "reason": "async-layer-resolve",
+            "action": "full-current-page-state",
+            "pageId": "143_page",
+            "duringTransition": false,
+            "transitionSourcePageId": null,
+            "transitionTargetPageId": null,
+            "transitionReason": null,
+            "transitionProgress": null,
+            "timeMs": 154617.80000000075
+          }
+        ]
+      },
+      "transitionCommit": {
+        "transitionId": "page-27",
+        "commitOwner": "SceneManager",
+        "commitPhase": "duplicate-target-assertion",
+        "hasFinalized": true,
+        "finalizedAt": 316045,
+        "suppressedDuplicateAssertions": 2
+      },
+      "commitTraces": [
+        {
+          "transitionId": "page-27",
+          "phase": "tween-completion",
+          "owner": "SceneManager",
+          "attemptedBy": "layerTweenRuntime.tickLayerTweens",
+          "allowed": true,
+          "suppressed": false,
+          "reason": "transition commit observation recorded",
+          "terminalGraphEntityCount": 0,
+          "targetGraphEntityCount": 44,
+          "resolvedTargetGraphEntityCount": 44,
+          "committedGraphEntityCount": 0,
+          "visibleDeltaCount": 0,
+          "visibleDeltas": [],
+          "unresolvedCoverage": []
+        },
+        {
+          "transitionId": "page-27",
+          "phase": "terminal-before-commit",
+          "owner": "SceneManager",
+          "attemptedBy": "SceneManager.finalizePageTransitionCommit",
+          "allowed": true,
+          "suppressed": false,
+          "reason": "terminal graph captured before final commit owner runs",
+          "terminalGraphEntityCount": 44,
+          "targetGraphEntityCount": 44,
+          "resolvedTargetGraphEntityCount": 44,
+          "committedGraphEntityCount": 0,
+          "visibleDeltaCount": 0,
+          "visibleDeltas": [],
+          "unresolvedCoverage": [
+            "terminal:layer:utah-forge-phase3-seismic-browser:style:seismicProductId",
+            "terminal:layer:utah-forge-phase3-seismic-browser:style:seismicProductVisibility",
+            "terminal:layer:utah-forge-phase3-seismic-browser:object:survey-geometry:lines:style:seismicProductId",
+            "terminal:layer:utah-forge-phase3-seismic-browser:object:survey-geometry:lines:style:seismicProductVisibility",
+            "terminal:layer:utah-forge-phase3-seismic-browser:object:survey-geometry:navigation:style:seismicProductId",
+            "terminal:layer:utah-forge-phase3-seismic-browser:object:survey-geometry:navigation:style:seismicProductVisibility",
+            "terminal:layer:utah-forge-phase3-seismic-browser:object:survey-geometry:receivers:style:seismicProductId",
+            "terminal:layer:utah-forge-phase3-seismic-browser:object:survey-geometry:receivers:style:seismicProductVisibility",
+            "terminal:layer:utah-forge-phase3-seismic-browser:object:survey-geometry:sources:style:seismicProductId",
+            "terminal:layer:utah-forge-phase3-seismic-browser:object:survey-geometry:sources:style:seismicProductVisibility",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:style:sectionIsoEnabled",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:style:seismicAudiencePresetId",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:style:seismicCapabilityPresetId",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:style:seismicColormap",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:style:seismicDisplayRecipeId",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:style:seismicLegendVisible",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:style:seismicPresentationBarVisible",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:style:seismicProductId",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:style:seismicProductVisibility",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:style:seismicRenderMode",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:style:seismicSliceFraction",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:sectionIsoEnabled",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicAudiencePresetId",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicCapabilityPresetId",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicColormap",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicDisplayRecipeId",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicLegendVisible",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicPresentationBarVisible",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicProductId",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicProductVisibility",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicRenderMode",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicSliceFraction",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:comparison:single-product:style:sectionIsoEnabled",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:comparison:single-product:style:seismicAudiencePresetId",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:comparison:single-product:style:seismicCapabilityPresetId",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:comparison:single-product:style:seismicColormap",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:comparison:single-product:style:seismicDisplayRecipeId",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:comparison:single-product:style:seismicLegendVisible",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:comparison:single-product:style:seismicPresentationBarVisible",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:comparison:single-product:style:seismicProductId",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:comparison:single-product:style:seismicProductVisibility",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:comparison:single-product:style:seismicRenderMode",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:comparison:single-product:style:seismicSliceFraction",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:style:sectionIsoEnabled",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:style:seismicAudiencePresetId",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:style:seismicCapabilityPresetId",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:style:seismicColormap",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:style:seismicDisplayRecipeId",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:style:seismicLegendVisible",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:style:seismicPresentationBarVisible",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:style:seismicProductId",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:style:seismicProductVisibility",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:style:seismicRenderMode",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:style:seismicSliceFraction",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:sectionIsoEnabled",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicAudiencePresetId",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicCapabilityPresetId",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicColormap",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicDisplayRecipeId",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicLegendVisible",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicPresentationBarVisible",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicProductId",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicProductVisibility",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicRenderMode",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicSliceFraction",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:comparison:single-product:style:sectionIsoEnabled",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:comparison:single-product:style:seismicAudiencePresetId",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:comparison:single-product:style:seismicCapabilityPresetId",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:comparison:single-product:style:seismicColormap",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:comparison:single-product:style:seismicDisplayRecipeId",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:comparison:single-product:style:seismicLegendVisible",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:comparison:single-product:style:seismicPresentationBarVisible",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:comparison:single-product:style:seismicProductId",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:comparison:single-product:style:seismicProductVisibility",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:comparison:single-product:style:seismicRenderMode",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:comparison:single-product:style:seismicSliceFraction"
+          ]
+        },
+        {
+          "transitionId": "page-27",
+          "phase": "final-commit",
+          "owner": "SceneManager",
+          "attemptedBy": "SceneManager.finalizePageTransitionCommit",
+          "allowed": true,
+          "suppressed": false,
+          "reason": "SceneManager owns page-transition final commit",
+          "terminalGraphEntityCount": 44,
+          "targetGraphEntityCount": 44,
+          "resolvedTargetGraphEntityCount": 44,
+          "committedGraphEntityCount": 44,
+          "visibleDeltaCount": 0,
+          "visibleDeltas": [],
+          "unresolvedCoverage": [
+            "terminal:layer:utah-forge-phase3-seismic-browser:style:seismicProductId",
+            "terminal:layer:utah-forge-phase3-seismic-browser:style:seismicProductVisibility",
+            "committed:layer:utah-forge-phase3-seismic-browser:style:seismicProductId",
+            "committed:layer:utah-forge-phase3-seismic-browser:style:seismicProductVisibility",
+            "terminal:layer:utah-forge-phase3-seismic-browser:object:survey-geometry:lines:style:seismicProductId",
+            "terminal:layer:utah-forge-phase3-seismic-browser:object:survey-geometry:lines:style:seismicProductVisibility",
+            "committed:layer:utah-forge-phase3-seismic-browser:object:survey-geometry:lines:style:seismicProductId",
+            "committed:layer:utah-forge-phase3-seismic-browser:object:survey-geometry:lines:style:seismicProductVisibility",
+            "terminal:layer:utah-forge-phase3-seismic-browser:object:survey-geometry:navigation:style:seismicProductId",
+            "terminal:layer:utah-forge-phase3-seismic-browser:object:survey-geometry:navigation:style:seismicProductVisibility",
+            "committed:layer:utah-forge-phase3-seismic-browser:object:survey-geometry:navigation:style:seismicProductId",
+            "committed:layer:utah-forge-phase3-seismic-browser:object:survey-geometry:navigation:style:seismicProductVisibility",
+            "terminal:layer:utah-forge-phase3-seismic-browser:object:survey-geometry:receivers:style:seismicProductId",
+            "terminal:layer:utah-forge-phase3-seismic-browser:object:survey-geometry:receivers:style:seismicProductVisibility",
+            "committed:layer:utah-forge-phase3-seismic-browser:object:survey-geometry:receivers:style:seismicProductId",
+            "committed:layer:utah-forge-phase3-seismic-browser:object:survey-geometry:receivers:style:seismicProductVisibility",
+            "terminal:layer:utah-forge-phase3-seismic-browser:object:survey-geometry:sources:style:seismicProductId",
+            "terminal:layer:utah-forge-phase3-seismic-browser:object:survey-geometry:sources:style:seismicProductVisibility",
+            "committed:layer:utah-forge-phase3-seismic-browser:object:survey-geometry:sources:style:seismicProductId",
+            "committed:layer:utah-forge-phase3-seismic-browser:object:survey-geometry:sources:style:seismicProductVisibility",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:style:sectionIsoEnabled",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:style:seismicAudiencePresetId",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:style:seismicCapabilityPresetId",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:style:seismicColormap",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:style:seismicDisplayRecipeId",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:style:seismicLegendVisible",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:style:seismicPresentationBarVisible",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:style:seismicProductId",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:style:seismicProductVisibility",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:style:seismicRenderMode",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:style:seismicSliceFraction",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:style:sectionIsoEnabled",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:style:seismicAudiencePresetId",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:style:seismicCapabilityPresetId",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:style:seismicColormap",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:style:seismicDisplayRecipeId",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:style:seismicLegendVisible",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:style:seismicPresentationBarVisible",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:style:seismicProductId",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:style:seismicProductVisibility",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:style:seismicRenderMode",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:style:seismicSliceFraction",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:sectionIsoEnabled",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicAudiencePresetId",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicCapabilityPresetId",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicColormap",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicDisplayRecipeId",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicLegendVisible",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicPresentationBarVisible",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicProductId",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicProductVisibility",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicRenderMode",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicSliceFraction",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:sectionIsoEnabled",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicAudiencePresetId",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicCapabilityPresetId",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicColormap",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicDisplayRecipeId",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicLegendVisible",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicPresentationBarVisible",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicProductId",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicProductVisibility",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicRenderMode",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicSliceFraction",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:comparison:single-product:style:sectionIsoEnabled",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:comparison:single-product:style:seismicAudiencePresetId",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:comparison:single-product:style:seismicCapabilityPresetId",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:comparison:single-product:style:seismicColormap",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:comparison:single-product:style:seismicDisplayRecipeId",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:comparison:single-product:style:seismicLegendVisible",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:comparison:single-product:style:seismicPresentationBarVisible",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:comparison:single-product:style:seismicProductId",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:comparison:single-product:style:seismicProductVisibility",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:comparison:single-product:style:seismicRenderMode",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:comparison:single-product:style:seismicSliceFraction",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:comparison:single-product:style:sectionIsoEnabled",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:comparison:single-product:style:seismicAudiencePresetId",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:comparison:single-product:style:seismicCapabilityPresetId",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:comparison:single-product:style:seismicColormap",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:comparison:single-product:style:seismicDisplayRecipeId",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:comparison:single-product:style:seismicLegendVisible",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:comparison:single-product:style:seismicPresentationBarVisible",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:comparison:single-product:style:seismicProductId",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:comparison:single-product:style:seismicProductVisibility",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:comparison:single-product:style:seismicRenderMode",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:comparison:single-product:style:seismicSliceFraction",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:style:sectionIsoEnabled",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:style:seismicAudiencePresetId",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:style:seismicCapabilityPresetId",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:style:seismicColormap",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:style:seismicDisplayRecipeId",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:style:seismicLegendVisible",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:style:seismicPresentationBarVisible",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:style:seismicProductId",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:style:seismicProductVisibility",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:style:seismicRenderMode",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:style:seismicSliceFraction",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:style:sectionIsoEnabled",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:style:seismicAudiencePresetId",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:style:seismicCapabilityPresetId",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:style:seismicColormap",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:style:seismicDisplayRecipeId",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:style:seismicLegendVisible",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:style:seismicPresentationBarVisible",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:style:seismicProductId",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:style:seismicProductVisibility",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:style:seismicRenderMode",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:style:seismicSliceFraction",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:sectionIsoEnabled",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicAudiencePresetId",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicCapabilityPresetId",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicColormap",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicDisplayRecipeId",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicLegendVisible",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicPresentationBarVisible",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicProductId",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicProductVisibility",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicRenderMode",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicSliceFraction",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:sectionIsoEnabled",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicAudiencePresetId",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicCapabilityPresetId",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicColormap",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicDisplayRecipeId",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicLegendVisible",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicPresentationBarVisible",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicProductId",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicProductVisibility",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicRenderMode",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicSliceFraction",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:comparison:single-product:style:sectionIsoEnabled",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:comparison:single-product:style:seismicAudiencePresetId",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:comparison:single-product:style:seismicCapabilityPresetId",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:comparison:single-product:style:seismicColormap",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:comparison:single-product:style:seismicDisplayRecipeId",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:comparison:single-product:style:seismicLegendVisible",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:comparison:single-product:style:seismicPresentationBarVisible",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:comparison:single-product:style:seismicProductId",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:comparison:single-product:style:seismicProductVisibility",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:comparison:single-product:style:seismicRenderMode",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:comparison:single-product:style:seismicSliceFraction",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:comparison:single-product:style:sectionIsoEnabled",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:comparison:single-product:style:seismicAudiencePresetId",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:comparison:single-product:style:seismicCapabilityPresetId",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:comparison:single-product:style:seismicColormap",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:comparison:single-product:style:seismicDisplayRecipeId",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:comparison:single-product:style:seismicLegendVisible",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:comparison:single-product:style:seismicPresentationBarVisible",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:comparison:single-product:style:seismicProductId",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:comparison:single-product:style:seismicProductVisibility",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:comparison:single-product:style:seismicRenderMode",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:comparison:single-product:style:seismicSliceFraction"
+          ]
+        },
+        {
+          "transitionId": "page-27",
+          "phase": "post-commit-graph-check",
+          "owner": "SceneManager",
+          "attemptedBy": "SceneManager.finalizePageTransitionCommit",
+          "allowed": true,
+          "suppressed": false,
+          "reason": "post-commit graph comparison is observational only",
+          "terminalGraphEntityCount": 44,
+          "targetGraphEntityCount": 44,
+          "resolvedTargetGraphEntityCount": 44,
+          "committedGraphEntityCount": 44,
+          "visibleDeltaCount": 0,
+          "visibleDeltas": [],
+          "unresolvedCoverage": [
+            "terminal:layer:utah-forge-phase3-seismic-browser:style:seismicProductId",
+            "terminal:layer:utah-forge-phase3-seismic-browser:style:seismicProductVisibility",
+            "committed:layer:utah-forge-phase3-seismic-browser:style:seismicProductId",
+            "committed:layer:utah-forge-phase3-seismic-browser:style:seismicProductVisibility",
+            "terminal:layer:utah-forge-phase3-seismic-browser:object:survey-geometry:lines:style:seismicProductId",
+            "terminal:layer:utah-forge-phase3-seismic-browser:object:survey-geometry:lines:style:seismicProductVisibility",
+            "committed:layer:utah-forge-phase3-seismic-browser:object:survey-geometry:lines:style:seismicProductId",
+            "committed:layer:utah-forge-phase3-seismic-browser:object:survey-geometry:lines:style:seismicProductVisibility",
+            "terminal:layer:utah-forge-phase3-seismic-browser:object:survey-geometry:navigation:style:seismicProductId",
+            "terminal:layer:utah-forge-phase3-seismic-browser:object:survey-geometry:navigation:style:seismicProductVisibility",
+            "committed:layer:utah-forge-phase3-seismic-browser:object:survey-geometry:navigation:style:seismicProductId",
+            "committed:layer:utah-forge-phase3-seismic-browser:object:survey-geometry:navigation:style:seismicProductVisibility",
+            "terminal:layer:utah-forge-phase3-seismic-browser:object:survey-geometry:receivers:style:seismicProductId",
+            "terminal:layer:utah-forge-phase3-seismic-browser:object:survey-geometry:receivers:style:seismicProductVisibility",
+            "committed:layer:utah-forge-phase3-seismic-browser:object:survey-geometry:receivers:style:seismicProductId",
+            "committed:layer:utah-forge-phase3-seismic-browser:object:survey-geometry:receivers:style:seismicProductVisibility",
+            "terminal:layer:utah-forge-phase3-seismic-browser:object:survey-geometry:sources:style:seismicProductId",
+            "terminal:layer:utah-forge-phase3-seismic-browser:object:survey-geometry:sources:style:seismicProductVisibility",
+            "committed:layer:utah-forge-phase3-seismic-browser:object:survey-geometry:sources:style:seismicProductId",
+            "committed:layer:utah-forge-phase3-seismic-browser:object:survey-geometry:sources:style:seismicProductVisibility",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:style:sectionIsoEnabled",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:style:seismicAudiencePresetId",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:style:seismicCapabilityPresetId",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:style:seismicColormap",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:style:seismicDisplayRecipeId",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:style:seismicLegendVisible",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:style:seismicPresentationBarVisible",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:style:seismicProductId",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:style:seismicProductVisibility",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:style:seismicRenderMode",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:style:seismicSliceFraction",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:style:sectionIsoEnabled",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:style:seismicAudiencePresetId",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:style:seismicCapabilityPresetId",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:style:seismicColormap",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:style:seismicDisplayRecipeId",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:style:seismicLegendVisible",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:style:seismicPresentationBarVisible",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:style:seismicProductId",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:style:seismicProductVisibility",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:style:seismicRenderMode",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:style:seismicSliceFraction",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:sectionIsoEnabled",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicAudiencePresetId",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicCapabilityPresetId",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicColormap",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicDisplayRecipeId",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicLegendVisible",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicPresentationBarVisible",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicProductId",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicProductVisibility",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicRenderMode",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicSliceFraction",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:sectionIsoEnabled",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicAudiencePresetId",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicCapabilityPresetId",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicColormap",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicDisplayRecipeId",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicLegendVisible",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicPresentationBarVisible",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicProductId",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicProductVisibility",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicRenderMode",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicSliceFraction",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:comparison:single-product:style:sectionIsoEnabled",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:comparison:single-product:style:seismicAudiencePresetId",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:comparison:single-product:style:seismicCapabilityPresetId",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:comparison:single-product:style:seismicColormap",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:comparison:single-product:style:seismicDisplayRecipeId",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:comparison:single-product:style:seismicLegendVisible",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:comparison:single-product:style:seismicPresentationBarVisible",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:comparison:single-product:style:seismicProductId",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:comparison:single-product:style:seismicProductVisibility",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:comparison:single-product:style:seismicRenderMode",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:comparison:single-product:style:seismicSliceFraction",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:comparison:single-product:style:sectionIsoEnabled",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:comparison:single-product:style:seismicAudiencePresetId",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:comparison:single-product:style:seismicCapabilityPresetId",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:comparison:single-product:style:seismicColormap",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:comparison:single-product:style:seismicDisplayRecipeId",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:comparison:single-product:style:seismicLegendVisible",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:comparison:single-product:style:seismicPresentationBarVisible",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:comparison:single-product:style:seismicProductId",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:comparison:single-product:style:seismicProductVisibility",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:comparison:single-product:style:seismicRenderMode",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:comparison:single-product:style:seismicSliceFraction",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:style:sectionIsoEnabled",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:style:seismicAudiencePresetId",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:style:seismicCapabilityPresetId",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:style:seismicColormap",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:style:seismicDisplayRecipeId",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:style:seismicLegendVisible",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:style:seismicPresentationBarVisible",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:style:seismicProductId",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:style:seismicProductVisibility",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:style:seismicRenderMode",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:style:seismicSliceFraction",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:style:sectionIsoEnabled",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:style:seismicAudiencePresetId",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:style:seismicCapabilityPresetId",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:style:seismicColormap",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:style:seismicDisplayRecipeId",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:style:seismicLegendVisible",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:style:seismicPresentationBarVisible",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:style:seismicProductId",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:style:seismicProductVisibility",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:style:seismicRenderMode",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:style:seismicSliceFraction",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:sectionIsoEnabled",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicAudiencePresetId",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicCapabilityPresetId",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicColormap",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicDisplayRecipeId",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicLegendVisible",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicPresentationBarVisible",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicProductId",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicProductVisibility",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicRenderMode",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicSliceFraction",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:sectionIsoEnabled",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicAudiencePresetId",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicCapabilityPresetId",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicColormap",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicDisplayRecipeId",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicLegendVisible",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicPresentationBarVisible",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicProductId",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicProductVisibility",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicRenderMode",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:figure-annotation:style:seismicSliceFraction",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:comparison:single-product:style:sectionIsoEnabled",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:comparison:single-product:style:seismicAudiencePresetId",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:comparison:single-product:style:seismicCapabilityPresetId",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:comparison:single-product:style:seismicColormap",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:comparison:single-product:style:seismicDisplayRecipeId",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:comparison:single-product:style:seismicLegendVisible",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:comparison:single-product:style:seismicPresentationBarVisible",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:comparison:single-product:style:seismicProductId",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:comparison:single-product:style:seismicProductVisibility",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:comparison:single-product:style:seismicRenderMode",
+            "terminal:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:comparison:single-product:style:seismicSliceFraction",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:comparison:single-product:style:sectionIsoEnabled",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:comparison:single-product:style:seismicAudiencePresetId",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:comparison:single-product:style:seismicCapabilityPresetId",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:comparison:single-product:style:seismicColormap",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:comparison:single-product:style:seismicDisplayRecipeId",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:comparison:single-product:style:seismicLegendVisible",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:comparison:single-product:style:seismicPresentationBarVisible",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:comparison:single-product:style:seismicProductId",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:comparison:single-product:style:seismicProductVisibility",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:comparison:single-product:style:seismicRenderMode",
+            "committed:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:comparison:single-product:style:seismicSliceFraction"
+          ]
+        },
+        {
+          "transitionId": "page-27",
+          "phase": "tween-completion",
+          "owner": "SceneManager",
+          "attemptedBy": "layerTweenRuntime.tickLayerTweens",
+          "allowed": false,
+          "suppressed": true,
+          "reason": "transition already finalized by SceneManager",
+          "terminalGraphEntityCount": 0,
+          "targetGraphEntityCount": 44,
+          "resolvedTargetGraphEntityCount": 44,
+          "committedGraphEntityCount": 0,
+          "visibleDeltaCount": 0,
+          "visibleDeltas": [],
+          "unresolvedCoverage": []
+        },
+        {
+          "transitionId": "page-27",
+          "phase": "duplicate-target-assertion",
+          "owner": "SceneManager",
+          "attemptedBy": "PageController.reapplyCurrentPageState",
+          "allowed": false,
+          "suppressed": true,
+          "reason": "post-transition target assertion suppressed after final commit",
+          "terminalGraphEntityCount": 0,
+          "targetGraphEntityCount": 0,
+          "resolvedTargetGraphEntityCount": 0,
+          "committedGraphEntityCount": 0,
+          "visibleDeltaCount": 0,
+          "visibleDeltas": [],
+          "unresolvedCoverage": []
+        }
+      ]
+    },
+    "transitionRun": null,
+    "lastTransitionRun": {
+      "mode": "page",
+      "sourceIndex": 47,
+      "targetIndex": 48,
+      "sourcePageId": "57_legacy_line_l11_seismic_products",
+      "targetPageId": "58_legacy_line_l5_seismic_products",
+      "reason": "page-click",
+      "startedAtMs": 312541.9000000004,
+      "durationMs": 3000,
+      "easing": "easeInOutCubic",
+      "interruptedRunIds": [],
+      "runId": "page-27",
+      "status": "completed",
+      "rawProgress": 1,
+      "easedProgress": 1,
+      "pageTransitionActive": false,
+      "dynamicCameraTransitionActive": false,
+      "sceneTransition": {
+        "active": true,
+        "sourcePageId": "57_legacy_line_l11_seismic_products",
+        "targetPageId": "58_legacy_line_l5_seismic_products",
+        "reason": "page-click",
+        "activeDataTransitionCount": 0,
+        "snapshotCount": 0,
+        "scalarTweenCount": 0,
+        "layerTweenCount": 0,
+        "workingAreaFocusTweenActive": false,
+        "sceneSectionStyleTweenActive": false,
+        "sceneSectionHelperTransitionSnapshotActive": false,
+        "sceneSectionHelperTransitionOpacity": 1,
+        "layerTweenTick": {
+          "timestampMs": 315549.9,
+          "totalMs": 0.5,
+          "sceneSectionMs": 0,
+          "sceneSectionApply": null,
+          "workingAreaMs": 0,
+          "scalarMs": 0,
+          "layerMs": 0,
+          "snapshotMs": 0,
+          "helperSnapshotMs": 0,
+          "envelopeMs": 0.5,
+          "activeSceneTransition": true,
+          "sceneSectionApplyMode": "none",
+          "layerTweenIds": [],
+          "scalarTweenIds": [],
+          "snapshotIds": [],
+          "layerTweenCountBefore": 0,
+          "scalarTweenCountBefore": 0,
+          "snapshotCountBefore": 0,
+          "sceneSectionStyleTweenActiveBefore": false,
+          "helperSnapshotActiveBefore": false,
+          "workingAreaFocusTweenActiveBefore": false
+        },
+        "frameUpdate": {
+          "timestampMs": 315549.9,
+          "totalMs": 1,
+          "cameraLockedSunMs": 0,
+          "layerTweensMs": 0.6,
+          "environmentSceneMs": 0.2,
+          "cinematicPostMs": 0,
+          "boreLensMs": 0,
+          "lightingStudioScaleMs": 0,
+          "dynamicCameraOrbitCenterScaleMs": 0,
+          "pageCameraMarkerScaleMs": 0,
+          "ezGammaBillboardMs": 0,
+          "sceneSectionTextFacingMs": 0.1,
+          "sectionIsoThresholdOcclusionMs": 0,
+          "topoGridCameraVisibilityMs": 0,
+          "localAtmosphereMs": 0,
+          "sceneOverlayTickMs": 0.1,
+          "activeSceneTransition": true
+        },
+        "sectionIsoOverlays": {
+          "opacityPolicy": "split-section-iso-overlay-opacity-from-layer-opacity",
+          "overlayMaterialCount": 16,
+          "independentOverlayMaterialCount": 0,
+          "transitionEnvelopeOverlayMaterialCount": 0,
+          "hiddenWithParentMaterialCount": 16,
+          "layerRenderOpacityMin": 0,
+          "layerRenderOpacityMax": 0,
+          "transitionOpacityMin": 0,
+          "transitionOpacityMax": 0
+        },
+        "sceneSectionHelpers": {
+          "groundTracePolicy": "mirror-delayed-ground-trace-into-helper-snapshot",
+          "liveGroundTraceCount": 0,
+          "snapshotGroundTraceCount": 0,
+          "snapshotActive": false,
+          "transitionOpacity": 1
+        },
+        "productFamilies": [
+          {
+            "layerId": "utah-forge-phase3-demo-boreholes",
+            "layerType": "mesh",
+            "family": "simple-geometry",
+            "policy": "preserve",
+            "transitionKind": "none",
+            "stateSource": "loaded-layer",
+            "loadedAtStart": true,
+            "sourceVisible": true,
+            "targetVisible": true,
+            "sourceOpacity": 1,
+            "targetOpacity": 1,
+            "reason": "layer remains in the same transition state"
+          },
+          {
+            "layerId": "utah-forge-site-boundary",
+            "layerType": "line",
+            "family": "simple-geometry",
+            "policy": "preserve",
+            "transitionKind": "none",
+            "stateSource": "loaded-layer",
+            "loadedAtStart": true,
+            "sourceVisible": true,
+            "targetVisible": true,
+            "sourceOpacity": 1,
+            "targetOpacity": 1,
+            "reason": "layer remains in the same transition state"
+          },
+          {
+            "layerId": "utah-forge-phase3-seismic-browser",
+            "layerType": "seismic",
+            "family": "seismic-sections",
+            "policy": "state-source-only",
+            "transitionKind": "none",
+            "stateSource": "loaded-layer",
+            "loadedAtStart": true,
+            "sourceVisible": false,
+            "targetVisible": false,
+            "sourceOpacity": 0,
+            "targetOpacity": 0,
+            "reason": "hidden product state is authored by the source or target page"
+          },
+          {
+            "layerId": "utah-forge-mt-stations",
+            "layerType": "point",
+            "family": "point-markers",
+            "policy": "preserve",
+            "transitionKind": "none",
+            "stateSource": "loaded-layer",
+            "loadedAtStart": true,
+            "sourceVisible": true,
+            "targetVisible": true,
+            "sourceOpacity": 1,
+            "targetOpacity": 1,
+            "reason": "layer remains in the same transition state"
+          },
+          {
+            "layerId": "utah-forge-mt-resistivity-full-density",
+            "layerType": "pointcloud",
+            "family": "point-cloud",
+            "policy": "preserve",
+            "transitionKind": "none",
+            "stateSource": "loaded-layer",
+            "loadedAtStart": true,
+            "sourceVisible": true,
+            "targetVisible": true,
+            "sourceOpacity": 0.05,
+            "targetOpacity": 0.05,
+            "reason": "layer remains in the same transition state"
+          }
+        ],
+        "assignmentTraces": [
+          {
+            "entityKey": "layer:bench-conformance-overlay",
+            "sourcePresence": "hidden",
+            "targetPresence": "absent",
+            "sourceReadiness": "ready",
+            "targetReadiness": "unavailable",
+            "sourceRepresentation": "layer:unknown",
+            "targetRepresentation": "layer:unknown",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:erosion-runoff-planning",
+            "sourcePresence": "hidden",
+            "targetPresence": "absent",
+            "sourceReadiness": "ready",
+            "targetReadiness": "unavailable",
+            "sourceRepresentation": "layer:unknown",
+            "targetRepresentation": "layer:unknown",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:haul-route-equipment-demo",
+            "sourcePresence": "hidden",
+            "targetPresence": "absent",
+            "sourceReadiness": "ready",
+            "targetReadiness": "unavailable",
+            "sourceRepresentation": "layer:unknown",
+            "targetRepresentation": "layer:unknown",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:hydrography-lakes",
+            "sourcePresence": "hidden",
+            "targetPresence": "hidden",
+            "sourceReadiness": "ready",
+            "targetReadiness": "ready",
+            "sourceRepresentation": "layer:polygon",
+            "targetRepresentation": "layer:polygon",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:hydrography-streams",
+            "sourcePresence": "hidden",
+            "targetPresence": "hidden",
+            "sourceReadiness": "ready",
+            "targetReadiness": "ready",
+            "sourceRepresentation": "layer:line",
+            "targetRepresentation": "layer:line",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:naip-2024-tile-diagnostics",
+            "sourcePresence": "hidden",
+            "targetPresence": "hidden",
+            "sourceReadiness": "ready",
+            "targetReadiness": "ready",
+            "sourceRepresentation": "layer:line",
+            "targetRepresentation": "layer:line",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:public-viewshed-overlay",
+            "sourcePresence": "hidden",
+            "targetPresence": "absent",
+            "sourceReadiness": "ready",
+            "targetReadiness": "unavailable",
+            "sourceRepresentation": "layer:unknown",
+            "targetRepresentation": "layer:unknown",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:quarry-drill-traces",
+            "sourcePresence": "hidden",
+            "targetPresence": "absent",
+            "sourceReadiness": "ready",
+            "targetReadiness": "unavailable",
+            "sourceRepresentation": "layer:unknown",
+            "targetRepresentation": "layer:unknown",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:quarry-imagery-base",
+            "sourcePresence": "hidden",
+            "targetPresence": "absent",
+            "sourceReadiness": "ready",
+            "targetReadiness": "unavailable",
+            "sourceRepresentation": "layer:unknown",
+            "targetRepresentation": "layer:unknown",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:quarry-lidar-surface",
+            "sourcePresence": "hidden",
+            "targetPresence": "absent",
+            "sourceReadiness": "ready",
+            "targetReadiness": "unavailable",
+            "sourceRepresentation": "layer:unknown",
+            "targetRepresentation": "layer:unknown",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:quarry-ore-grade-heatmap",
+            "sourcePresence": "hidden",
+            "targetPresence": "absent",
+            "sourceReadiness": "ready",
+            "targetReadiness": "unavailable",
+            "sourceRepresentation": "layer:unknown",
+            "targetRepresentation": "layer:unknown",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:restoration-preview",
+            "sourcePresence": "hidden",
+            "targetPresence": "absent",
+            "sourceReadiness": "ready",
+            "targetReadiness": "unavailable",
+            "sourceRepresentation": "layer:unknown",
+            "targetRepresentation": "layer:unknown",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:slope-stability-anomaly",
+            "sourcePresence": "hidden",
+            "targetPresence": "absent",
+            "sourceReadiness": "ready",
+            "targetReadiness": "unavailable",
+            "sourceRepresentation": "layer:unknown",
+            "targetRepresentation": "layer:unknown",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:stockpile-volume-zones",
+            "sourcePresence": "hidden",
+            "targetPresence": "absent",
+            "sourceReadiness": "ready",
+            "targetReadiness": "unavailable",
+            "sourceRepresentation": "layer:unknown",
+            "targetRepresentation": "layer:unknown",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:terrain",
+            "sourcePresence": "hidden",
+            "targetPresence": "hidden",
+            "sourceReadiness": "ready",
+            "targetReadiness": "ready",
+            "sourceRepresentation": "layer:geotiff",
+            "targetRepresentation": "layer:geotiff",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:topo-cloud-volume-2",
+            "sourcePresence": "hidden",
+            "targetPresence": "hidden",
+            "sourceReadiness": "ready",
+            "targetReadiness": "ready",
+            "sourceRepresentation": "layer:atmosphere-volume",
+            "targetRepresentation": "layer:atmosphere-volume",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:topo-cloud-volume-3",
+            "sourcePresence": "hidden",
+            "targetPresence": "hidden",
+            "sourceReadiness": "ready",
+            "targetReadiness": "ready",
+            "sourceRepresentation": "layer:atmosphere-volume",
+            "targetRepresentation": "layer:atmosphere-volume",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:transport-roads",
+            "sourcePresence": "hidden",
+            "targetPresence": "hidden",
+            "sourceReadiness": "ready",
+            "targetReadiness": "ready",
+            "sourceRepresentation": "layer:line",
+            "targetRepresentation": "layer:line",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:utah-forge-borehole-logs",
+            "sourcePresence": "hidden",
+            "targetPresence": "hidden",
+            "sourceReadiness": "ready",
+            "targetReadiness": "ready",
+            "sourceRepresentation": "layer:mesh",
+            "targetRepresentation": "layer:mesh",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:utah-forge-mt-resistivity-full-density",
+            "sourcePresence": "visible",
+            "targetPresence": "visible",
+            "sourceReadiness": "ready",
+            "targetReadiness": "ready",
+            "sourceRepresentation": "layer:pointcloud",
+            "targetRepresentation": "layer:pointcloud",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "preserve-interpolate",
+            "executionMode": "interpolate-channels",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:preserve-interpolate",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:utah-forge-mt-resistivity-preview",
+            "sourcePresence": "hidden",
+            "targetPresence": "hidden",
+            "sourceReadiness": "ready",
+            "targetReadiness": "ready",
+            "sourceRepresentation": "layer:pointcloud",
+            "targetRepresentation": "layer:pointcloud",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:utah-forge-mt-resistivity-slices",
+            "sourcePresence": "hidden",
+            "targetPresence": "hidden",
+            "sourceReadiness": "ready",
+            "targetReadiness": "ready",
+            "sourceRepresentation": "layer:mesh",
+            "targetRepresentation": "layer:mesh",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:utah-forge-mt-resistivity-threshold-surfaces",
+            "sourcePresence": "hidden",
+            "targetPresence": "hidden",
+            "sourceReadiness": "ready",
+            "targetReadiness": "ready",
+            "sourceRepresentation": "layer:mesh",
+            "targetRepresentation": "layer:mesh",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:utah-forge-mt-resistivity-volume",
+            "sourcePresence": "hidden",
+            "targetPresence": "hidden",
+            "sourceReadiness": "ready",
+            "targetReadiness": "ready",
+            "sourceRepresentation": "layer:volume",
+            "targetRepresentation": "layer:volume",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:utah-forge-mt-stations",
+            "sourcePresence": "visible",
+            "targetPresence": "visible",
+            "sourceReadiness": "ready",
+            "targetReadiness": "ready",
+            "sourceRepresentation": "layer:point",
+            "targetRepresentation": "layer:point",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "preserve-interpolate",
+            "executionMode": "interpolate-channels",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:preserve-interpolate",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:utah-forge-mt-top-contact-surface",
+            "sourcePresence": "hidden",
+            "targetPresence": "hidden",
+            "sourceReadiness": "ready",
+            "targetReadiness": "ready",
+            "sourceRepresentation": "layer:mesh",
+            "targetRepresentation": "layer:mesh",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:utah-forge-mt-top-surface",
+            "sourcePresence": "hidden",
+            "targetPresence": "hidden",
+            "sourceReadiness": "ready",
+            "targetReadiness": "ready",
+            "sourceRepresentation": "layer:mesh",
+            "targetRepresentation": "layer:mesh",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:utah-forge-phase3-demo-boreholes",
+            "sourcePresence": "visible",
+            "targetPresence": "visible",
+            "sourceReadiness": "ready",
+            "targetReadiness": "ready",
+            "sourceRepresentation": "layer:mesh",
+            "targetRepresentation": "layer:mesh",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "preserve-interpolate",
+            "executionMode": "interpolate-channels",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:preserve-interpolate",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:utah-forge-phase3-seismic-browser",
+            "sourcePresence": "hidden",
+            "targetPresence": "hidden",
+            "sourceReadiness": "ready",
+            "targetReadiness": "ready",
+            "sourceRepresentation": "layer:seismic",
+            "targetRepresentation": "layer:seismic",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [
+              {
+                "key": "style:seismicProductId",
+                "channelClass": "discrete-categorical",
+                "capability": "discrete-commit",
+                "ownerKey": "target-effective",
+                "sourceValue": "gdr-1141-line-l11-psdm-enh",
+                "targetValue": "gdr-1141-line-l5-psdm-enh"
+              },
+              {
+                "key": "style:seismicProductVisibility",
+                "channelClass": "discrete-categorical",
+                "capability": "discrete-commit",
+                "ownerKey": "target-effective",
+                "sourceValue": {
+                  "gdr-1141-line-l11-psdm-enh": true
+                },
+                "targetValue": {
+                  "gdr-1141-line-l5-psdm-enh": true
+                }
+              }
+            ],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:compatible",
+              "changed-channels:style:seismicProductId,style:seismicProductVisibility"
+            ]
+          },
+          {
+            "entityKey": "layer:utah-forge-phase3-working-area",
+            "sourcePresence": "hidden",
+            "targetPresence": "hidden",
+            "sourceReadiness": "ready",
+            "targetReadiness": "ready",
+            "sourceRepresentation": "layer:line",
+            "targetRepresentation": "layer:line",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:utah-forge-reference-stage",
+            "sourcePresence": "hidden",
+            "targetPresence": "hidden",
+            "sourceReadiness": "ready",
+            "targetReadiness": "ready",
+            "sourceRepresentation": "layer:mesh",
+            "targetRepresentation": "layer:mesh",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:utah-forge-site-boundary",
+            "sourcePresence": "visible",
+            "targetPresence": "visible",
+            "sourceReadiness": "ready",
+            "targetReadiness": "ready",
+            "sourceRepresentation": "layer:line",
+            "targetRepresentation": "layer:line",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "preserve-interpolate",
+            "executionMode": "interpolate-channels",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:preserve-interpolate",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:utah-forge-topo-clouds",
+            "sourcePresence": "hidden",
+            "targetPresence": "hidden",
+            "sourceReadiness": "ready",
+            "targetReadiness": "ready",
+            "sourceRepresentation": "layer:atmosphere-volume",
+            "targetRepresentation": "layer:atmosphere-volume",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:utah-forge-topo-graticule",
+            "sourcePresence": "hidden",
+            "targetPresence": "hidden",
+            "sourceReadiness": "ready",
+            "targetReadiness": "ready",
+            "sourceRepresentation": "layer:line",
+            "targetRepresentation": "layer:line",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:utah-forge-phase3-seismic-browser:object:survey-geometry:lines",
+            "sourcePresence": "visible",
+            "targetPresence": "visible",
+            "sourceReadiness": "ready",
+            "targetReadiness": "ready",
+            "sourceRepresentation": "seismic:survey-geometry",
+            "targetRepresentation": "seismic:survey-geometry",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": "layer:utah-forge-phase3-seismic-browser",
+            "dependencyPolicy": "follow-source",
+            "changedChannels": [
+              {
+                "key": "style:seismicProductId",
+                "channelClass": "discrete-categorical",
+                "capability": "discrete-commit",
+                "ownerKey": "target-effective",
+                "sourceValue": "gdr-1141-line-l11-psdm-enh",
+                "targetValue": "gdr-1141-line-l5-psdm-enh"
+              },
+              {
+                "key": "style:seismicProductVisibility",
+                "channelClass": "discrete-categorical",
+                "capability": "discrete-commit",
+                "ownerKey": "target-effective",
+                "sourceValue": {
+                  "gdr-1141-line-l11-psdm-enh": true
+                },
+                "targetValue": {
+                  "gdr-1141-line-l5-psdm-enh": true
+                }
+              }
+            ],
+            "assignment": "discrete-commit",
+            "executionMode": "commit-discrete",
+            "fallbackReason": "one or more changed channels require fallback",
+            "traceReasons": [
+              "assignment:discrete-commit",
+              "compatibility:compatible",
+              "one or more changed channels require fallback",
+              "changed-channels:style:seismicProductId,style:seismicProductVisibility",
+              "derived:follow-source:layer:utah-forge-phase3-seismic-browser"
+            ]
+          },
+          {
+            "entityKey": "layer:utah-forge-phase3-seismic-browser:object:survey-geometry:navigation",
+            "sourcePresence": "visible",
+            "targetPresence": "visible",
+            "sourceReadiness": "ready",
+            "targetReadiness": "ready",
+            "sourceRepresentation": "seismic:survey-geometry",
+            "targetRepresentation": "seismic:survey-geometry",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": "layer:utah-forge-phase3-seismic-browser",
+            "dependencyPolicy": "follow-source",
+            "changedChannels": [
+              {
+                "key": "style:seismicProductId",
+                "channelClass": "discrete-categorical",
+                "capability": "discrete-commit",
+                "ownerKey": "target-effective",
+                "sourceValue": "gdr-1141-line-l11-psdm-enh",
+                "targetValue": "gdr-1141-line-l5-psdm-enh"
+              },
+              {
+                "key": "style:seismicProductVisibility",
+                "channelClass": "discrete-categorical",
+                "capability": "discrete-commit",
+                "ownerKey": "target-effective",
+                "sourceValue": {
+                  "gdr-1141-line-l11-psdm-enh": true
+                },
+                "targetValue": {
+                  "gdr-1141-line-l5-psdm-enh": true
+                }
+              }
+            ],
+            "assignment": "discrete-commit",
+            "executionMode": "commit-discrete",
+            "fallbackReason": "one or more changed channels require fallback",
+            "traceReasons": [
+              "assignment:discrete-commit",
+              "compatibility:compatible",
+              "one or more changed channels require fallback",
+              "changed-channels:style:seismicProductId,style:seismicProductVisibility",
+              "derived:follow-source:layer:utah-forge-phase3-seismic-browser"
+            ]
+          },
+          {
+            "entityKey": "layer:utah-forge-phase3-seismic-browser:object:survey-geometry:receivers",
+            "sourcePresence": "hidden",
+            "targetPresence": "hidden",
+            "sourceReadiness": "ready",
+            "targetReadiness": "ready",
+            "sourceRepresentation": "seismic:survey-geometry",
+            "targetRepresentation": "seismic:survey-geometry",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": "layer:utah-forge-phase3-seismic-browser",
+            "dependencyPolicy": "follow-source",
+            "changedChannels": [
+              {
+                "key": "style:seismicProductId",
+                "channelClass": "discrete-categorical",
+                "capability": "discrete-commit",
+                "ownerKey": "target-effective",
+                "sourceValue": "gdr-1141-line-l11-psdm-enh",
+                "targetValue": "gdr-1141-line-l5-psdm-enh"
+              },
+              {
+                "key": "style:seismicProductVisibility",
+                "channelClass": "discrete-categorical",
+                "capability": "discrete-commit",
+                "ownerKey": "target-effective",
+                "sourceValue": {
+                  "gdr-1141-line-l11-psdm-enh": true
+                },
+                "targetValue": {
+                  "gdr-1141-line-l5-psdm-enh": true
+                }
+              }
+            ],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:compatible",
+              "changed-channels:style:seismicProductId,style:seismicProductVisibility",
+              "derived:follow-source:layer:utah-forge-phase3-seismic-browser"
+            ]
+          },
+          {
+            "entityKey": "layer:utah-forge-phase3-seismic-browser:object:survey-geometry:sources",
+            "sourcePresence": "hidden",
+            "targetPresence": "hidden",
+            "sourceReadiness": "ready",
+            "targetReadiness": "ready",
+            "sourceRepresentation": "seismic:survey-geometry",
+            "targetRepresentation": "seismic:survey-geometry",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": "layer:utah-forge-phase3-seismic-browser",
+            "dependencyPolicy": "follow-source",
+            "changedChannels": [
+              {
+                "key": "style:seismicProductId",
+                "channelClass": "discrete-categorical",
+                "capability": "discrete-commit",
+                "ownerKey": "target-effective",
+                "sourceValue": "gdr-1141-line-l11-psdm-enh",
+                "targetValue": "gdr-1141-line-l5-psdm-enh"
+              },
+              {
+                "key": "style:seismicProductVisibility",
+                "channelClass": "discrete-categorical",
+                "capability": "discrete-commit",
+                "ownerKey": "target-effective",
+                "sourceValue": {
+                  "gdr-1141-line-l11-psdm-enh": true
+                },
+                "targetValue": {
+                  "gdr-1141-line-l5-psdm-enh": true
+                }
+              }
+            ],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:compatible",
+              "changed-channels:style:seismicProductId,style:seismicProductVisibility",
+              "derived:follow-source:layer:utah-forge-phase3-seismic-browser"
+            ]
+          },
+          {
+            "entityKey": "layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500",
+            "sourcePresence": "visible",
+            "targetPresence": null,
+            "sourceReadiness": "ready",
+            "targetReadiness": null,
+            "sourceRepresentation": "seismic:2d-section-line",
+            "targetRepresentation": null,
+            "compatibility": "unknown",
+            "derivedFromEntityKey": "layer:utah-forge-phase3-seismic-browser",
+            "dependencyPolicy": "follow-source",
+            "changedChannels": [
+              {
+                "key": "style:sectionIsoEnabled",
+                "channelClass": "discrete-categorical",
+                "capability": "discrete-commit",
+                "ownerKey": "live-runtime",
+                "sourceValue": false
+              },
+              {
+                "key": "style:seismicAudiencePresetId",
+                "channelClass": "discrete-categorical",
+                "capability": "discrete-commit",
+                "ownerKey": "live-runtime",
+                "sourceValue": "psdm-depth-surrogate-showcase"
+              },
+              {
+                "key": "style:seismicCapabilityPresetId",
+                "channelClass": "discrete-categorical",
+                "capability": "discrete-commit",
+                "ownerKey": "live-runtime",
+                "sourceValue": "psdm-depth-surrogate-showcase"
+              },
+              {
+                "key": "style:seismicColormap",
+                "channelClass": "discrete-categorical",
+                "capability": "discrete-commit",
+                "ownerKey": "live-runtime",
+                "sourceValue": "blue-white-red"
+              },
+              {
+                "key": "style:seismicDisplayRecipeId",
+                "channelClass": "discrete-categorical",
+                "capability": "discrete-commit",
+                "ownerKey": "live-runtime",
+                "sourceValue": "3d-seismic-showcase"
+              },
+              {
+                "key": "style:seismicLegendVisible",
+                "channelClass": "discrete-categorical",
+                "capability": "discrete-commit",
+                "ownerKey": "live-runtime",
+                "sourceValue": true
+              },
+              {
+                "key": "style:seismicPresentationBarVisible",
+                "channelClass": "discrete-categorical",
+                "capability": "discrete-commit",
+                "ownerKey": "live-runtime",
+                "sourceValue": true
+              },
+              {
+                "key": "style:seismicProductId",
+                "channelClass": "discrete-categorical",
+                "capability": "discrete-commit",
+                "ownerKey": "live-runtime",
+                "sourceValue": "gdr-1141-line-l11-psdm-enh"
+              },
+              {
+                "key": "style:seismicProductVisibility",
+                "channelClass": "discrete-categorical",
+                "capability": "discrete-commit",
+                "ownerKey": "live-runtime",
+                "sourceValue": {
+                  "gdr-1141-line-l11-psdm-enh": true
+                }
+              },
+              {
+                "key": "style:seismicRenderMode",
+                "channelClass": "discrete-categorical",
+                "capability": "discrete-commit",
+                "ownerKey": "live-runtime",
+                "sourceValue": "slice"
+              },
+              {
+                "key": "style:seismicSliceFraction",
+                "channelClass": "continuous-scalar",
+                "capability": "interpolate",
+                "ownerKey": "live-runtime",
+                "sourceValue": 0.5
+              }
+            ],
+            "assignment": "exit",
+            "executionMode": "exit",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:exit",
+              "compatibility:unknown",
+              "changed-channels:style:sectionIsoEnabled,style:seismicAudiencePresetId,style:seismicCapabilityPresetId,style:seismicColormap,style:seismicDisplayRecipeId,style:seismicLegendVisible,style:seismicPresentationBarVisible,style:seismicProductId,style:seismicProductVisibility,style:seismicRenderMode,style:seismicSliceFraction",
+              "derived:follow-source:layer:utah-forge-phase3-seismic-browser"
+            ]
+          },
+          {
+            "entityKey": "layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:comparison:single-product",
+            "sourcePresence": "hidden",
+            "targetPresence": null,
+            "sourceReadiness": "ready",
+            "targetReadiness": null,
+            "sourceRepresentation": "seismic:comparison",
+            "targetRepresentation": null,
+            "compatibility": "unknown",
+            "derivedFromEntityKey": "layer:utah-forge-phase3-seismic-browser",
+            "dependencyPolicy": "follow-source",
+            "changedChannels": [
+              {
+                "key": "style:sectionIsoEnabled",
+                "channelClass": "discrete-categorical",
+                "capability": "discrete-commit",
+                "ownerKey": "live-runtime",
+                "sourceValue": false
+              },
+              {
+                "key": "style:seismicAudiencePresetId",
+                "channelClass": "discrete-categorical",
+                "capability": "discrete-commit",
+                "ownerKey": "live-runtime",
+                "sourceValue": "psdm-depth-surrogate-showcase"
+              },
+              {
+                "key": "style:seismicCapabilityPresetId",
+                "channelClass": "discrete-categorical",
+                "capability": "discrete-commit",
+                "ownerKey": "live-runtime",
+                "sourceValue": "psdm-depth-surrogate-showcase"
+              },
+              {
+                "key": "style:seismicColormap",
+                "channelClass": "discrete-categorical",
+                "capability": "discrete-commit",
+                "ownerKey": "live-runtime",
+                "sourceValue": "blue-white-red"
+              },
+              {
+                "key": "style:seismicDisplayRecipeId",
+                "channelClass": "discrete-categorical",
+                "capability": "discrete-commit",
+                "ownerKey": "live-runtime",
+                "sourceValue": "3d-seismic-showcase"
+              },
+              {
+                "key": "style:seismicLegendVisible",
+                "channelClass": "discrete-categorical",
+                "capability": "discrete-commit",
+                "ownerKey": "live-runtime",
+                "sourceValue": true
+              },
+              {
+                "key": "style:seismicPresentationBarVisible",
+                "channelClass": "discrete-categorical",
+                "capability": "discrete-commit",
+                "ownerKey": "live-runtime",
+                "sourceValue": true
+              },
+              {
+                "key": "style:seismicProductId",
+                "channelClass": "discrete-categorical",
+                "capability": "discrete-commit",
+                "ownerKey": "live-runtime",
+                "sourceValue": "gdr-1141-line-l11-psdm-enh"
+              },
+              {
+                "key": "style:seismicProductVisibility",
+                "channelClass": "discrete-categorical",
+                "capability": "discrete-commit",
+                "ownerKey": "live-runtime",
+                "sourceValue": {
+                  "gdr-1141-line-l11-psdm-enh": true
+                }
+              },
+              {
+                "key": "style:seismicRenderMode",
+                "channelClass": "discrete-categorical",
+                "capability": "discrete-commit",
+                "ownerKey": "live-runtime",
+                "sourceValue": "slice"
+              },
+              {
+                "key": "style:seismicSliceFraction",
+                "channelClass": "continuous-scalar",
+                "capability": "interpolate",
+                "ownerKey": "live-runtime",
+                "sourceValue": 0.5
+              }
+            ],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:unknown",
+              "changed-channels:style:sectionIsoEnabled,style:seismicAudiencePresetId,style:seismicCapabilityPresetId,style:seismicColormap,style:seismicDisplayRecipeId,style:seismicLegendVisible,style:seismicPresentationBarVisible,style:seismicProductId,style:seismicProductVisibility,style:seismicRenderMode,style:seismicSliceFraction",
+              "derived:follow-source:layer:utah-forge-phase3-seismic-browser"
+            ]
+          },
+          {
+            "entityKey": "layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500",
+            "sourcePresence": null,
+            "targetPresence": "visible",
+            "sourceReadiness": null,
+            "targetReadiness": "ready",
+            "sourceRepresentation": null,
+            "targetRepresentation": "seismic:2d-section-line",
+            "compatibility": "unknown",
+            "derivedFromEntityKey": "layer:utah-forge-phase3-seismic-browser",
+            "dependencyPolicy": "follow-source",
+            "changedChannels": [
+              {
+                "key": "style:sectionIsoEnabled",
+                "channelClass": "discrete-categorical",
+                "capability": "discrete-commit",
+                "ownerKey": "target-effective",
+                "targetValue": false
+              },
+              {
+                "key": "style:seismicAudiencePresetId",
+                "channelClass": "discrete-categorical",
+                "capability": "discrete-commit",
+                "ownerKey": "target-effective",
+                "targetValue": "psdm-depth-surrogate-showcase"
+              },
+              {
+                "key": "style:seismicCapabilityPresetId",
+                "channelClass": "discrete-categorical",
+                "capability": "discrete-commit",
+                "ownerKey": "target-effective",
+                "targetValue": "psdm-depth-surrogate-showcase"
+              },
+              {
+                "key": "style:seismicColormap",
+                "channelClass": "discrete-categorical",
+                "capability": "discrete-commit",
+                "ownerKey": "target-effective",
+                "targetValue": "blue-white-red"
+              },
+              {
+                "key": "style:seismicDisplayRecipeId",
+                "channelClass": "discrete-categorical",
+                "capability": "discrete-commit",
+                "ownerKey": "target-effective",
+                "targetValue": "3d-seismic-showcase"
+              },
+              {
+                "key": "style:seismicLegendVisible",
+                "channelClass": "discrete-categorical",
+                "capability": "discrete-commit",
+                "ownerKey": "target-effective",
+                "targetValue": true
+              },
+              {
+                "key": "style:seismicPresentationBarVisible",
+                "channelClass": "discrete-categorical",
+                "capability": "discrete-commit",
+                "ownerKey": "target-effective",
+                "targetValue": true
+              },
+              {
+                "key": "style:seismicProductId",
+                "channelClass": "discrete-categorical",
+                "capability": "discrete-commit",
+                "ownerKey": "target-effective",
+                "targetValue": "gdr-1141-line-l5-psdm-enh"
+              },
+              {
+                "key": "style:seismicProductVisibility",
+                "channelClass": "discrete-categorical",
+                "capability": "discrete-commit",
+                "ownerKey": "target-effective",
+                "targetValue": {
+                  "gdr-1141-line-l5-psdm-enh": true
+                }
+              },
+              {
+                "key": "style:seismicRenderMode",
+                "channelClass": "discrete-categorical",
+                "capability": "discrete-commit",
+                "ownerKey": "target-effective",
+                "targetValue": "slice"
+              },
+              {
+                "key": "style:seismicSliceFraction",
+                "channelClass": "continuous-scalar",
+                "capability": "interpolate",
+                "ownerKey": "target-effective",
+                "targetValue": 0.5
+              }
+            ],
+            "assignment": "enter",
+            "executionMode": "enter",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:enter",
+              "compatibility:unknown",
+              "changed-channels:style:sectionIsoEnabled,style:seismicAudiencePresetId,style:seismicCapabilityPresetId,style:seismicColormap,style:seismicDisplayRecipeId,style:seismicLegendVisible,style:seismicPresentationBarVisible,style:seismicProductId,style:seismicProductVisibility,style:seismicRenderMode,style:seismicSliceFraction",
+              "derived:follow-source:layer:utah-forge-phase3-seismic-browser"
+            ]
+          },
+          {
+            "entityKey": "layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:comparison:single-product",
+            "sourcePresence": null,
+            "targetPresence": "hidden",
+            "sourceReadiness": null,
+            "targetReadiness": "ready",
+            "sourceRepresentation": null,
+            "targetRepresentation": "seismic:comparison",
+            "compatibility": "unknown",
+            "derivedFromEntityKey": "layer:utah-forge-phase3-seismic-browser",
+            "dependencyPolicy": "follow-source",
+            "changedChannels": [
+              {
+                "key": "style:sectionIsoEnabled",
+                "channelClass": "discrete-categorical",
+                "capability": "discrete-commit",
+                "ownerKey": "target-effective",
+                "targetValue": false
+              },
+              {
+                "key": "style:seismicAudiencePresetId",
+                "channelClass": "discrete-categorical",
+                "capability": "discrete-commit",
+                "ownerKey": "target-effective",
+                "targetValue": "psdm-depth-surrogate-showcase"
+              },
+              {
+                "key": "style:seismicCapabilityPresetId",
+                "channelClass": "discrete-categorical",
+                "capability": "discrete-commit",
+                "ownerKey": "target-effective",
+                "targetValue": "psdm-depth-surrogate-showcase"
+              },
+              {
+                "key": "style:seismicColormap",
+                "channelClass": "discrete-categorical",
+                "capability": "discrete-commit",
+                "ownerKey": "target-effective",
+                "targetValue": "blue-white-red"
+              },
+              {
+                "key": "style:seismicDisplayRecipeId",
+                "channelClass": "discrete-categorical",
+                "capability": "discrete-commit",
+                "ownerKey": "target-effective",
+                "targetValue": "3d-seismic-showcase"
+              },
+              {
+                "key": "style:seismicLegendVisible",
+                "channelClass": "discrete-categorical",
+                "capability": "discrete-commit",
+                "ownerKey": "target-effective",
+                "targetValue": true
+              },
+              {
+                "key": "style:seismicPresentationBarVisible",
+                "channelClass": "discrete-categorical",
+                "capability": "discrete-commit",
+                "ownerKey": "target-effective",
+                "targetValue": true
+              },
+              {
+                "key": "style:seismicProductId",
+                "channelClass": "discrete-categorical",
+                "capability": "discrete-commit",
+                "ownerKey": "target-effective",
+                "targetValue": "gdr-1141-line-l5-psdm-enh"
+              },
+              {
+                "key": "style:seismicProductVisibility",
+                "channelClass": "discrete-categorical",
+                "capability": "discrete-commit",
+                "ownerKey": "target-effective",
+                "targetValue": {
+                  "gdr-1141-line-l5-psdm-enh": true
+                }
+              },
+              {
+                "key": "style:seismicRenderMode",
+                "channelClass": "discrete-categorical",
+                "capability": "discrete-commit",
+                "ownerKey": "target-effective",
+                "targetValue": "slice"
+              },
+              {
+                "key": "style:seismicSliceFraction",
+                "channelClass": "continuous-scalar",
+                "capability": "interpolate",
+                "ownerKey": "target-effective",
+                "targetValue": 0.5
+              }
+            ],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:unknown",
+              "changed-channels:style:sectionIsoEnabled,style:seismicAudiencePresetId,style:seismicCapabilityPresetId,style:seismicColormap,style:seismicDisplayRecipeId,style:seismicLegendVisible,style:seismicPresentationBarVisible,style:seismicProductId,style:seismicProductVisibility,style:seismicRenderMode,style:seismicSliceFraction",
+              "derived:follow-source:layer:utah-forge-phase3-seismic-browser"
+            ]
+          },
+          {
+            "entityKey": "layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500:figure-annotation",
+            "sourcePresence": "hidden",
+            "targetPresence": null,
+            "sourceReadiness": "ready",
+            "targetReadiness": null,
+            "sourceRepresentation": "seismic:figure-annotation",
+            "targetRepresentation": null,
+            "compatibility": "unknown",
+            "derivedFromEntityKey": "layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500",
+            "dependencyPolicy": "follow-source",
+            "changedChannels": [
+              {
+                "key": "style:sectionIsoEnabled",
+                "channelClass": "discrete-categorical",
+                "capability": "discrete-commit",
+                "ownerKey": "live-runtime",
+                "sourceValue": false
+              },
+              {
+                "key": "style:seismicAudiencePresetId",
+                "channelClass": "discrete-categorical",
+                "capability": "discrete-commit",
+                "ownerKey": "live-runtime",
+                "sourceValue": "psdm-depth-surrogate-showcase"
+              },
+              {
+                "key": "style:seismicCapabilityPresetId",
+                "channelClass": "discrete-categorical",
+                "capability": "discrete-commit",
+                "ownerKey": "live-runtime",
+                "sourceValue": "psdm-depth-surrogate-showcase"
+              },
+              {
+                "key": "style:seismicColormap",
+                "channelClass": "discrete-categorical",
+                "capability": "discrete-commit",
+                "ownerKey": "live-runtime",
+                "sourceValue": "blue-white-red"
+              },
+              {
+                "key": "style:seismicDisplayRecipeId",
+                "channelClass": "discrete-categorical",
+                "capability": "discrete-commit",
+                "ownerKey": "live-runtime",
+                "sourceValue": "3d-seismic-showcase"
+              },
+              {
+                "key": "style:seismicLegendVisible",
+                "channelClass": "discrete-categorical",
+                "capability": "discrete-commit",
+                "ownerKey": "live-runtime",
+                "sourceValue": true
+              },
+              {
+                "key": "style:seismicPresentationBarVisible",
+                "channelClass": "discrete-categorical",
+                "capability": "discrete-commit",
+                "ownerKey": "live-runtime",
+                "sourceValue": true
+              },
+              {
+                "key": "style:seismicProductId",
+                "channelClass": "discrete-categorical",
+                "capability": "discrete-commit",
+                "ownerKey": "live-runtime",
+                "sourceValue": "gdr-1141-line-l11-psdm-enh"
+              },
+              {
+                "key": "style:seismicProductVisibility",
+                "channelClass": "discrete-categorical",
+                "capability": "discrete-commit",
+                "ownerKey": "live-runtime",
+                "sourceValue": {
+                  "gdr-1141-line-l11-psdm-enh": true
+                }
+              },
+              {
+                "key": "style:seismicRenderMode",
+                "channelClass": "discrete-categorical",
+                "capability": "discrete-commit",
+                "ownerKey": "live-runtime",
+                "sourceValue": "slice"
+              },
+              {
+                "key": "style:seismicSliceFraction",
+                "channelClass": "continuous-scalar",
+                "capability": "interpolate",
+                "ownerKey": "live-runtime",
+                "sourceValue": 0.5
+              }
+            ],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:unknown",
+              "changed-channels:style:sectionIsoEnabled,style:seismicAudiencePresetId,style:seismicCapabilityPresetId,style:seismicColormap,style:seismicDisplayRecipeId,style:seismicLegendVisible,style:seismicPresentationBarVisible,style:seismicProductId,style:seismicProductVisibility,style:seismicRenderMode,style:seismicSliceFraction",
+              "derived:follow-source:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l11-psdm-enh:object:2d-section-line:line:0.500"
+            ]
+          },
+          {
+            "entityKey": "layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500:figure-annotation",
+            "sourcePresence": null,
+            "targetPresence": "hidden",
+            "sourceReadiness": null,
+            "targetReadiness": "ready",
+            "sourceRepresentation": null,
+            "targetRepresentation": "seismic:figure-annotation",
+            "compatibility": "unknown",
+            "derivedFromEntityKey": "layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500",
+            "dependencyPolicy": "follow-source",
+            "changedChannels": [
+              {
+                "key": "style:sectionIsoEnabled",
+                "channelClass": "discrete-categorical",
+                "capability": "discrete-commit",
+                "ownerKey": "target-effective",
+                "targetValue": false
+              },
+              {
+                "key": "style:seismicAudiencePresetId",
+                "channelClass": "discrete-categorical",
+                "capability": "discrete-commit",
+                "ownerKey": "target-effective",
+                "targetValue": "psdm-depth-surrogate-showcase"
+              },
+              {
+                "key": "style:seismicCapabilityPresetId",
+                "channelClass": "discrete-categorical",
+                "capability": "discrete-commit",
+                "ownerKey": "target-effective",
+                "targetValue": "psdm-depth-surrogate-showcase"
+              },
+              {
+                "key": "style:seismicColormap",
+                "channelClass": "discrete-categorical",
+                "capability": "discrete-commit",
+                "ownerKey": "target-effective",
+                "targetValue": "blue-white-red"
+              },
+              {
+                "key": "style:seismicDisplayRecipeId",
+                "channelClass": "discrete-categorical",
+                "capability": "discrete-commit",
+                "ownerKey": "target-effective",
+                "targetValue": "3d-seismic-showcase"
+              },
+              {
+                "key": "style:seismicLegendVisible",
+                "channelClass": "discrete-categorical",
+                "capability": "discrete-commit",
+                "ownerKey": "target-effective",
+                "targetValue": true
+              },
+              {
+                "key": "style:seismicPresentationBarVisible",
+                "channelClass": "discrete-categorical",
+                "capability": "discrete-commit",
+                "ownerKey": "target-effective",
+                "targetValue": true
+              },
+              {
+                "key": "style:seismicProductId",
+                "channelClass": "discrete-categorical",
+                "capability": "discrete-commit",
+                "ownerKey": "target-effective",
+                "targetValue": "gdr-1141-line-l5-psdm-enh"
+              },
+              {
+                "key": "style:seismicProductVisibility",
+                "channelClass": "discrete-categorical",
+                "capability": "discrete-commit",
+                "ownerKey": "target-effective",
+                "targetValue": {
+                  "gdr-1141-line-l5-psdm-enh": true
+                }
+              },
+              {
+                "key": "style:seismicRenderMode",
+                "channelClass": "discrete-categorical",
+                "capability": "discrete-commit",
+                "ownerKey": "target-effective",
+                "targetValue": "slice"
+              },
+              {
+                "key": "style:seismicSliceFraction",
+                "channelClass": "continuous-scalar",
+                "capability": "interpolate",
+                "ownerKey": "target-effective",
+                "targetValue": 0.5
+              }
+            ],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:unknown",
+              "changed-channels:style:sectionIsoEnabled,style:seismicAudiencePresetId,style:seismicCapabilityPresetId,style:seismicColormap,style:seismicDisplayRecipeId,style:seismicLegendVisible,style:seismicPresentationBarVisible,style:seismicProductId,style:seismicProductVisibility,style:seismicRenderMode,style:seismicSliceFraction",
+              "derived:follow-source:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-line-l5-psdm-enh:object:2d-section-line:line:0.500"
+            ]
+          }
+        ],
+        "readinessAttachedLayerIds": [],
+        "sceneOverlays": {
+          "policy": "transition-clock-linear-fade",
+          "fadeDurationMs": 800,
+          "lastTransitionClockDurationMs": 3000,
+          "registeredHandleCount": 0,
+          "activeTweenCount": 0,
+          "activeOutlineTweenCount": 0,
+          "visibleHandleCount": 0,
+          "lastPhase": "transition-start",
+          "lastPageId": "58_legacy_line_l5_seismic_products",
+          "lastResolvedCount": 0,
+          "handles": []
+        },
+        "cinematicPost": {
+          "active": true,
+          "transitionKind": "continuous-post",
+          "sourcePageId": "57_legacy_line_l11_seismic_products",
+          "targetPageId": "58_legacy_line_l5_seismic_products",
+          "progress": 1,
+          "policyCount": 13,
+          "channelPolicies": [
+            {
+              "key": "colorGrade",
+              "transitionKind": "continuous"
+            },
+            {
+              "key": "vignette",
+              "transitionKind": "continuous"
+            },
+            {
+              "key": "depthOfField",
+              "transitionKind": "continuous"
+            },
+            {
+              "key": "tiltShift",
+              "transitionKind": "continuous"
+            },
+            {
+              "key": "lensEffects",
+              "transitionKind": "continuous"
+            },
+            {
+              "key": "motionTrails",
+              "transitionKind": "continuous"
+            },
+            {
+              "key": "presentationFrame",
+              "transitionKind": "continuous"
+            },
+            {
+              "key": "compositionGuides",
+              "transitionKind": "continuous"
+            },
+            {
+              "key": "camera.lensPreset",
+              "transitionKind": "discrete"
+            },
+            {
+              "key": "dynamicCamera.dolly",
+              "transitionKind": "timed-shot"
+            },
+            {
+              "key": "dynamicCamera.truck",
+              "transitionKind": "timed-shot"
+            },
+            {
+              "key": "dynamicCamera.crane",
+              "transitionKind": "timed-shot"
+            },
+            {
+              "key": "dynamicCamera.handheld",
+              "transitionKind": "timed-shot"
+            }
+          ]
+        },
+        "lateReapply": {
+          "totalCount": 43,
+          "duringTransitionCount": 10,
+          "events": [
+            {
+              "sequence": 19,
+              "reason": "async-layer-resolve",
+              "action": "full-current-page-state",
+              "pageId": null,
+              "duringTransition": false,
+              "transitionSourcePageId": null,
+              "transitionTargetPageId": null,
+              "transitionReason": null,
+              "transitionProgress": null,
+              "timeMs": 3912.9000000003725
+            },
+            {
+              "sequence": 20,
+              "reason": "async-layer-resolve",
+              "action": "full-current-page-state",
+              "pageId": null,
+              "duringTransition": false,
+              "transitionSourcePageId": null,
+              "transitionTargetPageId": null,
+              "transitionReason": null,
+              "transitionProgress": null,
+              "timeMs": 3951.9000000003725
+            },
+            {
+              "sequence": 21,
+              "reason": "async-layer-resolve",
+              "action": "full-current-page-state",
+              "pageId": null,
+              "duringTransition": false,
+              "transitionSourcePageId": null,
+              "transitionTargetPageId": null,
+              "transitionReason": null,
+              "transitionProgress": null,
+              "timeMs": 3951.9000000003725
+            },
+            {
+              "sequence": 22,
+              "reason": "async-layer-resolve",
+              "action": "full-current-page-state",
+              "pageId": null,
+              "duringTransition": false,
+              "transitionSourcePageId": null,
+              "transitionTargetPageId": null,
+              "transitionReason": null,
+              "transitionProgress": null,
+              "timeMs": 3951.9000000003725
+            },
+            {
+              "sequence": 23,
+              "reason": "async-layer-resolve",
+              "action": "full-current-page-state",
+              "pageId": null,
+              "duringTransition": false,
+              "transitionSourcePageId": null,
+              "transitionTargetPageId": null,
+              "transitionReason": null,
+              "transitionProgress": null,
+              "timeMs": 4996.10000000149
+            },
+            {
+              "sequence": 24,
+              "reason": "state-reapply",
+              "action": "transition-aware-current-page-state",
+              "pageId": "157_page",
+              "duringTransition": true,
+              "transitionSourcePageId": "156_page",
+              "transitionTargetPageId": "157_page",
+              "transitionReason": "page-click",
+              "transitionProgress": 0.4144997098046884,
+              "timeMs": 14345.900000000373
+            },
+            {
+              "sequence": 25,
+              "reason": "async-layer-resolve",
+              "action": "transition-aware-current-page-state",
+              "pageId": "61_psdm_mt_58_32_source_location_tie",
+              "duringTransition": true,
+              "transitionSourcePageId": "63_borehole_logs_16a_source_ingest",
+              "transitionTargetPageId": "61_psdm_mt_58_32_source_location_tie",
+              "transitionReason": "page-click",
+              "transitionProgress": 1,
+              "timeMs": 109844.30000000075
+            },
+            {
+              "sequence": 26,
+              "reason": "async-layer-resolve",
+              "action": "full-current-page-state",
+              "pageId": "61_psdm_mt_58_32_source_location_tie",
+              "duringTransition": false,
+              "transitionSourcePageId": null,
+              "transitionTargetPageId": null,
+              "transitionReason": null,
+              "transitionProgress": null,
+              "timeMs": 112107.60000000149
+            },
+            {
+              "sequence": 27,
+              "reason": "async-layer-resolve",
+              "action": "transition-aware-current-page-state",
+              "pageId": "176_page",
+              "duringTransition": true,
+              "transitionSourcePageId": "61_psdm_mt_58_32_source_location_tie",
+              "transitionTargetPageId": "176_page",
+              "transitionReason": "page-click",
+              "transitionProgress": 1,
+              "timeMs": 121310.90000000037
+            },
+            {
+              "sequence": 28,
+              "reason": "async-layer-resolve",
+              "action": "transition-aware-current-page-state",
+              "pageId": "176_page",
+              "duringTransition": true,
+              "transitionSourcePageId": "61_psdm_mt_58_32_source_location_tie",
+              "transitionTargetPageId": "176_page",
+              "transitionReason": "page-click",
+              "transitionProgress": 1,
+              "timeMs": 121516.60000000149
+            },
+            {
+              "sequence": 29,
+              "reason": "async-layer-resolve",
+              "action": "full-current-page-state",
+              "pageId": "176_page",
+              "duringTransition": false,
+              "transitionSourcePageId": null,
+              "transitionTargetPageId": null,
+              "transitionReason": null,
+              "transitionProgress": null,
+              "timeMs": 123156
+            },
+            {
+              "sequence": 30,
+              "reason": "async-layer-resolve",
+              "action": "full-current-page-state",
+              "pageId": "176_page",
+              "duringTransition": false,
+              "transitionSourcePageId": null,
+              "transitionTargetPageId": null,
+              "transitionReason": null,
+              "transitionProgress": null,
+              "timeMs": 128892.5
+            },
+            {
+              "sequence": 31,
+              "reason": "async-layer-resolve",
+              "action": "full-current-page-state",
+              "pageId": "176_page",
+              "duringTransition": false,
+              "transitionSourcePageId": null,
+              "transitionTargetPageId": null,
+              "transitionReason": null,
+              "transitionProgress": null,
+              "timeMs": 129985.5
+            },
+            {
+              "sequence": 32,
+              "reason": "async-layer-resolve",
+              "action": "full-current-page-state",
+              "pageId": "176_page",
+              "duringTransition": false,
+              "transitionSourcePageId": null,
+              "transitionTargetPageId": null,
+              "transitionReason": null,
+              "transitionProgress": null,
+              "timeMs": 131158.5
+            },
+            {
+              "sequence": 33,
+              "reason": "async-layer-resolve",
+              "action": "full-current-page-state",
+              "pageId": "176_page",
+              "duringTransition": false,
+              "transitionSourcePageId": null,
+              "transitionTargetPageId": null,
+              "transitionReason": null,
+              "transitionProgress": null,
+              "timeMs": 137703.40000000037
+            },
+            {
+              "sequence": 34,
+              "reason": "async-layer-resolve",
+              "action": "full-current-page-state",
+              "pageId": "176_page",
+              "duringTransition": false,
+              "transitionSourcePageId": null,
+              "transitionTargetPageId": null,
+              "transitionReason": null,
+              "transitionProgress": null,
+              "timeMs": 140041.1000000015
+            },
+            {
+              "sequence": 35,
+              "reason": "async-layer-resolve",
+              "action": "full-current-page-state",
+              "pageId": "176_page",
+              "duringTransition": false,
+              "transitionSourcePageId": null,
+              "transitionTargetPageId": null,
+              "transitionReason": null,
+              "transitionProgress": null,
+              "timeMs": 141289.5
+            },
+            {
+              "sequence": 36,
+              "reason": "async-layer-resolve",
+              "action": "transition-aware-current-page-state",
+              "pageId": "143_page",
+              "duringTransition": true,
+              "transitionSourcePageId": "176_page",
+              "transitionTargetPageId": "143_page",
+              "transitionReason": "page-click",
+              "transitionProgress": 0.02510344827586207,
+              "timeMs": 143507.40000000037
+            },
+            {
+              "sequence": 37,
+              "reason": "async-layer-resolve",
+              "action": "transition-aware-current-page-state",
+              "pageId": "143_page",
+              "duringTransition": true,
+              "transitionSourcePageId": "176_page",
+              "transitionTargetPageId": "143_page",
+              "transitionReason": "page-click",
+              "transitionProgress": 0.6327586206896552,
+              "timeMs": 147912.90000000037
+            },
+            {
+              "sequence": 38,
+              "reason": "async-layer-resolve",
+              "action": "transition-aware-current-page-state",
+              "pageId": "143_page",
+              "duringTransition": true,
+              "transitionSourcePageId": "176_page",
+              "transitionTargetPageId": "143_page",
+              "transitionReason": "page-click",
+              "transitionProgress": 0.6567724137930521,
+              "timeMs": 148087
+            },
+            {
+              "sequence": 39,
+              "reason": "async-layer-resolve",
+              "action": "transition-aware-current-page-state",
+              "pageId": "143_page",
+              "duringTransition": true,
+              "transitionSourcePageId": "176_page",
+              "transitionTargetPageId": "143_page",
+              "transitionReason": "page-click",
+              "transitionProgress": 0.6819172413793617,
+              "timeMs": 148269.30000000075
+            },
+            {
+              "sequence": 40,
+              "reason": "async-layer-resolve",
+              "action": "transition-aware-current-page-state",
+              "pageId": "143_page",
+              "duringTransition": true,
+              "transitionSourcePageId": "176_page",
+              "transitionTargetPageId": "143_page",
+              "transitionReason": "page-click",
+              "transitionProgress": 0.7071448275863097,
+              "timeMs": 148452.20000000112
+            },
+            {
+              "sequence": 41,
+              "reason": "async-layer-resolve",
+              "action": "transition-aware-current-page-state",
+              "pageId": "143_page",
+              "duringTransition": true,
+              "transitionSourcePageId": "176_page",
+              "transitionTargetPageId": "143_page",
+              "transitionReason": "page-click",
+              "transitionProgress": 0.731889655172568,
+              "timeMs": 148631.6000000015
+            },
+            {
+              "sequence": 42,
+              "reason": "async-layer-resolve",
+              "action": "full-current-page-state",
+              "pageId": "143_page",
+              "duringTransition": false,
+              "transitionSourcePageId": null,
+              "transitionTargetPageId": null,
+              "transitionReason": null,
+              "transitionProgress": null,
+              "timeMs": 154297.70000000112
+            },
+            {
+              "sequence": 43,
+              "reason": "async-layer-resolve",
+              "action": "full-current-page-state",
+              "pageId": "143_page",
+              "duringTransition": false,
+              "transitionSourcePageId": null,
+              "transitionTargetPageId": null,
+              "transitionReason": null,
+              "transitionProgress": null,
+              "timeMs": 154617.80000000075
+            }
+          ]
+        },
+        "transitionCommit": {
+          "transitionId": "page-27",
+          "commitOwner": "SceneManager",
+          "commitPhase": "tween-completion",
+          "hasFinalized": false,
+          "finalizedAt": null,
+          "suppressedDuplicateAssertions": 0
+        },
+        "commitTraces": [
+          {
+            "transitionId": "page-27",
+            "phase": "tween-completion",
+            "owner": "SceneManager",
+            "attemptedBy": "layerTweenRuntime.tickLayerTweens",
+            "allowed": true,
+            "suppressed": false,
+            "reason": "transition commit observation recorded",
+            "terminalGraphEntityCount": 0,
+            "targetGraphEntityCount": 44,
+            "resolvedTargetGraphEntityCount": 44,
+            "committedGraphEntityCount": 0,
+            "visibleDeltaCount": 0,
+            "visibleDeltas": [],
+            "unresolvedCoverage": []
+          }
+        ]
+      },
+      "consumerDebug": {
+        "presenterOverlay": {
+          "policy": "crossfade-slide",
+          "active": true,
+          "sourcePageId": "57_legacy_line_l11_seismic_products",
+          "targetPageId": "58_legacy_line_l5_seismic_products",
+          "progress": 1,
+          "slideDirection": 1,
+          "cssTransitionsDisabledWhileActive": true
+        },
+        "sceneOverlays": {
+          "policy": "transition-clock-linear-fade",
+          "fadeDurationMs": 800,
+          "lastTransitionClockDurationMs": 3000,
+          "registeredHandleCount": 0,
+          "activeTweenCount": 0,
+          "activeOutlineTweenCount": 0,
+          "visibleHandleCount": 0,
+          "lastPhase": "transition-start",
+          "lastPageId": "58_legacy_line_l5_seismic_products",
+          "lastResolvedCount": 0,
+          "handles": []
+        },
+        "labels": {
+          "policy": "hold-source-until-threshold",
+          "switchThreshold": 0.92,
+          "activePageId": "58_legacy_line_l5_seismic_products",
+          "sourcePageId": "57_legacy_line_l11_seismic_products",
+          "targetPageId": "58_legacy_line_l5_seismic_products"
+        },
+        "assays": {
+          "policy": "hold-source-until-threshold",
+          "switchThreshold": 0.92,
+          "activePageId": "58_legacy_line_l5_seismic_products",
+          "sourcePageId": "57_legacy_line_l11_seismic_products",
+          "targetPageId": "58_legacy_line_l5_seismic_products"
+        },
+        "legends": {
+          "stackPolicy": "phased-layout-slide",
+          "resistivityPolicy": "interpolate-source-target",
+          "defaultPolicy": "target-from-start",
+          "sourcePageId": "57_legacy_line_l11_seismic_products",
+          "targetPageId": "58_legacy_line_l5_seismic_products",
+          "progress": 1,
+          "exitEnd": 0.34,
+          "layoutEnd": 0.68,
+          "targetInteractiveThreshold": 0.92
+        },
+        "lateReapply": {
+          "totalCount": 43,
+          "duringTransitionCount": 10,
+          "events": [
+            {
+              "sequence": 19,
+              "reason": "async-layer-resolve",
+              "action": "full-current-page-state",
+              "pageId": null,
+              "duringTransition": false,
+              "transitionSourcePageId": null,
+              "transitionTargetPageId": null,
+              "transitionReason": null,
+              "transitionProgress": null,
+              "timeMs": 3912.9000000003725
+            },
+            {
+              "sequence": 20,
+              "reason": "async-layer-resolve",
+              "action": "full-current-page-state",
+              "pageId": null,
+              "duringTransition": false,
+              "transitionSourcePageId": null,
+              "transitionTargetPageId": null,
+              "transitionReason": null,
+              "transitionProgress": null,
+              "timeMs": 3951.9000000003725
+            },
+            {
+              "sequence": 21,
+              "reason": "async-layer-resolve",
+              "action": "full-current-page-state",
+              "pageId": null,
+              "duringTransition": false,
+              "transitionSourcePageId": null,
+              "transitionTargetPageId": null,
+              "transitionReason": null,
+              "transitionProgress": null,
+              "timeMs": 3951.9000000003725
+            },
+            {
+              "sequence": 22,
+              "reason": "async-layer-resolve",
+              "action": "full-current-page-state",
+              "pageId": null,
+              "duringTransition": false,
+              "transitionSourcePageId": null,
+              "transitionTargetPageId": null,
+              "transitionReason": null,
+              "transitionProgress": null,
+              "timeMs": 3951.9000000003725
+            },
+            {
+              "sequence": 23,
+              "reason": "async-layer-resolve",
+              "action": "full-current-page-state",
+              "pageId": null,
+              "duringTransition": false,
+              "transitionSourcePageId": null,
+              "transitionTargetPageId": null,
+              "transitionReason": null,
+              "transitionProgress": null,
+              "timeMs": 4996.10000000149
+            },
+            {
+              "sequence": 24,
+              "reason": "state-reapply",
+              "action": "transition-aware-current-page-state",
+              "pageId": "157_page",
+              "duringTransition": true,
+              "transitionSourcePageId": "156_page",
+              "transitionTargetPageId": "157_page",
+              "transitionReason": "page-click",
+              "transitionProgress": 0.4144997098046884,
+              "timeMs": 14345.900000000373
+            },
+            {
+              "sequence": 25,
+              "reason": "async-layer-resolve",
+              "action": "transition-aware-current-page-state",
+              "pageId": "61_psdm_mt_58_32_source_location_tie",
+              "duringTransition": true,
+              "transitionSourcePageId": "63_borehole_logs_16a_source_ingest",
+              "transitionTargetPageId": "61_psdm_mt_58_32_source_location_tie",
+              "transitionReason": "page-click",
+              "transitionProgress": 1,
+              "timeMs": 109844.30000000075
+            },
+            {
+              "sequence": 26,
+              "reason": "async-layer-resolve",
+              "action": "full-current-page-state",
+              "pageId": "61_psdm_mt_58_32_source_location_tie",
+              "duringTransition": false,
+              "transitionSourcePageId": null,
+              "transitionTargetPageId": null,
+              "transitionReason": null,
+              "transitionProgress": null,
+              "timeMs": 112107.60000000149
+            },
+            {
+              "sequence": 27,
+              "reason": "async-layer-resolve",
+              "action": "transition-aware-current-page-state",
+              "pageId": "176_page",
+              "duringTransition": true,
+              "transitionSourcePageId": "61_psdm_mt_58_32_source_location_tie",
+              "transitionTargetPageId": "176_page",
+              "transitionReason": "page-click",
+              "transitionProgress": 1,
+              "timeMs": 121310.90000000037
+            },
+            {
+              "sequence": 28,
+              "reason": "async-layer-resolve",
+              "action": "transition-aware-current-page-state",
+              "pageId": "176_page",
+              "duringTransition": true,
+              "transitionSourcePageId": "61_psdm_mt_58_32_source_location_tie",
+              "transitionTargetPageId": "176_page",
+              "transitionReason": "page-click",
+              "transitionProgress": 1,
+              "timeMs": 121516.60000000149
+            },
+            {
+              "sequence": 29,
+              "reason": "async-layer-resolve",
+              "action": "full-current-page-state",
+              "pageId": "176_page",
+              "duringTransition": false,
+              "transitionSourcePageId": null,
+              "transitionTargetPageId": null,
+              "transitionReason": null,
+              "transitionProgress": null,
+              "timeMs": 123156
+            },
+            {
+              "sequence": 30,
+              "reason": "async-layer-resolve",
+              "action": "full-current-page-state",
+              "pageId": "176_page",
+              "duringTransition": false,
+              "transitionSourcePageId": null,
+              "transitionTargetPageId": null,
+              "transitionReason": null,
+              "transitionProgress": null,
+              "timeMs": 128892.5
+            },
+            {
+              "sequence": 31,
+              "reason": "async-layer-resolve",
+              "action": "full-current-page-state",
+              "pageId": "176_page",
+              "duringTransition": false,
+              "transitionSourcePageId": null,
+              "transitionTargetPageId": null,
+              "transitionReason": null,
+              "transitionProgress": null,
+              "timeMs": 129985.5
+            },
+            {
+              "sequence": 32,
+              "reason": "async-layer-resolve",
+              "action": "full-current-page-state",
+              "pageId": "176_page",
+              "duringTransition": false,
+              "transitionSourcePageId": null,
+              "transitionTargetPageId": null,
+              "transitionReason": null,
+              "transitionProgress": null,
+              "timeMs": 131158.5
+            },
+            {
+              "sequence": 33,
+              "reason": "async-layer-resolve",
+              "action": "full-current-page-state",
+              "pageId": "176_page",
+              "duringTransition": false,
+              "transitionSourcePageId": null,
+              "transitionTargetPageId": null,
+              "transitionReason": null,
+              "transitionProgress": null,
+              "timeMs": 137703.40000000037
+            },
+            {
+              "sequence": 34,
+              "reason": "async-layer-resolve",
+              "action": "full-current-page-state",
+              "pageId": "176_page",
+              "duringTransition": false,
+              "transitionSourcePageId": null,
+              "transitionTargetPageId": null,
+              "transitionReason": null,
+              "transitionProgress": null,
+              "timeMs": 140041.1000000015
+            },
+            {
+              "sequence": 35,
+              "reason": "async-layer-resolve",
+              "action": "full-current-page-state",
+              "pageId": "176_page",
+              "duringTransition": false,
+              "transitionSourcePageId": null,
+              "transitionTargetPageId": null,
+              "transitionReason": null,
+              "transitionProgress": null,
+              "timeMs": 141289.5
+            },
+            {
+              "sequence": 36,
+              "reason": "async-layer-resolve",
+              "action": "transition-aware-current-page-state",
+              "pageId": "143_page",
+              "duringTransition": true,
+              "transitionSourcePageId": "176_page",
+              "transitionTargetPageId": "143_page",
+              "transitionReason": "page-click",
+              "transitionProgress": 0.02510344827586207,
+              "timeMs": 143507.40000000037
+            },
+            {
+              "sequence": 37,
+              "reason": "async-layer-resolve",
+              "action": "transition-aware-current-page-state",
+              "pageId": "143_page",
+              "duringTransition": true,
+              "transitionSourcePageId": "176_page",
+              "transitionTargetPageId": "143_page",
+              "transitionReason": "page-click",
+              "transitionProgress": 0.6327586206896552,
+              "timeMs": 147912.90000000037
+            },
+            {
+              "sequence": 38,
+              "reason": "async-layer-resolve",
+              "action": "transition-aware-current-page-state",
+              "pageId": "143_page",
+              "duringTransition": true,
+              "transitionSourcePageId": "176_page",
+              "transitionTargetPageId": "143_page",
+              "transitionReason": "page-click",
+              "transitionProgress": 0.6567724137930521,
+              "timeMs": 148087
+            },
+            {
+              "sequence": 39,
+              "reason": "async-layer-resolve",
+              "action": "transition-aware-current-page-state",
+              "pageId": "143_page",
+              "duringTransition": true,
+              "transitionSourcePageId": "176_page",
+              "transitionTargetPageId": "143_page",
+              "transitionReason": "page-click",
+              "transitionProgress": 0.6819172413793617,
+              "timeMs": 148269.30000000075
+            },
+            {
+              "sequence": 40,
+              "reason": "async-layer-resolve",
+              "action": "transition-aware-current-page-state",
+              "pageId": "143_page",
+              "duringTransition": true,
+              "transitionSourcePageId": "176_page",
+              "transitionTargetPageId": "143_page",
+              "transitionReason": "page-click",
+              "transitionProgress": 0.7071448275863097,
+              "timeMs": 148452.20000000112
+            },
+            {
+              "sequence": 41,
+              "reason": "async-layer-resolve",
+              "action": "transition-aware-current-page-state",
+              "pageId": "143_page",
+              "duringTransition": true,
+              "transitionSourcePageId": "176_page",
+              "transitionTargetPageId": "143_page",
+              "transitionReason": "page-click",
+              "transitionProgress": 0.731889655172568,
+              "timeMs": 148631.6000000015
+            },
+            {
+              "sequence": 42,
+              "reason": "async-layer-resolve",
+              "action": "full-current-page-state",
+              "pageId": "143_page",
+              "duringTransition": false,
+              "transitionSourcePageId": null,
+              "transitionTargetPageId": null,
+              "transitionReason": null,
+              "transitionProgress": null,
+              "timeMs": 154297.70000000112
+            },
+            {
+              "sequence": 43,
+              "reason": "async-layer-resolve",
+              "action": "full-current-page-state",
+              "pageId": "143_page",
+              "duringTransition": false,
+              "transitionSourcePageId": null,
+              "transitionTargetPageId": null,
+              "transitionReason": null,
+              "transitionProgress": null,
+              "timeMs": 154617.80000000075
+            }
+          ]
+        }
+      },
+      "completedAtMs": 316044.6000000015
+    }
+  }
+}

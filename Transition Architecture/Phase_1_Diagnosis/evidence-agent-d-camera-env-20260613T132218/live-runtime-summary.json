@@ -1,0 +1,828 @@
+{
+  "reportId": "PHASE1-D-CAMERA-ENV-COMMIT-20260613T132218",
+  "baseUrl": "http://127.0.0.1:5173/?project=utah-forge",
+  "browserFallback": "standalone-playwright-after-in-app-browser-tab-loss",
+  "sampleCount": 15,
+  "consoleWarnings": [
+    "[.WebGL-0x2f1c00171400]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels",
+    "[.WebGL-0x2f1c00171400]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels",
+    "[.WebGL-0x2f1c00171400]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels",
+    "[.WebGL-0x2f1c00171400]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels (this message will no longer repeat)"
+  ],
+  "pageErrors": 0,
+  "requestFailures": 0,
+  "badResponses": 0,
+  "environmentFog": {
+    "transition": {
+      "sourcePageId": "158_page",
+      "targetPageId": "168_page",
+      "durationMs": 3000,
+      "easing": "easeInOutSine",
+      "sourceState": {
+        "backgroundHex": "#d4d4d4",
+        "fogHex": "#b5b5b5",
+        "fogDensity": 0.0000037267080745341615,
+        "fogEnabled": true
+      },
+      "targetState": {
+        "backgroundHex": "#383838",
+        "fogHex": "#454545",
+        "fogDensity": 0.0000037267080745341615,
+        "fogEnabled": true
+      }
+    },
+    "samples": [
+      {
+        "label": "environment-fog-2-to-3-500ms",
+        "runProgress": 0.5110470352028504,
+        "frame": {
+          "backgroundHex": "#b4b4b4",
+          "fogHex": "#9b9b9b",
+          "fogDensity": 0.0000037267080745341615,
+          "fogEnabled": true,
+          "progress": 0.3280226486087272,
+          "done": false
+        },
+        "sceneBackgroundHex": "#b4b4b4",
+        "sceneFog": {
+          "color": "#9b9b9b",
+          "density": 0.0000037267080745341615
+        }
+      },
+      {
+        "label": "environment-fog-2-to-3-1600ms",
+        "runProgress": 1,
+        "frame": {
+          "backgroundHex": "#474747",
+          "fogHex": "#4d4d4d",
+          "fogDensity": 0.0000037267080745341615,
+          "fogEnabled": true,
+          "progress": 0.9632117665564339,
+          "done": false
+        },
+        "sceneBackgroundHex": "#474747",
+        "sceneFog": {
+          "color": "#4d4d4d",
+          "density": 0.0000037267080745341615
+        }
+      }
+    ],
+    "settled": {
+      "label": "environment-fog-2-to-3-settled",
+      "sceneBackgroundHex": "#383838",
+      "sceneFog": {
+        "color": "#454545",
+        "density": 0.0000037267080745341615
+      },
+      "commit": {
+        "transitionId": "page-2",
+        "commitOwner": "SceneManager",
+        "commitPhase": "duplicate-target-assertion",
+        "hasFinalized": true,
+        "finalizedAt": 23203.099999999627,
+        "suppressedDuplicateAssertions": 2
+      },
+      "traces": [
+        {
+          "phase": "tween-completion",
+          "attemptedBy": "layerTweenRuntime.tickLayerTweens",
+          "allowed": true,
+          "suppressed": false,
+          "visibleDeltaCount": 0,
+          "unresolvedCoverageCount": 0,
+          "reason": "transition commit observation recorded"
+        },
+        {
+          "phase": "terminal-before-commit",
+          "attemptedBy": "SceneManager.finalizePageTransitionCommit",
+          "allowed": true,
+          "suppressed": false,
+          "visibleDeltaCount": 0,
+          "unresolvedCoverageCount": 22,
+          "reason": "terminal graph captured before final commit owner runs"
+        },
+        {
+          "phase": "final-commit",
+          "attemptedBy": "SceneManager.finalizePageTransitionCommit",
+          "allowed": true,
+          "suppressed": false,
+          "visibleDeltaCount": 0,
+          "unresolvedCoverageCount": 44,
+          "reason": "SceneManager owns page-transition final commit"
+        },
+        {
+          "phase": "post-commit-graph-check",
+          "attemptedBy": "SceneManager.finalizePageTransitionCommit",
+          "allowed": true,
+          "suppressed": false,
+          "visibleDeltaCount": 0,
+          "unresolvedCoverageCount": 44,
+          "reason": "post-commit graph comparison is observational only"
+        },
+        {
+          "phase": "tween-completion",
+          "attemptedBy": "layerTweenRuntime.tickLayerTweens",
+          "allowed": false,
+          "suppressed": true,
+          "visibleDeltaCount": 0,
+          "unresolvedCoverageCount": 0,
+          "reason": "transition already finalized by SceneManager"
+        },
+        {
+          "phase": "duplicate-target-assertion",
+          "attemptedBy": "PageController.reapplyCurrentPageState",
+          "allowed": false,
+          "suppressed": true,
+          "visibleDeltaCount": 0,
+          "unresolvedCoverageCount": 0,
+          "reason": "post-transition target assertion suppressed after final commit"
+        }
+      ],
+      "lateReapply": {
+        "totalCount": 23,
+        "duringTransitionCount": 0,
+        "lastEvents": [
+          {
+            "sequence": 21,
+            "reason": "async-layer-resolve",
+            "action": "full-current-page-state",
+            "duringTransition": false,
+            "transitionProgress": null
+          },
+          {
+            "sequence": 22,
+            "reason": "async-layer-resolve",
+            "action": "full-current-page-state",
+            "duringTransition": false,
+            "transitionProgress": null
+          },
+          {
+            "sequence": 23,
+            "reason": "async-layer-resolve",
+            "action": "full-current-page-state",
+            "duringTransition": false,
+            "transitionProgress": null
+          }
+        ]
+      }
+    }
+  },
+  "overlaysLegendsLabels": {
+    "transitionSample": {
+      "label": "overlay-legend-8-to-9-550ms",
+      "run": {
+        "sourcePageId": "171_page",
+        "targetPageId": "173_page",
+        "progress": 1,
+        "presenterOverlay": {
+          "policy": "crossfade-slide",
+          "active": true,
+          "sourcePageId": "171_page",
+          "targetPageId": "173_page",
+          "progress": 1,
+          "slideDirection": 1,
+          "cssTransitionsDisabledWhileActive": true
+        },
+        "labels": {
+          "policy": "hold-source-until-threshold",
+          "switchThreshold": 0.92,
+          "activePageId": "173_page",
+          "sourcePageId": "171_page",
+          "targetPageId": "173_page"
+        },
+        "legends": {
+          "stackPolicy": "phased-layout-slide",
+          "resistivityPolicy": "interpolate-source-target",
+          "defaultPolicy": "target-from-start",
+          "sourcePageId": "171_page",
+          "targetPageId": "173_page",
+          "progress": 1,
+          "exitEnd": 0.34,
+          "layoutEnd": 0.68,
+          "targetInteractiveThreshold": 0.92
+        }
+      },
+      "sceneOverlays": {
+        "policy": "transition-clock-linear-fade",
+        "fadeDurationMs": 800,
+        "lastTransitionClockDurationMs": 3000,
+        "registeredHandleCount": 0,
+        "activeTweenCount": 0,
+        "activeOutlineTweenCount": 0,
+        "visibleHandleCount": 0,
+        "lastPhase": "transition-start",
+        "lastPageId": "173_page",
+        "lastResolvedCount": 0,
+        "handles": []
+      }
+    },
+    "settled": {
+      "label": "overlay-legend-8-to-9-settled",
+      "sceneOverlays": {
+        "policy": "transition-clock-linear-fade",
+        "fadeDurationMs": 800,
+        "lastTransitionClockDurationMs": 3000,
+        "registeredHandleCount": 0,
+        "activeTweenCount": 0,
+        "activeOutlineTweenCount": 0,
+        "visibleHandleCount": 0,
+        "lastPhase": "transition-end",
+        "lastPageId": "173_page",
+        "lastResolvedCount": 0,
+        "handles": []
+      },
+      "commit": {
+        "transitionId": "page-4",
+        "commitOwner": "SceneManager",
+        "commitPhase": "duplicate-target-assertion",
+        "hasFinalized": true,
+        "finalizedAt": 34121.40000000037,
+        "suppressedDuplicateAssertions": 2
+      },
+      "traces": [
+        {
+          "phase": "tween-completion",
+          "attemptedBy": "layerTweenRuntime.tickLayerTweens",
+          "allowed": true,
+          "suppressed": false,
+          "visibleDeltaCount": 0,
+          "unresolvedCoverageCount": 0,
+          "reason": "transition commit observation recorded"
+        },
+        {
+          "phase": "tween-completion",
+          "attemptedBy": "layerTweenRuntime.tickLayerTweens",
+          "allowed": true,
+          "suppressed": false,
+          "visibleDeltaCount": 0,
+          "unresolvedCoverageCount": 0,
+          "reason": "transition commit observation recorded"
+        },
+        {
+          "phase": "terminal-before-commit",
+          "attemptedBy": "SceneManager.finalizePageTransitionCommit",
+          "allowed": true,
+          "suppressed": false,
+          "visibleDeltaCount": 0,
+          "unresolvedCoverageCount": 56,
+          "reason": "terminal graph captured before final commit owner runs"
+        },
+        {
+          "phase": "final-commit",
+          "attemptedBy": "SceneManager.finalizePageTransitionCommit",
+          "allowed": true,
+          "suppressed": false,
+          "visibleDeltaCount": 0,
+          "unresolvedCoverageCount": 112,
+          "reason": "SceneManager owns page-transition final commit"
+        },
+        {
+          "phase": "post-commit-graph-check",
+          "attemptedBy": "SceneManager.finalizePageTransitionCommit",
+          "allowed": true,
+          "suppressed": false,
+          "visibleDeltaCount": 0,
+          "unresolvedCoverageCount": 112,
+          "reason": "post-commit graph comparison is observational only"
+        },
+        {
+          "phase": "tween-completion",
+          "attemptedBy": "layerTweenRuntime.tickLayerTweens",
+          "allowed": false,
+          "suppressed": true,
+          "visibleDeltaCount": 0,
+          "unresolvedCoverageCount": 0,
+          "reason": "transition already finalized by SceneManager"
+        },
+        {
+          "phase": "duplicate-target-assertion",
+          "attemptedBy": "PageController.reapplyCurrentPageState",
+          "allowed": false,
+          "suppressed": true,
+          "visibleDeltaCount": 0,
+          "unresolvedCoverageCount": 0,
+          "reason": "post-transition target assertion suppressed after final commit"
+        }
+      ],
+      "lateReapply": {
+        "totalCount": 23,
+        "duringTransitionCount": 0,
+        "lastEvents": [
+          {
+            "sequence": 21,
+            "reason": "async-layer-resolve",
+            "action": "full-current-page-state",
+            "duringTransition": false,
+            "transitionProgress": null
+          },
+          {
+            "sequence": 22,
+            "reason": "async-layer-resolve",
+            "action": "full-current-page-state",
+            "duringTransition": false,
+            "transitionProgress": null
+          },
+          {
+            "sequence": 23,
+            "reason": "async-layer-resolve",
+            "action": "full-current-page-state",
+            "duringTransition": false,
+            "transitionProgress": null
+          }
+        ]
+      }
+    }
+  },
+  "dynamicCamera": {
+    "activeSample": {
+      "label": "dynamic-camera-4-to-5-700ms",
+      "run": {
+        "sourcePageId": "169_page",
+        "targetPageId": "145_page",
+        "progress": 0.712131321170264,
+        "dynamicCameraTransitionActive": true
+      },
+      "camera": {
+        "position": [
+          -27863.435985475517,
+          12420.02651305788,
+          46589.4706750084
+        ],
+        "target": [
+          -6118.437892203063,
+          -9297.619313991721,
+          1129.486868936714
+        ],
+        "up": [
+          0,
+          0,
+          1
+        ],
+        "fov": 70,
+        "distanceToTarget": 54873.59301151955,
+        "finite": true
+      },
+      "envFrame": {
+        "backgroundHex": "#a9a9a9",
+        "fogHex": "#939393",
+        "fogDensity": 0.0000037267080745341615,
+        "fogEnabled": true,
+        "progress": 0.42359332221768636,
+        "done": false
+      }
+    },
+    "settled": {
+      "label": "dynamic-camera-4-to-5-settled",
+      "lastRun": {
+        "runId": "page-6",
+        "status": "completed",
+        "mode": "page",
+        "reason": "page-click",
+        "sourcePageId": "169_page",
+        "targetPageId": "145_page",
+        "rawProgress": 1,
+        "easedProgress": 1,
+        "pageTransitionActive": false,
+        "dynamicCameraTransitionActive": false,
+        "interruptedRunIds": []
+      },
+      "camera": {
+        "position": [
+          -121501.01170880235,
+          69991.79835309609,
+          202222.99999999988
+        ],
+        "target": [
+          -8744,
+          -6253.999999999999,
+          1962
+        ],
+        "up": [
+          0,
+          0,
+          1
+        ],
+        "fov": 70,
+        "distanceToTarget": 242140.52444190322,
+        "finite": true
+      },
+      "commit": {
+        "transitionId": "page-6",
+        "commitOwner": "SceneManager",
+        "commitPhase": "duplicate-target-assertion",
+        "hasFinalized": true,
+        "finalizedAt": 44086.90000000037,
+        "suppressedDuplicateAssertions": 2
+      },
+      "traces": [
+        {
+          "phase": "tween-completion",
+          "attemptedBy": "layerTweenRuntime.tickLayerTweens",
+          "allowed": true,
+          "suppressed": false,
+          "visibleDeltaCount": 0,
+          "unresolvedCoverageCount": 0,
+          "reason": "transition commit observation recorded"
+        },
+        {
+          "phase": "terminal-before-commit",
+          "attemptedBy": "SceneManager.finalizePageTransitionCommit",
+          "allowed": true,
+          "suppressed": false,
+          "visibleDeltaCount": 0,
+          "unresolvedCoverageCount": 26,
+          "reason": "terminal graph captured before final commit owner runs"
+        },
+        {
+          "phase": "final-commit",
+          "attemptedBy": "SceneManager.finalizePageTransitionCommit",
+          "allowed": true,
+          "suppressed": false,
+          "visibleDeltaCount": 0,
+          "unresolvedCoverageCount": 52,
+          "reason": "SceneManager owns page-transition final commit"
+        },
+        {
+          "phase": "post-commit-graph-check",
+          "attemptedBy": "SceneManager.finalizePageTransitionCommit",
+          "allowed": true,
+          "suppressed": false,
+          "visibleDeltaCount": 0,
+          "unresolvedCoverageCount": 52,
+          "reason": "post-commit graph comparison is observational only"
+        },
+        {
+          "phase": "tween-completion",
+          "attemptedBy": "layerTweenRuntime.tickLayerTweens",
+          "allowed": false,
+          "suppressed": true,
+          "visibleDeltaCount": 0,
+          "unresolvedCoverageCount": 0,
+          "reason": "transition already finalized by SceneManager"
+        },
+        {
+          "phase": "duplicate-target-assertion",
+          "attemptedBy": "PageController.reapplyCurrentPageState",
+          "allowed": false,
+          "suppressed": true,
+          "visibleDeltaCount": 0,
+          "unresolvedCoverageCount": 0,
+          "reason": "post-transition target assertion suppressed after final commit"
+        }
+      ],
+      "lateReapply": {
+        "totalCount": 23,
+        "duringTransitionCount": 0,
+        "lastEvents": [
+          {
+            "sequence": 21,
+            "reason": "async-layer-resolve",
+            "action": "full-current-page-state",
+            "duringTransition": false,
+            "transitionProgress": null
+          },
+          {
+            "sequence": 22,
+            "reason": "async-layer-resolve",
+            "action": "full-current-page-state",
+            "duringTransition": false,
+            "transitionProgress": null
+          },
+          {
+            "sequence": 23,
+            "reason": "async-layer-resolve",
+            "action": "full-current-page-state",
+            "duringTransition": false,
+            "transitionProgress": null
+          }
+        ]
+      }
+    },
+    "postSettle": {
+      "label": "dynamic-camera-4-to-5-post-settle-1200ms",
+      "camera": {
+        "position": [
+          -130594.07282864918,
+          54410.03553715223,
+          202222.99999999977
+        ],
+        "target": [
+          -8744,
+          -6253.999999999999,
+          1962
+        ],
+        "up": [
+          0,
+          0,
+          1
+        ],
+        "fov": 70,
+        "distanceToTarget": 242140.52444190314,
+        "finite": true
+      },
+      "commit": {
+        "transitionId": "page-6",
+        "commitOwner": "SceneManager",
+        "commitPhase": "duplicate-target-assertion",
+        "hasFinalized": true,
+        "finalizedAt": 44086.90000000037,
+        "suppressedDuplicateAssertions": 2
+      }
+    }
+  },
+  "interruptionReplan": {
+    "beforeSecondGoto": {
+      "label": "interruption-before-second-goto",
+      "run": {
+        "runId": "page-7",
+        "reason": "page-click",
+        "sourcePageId": "145_page",
+        "targetPageId": "140_page",
+        "progress": 0.9677272286053017,
+        "dynamicCameraTransitionActive": true,
+        "interruptedRunIds": []
+      },
+      "camera": {
+        "position": [
+          -130681.32548422362,
+          49690.85346038395,
+          198646.14350218783
+        ],
+        "target": [
+          -8996.173144675431,
+          -7053.106528178762,
+          1396.0548956924567
+        ],
+        "up": [
+          0,
+          0,
+          1
+        ],
+        "fov": 70,
+        "distanceToTarget": 238610.03908124432,
+        "finite": true
+      }
+    },
+    "secondActive": {
+      "label": "interruption-second-600ms",
+      "run": {
+        "runId": "page-8",
+        "reason": "interrupted",
+        "sourcePageId": "140_page",
+        "targetPageId": "115_page",
+        "progress": 1,
+        "interruptedRunIds": [
+          "page-7"
+        ]
+      },
+      "lastRun": {
+        "runId": "page-7",
+        "status": "cancelled",
+        "mode": "page",
+        "reason": "page-click",
+        "sourcePageId": "145_page",
+        "targetPageId": "140_page",
+        "rawProgress": 1,
+        "easedProgress": 1,
+        "pageTransitionActive": false,
+        "dynamicCameraTransitionActive": false,
+        "interruptedRunIds": []
+      },
+      "camera": {
+        "position": [
+          -88359.10160710325,
+          50951.670285640736,
+          131366.44392707804
+        ],
+        "target": [
+          -12702.540435281753,
+          -18532.254801657447,
+          -6869.7777412739115
+        ],
+        "up": [
+          0,
+          0,
+          1
+        ],
+        "fov": 70,
+        "distanceToTarget": 172224.22615597543,
+        "finite": true
+      }
+    },
+    "settled": {
+      "label": "interruption-settled-index-7",
+      "lastRun": {
+        "runId": "page-8",
+        "status": "completed",
+        "mode": "page",
+        "reason": "interrupted",
+        "sourcePageId": "140_page",
+        "targetPageId": "115_page",
+        "rawProgress": 1,
+        "easedProgress": 1,
+        "pageTransitionActive": false,
+        "dynamicCameraTransitionActive": false,
+        "interruptedRunIds": [
+          "page-7"
+        ]
+      },
+      "camera": {
+        "position": [
+          -14423.188240111194,
+          9942.014948103137,
+          4110.685501525415
+        ],
+        "target": [
+          -9107,
+          -3916.000000000001,
+          1833
+        ],
+        "up": [
+          0,
+          0,
+          1
+        ],
+        "fov": 70,
+        "distanceToTarget": 15016.467192718987,
+        "finite": true
+      },
+      "commit": {
+        "transitionId": "page-8",
+        "commitOwner": "SceneManager",
+        "commitPhase": "duplicate-target-assertion",
+        "hasFinalized": true,
+        "finalizedAt": 55721.29999999888,
+        "suppressedDuplicateAssertions": 2
+      },
+      "traces": [
+        {
+          "phase": "tween-completion",
+          "attemptedBy": "layerTweenRuntime.tickLayerTweens",
+          "allowed": true,
+          "suppressed": false,
+          "visibleDeltaCount": 0,
+          "unresolvedCoverageCount": 0,
+          "reason": "transition commit observation recorded"
+        },
+        {
+          "phase": "terminal-before-commit",
+          "attemptedBy": "SceneManager.finalizePageTransitionCommit",
+          "allowed": true,
+          "suppressed": false,
+          "visibleDeltaCount": 0,
+          "unresolvedCoverageCount": 83,
+          "reason": "terminal graph captured before final commit owner runs"
+        },
+        {
+          "phase": "final-commit",
+          "attemptedBy": "SceneManager.finalizePageTransitionCommit",
+          "allowed": true,
+          "suppressed": false,
+          "visibleDeltaCount": 0,
+          "unresolvedCoverageCount": 166,
+          "reason": "SceneManager owns page-transition final commit"
+        },
+        {
+          "phase": "post-commit-graph-check",
+          "attemptedBy": "SceneManager.finalizePageTransitionCommit",
+          "allowed": true,
+          "suppressed": false,
+          "visibleDeltaCount": 0,
+          "unresolvedCoverageCount": 166,
+          "reason": "post-commit graph comparison is observational only"
+        },
+        {
+          "phase": "tween-completion",
+          "attemptedBy": "layerTweenRuntime.tickLayerTweens",
+          "allowed": false,
+          "suppressed": true,
+          "visibleDeltaCount": 0,
+          "unresolvedCoverageCount": 0,
+          "reason": "transition already finalized by SceneManager"
+        },
+        {
+          "phase": "duplicate-target-assertion",
+          "attemptedBy": "PageController.reapplyCurrentPageState",
+          "allowed": false,
+          "suppressed": true,
+          "visibleDeltaCount": 0,
+          "unresolvedCoverageCount": 0,
+          "reason": "post-transition target assertion suppressed after final commit"
+        }
+      ],
+      "lateReapply": {
+        "totalCount": 23,
+        "duringTransitionCount": 0,
+        "lastEvents": [
+          {
+            "sequence": 21,
+            "reason": "async-layer-resolve",
+            "action": "full-current-page-state",
+            "duringTransition": false,
+            "transitionProgress": null
+          },
+          {
+            "sequence": 22,
+            "reason": "async-layer-resolve",
+            "action": "full-current-page-state",
+            "duringTransition": false,
+            "transitionProgress": null
+          },
+          {
+            "sequence": 23,
+            "reason": "async-layer-resolve",
+            "action": "full-current-page-state",
+            "duringTransition": false,
+            "transitionProgress": null
+          }
+        ]
+      }
+    }
+  },
+  "topoRenderStackSample": {
+    "label": "initial-global-settings",
+    "topoRenderStack": {
+      "materialPreset": "image:naip-2024-aerial",
+      "orthoPhotoPath": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/naip_2024/naip_2024_regional_8192.webp?v=684f5a7e42719aa9",
+      "orthoPhotoOpacity": 1,
+      "bounds": null,
+      "publicSurfaceClip": {
+        "enabled": null,
+        "shape": null,
+        "centerX": null,
+        "centerY": null,
+        "centerZ": null,
+        "sizeX": null,
+        "sizeY": null,
+        "sizeZ": null,
+        "rotationZDeg": null,
+        "runtimeActive": true
+      },
+      "edgeFade": {
+        "distanceM": 90000,
+        "shape": "rounded-square",
+        "insetM": 40000,
+        "cornerRadiusM": 140000
+      },
+      "edgeOutline": {
+        "enabled": false,
+        "color": null,
+        "opacity": null,
+        "thicknessM": null
+      },
+      "activeTextureCache": {
+        "orthoPhotoTexturePath": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/naip_2024/naip_2024_regional_8192.webp?v=684f5a7e42719aa9",
+        "topoImageDetailTexturePath": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/naip_2024/naip_2024_forge_detail_8192.webp"
+      },
+      "layerIds": {
+        "surfaceLayerId": "terrain",
+        "graticuleLayerIds": [
+          "utah-forge-topo-graticule"
+        ],
+        "publicSurfaceLayerIds": [
+          "terrain",
+          "utah-forge-topo-graticule",
+          "naip-2024-tile-diagnostics",
+          "transport-roads",
+          "hydrography-streams",
+          "hydrography-lakes"
+        ]
+      },
+      "terrainMeshes": [
+        {
+          "name": "terrain",
+          "type": "Group",
+          "visible": true,
+          "geometryType": null,
+          "materialType": "ShaderMaterial",
+          "shaderMaterialType": "ShaderMaterial",
+          "publicSurfaceClipPlaneCount": 0,
+          "userDataKeys": [
+            "terrainHandle",
+            "terrainUtmBounds",
+            "terrainBaseZ",
+            "publicSurfaceBaseZ",
+            "terrainLodHandle",
+            "terrainLodDebugState"
+          ]
+        },
+        {
+          "name": "terrain-surface",
+          "type": "Mesh",
+          "visible": true,
+          "geometryType": "BufferGeometry",
+          "materialType": "ShaderMaterial",
+          "shaderMaterialType": "ShaderMaterial",
+          "publicSurfaceClipPlaneCount": 0,
+          "userDataKeys": [
+            "terrainHandle",
+            "terrainUtmBounds",
+            "terrainBaseZ",
+            "terrainLodTier",
+            "terrainVertexEstimate"
+          ]
+        }
+      ]
+    }
+  }
+}

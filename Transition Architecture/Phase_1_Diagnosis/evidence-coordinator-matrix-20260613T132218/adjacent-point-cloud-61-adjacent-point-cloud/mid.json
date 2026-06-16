@@ -1,0 +1,4894 @@
+{
+  "caseId": "adjacent-point-cloud-61",
+  "caseName": "adjacent-point-cloud",
+  "surfaces": "feature-family coverage: point clouds. Page ids are disposable fixture evidence; remediation must target the shared transition rule.",
+  "phase": "mid",
+  "fromIndex": 60,
+  "toIndex": 61,
+  "sourcePageId": "27_seismic_fence_panels",
+  "targetPageId": "28_integrated_seismic_resistivity_context",
+  "lateReapplyProbe": null,
+  "capturedAt": "2026-06-13T20:32:47.129Z",
+  "state": {
+    "currentIndex": 60,
+    "currentPageId": "27_seismic_fence_panels",
+    "targetIndex": 61,
+    "targetPageId": "28_integrated_seismic_resistivity_context",
+    "transitionProgress": 0.9516697755400697,
+    "transitionFrame": {
+      "active": true,
+      "sourceIndex": 60,
+      "targetIndex": 61,
+      "sourcePageId": "27_seismic_fence_panels",
+      "targetPageId": "28_integrated_seismic_resistivity_context",
+      "progress": 0.9516697755400697,
+      "rawProgress": 0.7705333333332092,
+      "reason": "page-click",
+      "runId": "page-40"
+    },
+    "isTransitioning": true,
+    "transitionContext": {
+      "sourcePageId": "27_seismic_fence_panels",
+      "targetPageId": "28_integrated_seismic_resistivity_context",
+      "reason": "page-click",
+      "startMs": 525747.1000000015,
+      "durationMs": 3000,
+      "sourcePose": {
+        "position": [
+          -72734.67301267442,
+          -10579.26309022274,
+          -6006.157920848738
+        ],
+        "target": [
+          6096,
+          -3222,
+          -18974
+        ],
+        "up": [
+          0,
+          0,
+          1
+        ],
+        "fov": 70
+      },
+      "targetPose": {
+        "position": [
+          -88734.90318739192,
+          -88943.7167018159,
+          30138.474109371047
+        ],
+        "target": [
+          6096,
+          -3222,
+          -18974
+        ],
+        "up": [
+          0,
+          0,
+          1
+        ],
+        "fov": 70
+      }
+    },
+    "sceneTransition": {
+      "active": true,
+      "sourcePageId": "27_seismic_fence_panels",
+      "targetPageId": "28_integrated_seismic_resistivity_context",
+      "reason": "page-click",
+      "activeDataTransitionCount": 0,
+      "snapshotCount": 0,
+      "scalarTweenCount": 0,
+      "layerTweenCount": 0,
+      "workingAreaFocusTweenActive": false,
+      "sceneSectionStyleTweenActive": false,
+      "sceneSectionHelperTransitionSnapshotActive": false,
+      "sceneSectionHelperTransitionOpacity": 1,
+      "layerTweenTick": {
+        "timestampMs": 527691.4,
+        "totalMs": 0.6,
+        "sceneSectionMs": 0,
+        "sceneSectionApply": null,
+        "workingAreaMs": 0,
+        "scalarMs": 0,
+        "layerMs": 0,
+        "snapshotMs": 0,
+        "helperSnapshotMs": 0,
+        "envelopeMs": 0.6,
+        "activeSceneTransition": true,
+        "sceneSectionApplyMode": "none",
+        "layerTweenIds": [],
+        "scalarTweenIds": [],
+        "snapshotIds": [],
+        "layerTweenCountBefore": 0,
+        "scalarTweenCountBefore": 0,
+        "snapshotCountBefore": 0,
+        "sceneSectionStyleTweenActiveBefore": false,
+        "helperSnapshotActiveBefore": false,
+        "workingAreaFocusTweenActiveBefore": false
+      },
+      "frameUpdate": {
+        "timestampMs": 527691.4,
+        "totalMs": 1.3,
+        "cameraLockedSunMs": 0,
+        "layerTweensMs": 0.6,
+        "environmentSceneMs": 0.3,
+        "cinematicPostMs": 0.2,
+        "boreLensMs": 0,
+        "lightingStudioScaleMs": 0,
+        "dynamicCameraOrbitCenterScaleMs": 0,
+        "pageCameraMarkerScaleMs": 0,
+        "ezGammaBillboardMs": 0,
+        "sceneSectionTextFacingMs": 0,
+        "sectionIsoThresholdOcclusionMs": 0,
+        "topoGridCameraVisibilityMs": 0,
+        "localAtmosphereMs": 0,
+        "sceneOverlayTickMs": 0.2,
+        "activeSceneTransition": true
+      },
+      "sectionIsoOverlays": {
+        "opacityPolicy": "split-section-iso-overlay-opacity-from-layer-opacity",
+        "overlayMaterialCount": 16,
+        "independentOverlayMaterialCount": 0,
+        "transitionEnvelopeOverlayMaterialCount": 0,
+        "hiddenWithParentMaterialCount": 16,
+        "layerRenderOpacityMin": 0,
+        "layerRenderOpacityMax": 0,
+        "transitionOpacityMin": 0,
+        "transitionOpacityMax": 0
+      },
+      "sceneSectionHelpers": {
+        "groundTracePolicy": "mirror-delayed-ground-trace-into-helper-snapshot",
+        "liveGroundTraceCount": 0,
+        "snapshotGroundTraceCount": 0,
+        "snapshotActive": false,
+        "transitionOpacity": 1
+      },
+      "productFamilies": [
+        {
+          "layerId": "utah-forge-phase3-demo-boreholes",
+          "layerType": "mesh",
+          "family": "simple-geometry",
+          "policy": "preserve",
+          "transitionKind": "none",
+          "stateSource": "loaded-layer",
+          "loadedAtStart": true,
+          "sourceVisible": true,
+          "targetVisible": true,
+          "sourceOpacity": 1,
+          "targetOpacity": 1,
+          "reason": "layer remains in the same transition state"
+        },
+        {
+          "layerId": "utah-forge-site-boundary",
+          "layerType": "line",
+          "family": "simple-geometry",
+          "policy": "preserve",
+          "transitionKind": "none",
+          "stateSource": "loaded-layer",
+          "loadedAtStart": true,
+          "sourceVisible": true,
+          "targetVisible": true,
+          "sourceOpacity": 1,
+          "targetOpacity": 1,
+          "reason": "layer remains in the same transition state"
+        },
+        {
+          "layerId": "utah-forge-mt-stations",
+          "layerType": "point",
+          "family": "point-markers",
+          "policy": "preserve",
+          "transitionKind": "none",
+          "stateSource": "loaded-layer",
+          "loadedAtStart": true,
+          "sourceVisible": true,
+          "targetVisible": true,
+          "sourceOpacity": 1,
+          "targetOpacity": 1,
+          "reason": "layer remains in the same transition state"
+        },
+        {
+          "layerId": "utah-forge-mt-resistivity-full-density",
+          "layerType": "pointcloud",
+          "family": "point-cloud",
+          "policy": "preserve",
+          "transitionKind": "none",
+          "stateSource": "loaded-layer",
+          "loadedAtStart": true,
+          "sourceVisible": true,
+          "targetVisible": true,
+          "sourceOpacity": 0.05,
+          "targetOpacity": 0.05,
+          "reason": "layer remains in the same transition state"
+        }
+      ],
+      "assignmentTraces": [
+        {
+          "entityKey": "layer:bench-conformance-overlay",
+          "sourcePresence": "hidden",
+          "targetPresence": "absent",
+          "sourceReadiness": "ready",
+          "targetReadiness": "unavailable",
+          "sourceRepresentation": "layer:unknown",
+          "targetRepresentation": "layer:unknown",
+          "compatibility": "compatible",
+          "derivedFromEntityKey": null,
+          "dependencyPolicy": "independent",
+          "changedChannels": [],
+          "assignment": "skip",
+          "executionMode": "none",
+          "fallbackReason": null,
+          "traceReasons": [
+            "assignment:skip",
+            "compatibility:compatible"
+          ]
+        },
+        {
+          "entityKey": "layer:erosion-runoff-planning",
+          "sourcePresence": "hidden",
+          "targetPresence": "absent",
+          "sourceReadiness": "ready",
+          "targetReadiness": "unavailable",
+          "sourceRepresentation": "layer:unknown",
+          "targetRepresentation": "layer:unknown",
+          "compatibility": "compatible",
+          "derivedFromEntityKey": null,
+          "dependencyPolicy": "independent",
+          "changedChannels": [],
+          "assignment": "skip",
+          "executionMode": "none",
+          "fallbackReason": null,
+          "traceReasons": [
+            "assignment:skip",
+            "compatibility:compatible"
+          ]
+        },
+        {
+          "entityKey": "layer:haul-route-equipment-demo",
+          "sourcePresence": "hidden",
+          "targetPresence": "absent",
+          "sourceReadiness": "ready",
+          "targetReadiness": "unavailable",
+          "sourceRepresentation": "layer:unknown",
+          "targetRepresentation": "layer:unknown",
+          "compatibility": "compatible",
+          "derivedFromEntityKey": null,
+          "dependencyPolicy": "independent",
+          "changedChannels": [],
+          "assignment": "skip",
+          "executionMode": "none",
+          "fallbackReason": null,
+          "traceReasons": [
+            "assignment:skip",
+            "compatibility:compatible"
+          ]
+        },
+        {
+          "entityKey": "layer:hydrography-lakes",
+          "sourcePresence": "hidden",
+          "targetPresence": "hidden",
+          "sourceReadiness": "ready",
+          "targetReadiness": "ready",
+          "sourceRepresentation": "layer:polygon",
+          "targetRepresentation": "layer:polygon",
+          "compatibility": "compatible",
+          "derivedFromEntityKey": null,
+          "dependencyPolicy": "independent",
+          "changedChannels": [],
+          "assignment": "skip",
+          "executionMode": "none",
+          "fallbackReason": null,
+          "traceReasons": [
+            "assignment:skip",
+            "compatibility:compatible"
+          ]
+        },
+        {
+          "entityKey": "layer:hydrography-streams",
+          "sourcePresence": "hidden",
+          "targetPresence": "hidden",
+          "sourceReadiness": "ready",
+          "targetReadiness": "ready",
+          "sourceRepresentation": "layer:line",
+          "targetRepresentation": "layer:line",
+          "compatibility": "compatible",
+          "derivedFromEntityKey": null,
+          "dependencyPolicy": "independent",
+          "changedChannels": [],
+          "assignment": "skip",
+          "executionMode": "none",
+          "fallbackReason": null,
+          "traceReasons": [
+            "assignment:skip",
+            "compatibility:compatible"
+          ]
+        },
+        {
+          "entityKey": "layer:naip-2024-tile-diagnostics",
+          "sourcePresence": "hidden",
+          "targetPresence": "hidden",
+          "sourceReadiness": "ready",
+          "targetReadiness": "ready",
+          "sourceRepresentation": "layer:line",
+          "targetRepresentation": "layer:line",
+          "compatibility": "compatible",
+          "derivedFromEntityKey": null,
+          "dependencyPolicy": "independent",
+          "changedChannels": [],
+          "assignment": "skip",
+          "executionMode": "none",
+          "fallbackReason": null,
+          "traceReasons": [
+            "assignment:skip",
+            "compatibility:compatible"
+          ]
+        },
+        {
+          "entityKey": "layer:public-viewshed-overlay",
+          "sourcePresence": "hidden",
+          "targetPresence": "absent",
+          "sourceReadiness": "ready",
+          "targetReadiness": "unavailable",
+          "sourceRepresentation": "layer:unknown",
+          "targetRepresentation": "layer:unknown",
+          "compatibility": "compatible",
+          "derivedFromEntityKey": null,
+          "dependencyPolicy": "independent",
+          "changedChannels": [],
+          "assignment": "skip",
+          "executionMode": "none",
+          "fallbackReason": null,
+          "traceReasons": [
+            "assignment:skip",
+            "compatibility:compatible"
+          ]
+        },
+        {
+          "entityKey": "layer:quarry-drill-traces",
+          "sourcePresence": "hidden",
+          "targetPresence": "absent",
+          "sourceReadiness": "ready",
+          "targetReadiness": "unavailable",
+          "sourceRepresentation": "layer:unknown",
+          "targetRepresentation": "layer:unknown",
+          "compatibility": "compatible",
+          "derivedFromEntityKey": null,
+          "dependencyPolicy": "independent",
+          "changedChannels": [],
+          "assignment": "skip",
+          "executionMode": "none",
+          "fallbackReason": null,
+          "traceReasons": [
+            "assignment:skip",
+            "compatibility:compatible"
+          ]
+        },
+        {
+          "entityKey": "layer:quarry-imagery-base",
+          "sourcePresence": "hidden",
+          "targetPresence": "absent",
+          "sourceReadiness": "ready",
+          "targetReadiness": "unavailable",
+          "sourceRepresentation": "layer:unknown",
+          "targetRepresentation": "layer:unknown",
+          "compatibility": "compatible",
+          "derivedFromEntityKey": null,
+          "dependencyPolicy": "independent",
+          "changedChannels": [],
+          "assignment": "skip",
+          "executionMode": "none",
+          "fallbackReason": null,
+          "traceReasons": [
+            "assignment:skip",
+            "compatibility:compatible"
+          ]
+        },
+        {
+          "entityKey": "layer:quarry-lidar-surface",
+          "sourcePresence": "hidden",
+          "targetPresence": "absent",
+          "sourceReadiness": "ready",
+          "targetReadiness": "unavailable",
+          "sourceRepresentation": "layer:unknown",
+          "targetRepresentation": "layer:unknown",
+          "compatibility": "compatible",
+          "derivedFromEntityKey": null,
+          "dependencyPolicy": "independent",
+          "changedChannels": [],
+          "assignment": "skip",
+          "executionMode": "none",
+          "fallbackReason": null,
+          "traceReasons": [
+            "assignment:skip",
+            "compatibility:compatible"
+          ]
+        },
+        {
+          "entityKey": "layer:quarry-ore-grade-heatmap",
+          "sourcePresence": "hidden",
+          "targetPresence": "absent",
+          "sourceReadiness": "ready",
+          "targetReadiness": "unavailable",
+          "sourceRepresentation": "layer:unknown",
+          "targetRepresentation": "layer:unknown",
+          "compatibility": "compatible",
+          "derivedFromEntityKey": null,
+          "dependencyPolicy": "independent",
+          "changedChannels": [],
+          "assignment": "skip",
+          "executionMode": "none",
+          "fallbackReason": null,
+          "traceReasons": [
+            "assignment:skip",
+            "compatibility:compatible"
+          ]
+        },
+        {
+          "entityKey": "layer:restoration-preview",
+          "sourcePresence": "hidden",
+          "targetPresence": "absent",
+          "sourceReadiness": "ready",
+          "targetReadiness": "unavailable",
+          "sourceRepresentation": "layer:unknown",
+          "targetRepresentation": "layer:unknown",
+          "compatibility": "compatible",
+          "derivedFromEntityKey": null,
+          "dependencyPolicy": "independent",
+          "changedChannels": [],
+          "assignment": "skip",
+          "executionMode": "none",
+          "fallbackReason": null,
+          "traceReasons": [
+            "assignment:skip",
+            "compatibility:compatible"
+          ]
+        },
+        {
+          "entityKey": "layer:slope-stability-anomaly",
+          "sourcePresence": "hidden",
+          "targetPresence": "absent",
+          "sourceReadiness": "ready",
+          "targetReadiness": "unavailable",
+          "sourceRepresentation": "layer:unknown",
+          "targetRepresentation": "layer:unknown",
+          "compatibility": "compatible",
+          "derivedFromEntityKey": null,
+          "dependencyPolicy": "independent",
+          "changedChannels": [],
+          "assignment": "skip",
+          "executionMode": "none",
+          "fallbackReason": null,
+          "traceReasons": [
+            "assignment:skip",
+            "compatibility:compatible"
+          ]
+        },
+        {
+          "entityKey": "layer:stockpile-volume-zones",
+          "sourcePresence": "hidden",
+          "targetPresence": "absent",
+          "sourceReadiness": "ready",
+          "targetReadiness": "unavailable",
+          "sourceRepresentation": "layer:unknown",
+          "targetRepresentation": "layer:unknown",
+          "compatibility": "compatible",
+          "derivedFromEntityKey": null,
+          "dependencyPolicy": "independent",
+          "changedChannels": [],
+          "assignment": "skip",
+          "executionMode": "none",
+          "fallbackReason": null,
+          "traceReasons": [
+            "assignment:skip",
+            "compatibility:compatible"
+          ]
+        },
+        {
+          "entityKey": "layer:terrain",
+          "sourcePresence": "hidden",
+          "targetPresence": "hidden",
+          "sourceReadiness": "ready",
+          "targetReadiness": "ready",
+          "sourceRepresentation": "layer:geotiff",
+          "targetRepresentation": "layer:geotiff",
+          "compatibility": "compatible",
+          "derivedFromEntityKey": null,
+          "dependencyPolicy": "independent",
+          "changedChannels": [],
+          "assignment": "skip",
+          "executionMode": "none",
+          "fallbackReason": null,
+          "traceReasons": [
+            "assignment:skip",
+            "compatibility:compatible"
+          ]
+        },
+        {
+          "entityKey": "layer:topo-cloud-volume-2",
+          "sourcePresence": "hidden",
+          "targetPresence": "hidden",
+          "sourceReadiness": "ready",
+          "targetReadiness": "ready",
+          "sourceRepresentation": "layer:atmosphere-volume",
+          "targetRepresentation": "layer:atmosphere-volume",
+          "compatibility": "compatible",
+          "derivedFromEntityKey": null,
+          "dependencyPolicy": "independent",
+          "changedChannels": [],
+          "assignment": "skip",
+          "executionMode": "none",
+          "fallbackReason": null,
+          "traceReasons": [
+            "assignment:skip",
+            "compatibility:compatible"
+          ]
+        },
+        {
+          "entityKey": "layer:topo-cloud-volume-3",
+          "sourcePresence": "hidden",
+          "targetPresence": "hidden",
+          "sourceReadiness": "ready",
+          "targetReadiness": "ready",
+          "sourceRepresentation": "layer:atmosphere-volume",
+          "targetRepresentation": "layer:atmosphere-volume",
+          "compatibility": "compatible",
+          "derivedFromEntityKey": null,
+          "dependencyPolicy": "independent",
+          "changedChannels": [],
+          "assignment": "skip",
+          "executionMode": "none",
+          "fallbackReason": null,
+          "traceReasons": [
+            "assignment:skip",
+            "compatibility:compatible"
+          ]
+        },
+        {
+          "entityKey": "layer:transport-roads",
+          "sourcePresence": "hidden",
+          "targetPresence": "hidden",
+          "sourceReadiness": "ready",
+          "targetReadiness": "ready",
+          "sourceRepresentation": "layer:line",
+          "targetRepresentation": "layer:line",
+          "compatibility": "compatible",
+          "derivedFromEntityKey": null,
+          "dependencyPolicy": "independent",
+          "changedChannels": [],
+          "assignment": "skip",
+          "executionMode": "none",
+          "fallbackReason": null,
+          "traceReasons": [
+            "assignment:skip",
+            "compatibility:compatible"
+          ]
+        },
+        {
+          "entityKey": "layer:utah-forge-borehole-logs",
+          "sourcePresence": "hidden",
+          "targetPresence": "hidden",
+          "sourceReadiness": "ready",
+          "targetReadiness": "ready",
+          "sourceRepresentation": "layer:mesh",
+          "targetRepresentation": "layer:mesh",
+          "compatibility": "compatible",
+          "derivedFromEntityKey": null,
+          "dependencyPolicy": "independent",
+          "changedChannels": [],
+          "assignment": "skip",
+          "executionMode": "none",
+          "fallbackReason": null,
+          "traceReasons": [
+            "assignment:skip",
+            "compatibility:compatible"
+          ]
+        },
+        {
+          "entityKey": "layer:utah-forge-mt-resistivity-full-density",
+          "sourcePresence": "visible",
+          "targetPresence": "visible",
+          "sourceReadiness": "ready",
+          "targetReadiness": "ready",
+          "sourceRepresentation": "layer:pointcloud",
+          "targetRepresentation": "layer:pointcloud",
+          "compatibility": "compatible",
+          "derivedFromEntityKey": null,
+          "dependencyPolicy": "independent",
+          "changedChannels": [],
+          "assignment": "preserve-interpolate",
+          "executionMode": "interpolate-channels",
+          "fallbackReason": null,
+          "traceReasons": [
+            "assignment:preserve-interpolate",
+            "compatibility:compatible"
+          ]
+        },
+        {
+          "entityKey": "layer:utah-forge-mt-resistivity-preview",
+          "sourcePresence": "hidden",
+          "targetPresence": "hidden",
+          "sourceReadiness": "ready",
+          "targetReadiness": "ready",
+          "sourceRepresentation": "layer:pointcloud",
+          "targetRepresentation": "layer:pointcloud",
+          "compatibility": "compatible",
+          "derivedFromEntityKey": null,
+          "dependencyPolicy": "independent",
+          "changedChannels": [],
+          "assignment": "skip",
+          "executionMode": "none",
+          "fallbackReason": null,
+          "traceReasons": [
+            "assignment:skip",
+            "compatibility:compatible"
+          ]
+        },
+        {
+          "entityKey": "layer:utah-forge-mt-resistivity-slices",
+          "sourcePresence": "hidden",
+          "targetPresence": "hidden",
+          "sourceReadiness": "ready",
+          "targetReadiness": "ready",
+          "sourceRepresentation": "layer:mesh",
+          "targetRepresentation": "layer:mesh",
+          "compatibility": "compatible",
+          "derivedFromEntityKey": null,
+          "dependencyPolicy": "independent",
+          "changedChannels": [],
+          "assignment": "skip",
+          "executionMode": "none",
+          "fallbackReason": null,
+          "traceReasons": [
+            "assignment:skip",
+            "compatibility:compatible"
+          ]
+        },
+        {
+          "entityKey": "layer:utah-forge-mt-resistivity-threshold-surfaces",
+          "sourcePresence": "hidden",
+          "targetPresence": "hidden",
+          "sourceReadiness": "ready",
+          "targetReadiness": "ready",
+          "sourceRepresentation": "layer:mesh",
+          "targetRepresentation": "layer:mesh",
+          "compatibility": "compatible",
+          "derivedFromEntityKey": null,
+          "dependencyPolicy": "independent",
+          "changedChannels": [],
+          "assignment": "skip",
+          "executionMode": "none",
+          "fallbackReason": null,
+          "traceReasons": [
+            "assignment:skip",
+            "compatibility:compatible"
+          ]
+        },
+        {
+          "entityKey": "layer:utah-forge-mt-resistivity-volume",
+          "sourcePresence": "hidden",
+          "targetPresence": "hidden",
+          "sourceReadiness": "ready",
+          "targetReadiness": "ready",
+          "sourceRepresentation": "layer:volume",
+          "targetRepresentation": "layer:volume",
+          "compatibility": "compatible",
+          "derivedFromEntityKey": null,
+          "dependencyPolicy": "independent",
+          "changedChannels": [],
+          "assignment": "skip",
+          "executionMode": "none",
+          "fallbackReason": null,
+          "traceReasons": [
+            "assignment:skip",
+            "compatibility:compatible"
+          ]
+        },
+        {
+          "entityKey": "layer:utah-forge-mt-stations",
+          "sourcePresence": "visible",
+          "targetPresence": "visible",
+          "sourceReadiness": "ready",
+          "targetReadiness": "ready",
+          "sourceRepresentation": "layer:point",
+          "targetRepresentation": "layer:point",
+          "compatibility": "compatible",
+          "derivedFromEntityKey": null,
+          "dependencyPolicy": "independent",
+          "changedChannels": [],
+          "assignment": "preserve-interpolate",
+          "executionMode": "interpolate-channels",
+          "fallbackReason": null,
+          "traceReasons": [
+            "assignment:preserve-interpolate",
+            "compatibility:compatible"
+          ]
+        },
+        {
+          "entityKey": "layer:utah-forge-mt-top-contact-surface",
+          "sourcePresence": "hidden",
+          "targetPresence": "hidden",
+          "sourceReadiness": "ready",
+          "targetReadiness": "ready",
+          "sourceRepresentation": "layer:mesh",
+          "targetRepresentation": "layer:mesh",
+          "compatibility": "compatible",
+          "derivedFromEntityKey": null,
+          "dependencyPolicy": "independent",
+          "changedChannels": [],
+          "assignment": "skip",
+          "executionMode": "none",
+          "fallbackReason": null,
+          "traceReasons": [
+            "assignment:skip",
+            "compatibility:compatible"
+          ]
+        },
+        {
+          "entityKey": "layer:utah-forge-mt-top-surface",
+          "sourcePresence": "hidden",
+          "targetPresence": "hidden",
+          "sourceReadiness": "ready",
+          "targetReadiness": "ready",
+          "sourceRepresentation": "layer:mesh",
+          "targetRepresentation": "layer:mesh",
+          "compatibility": "compatible",
+          "derivedFromEntityKey": null,
+          "dependencyPolicy": "independent",
+          "changedChannels": [],
+          "assignment": "skip",
+          "executionMode": "none",
+          "fallbackReason": null,
+          "traceReasons": [
+            "assignment:skip",
+            "compatibility:compatible"
+          ]
+        },
+        {
+          "entityKey": "layer:utah-forge-phase3-demo-boreholes",
+          "sourcePresence": "visible",
+          "targetPresence": "visible",
+          "sourceReadiness": "ready",
+          "targetReadiness": "ready",
+          "sourceRepresentation": "layer:mesh",
+          "targetRepresentation": "layer:mesh",
+          "compatibility": "compatible",
+          "derivedFromEntityKey": null,
+          "dependencyPolicy": "independent",
+          "changedChannels": [],
+          "assignment": "preserve-interpolate",
+          "executionMode": "interpolate-channels",
+          "fallbackReason": null,
+          "traceReasons": [
+            "assignment:preserve-interpolate",
+            "compatibility:compatible"
+          ]
+        },
+        {
+          "entityKey": "layer:utah-forge-phase3-seismic-browser",
+          "sourcePresence": "hidden",
+          "targetPresence": "hidden",
+          "sourceReadiness": "ready",
+          "targetReadiness": "ready",
+          "sourceRepresentation": "layer:seismic",
+          "targetRepresentation": "layer:seismic",
+          "compatibility": "compatible",
+          "derivedFromEntityKey": null,
+          "dependencyPolicy": "independent",
+          "changedChannels": [],
+          "assignment": "skip",
+          "executionMode": "none",
+          "fallbackReason": null,
+          "traceReasons": [
+            "assignment:skip",
+            "compatibility:compatible"
+          ]
+        },
+        {
+          "entityKey": "layer:utah-forge-phase3-working-area",
+          "sourcePresence": "hidden",
+          "targetPresence": "hidden",
+          "sourceReadiness": "ready",
+          "targetReadiness": "ready",
+          "sourceRepresentation": "layer:line",
+          "targetRepresentation": "layer:line",
+          "compatibility": "compatible",
+          "derivedFromEntityKey": null,
+          "dependencyPolicy": "independent",
+          "changedChannels": [],
+          "assignment": "skip",
+          "executionMode": "none",
+          "fallbackReason": null,
+          "traceReasons": [
+            "assignment:skip",
+            "compatibility:compatible"
+          ]
+        },
+        {
+          "entityKey": "layer:utah-forge-reference-stage",
+          "sourcePresence": "hidden",
+          "targetPresence": "hidden",
+          "sourceReadiness": "ready",
+          "targetReadiness": "ready",
+          "sourceRepresentation": "layer:mesh",
+          "targetRepresentation": "layer:mesh",
+          "compatibility": "compatible",
+          "derivedFromEntityKey": null,
+          "dependencyPolicy": "independent",
+          "changedChannels": [],
+          "assignment": "skip",
+          "executionMode": "none",
+          "fallbackReason": null,
+          "traceReasons": [
+            "assignment:skip",
+            "compatibility:compatible"
+          ]
+        },
+        {
+          "entityKey": "layer:utah-forge-site-boundary",
+          "sourcePresence": "visible",
+          "targetPresence": "visible",
+          "sourceReadiness": "ready",
+          "targetReadiness": "ready",
+          "sourceRepresentation": "layer:line",
+          "targetRepresentation": "layer:line",
+          "compatibility": "compatible",
+          "derivedFromEntityKey": null,
+          "dependencyPolicy": "independent",
+          "changedChannels": [],
+          "assignment": "preserve-interpolate",
+          "executionMode": "interpolate-channels",
+          "fallbackReason": null,
+          "traceReasons": [
+            "assignment:preserve-interpolate",
+            "compatibility:compatible"
+          ]
+        },
+        {
+          "entityKey": "layer:utah-forge-topo-clouds",
+          "sourcePresence": "hidden",
+          "targetPresence": "hidden",
+          "sourceReadiness": "ready",
+          "targetReadiness": "ready",
+          "sourceRepresentation": "layer:atmosphere-volume",
+          "targetRepresentation": "layer:atmosphere-volume",
+          "compatibility": "compatible",
+          "derivedFromEntityKey": null,
+          "dependencyPolicy": "independent",
+          "changedChannels": [],
+          "assignment": "skip",
+          "executionMode": "none",
+          "fallbackReason": null,
+          "traceReasons": [
+            "assignment:skip",
+            "compatibility:compatible"
+          ]
+        },
+        {
+          "entityKey": "layer:utah-forge-topo-graticule",
+          "sourcePresence": "hidden",
+          "targetPresence": "hidden",
+          "sourceReadiness": "ready",
+          "targetReadiness": "ready",
+          "sourceRepresentation": "layer:line",
+          "targetRepresentation": "layer:line",
+          "compatibility": "compatible",
+          "derivedFromEntityKey": null,
+          "dependencyPolicy": "independent",
+          "changedChannels": [],
+          "assignment": "skip",
+          "executionMode": "none",
+          "fallbackReason": null,
+          "traceReasons": [
+            "assignment:skip",
+            "compatibility:compatible"
+          ]
+        },
+        {
+          "entityKey": "layer:utah-forge-phase3-seismic-browser:object:survey-geometry:lines",
+          "sourcePresence": "visible",
+          "targetPresence": "visible",
+          "sourceReadiness": "ready",
+          "targetReadiness": "ready",
+          "sourceRepresentation": "seismic:survey-geometry",
+          "targetRepresentation": "seismic:survey-geometry",
+          "compatibility": "compatible",
+          "derivedFromEntityKey": "layer:utah-forge-phase3-seismic-browser",
+          "dependencyPolicy": "follow-source",
+          "changedChannels": [],
+          "assignment": "preserve-interpolate",
+          "executionMode": "interpolate-channels",
+          "fallbackReason": null,
+          "traceReasons": [
+            "assignment:preserve-interpolate",
+            "compatibility:compatible",
+            "derived:follow-source:layer:utah-forge-phase3-seismic-browser"
+          ]
+        },
+        {
+          "entityKey": "layer:utah-forge-phase3-seismic-browser:object:survey-geometry:navigation",
+          "sourcePresence": "visible",
+          "targetPresence": "visible",
+          "sourceReadiness": "ready",
+          "targetReadiness": "ready",
+          "sourceRepresentation": "seismic:survey-geometry",
+          "targetRepresentation": "seismic:survey-geometry",
+          "compatibility": "compatible",
+          "derivedFromEntityKey": "layer:utah-forge-phase3-seismic-browser",
+          "dependencyPolicy": "follow-source",
+          "changedChannels": [],
+          "assignment": "preserve-interpolate",
+          "executionMode": "interpolate-channels",
+          "fallbackReason": null,
+          "traceReasons": [
+            "assignment:preserve-interpolate",
+            "compatibility:compatible",
+            "derived:follow-source:layer:utah-forge-phase3-seismic-browser"
+          ]
+        },
+        {
+          "entityKey": "layer:utah-forge-phase3-seismic-browser:object:survey-geometry:receivers",
+          "sourcePresence": "visible",
+          "targetPresence": "visible",
+          "sourceReadiness": "ready",
+          "targetReadiness": "ready",
+          "sourceRepresentation": "seismic:survey-geometry",
+          "targetRepresentation": "seismic:survey-geometry",
+          "compatibility": "compatible",
+          "derivedFromEntityKey": "layer:utah-forge-phase3-seismic-browser",
+          "dependencyPolicy": "follow-source",
+          "changedChannels": [],
+          "assignment": "preserve-interpolate",
+          "executionMode": "interpolate-channels",
+          "fallbackReason": null,
+          "traceReasons": [
+            "assignment:preserve-interpolate",
+            "compatibility:compatible",
+            "derived:follow-source:layer:utah-forge-phase3-seismic-browser"
+          ]
+        },
+        {
+          "entityKey": "layer:utah-forge-phase3-seismic-browser:object:survey-geometry:sources",
+          "sourcePresence": "visible",
+          "targetPresence": "visible",
+          "sourceReadiness": "ready",
+          "targetReadiness": "ready",
+          "sourceRepresentation": "seismic:survey-geometry",
+          "targetRepresentation": "seismic:survey-geometry",
+          "compatibility": "compatible",
+          "derivedFromEntityKey": "layer:utah-forge-phase3-seismic-browser",
+          "dependencyPolicy": "follow-source",
+          "changedChannels": [],
+          "assignment": "preserve-interpolate",
+          "executionMode": "interpolate-channels",
+          "fallbackReason": null,
+          "traceReasons": [
+            "assignment:preserve-interpolate",
+            "compatibility:compatible",
+            "derived:follow-source:layer:utah-forge-phase3-seismic-browser"
+          ]
+        },
+        {
+          "entityKey": "layer:utah-forge-phase3-seismic-browser:product:gdr-1141-forge3d-ani-psdm-stack-unenh:object:3d-volume:volume",
+          "sourcePresence": "visible",
+          "targetPresence": "visible",
+          "sourceReadiness": "ready",
+          "targetReadiness": "ready",
+          "sourceRepresentation": "seismic:3d-volume",
+          "targetRepresentation": "seismic:3d-volume",
+          "compatibility": "compatible",
+          "derivedFromEntityKey": "layer:utah-forge-phase3-seismic-browser",
+          "dependencyPolicy": "follow-source",
+          "changedChannels": [],
+          "assignment": "preserve-interpolate",
+          "executionMode": "interpolate-channels",
+          "fallbackReason": null,
+          "traceReasons": [
+            "assignment:preserve-interpolate",
+            "compatibility:compatible",
+            "derived:follow-source:layer:utah-forge-phase3-seismic-browser"
+          ]
+        },
+        {
+          "entityKey": "layer:utah-forge-phase3-seismic-browser:product:gdr-1141-forge3d-ani-psdm-stack-unenh:object:comparison:single-product",
+          "sourcePresence": "hidden",
+          "targetPresence": "hidden",
+          "sourceReadiness": "ready",
+          "targetReadiness": "ready",
+          "sourceRepresentation": "seismic:comparison",
+          "targetRepresentation": "seismic:comparison",
+          "compatibility": "compatible",
+          "derivedFromEntityKey": "layer:utah-forge-phase3-seismic-browser",
+          "dependencyPolicy": "follow-source",
+          "changedChannels": [],
+          "assignment": "skip",
+          "executionMode": "none",
+          "fallbackReason": null,
+          "traceReasons": [
+            "assignment:skip",
+            "compatibility:compatible",
+            "derived:follow-source:layer:utah-forge-phase3-seismic-browser"
+          ]
+        },
+        {
+          "entityKey": "layer:utah-forge-phase3-seismic-browser:product:gdr-1141-forge3d-ani-psdm-stack-unenh:object:3d-volume:volume:figure-annotation",
+          "sourcePresence": "hidden",
+          "targetPresence": "hidden",
+          "sourceReadiness": "ready",
+          "targetReadiness": "ready",
+          "sourceRepresentation": "seismic:figure-annotation",
+          "targetRepresentation": "seismic:figure-annotation",
+          "compatibility": "compatible",
+          "derivedFromEntityKey": "layer:utah-forge-phase3-seismic-browser:product:gdr-1141-forge3d-ani-psdm-stack-unenh:object:3d-volume:volume",
+          "dependencyPolicy": "follow-source",
+          "changedChannels": [],
+          "assignment": "skip",
+          "executionMode": "none",
+          "fallbackReason": null,
+          "traceReasons": [
+            "assignment:skip",
+            "compatibility:compatible",
+            "derived:follow-source:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-forge3d-ani-psdm-stack-unenh:object:3d-volume:volume"
+          ]
+        }
+      ],
+      "readinessAttachedLayerIds": [],
+      "sceneOverlays": {
+        "policy": "transition-clock-linear-fade",
+        "fadeDurationMs": 800,
+        "lastTransitionClockDurationMs": 3000,
+        "registeredHandleCount": 0,
+        "activeTweenCount": 0,
+        "activeOutlineTweenCount": 0,
+        "visibleHandleCount": 0,
+        "lastPhase": "transition-start",
+        "lastPageId": "28_integrated_seismic_resistivity_context",
+        "lastResolvedCount": 0,
+        "handles": []
+      },
+      "cinematicPost": {
+        "active": true,
+        "transitionKind": "continuous-post",
+        "sourcePageId": "27_seismic_fence_panels",
+        "targetPageId": "28_integrated_seismic_resistivity_context",
+        "progress": 0.8256918105632735,
+        "policyCount": 13,
+        "channelPolicies": [
+          {
+            "key": "colorGrade",
+            "transitionKind": "continuous"
+          },
+          {
+            "key": "vignette",
+            "transitionKind": "continuous"
+          },
+          {
+            "key": "depthOfField",
+            "transitionKind": "continuous"
+          },
+          {
+            "key": "tiltShift",
+            "transitionKind": "continuous"
+          },
+          {
+            "key": "lensEffects",
+            "transitionKind": "continuous"
+          },
+          {
+            "key": "motionTrails",
+            "transitionKind": "continuous"
+          },
+          {
+            "key": "presentationFrame",
+            "transitionKind": "continuous"
+          },
+          {
+            "key": "compositionGuides",
+            "transitionKind": "continuous"
+          },
+          {
+            "key": "camera.lensPreset",
+            "transitionKind": "discrete"
+          },
+          {
+            "key": "dynamicCamera.dolly",
+            "transitionKind": "timed-shot"
+          },
+          {
+            "key": "dynamicCamera.truck",
+            "transitionKind": "timed-shot"
+          },
+          {
+            "key": "dynamicCamera.crane",
+            "transitionKind": "timed-shot"
+          },
+          {
+            "key": "dynamicCamera.handheld",
+            "transitionKind": "timed-shot"
+          }
+        ]
+      },
+      "lateReapply": {
+        "totalCount": 43,
+        "duringTransitionCount": 10,
+        "events": [
+          {
+            "sequence": 19,
+            "reason": "async-layer-resolve",
+            "action": "full-current-page-state",
+            "pageId": null,
+            "duringTransition": false,
+            "transitionSourcePageId": null,
+            "transitionTargetPageId": null,
+            "transitionReason": null,
+            "transitionProgress": null,
+            "timeMs": 3912.9000000003725
+          },
+          {
+            "sequence": 20,
+            "reason": "async-layer-resolve",
+            "action": "full-current-page-state",
+            "pageId": null,
+            "duringTransition": false,
+            "transitionSourcePageId": null,
+            "transitionTargetPageId": null,
+            "transitionReason": null,
+            "transitionProgress": null,
+            "timeMs": 3951.9000000003725
+          },
+          {
+            "sequence": 21,
+            "reason": "async-layer-resolve",
+            "action": "full-current-page-state",
+            "pageId": null,
+            "duringTransition": false,
+            "transitionSourcePageId": null,
+            "transitionTargetPageId": null,
+            "transitionReason": null,
+            "transitionProgress": null,
+            "timeMs": 3951.9000000003725
+          },
+          {
+            "sequence": 22,
+            "reason": "async-layer-resolve",
+            "action": "full-current-page-state",
+            "pageId": null,
+            "duringTransition": false,
+            "transitionSourcePageId": null,
+            "transitionTargetPageId": null,
+            "transitionReason": null,
+            "transitionProgress": null,
+            "timeMs": 3951.9000000003725
+          },
+          {
+            "sequence": 23,
+            "reason": "async-layer-resolve",
+            "action": "full-current-page-state",
+            "pageId": null,
+            "duringTransition": false,
+            "transitionSourcePageId": null,
+            "transitionTargetPageId": null,
+            "transitionReason": null,
+            "transitionProgress": null,
+            "timeMs": 4996.10000000149
+          },
+          {
+            "sequence": 24,
+            "reason": "state-reapply",
+            "action": "transition-aware-current-page-state",
+            "pageId": "157_page",
+            "duringTransition": true,
+            "transitionSourcePageId": "156_page",
+            "transitionTargetPageId": "157_page",
+            "transitionReason": "page-click",
+            "transitionProgress": 0.4144997098046884,
+            "timeMs": 14345.900000000373
+          },
+          {
+            "sequence": 25,
+            "reason": "async-layer-resolve",
+            "action": "transition-aware-current-page-state",
+            "pageId": "61_psdm_mt_58_32_source_location_tie",
+            "duringTransition": true,
+            "transitionSourcePageId": "63_borehole_logs_16a_source_ingest",
+            "transitionTargetPageId": "61_psdm_mt_58_32_source_location_tie",
+            "transitionReason": "page-click",
+            "transitionProgress": 1,
+            "timeMs": 109844.30000000075
+          },
+          {
+            "sequence": 26,
+            "reason": "async-layer-resolve",
+            "action": "full-current-page-state",
+            "pageId": "61_psdm_mt_58_32_source_location_tie",
+            "duringTransition": false,
+            "transitionSourcePageId": null,
+            "transitionTargetPageId": null,
+            "transitionReason": null,
+            "transitionProgress": null,
+            "timeMs": 112107.60000000149
+          },
+          {
+            "sequence": 27,
+            "reason": "async-layer-resolve",
+            "action": "transition-aware-current-page-state",
+            "pageId": "176_page",
+            "duringTransition": true,
+            "transitionSourcePageId": "61_psdm_mt_58_32_source_location_tie",
+            "transitionTargetPageId": "176_page",
+            "transitionReason": "page-click",
+            "transitionProgress": 1,
+            "timeMs": 121310.90000000037
+          },
+          {
+            "sequence": 28,
+            "reason": "async-layer-resolve",
+            "action": "transition-aware-current-page-state",
+            "pageId": "176_page",
+            "duringTransition": true,
+            "transitionSourcePageId": "61_psdm_mt_58_32_source_location_tie",
+            "transitionTargetPageId": "176_page",
+            "transitionReason": "page-click",
+            "transitionProgress": 1,
+            "timeMs": 121516.60000000149
+          },
+          {
+            "sequence": 29,
+            "reason": "async-layer-resolve",
+            "action": "full-current-page-state",
+            "pageId": "176_page",
+            "duringTransition": false,
+            "transitionSourcePageId": null,
+            "transitionTargetPageId": null,
+            "transitionReason": null,
+            "transitionProgress": null,
+            "timeMs": 123156
+          },
+          {
+            "sequence": 30,
+            "reason": "async-layer-resolve",
+            "action": "full-current-page-state",
+            "pageId": "176_page",
+            "duringTransition": false,
+            "transitionSourcePageId": null,
+            "transitionTargetPageId": null,
+            "transitionReason": null,
+            "transitionProgress": null,
+            "timeMs": 128892.5
+          },
+          {
+            "sequence": 31,
+            "reason": "async-layer-resolve",
+            "action": "full-current-page-state",
+            "pageId": "176_page",
+            "duringTransition": false,
+            "transitionSourcePageId": null,
+            "transitionTargetPageId": null,
+            "transitionReason": null,
+            "transitionProgress": null,
+            "timeMs": 129985.5
+          },
+          {
+            "sequence": 32,
+            "reason": "async-layer-resolve",
+            "action": "full-current-page-state",
+            "pageId": "176_page",
+            "duringTransition": false,
+            "transitionSourcePageId": null,
+            "transitionTargetPageId": null,
+            "transitionReason": null,
+            "transitionProgress": null,
+            "timeMs": 131158.5
+          },
+          {
+            "sequence": 33,
+            "reason": "async-layer-resolve",
+            "action": "full-current-page-state",
+            "pageId": "176_page",
+            "duringTransition": false,
+            "transitionSourcePageId": null,
+            "transitionTargetPageId": null,
+            "transitionReason": null,
+            "transitionProgress": null,
+            "timeMs": 137703.40000000037
+          },
+          {
+            "sequence": 34,
+            "reason": "async-layer-resolve",
+            "action": "full-current-page-state",
+            "pageId": "176_page",
+            "duringTransition": false,
+            "transitionSourcePageId": null,
+            "transitionTargetPageId": null,
+            "transitionReason": null,
+            "transitionProgress": null,
+            "timeMs": 140041.1000000015
+          },
+          {
+            "sequence": 35,
+            "reason": "async-layer-resolve",
+            "action": "full-current-page-state",
+            "pageId": "176_page",
+            "duringTransition": false,
+            "transitionSourcePageId": null,
+            "transitionTargetPageId": null,
+            "transitionReason": null,
+            "transitionProgress": null,
+            "timeMs": 141289.5
+          },
+          {
+            "sequence": 36,
+            "reason": "async-layer-resolve",
+            "action": "transition-aware-current-page-state",
+            "pageId": "143_page",
+            "duringTransition": true,
+            "transitionSourcePageId": "176_page",
+            "transitionTargetPageId": "143_page",
+            "transitionReason": "page-click",
+            "transitionProgress": 0.02510344827586207,
+            "timeMs": 143507.40000000037
+          },
+          {
+            "sequence": 37,
+            "reason": "async-layer-resolve",
+            "action": "transition-aware-current-page-state",
+            "pageId": "143_page",
+            "duringTransition": true,
+            "transitionSourcePageId": "176_page",
+            "transitionTargetPageId": "143_page",
+            "transitionReason": "page-click",
+            "transitionProgress": 0.6327586206896552,
+            "timeMs": 147912.90000000037
+          },
+          {
+            "sequence": 38,
+            "reason": "async-layer-resolve",
+            "action": "transition-aware-current-page-state",
+            "pageId": "143_page",
+            "duringTransition": true,
+            "transitionSourcePageId": "176_page",
+            "transitionTargetPageId": "143_page",
+            "transitionReason": "page-click",
+            "transitionProgress": 0.6567724137930521,
+            "timeMs": 148087
+          },
+          {
+            "sequence": 39,
+            "reason": "async-layer-resolve",
+            "action": "transition-aware-current-page-state",
+            "pageId": "143_page",
+            "duringTransition": true,
+            "transitionSourcePageId": "176_page",
+            "transitionTargetPageId": "143_page",
+            "transitionReason": "page-click",
+            "transitionProgress": 0.6819172413793617,
+            "timeMs": 148269.30000000075
+          },
+          {
+            "sequence": 40,
+            "reason": "async-layer-resolve",
+            "action": "transition-aware-current-page-state",
+            "pageId": "143_page",
+            "duringTransition": true,
+            "transitionSourcePageId": "176_page",
+            "transitionTargetPageId": "143_page",
+            "transitionReason": "page-click",
+            "transitionProgress": 0.7071448275863097,
+            "timeMs": 148452.20000000112
+          },
+          {
+            "sequence": 41,
+            "reason": "async-layer-resolve",
+            "action": "transition-aware-current-page-state",
+            "pageId": "143_page",
+            "duringTransition": true,
+            "transitionSourcePageId": "176_page",
+            "transitionTargetPageId": "143_page",
+            "transitionReason": "page-click",
+            "transitionProgress": 0.731889655172568,
+            "timeMs": 148631.6000000015
+          },
+          {
+            "sequence": 42,
+            "reason": "async-layer-resolve",
+            "action": "full-current-page-state",
+            "pageId": "143_page",
+            "duringTransition": false,
+            "transitionSourcePageId": null,
+            "transitionTargetPageId": null,
+            "transitionReason": null,
+            "transitionProgress": null,
+            "timeMs": 154297.70000000112
+          },
+          {
+            "sequence": 43,
+            "reason": "async-layer-resolve",
+            "action": "full-current-page-state",
+            "pageId": "143_page",
+            "duringTransition": false,
+            "transitionSourcePageId": null,
+            "transitionTargetPageId": null,
+            "transitionReason": null,
+            "transitionProgress": null,
+            "timeMs": 154617.80000000075
+          }
+        ]
+      },
+      "transitionCommit": {
+        "transitionId": "page-40",
+        "commitOwner": "SceneManager",
+        "commitPhase": null,
+        "hasFinalized": false,
+        "finalizedAt": null,
+        "suppressedDuplicateAssertions": 0
+      },
+      "commitTraces": []
+    },
+    "transitionRun": {
+      "mode": "page",
+      "sourceIndex": 60,
+      "targetIndex": 61,
+      "sourcePageId": "27_seismic_fence_panels",
+      "targetPageId": "28_integrated_seismic_resistivity_context",
+      "reason": "page-click",
+      "startedAtMs": 525747.1000000015,
+      "durationMs": 3000,
+      "easing": "easeInOutCubic",
+      "interruptedRunIds": [],
+      "runId": "page-40",
+      "status": "active",
+      "rawProgress": 0.7705333333332092,
+      "easedProgress": 0.9516697755400697,
+      "pageTransitionActive": true,
+      "dynamicCameraTransitionActive": false,
+      "sceneTransition": {
+        "active": true,
+        "sourcePageId": "27_seismic_fence_panels",
+        "targetPageId": "28_integrated_seismic_resistivity_context",
+        "reason": "page-click",
+        "activeDataTransitionCount": 0,
+        "snapshotCount": 0,
+        "scalarTweenCount": 0,
+        "layerTweenCount": 0,
+        "workingAreaFocusTweenActive": false,
+        "sceneSectionStyleTweenActive": false,
+        "sceneSectionHelperTransitionSnapshotActive": false,
+        "sceneSectionHelperTransitionOpacity": 1,
+        "layerTweenTick": {
+          "timestampMs": 527691.4,
+          "totalMs": 0.6,
+          "sceneSectionMs": 0,
+          "sceneSectionApply": null,
+          "workingAreaMs": 0,
+          "scalarMs": 0,
+          "layerMs": 0,
+          "snapshotMs": 0,
+          "helperSnapshotMs": 0,
+          "envelopeMs": 0.6,
+          "activeSceneTransition": true,
+          "sceneSectionApplyMode": "none",
+          "layerTweenIds": [],
+          "scalarTweenIds": [],
+          "snapshotIds": [],
+          "layerTweenCountBefore": 0,
+          "scalarTweenCountBefore": 0,
+          "snapshotCountBefore": 0,
+          "sceneSectionStyleTweenActiveBefore": false,
+          "helperSnapshotActiveBefore": false,
+          "workingAreaFocusTweenActiveBefore": false
+        },
+        "frameUpdate": {
+          "timestampMs": 527691.4,
+          "totalMs": 1.3,
+          "cameraLockedSunMs": 0,
+          "layerTweensMs": 0.6,
+          "environmentSceneMs": 0.3,
+          "cinematicPostMs": 0.2,
+          "boreLensMs": 0,
+          "lightingStudioScaleMs": 0,
+          "dynamicCameraOrbitCenterScaleMs": 0,
+          "pageCameraMarkerScaleMs": 0,
+          "ezGammaBillboardMs": 0,
+          "sceneSectionTextFacingMs": 0,
+          "sectionIsoThresholdOcclusionMs": 0,
+          "topoGridCameraVisibilityMs": 0,
+          "localAtmosphereMs": 0,
+          "sceneOverlayTickMs": 0.2,
+          "activeSceneTransition": true
+        },
+        "sectionIsoOverlays": {
+          "opacityPolicy": "split-section-iso-overlay-opacity-from-layer-opacity",
+          "overlayMaterialCount": 16,
+          "independentOverlayMaterialCount": 0,
+          "transitionEnvelopeOverlayMaterialCount": 0,
+          "hiddenWithParentMaterialCount": 16,
+          "layerRenderOpacityMin": 0,
+          "layerRenderOpacityMax": 0,
+          "transitionOpacityMin": 0,
+          "transitionOpacityMax": 0
+        },
+        "sceneSectionHelpers": {
+          "groundTracePolicy": "mirror-delayed-ground-trace-into-helper-snapshot",
+          "liveGroundTraceCount": 0,
+          "snapshotGroundTraceCount": 0,
+          "snapshotActive": false,
+          "transitionOpacity": 1
+        },
+        "productFamilies": [
+          {
+            "layerId": "utah-forge-phase3-demo-boreholes",
+            "layerType": "mesh",
+            "family": "simple-geometry",
+            "policy": "preserve",
+            "transitionKind": "none",
+            "stateSource": "loaded-layer",
+            "loadedAtStart": true,
+            "sourceVisible": true,
+            "targetVisible": true,
+            "sourceOpacity": 1,
+            "targetOpacity": 1,
+            "reason": "layer remains in the same transition state"
+          },
+          {
+            "layerId": "utah-forge-site-boundary",
+            "layerType": "line",
+            "family": "simple-geometry",
+            "policy": "preserve",
+            "transitionKind": "none",
+            "stateSource": "loaded-layer",
+            "loadedAtStart": true,
+            "sourceVisible": true,
+            "targetVisible": true,
+            "sourceOpacity": 1,
+            "targetOpacity": 1,
+            "reason": "layer remains in the same transition state"
+          },
+          {
+            "layerId": "utah-forge-mt-stations",
+            "layerType": "point",
+            "family": "point-markers",
+            "policy": "preserve",
+            "transitionKind": "none",
+            "stateSource": "loaded-layer",
+            "loadedAtStart": true,
+            "sourceVisible": true,
+            "targetVisible": true,
+            "sourceOpacity": 1,
+            "targetOpacity": 1,
+            "reason": "layer remains in the same transition state"
+          },
+          {
+            "layerId": "utah-forge-mt-resistivity-full-density",
+            "layerType": "pointcloud",
+            "family": "point-cloud",
+            "policy": "preserve",
+            "transitionKind": "none",
+            "stateSource": "loaded-layer",
+            "loadedAtStart": true,
+            "sourceVisible": true,
+            "targetVisible": true,
+            "sourceOpacity": 0.05,
+            "targetOpacity": 0.05,
+            "reason": "layer remains in the same transition state"
+          }
+        ],
+        "assignmentTraces": [
+          {
+            "entityKey": "layer:bench-conformance-overlay",
+            "sourcePresence": "hidden",
+            "targetPresence": "absent",
+            "sourceReadiness": "ready",
+            "targetReadiness": "unavailable",
+            "sourceRepresentation": "layer:unknown",
+            "targetRepresentation": "layer:unknown",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:erosion-runoff-planning",
+            "sourcePresence": "hidden",
+            "targetPresence": "absent",
+            "sourceReadiness": "ready",
+            "targetReadiness": "unavailable",
+            "sourceRepresentation": "layer:unknown",
+            "targetRepresentation": "layer:unknown",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:haul-route-equipment-demo",
+            "sourcePresence": "hidden",
+            "targetPresence": "absent",
+            "sourceReadiness": "ready",
+            "targetReadiness": "unavailable",
+            "sourceRepresentation": "layer:unknown",
+            "targetRepresentation": "layer:unknown",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:hydrography-lakes",
+            "sourcePresence": "hidden",
+            "targetPresence": "hidden",
+            "sourceReadiness": "ready",
+            "targetReadiness": "ready",
+            "sourceRepresentation": "layer:polygon",
+            "targetRepresentation": "layer:polygon",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:hydrography-streams",
+            "sourcePresence": "hidden",
+            "targetPresence": "hidden",
+            "sourceReadiness": "ready",
+            "targetReadiness": "ready",
+            "sourceRepresentation": "layer:line",
+            "targetRepresentation": "layer:line",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:naip-2024-tile-diagnostics",
+            "sourcePresence": "hidden",
+            "targetPresence": "hidden",
+            "sourceReadiness": "ready",
+            "targetReadiness": "ready",
+            "sourceRepresentation": "layer:line",
+            "targetRepresentation": "layer:line",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:public-viewshed-overlay",
+            "sourcePresence": "hidden",
+            "targetPresence": "absent",
+            "sourceReadiness": "ready",
+            "targetReadiness": "unavailable",
+            "sourceRepresentation": "layer:unknown",
+            "targetRepresentation": "layer:unknown",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:quarry-drill-traces",
+            "sourcePresence": "hidden",
+            "targetPresence": "absent",
+            "sourceReadiness": "ready",
+            "targetReadiness": "unavailable",
+            "sourceRepresentation": "layer:unknown",
+            "targetRepresentation": "layer:unknown",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:quarry-imagery-base",
+            "sourcePresence": "hidden",
+            "targetPresence": "absent",
+            "sourceReadiness": "ready",
+            "targetReadiness": "unavailable",
+            "sourceRepresentation": "layer:unknown",
+            "targetRepresentation": "layer:unknown",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:quarry-lidar-surface",
+            "sourcePresence": "hidden",
+            "targetPresence": "absent",
+            "sourceReadiness": "ready",
+            "targetReadiness": "unavailable",
+            "sourceRepresentation": "layer:unknown",
+            "targetRepresentation": "layer:unknown",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:quarry-ore-grade-heatmap",
+            "sourcePresence": "hidden",
+            "targetPresence": "absent",
+            "sourceReadiness": "ready",
+            "targetReadiness": "unavailable",
+            "sourceRepresentation": "layer:unknown",
+            "targetRepresentation": "layer:unknown",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:restoration-preview",
+            "sourcePresence": "hidden",
+            "targetPresence": "absent",
+            "sourceReadiness": "ready",
+            "targetReadiness": "unavailable",
+            "sourceRepresentation": "layer:unknown",
+            "targetRepresentation": "layer:unknown",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:slope-stability-anomaly",
+            "sourcePresence": "hidden",
+            "targetPresence": "absent",
+            "sourceReadiness": "ready",
+            "targetReadiness": "unavailable",
+            "sourceRepresentation": "layer:unknown",
+            "targetRepresentation": "layer:unknown",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:stockpile-volume-zones",
+            "sourcePresence": "hidden",
+            "targetPresence": "absent",
+            "sourceReadiness": "ready",
+            "targetReadiness": "unavailable",
+            "sourceRepresentation": "layer:unknown",
+            "targetRepresentation": "layer:unknown",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:terrain",
+            "sourcePresence": "hidden",
+            "targetPresence": "hidden",
+            "sourceReadiness": "ready",
+            "targetReadiness": "ready",
+            "sourceRepresentation": "layer:geotiff",
+            "targetRepresentation": "layer:geotiff",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:topo-cloud-volume-2",
+            "sourcePresence": "hidden",
+            "targetPresence": "hidden",
+            "sourceReadiness": "ready",
+            "targetReadiness": "ready",
+            "sourceRepresentation": "layer:atmosphere-volume",
+            "targetRepresentation": "layer:atmosphere-volume",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:topo-cloud-volume-3",
+            "sourcePresence": "hidden",
+            "targetPresence": "hidden",
+            "sourceReadiness": "ready",
+            "targetReadiness": "ready",
+            "sourceRepresentation": "layer:atmosphere-volume",
+            "targetRepresentation": "layer:atmosphere-volume",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:transport-roads",
+            "sourcePresence": "hidden",
+            "targetPresence": "hidden",
+            "sourceReadiness": "ready",
+            "targetReadiness": "ready",
+            "sourceRepresentation": "layer:line",
+            "targetRepresentation": "layer:line",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:utah-forge-borehole-logs",
+            "sourcePresence": "hidden",
+            "targetPresence": "hidden",
+            "sourceReadiness": "ready",
+            "targetReadiness": "ready",
+            "sourceRepresentation": "layer:mesh",
+            "targetRepresentation": "layer:mesh",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:utah-forge-mt-resistivity-full-density",
+            "sourcePresence": "visible",
+            "targetPresence": "visible",
+            "sourceReadiness": "ready",
+            "targetReadiness": "ready",
+            "sourceRepresentation": "layer:pointcloud",
+            "targetRepresentation": "layer:pointcloud",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "preserve-interpolate",
+            "executionMode": "interpolate-channels",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:preserve-interpolate",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:utah-forge-mt-resistivity-preview",
+            "sourcePresence": "hidden",
+            "targetPresence": "hidden",
+            "sourceReadiness": "ready",
+            "targetReadiness": "ready",
+            "sourceRepresentation": "layer:pointcloud",
+            "targetRepresentation": "layer:pointcloud",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:utah-forge-mt-resistivity-slices",
+            "sourcePresence": "hidden",
+            "targetPresence": "hidden",
+            "sourceReadiness": "ready",
+            "targetReadiness": "ready",
+            "sourceRepresentation": "layer:mesh",
+            "targetRepresentation": "layer:mesh",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:utah-forge-mt-resistivity-threshold-surfaces",
+            "sourcePresence": "hidden",
+            "targetPresence": "hidden",
+            "sourceReadiness": "ready",
+            "targetReadiness": "ready",
+            "sourceRepresentation": "layer:mesh",
+            "targetRepresentation": "layer:mesh",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:utah-forge-mt-resistivity-volume",
+            "sourcePresence": "hidden",
+            "targetPresence": "hidden",
+            "sourceReadiness": "ready",
+            "targetReadiness": "ready",
+            "sourceRepresentation": "layer:volume",
+            "targetRepresentation": "layer:volume",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:utah-forge-mt-stations",
+            "sourcePresence": "visible",
+            "targetPresence": "visible",
+            "sourceReadiness": "ready",
+            "targetReadiness": "ready",
+            "sourceRepresentation": "layer:point",
+            "targetRepresentation": "layer:point",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "preserve-interpolate",
+            "executionMode": "interpolate-channels",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:preserve-interpolate",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:utah-forge-mt-top-contact-surface",
+            "sourcePresence": "hidden",
+            "targetPresence": "hidden",
+            "sourceReadiness": "ready",
+            "targetReadiness": "ready",
+            "sourceRepresentation": "layer:mesh",
+            "targetRepresentation": "layer:mesh",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:utah-forge-mt-top-surface",
+            "sourcePresence": "hidden",
+            "targetPresence": "hidden",
+            "sourceReadiness": "ready",
+            "targetReadiness": "ready",
+            "sourceRepresentation": "layer:mesh",
+            "targetRepresentation": "layer:mesh",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:utah-forge-phase3-demo-boreholes",
+            "sourcePresence": "visible",
+            "targetPresence": "visible",
+            "sourceReadiness": "ready",
+            "targetReadiness": "ready",
+            "sourceRepresentation": "layer:mesh",
+            "targetRepresentation": "layer:mesh",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "preserve-interpolate",
+            "executionMode": "interpolate-channels",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:preserve-interpolate",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:utah-forge-phase3-seismic-browser",
+            "sourcePresence": "hidden",
+            "targetPresence": "hidden",
+            "sourceReadiness": "ready",
+            "targetReadiness": "ready",
+            "sourceRepresentation": "layer:seismic",
+            "targetRepresentation": "layer:seismic",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:utah-forge-phase3-working-area",
+            "sourcePresence": "hidden",
+            "targetPresence": "hidden",
+            "sourceReadiness": "ready",
+            "targetReadiness": "ready",
+            "sourceRepresentation": "layer:line",
+            "targetRepresentation": "layer:line",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:utah-forge-reference-stage",
+            "sourcePresence": "hidden",
+            "targetPresence": "hidden",
+            "sourceReadiness": "ready",
+            "targetReadiness": "ready",
+            "sourceRepresentation": "layer:mesh",
+            "targetRepresentation": "layer:mesh",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:utah-forge-site-boundary",
+            "sourcePresence": "visible",
+            "targetPresence": "visible",
+            "sourceReadiness": "ready",
+            "targetReadiness": "ready",
+            "sourceRepresentation": "layer:line",
+            "targetRepresentation": "layer:line",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "preserve-interpolate",
+            "executionMode": "interpolate-channels",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:preserve-interpolate",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:utah-forge-topo-clouds",
+            "sourcePresence": "hidden",
+            "targetPresence": "hidden",
+            "sourceReadiness": "ready",
+            "targetReadiness": "ready",
+            "sourceRepresentation": "layer:atmosphere-volume",
+            "targetRepresentation": "layer:atmosphere-volume",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:utah-forge-topo-graticule",
+            "sourcePresence": "hidden",
+            "targetPresence": "hidden",
+            "sourceReadiness": "ready",
+            "targetReadiness": "ready",
+            "sourceRepresentation": "layer:line",
+            "targetRepresentation": "layer:line",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:utah-forge-phase3-seismic-browser:object:survey-geometry:lines",
+            "sourcePresence": "visible",
+            "targetPresence": "visible",
+            "sourceReadiness": "ready",
+            "targetReadiness": "ready",
+            "sourceRepresentation": "seismic:survey-geometry",
+            "targetRepresentation": "seismic:survey-geometry",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": "layer:utah-forge-phase3-seismic-browser",
+            "dependencyPolicy": "follow-source",
+            "changedChannels": [],
+            "assignment": "preserve-interpolate",
+            "executionMode": "interpolate-channels",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:preserve-interpolate",
+              "compatibility:compatible",
+              "derived:follow-source:layer:utah-forge-phase3-seismic-browser"
+            ]
+          },
+          {
+            "entityKey": "layer:utah-forge-phase3-seismic-browser:object:survey-geometry:navigation",
+            "sourcePresence": "visible",
+            "targetPresence": "visible",
+            "sourceReadiness": "ready",
+            "targetReadiness": "ready",
+            "sourceRepresentation": "seismic:survey-geometry",
+            "targetRepresentation": "seismic:survey-geometry",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": "layer:utah-forge-phase3-seismic-browser",
+            "dependencyPolicy": "follow-source",
+            "changedChannels": [],
+            "assignment": "preserve-interpolate",
+            "executionMode": "interpolate-channels",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:preserve-interpolate",
+              "compatibility:compatible",
+              "derived:follow-source:layer:utah-forge-phase3-seismic-browser"
+            ]
+          },
+          {
+            "entityKey": "layer:utah-forge-phase3-seismic-browser:object:survey-geometry:receivers",
+            "sourcePresence": "visible",
+            "targetPresence": "visible",
+            "sourceReadiness": "ready",
+            "targetReadiness": "ready",
+            "sourceRepresentation": "seismic:survey-geometry",
+            "targetRepresentation": "seismic:survey-geometry",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": "layer:utah-forge-phase3-seismic-browser",
+            "dependencyPolicy": "follow-source",
+            "changedChannels": [],
+            "assignment": "preserve-interpolate",
+            "executionMode": "interpolate-channels",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:preserve-interpolate",
+              "compatibility:compatible",
+              "derived:follow-source:layer:utah-forge-phase3-seismic-browser"
+            ]
+          },
+          {
+            "entityKey": "layer:utah-forge-phase3-seismic-browser:object:survey-geometry:sources",
+            "sourcePresence": "visible",
+            "targetPresence": "visible",
+            "sourceReadiness": "ready",
+            "targetReadiness": "ready",
+            "sourceRepresentation": "seismic:survey-geometry",
+            "targetRepresentation": "seismic:survey-geometry",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": "layer:utah-forge-phase3-seismic-browser",
+            "dependencyPolicy": "follow-source",
+            "changedChannels": [],
+            "assignment": "preserve-interpolate",
+            "executionMode": "interpolate-channels",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:preserve-interpolate",
+              "compatibility:compatible",
+              "derived:follow-source:layer:utah-forge-phase3-seismic-browser"
+            ]
+          },
+          {
+            "entityKey": "layer:utah-forge-phase3-seismic-browser:product:gdr-1141-forge3d-ani-psdm-stack-unenh:object:3d-volume:volume",
+            "sourcePresence": "visible",
+            "targetPresence": "visible",
+            "sourceReadiness": "ready",
+            "targetReadiness": "ready",
+            "sourceRepresentation": "seismic:3d-volume",
+            "targetRepresentation": "seismic:3d-volume",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": "layer:utah-forge-phase3-seismic-browser",
+            "dependencyPolicy": "follow-source",
+            "changedChannels": [],
+            "assignment": "preserve-interpolate",
+            "executionMode": "interpolate-channels",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:preserve-interpolate",
+              "compatibility:compatible",
+              "derived:follow-source:layer:utah-forge-phase3-seismic-browser"
+            ]
+          },
+          {
+            "entityKey": "layer:utah-forge-phase3-seismic-browser:product:gdr-1141-forge3d-ani-psdm-stack-unenh:object:comparison:single-product",
+            "sourcePresence": "hidden",
+            "targetPresence": "hidden",
+            "sourceReadiness": "ready",
+            "targetReadiness": "ready",
+            "sourceRepresentation": "seismic:comparison",
+            "targetRepresentation": "seismic:comparison",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": "layer:utah-forge-phase3-seismic-browser",
+            "dependencyPolicy": "follow-source",
+            "changedChannels": [],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:compatible",
+              "derived:follow-source:layer:utah-forge-phase3-seismic-browser"
+            ]
+          },
+          {
+            "entityKey": "layer:utah-forge-phase3-seismic-browser:product:gdr-1141-forge3d-ani-psdm-stack-unenh:object:3d-volume:volume:figure-annotation",
+            "sourcePresence": "hidden",
+            "targetPresence": "hidden",
+            "sourceReadiness": "ready",
+            "targetReadiness": "ready",
+            "sourceRepresentation": "seismic:figure-annotation",
+            "targetRepresentation": "seismic:figure-annotation",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": "layer:utah-forge-phase3-seismic-browser:product:gdr-1141-forge3d-ani-psdm-stack-unenh:object:3d-volume:volume",
+            "dependencyPolicy": "follow-source",
+            "changedChannels": [],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:compatible",
+              "derived:follow-source:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-forge3d-ani-psdm-stack-unenh:object:3d-volume:volume"
+            ]
+          }
+        ],
+        "readinessAttachedLayerIds": [],
+        "sceneOverlays": {
+          "policy": "transition-clock-linear-fade",
+          "fadeDurationMs": 800,
+          "lastTransitionClockDurationMs": 3000,
+          "registeredHandleCount": 0,
+          "activeTweenCount": 0,
+          "activeOutlineTweenCount": 0,
+          "visibleHandleCount": 0,
+          "lastPhase": "transition-start",
+          "lastPageId": "28_integrated_seismic_resistivity_context",
+          "lastResolvedCount": 0,
+          "handles": []
+        },
+        "cinematicPost": {
+          "active": true,
+          "transitionKind": "continuous-post",
+          "sourcePageId": "27_seismic_fence_panels",
+          "targetPageId": "28_integrated_seismic_resistivity_context",
+          "progress": 0.8256918105632735,
+          "policyCount": 13,
+          "channelPolicies": [
+            {
+              "key": "colorGrade",
+              "transitionKind": "continuous"
+            },
+            {
+              "key": "vignette",
+              "transitionKind": "continuous"
+            },
+            {
+              "key": "depthOfField",
+              "transitionKind": "continuous"
+            },
+            {
+              "key": "tiltShift",
+              "transitionKind": "continuous"
+            },
+            {
+              "key": "lensEffects",
+              "transitionKind": "continuous"
+            },
+            {
+              "key": "motionTrails",
+              "transitionKind": "continuous"
+            },
+            {
+              "key": "presentationFrame",
+              "transitionKind": "continuous"
+            },
+            {
+              "key": "compositionGuides",
+              "transitionKind": "continuous"
+            },
+            {
+              "key": "camera.lensPreset",
+              "transitionKind": "discrete"
+            },
+            {
+              "key": "dynamicCamera.dolly",
+              "transitionKind": "timed-shot"
+            },
+            {
+              "key": "dynamicCamera.truck",
+              "transitionKind": "timed-shot"
+            },
+            {
+              "key": "dynamicCamera.crane",
+              "transitionKind": "timed-shot"
+            },
+            {
+              "key": "dynamicCamera.handheld",
+              "transitionKind": "timed-shot"
+            }
+          ]
+        },
+        "lateReapply": {
+          "totalCount": 43,
+          "duringTransitionCount": 10,
+          "events": [
+            {
+              "sequence": 19,
+              "reason": "async-layer-resolve",
+              "action": "full-current-page-state",
+              "pageId": null,
+              "duringTransition": false,
+              "transitionSourcePageId": null,
+              "transitionTargetPageId": null,
+              "transitionReason": null,
+              "transitionProgress": null,
+              "timeMs": 3912.9000000003725
+            },
+            {
+              "sequence": 20,
+              "reason": "async-layer-resolve",
+              "action": "full-current-page-state",
+              "pageId": null,
+              "duringTransition": false,
+              "transitionSourcePageId": null,
+              "transitionTargetPageId": null,
+              "transitionReason": null,
+              "transitionProgress": null,
+              "timeMs": 3951.9000000003725
+            },
+            {
+              "sequence": 21,
+              "reason": "async-layer-resolve",
+              "action": "full-current-page-state",
+              "pageId": null,
+              "duringTransition": false,
+              "transitionSourcePageId": null,
+              "transitionTargetPageId": null,
+              "transitionReason": null,
+              "transitionProgress": null,
+              "timeMs": 3951.9000000003725
+            },
+            {
+              "sequence": 22,
+              "reason": "async-layer-resolve",
+              "action": "full-current-page-state",
+              "pageId": null,
+              "duringTransition": false,
+              "transitionSourcePageId": null,
+              "transitionTargetPageId": null,
+              "transitionReason": null,
+              "transitionProgress": null,
+              "timeMs": 3951.9000000003725
+            },
+            {
+              "sequence": 23,
+              "reason": "async-layer-resolve",
+              "action": "full-current-page-state",
+              "pageId": null,
+              "duringTransition": false,
+              "transitionSourcePageId": null,
+              "transitionTargetPageId": null,
+              "transitionReason": null,
+              "transitionProgress": null,
+              "timeMs": 4996.10000000149
+            },
+            {
+              "sequence": 24,
+              "reason": "state-reapply",
+              "action": "transition-aware-current-page-state",
+              "pageId": "157_page",
+              "duringTransition": true,
+              "transitionSourcePageId": "156_page",
+              "transitionTargetPageId": "157_page",
+              "transitionReason": "page-click",
+              "transitionProgress": 0.4144997098046884,
+              "timeMs": 14345.900000000373
+            },
+            {
+              "sequence": 25,
+              "reason": "async-layer-resolve",
+              "action": "transition-aware-current-page-state",
+              "pageId": "61_psdm_mt_58_32_source_location_tie",
+              "duringTransition": true,
+              "transitionSourcePageId": "63_borehole_logs_16a_source_ingest",
+              "transitionTargetPageId": "61_psdm_mt_58_32_source_location_tie",
+              "transitionReason": "page-click",
+              "transitionProgress": 1,
+              "timeMs": 109844.30000000075
+            },
+            {
+              "sequence": 26,
+              "reason": "async-layer-resolve",
+              "action": "full-current-page-state",
+              "pageId": "61_psdm_mt_58_32_source_location_tie",
+              "duringTransition": false,
+              "transitionSourcePageId": null,
+              "transitionTargetPageId": null,
+              "transitionReason": null,
+              "transitionProgress": null,
+              "timeMs": 112107.60000000149
+            },
+            {
+              "sequence": 27,
+              "reason": "async-layer-resolve",
+              "action": "transition-aware-current-page-state",
+              "pageId": "176_page",
+              "duringTransition": true,
+              "transitionSourcePageId": "61_psdm_mt_58_32_source_location_tie",
+              "transitionTargetPageId": "176_page",
+              "transitionReason": "page-click",
+              "transitionProgress": 1,
+              "timeMs": 121310.90000000037
+            },
+            {
+              "sequence": 28,
+              "reason": "async-layer-resolve",
+              "action": "transition-aware-current-page-state",
+              "pageId": "176_page",
+              "duringTransition": true,
+              "transitionSourcePageId": "61_psdm_mt_58_32_source_location_tie",
+              "transitionTargetPageId": "176_page",
+              "transitionReason": "page-click",
+              "transitionProgress": 1,
+              "timeMs": 121516.60000000149
+            },
+            {
+              "sequence": 29,
+              "reason": "async-layer-resolve",
+              "action": "full-current-page-state",
+              "pageId": "176_page",
+              "duringTransition": false,
+              "transitionSourcePageId": null,
+              "transitionTargetPageId": null,
+              "transitionReason": null,
+              "transitionProgress": null,
+              "timeMs": 123156
+            },
+            {
+              "sequence": 30,
+              "reason": "async-layer-resolve",
+              "action": "full-current-page-state",
+              "pageId": "176_page",
+              "duringTransition": false,
+              "transitionSourcePageId": null,
+              "transitionTargetPageId": null,
+              "transitionReason": null,
+              "transitionProgress": null,
+              "timeMs": 128892.5
+            },
+            {
+              "sequence": 31,
+              "reason": "async-layer-resolve",
+              "action": "full-current-page-state",
+              "pageId": "176_page",
+              "duringTransition": false,
+              "transitionSourcePageId": null,
+              "transitionTargetPageId": null,
+              "transitionReason": null,
+              "transitionProgress": null,
+              "timeMs": 129985.5
+            },
+            {
+              "sequence": 32,
+              "reason": "async-layer-resolve",
+              "action": "full-current-page-state",
+              "pageId": "176_page",
+              "duringTransition": false,
+              "transitionSourcePageId": null,
+              "transitionTargetPageId": null,
+              "transitionReason": null,
+              "transitionProgress": null,
+              "timeMs": 131158.5
+            },
+            {
+              "sequence": 33,
+              "reason": "async-layer-resolve",
+              "action": "full-current-page-state",
+              "pageId": "176_page",
+              "duringTransition": false,
+              "transitionSourcePageId": null,
+              "transitionTargetPageId": null,
+              "transitionReason": null,
+              "transitionProgress": null,
+              "timeMs": 137703.40000000037
+            },
+            {
+              "sequence": 34,
+              "reason": "async-layer-resolve",
+              "action": "full-current-page-state",
+              "pageId": "176_page",
+              "duringTransition": false,
+              "transitionSourcePageId": null,
+              "transitionTargetPageId": null,
+              "transitionReason": null,
+              "transitionProgress": null,
+              "timeMs": 140041.1000000015
+            },
+            {
+              "sequence": 35,
+              "reason": "async-layer-resolve",
+              "action": "full-current-page-state",
+              "pageId": "176_page",
+              "duringTransition": false,
+              "transitionSourcePageId": null,
+              "transitionTargetPageId": null,
+              "transitionReason": null,
+              "transitionProgress": null,
+              "timeMs": 141289.5
+            },
+            {
+              "sequence": 36,
+              "reason": "async-layer-resolve",
+              "action": "transition-aware-current-page-state",
+              "pageId": "143_page",
+              "duringTransition": true,
+              "transitionSourcePageId": "176_page",
+              "transitionTargetPageId": "143_page",
+              "transitionReason": "page-click",
+              "transitionProgress": 0.02510344827586207,
+              "timeMs": 143507.40000000037
+            },
+            {
+              "sequence": 37,
+              "reason": "async-layer-resolve",
+              "action": "transition-aware-current-page-state",
+              "pageId": "143_page",
+              "duringTransition": true,
+              "transitionSourcePageId": "176_page",
+              "transitionTargetPageId": "143_page",
+              "transitionReason": "page-click",
+              "transitionProgress": 0.6327586206896552,
+              "timeMs": 147912.90000000037
+            },
+            {
+              "sequence": 38,
+              "reason": "async-layer-resolve",
+              "action": "transition-aware-current-page-state",
+              "pageId": "143_page",
+              "duringTransition": true,
+              "transitionSourcePageId": "176_page",
+              "transitionTargetPageId": "143_page",
+              "transitionReason": "page-click",
+              "transitionProgress": 0.6567724137930521,
+              "timeMs": 148087
+            },
+            {
+              "sequence": 39,
+              "reason": "async-layer-resolve",
+              "action": "transition-aware-current-page-state",
+              "pageId": "143_page",
+              "duringTransition": true,
+              "transitionSourcePageId": "176_page",
+              "transitionTargetPageId": "143_page",
+              "transitionReason": "page-click",
+              "transitionProgress": 0.6819172413793617,
+              "timeMs": 148269.30000000075
+            },
+            {
+              "sequence": 40,
+              "reason": "async-layer-resolve",
+              "action": "transition-aware-current-page-state",
+              "pageId": "143_page",
+              "duringTransition": true,
+              "transitionSourcePageId": "176_page",
+              "transitionTargetPageId": "143_page",
+              "transitionReason": "page-click",
+              "transitionProgress": 0.7071448275863097,
+              "timeMs": 148452.20000000112
+            },
+            {
+              "sequence": 41,
+              "reason": "async-layer-resolve",
+              "action": "transition-aware-current-page-state",
+              "pageId": "143_page",
+              "duringTransition": true,
+              "transitionSourcePageId": "176_page",
+              "transitionTargetPageId": "143_page",
+              "transitionReason": "page-click",
+              "transitionProgress": 0.731889655172568,
+              "timeMs": 148631.6000000015
+            },
+            {
+              "sequence": 42,
+              "reason": "async-layer-resolve",
+              "action": "full-current-page-state",
+              "pageId": "143_page",
+              "duringTransition": false,
+              "transitionSourcePageId": null,
+              "transitionTargetPageId": null,
+              "transitionReason": null,
+              "transitionProgress": null,
+              "timeMs": 154297.70000000112
+            },
+            {
+              "sequence": 43,
+              "reason": "async-layer-resolve",
+              "action": "full-current-page-state",
+              "pageId": "143_page",
+              "duringTransition": false,
+              "transitionSourcePageId": null,
+              "transitionTargetPageId": null,
+              "transitionReason": null,
+              "transitionProgress": null,
+              "timeMs": 154617.80000000075
+            }
+          ]
+        },
+        "transitionCommit": {
+          "transitionId": "page-40",
+          "commitOwner": "SceneManager",
+          "commitPhase": null,
+          "hasFinalized": false,
+          "finalizedAt": null,
+          "suppressedDuplicateAssertions": 0
+        },
+        "commitTraces": []
+      },
+      "consumerDebug": {
+        "presenterOverlay": {
+          "policy": "crossfade-slide",
+          "active": true,
+          "sourcePageId": "27_seismic_fence_panels",
+          "targetPageId": "28_integrated_seismic_resistivity_context",
+          "progress": 0.9516697755400697,
+          "slideDirection": 1,
+          "cssTransitionsDisabledWhileActive": true
+        },
+        "sceneOverlays": {
+          "policy": "transition-clock-linear-fade",
+          "fadeDurationMs": 800,
+          "lastTransitionClockDurationMs": 3000,
+          "registeredHandleCount": 0,
+          "activeTweenCount": 0,
+          "activeOutlineTweenCount": 0,
+          "visibleHandleCount": 0,
+          "lastPhase": "transition-start",
+          "lastPageId": "28_integrated_seismic_resistivity_context",
+          "lastResolvedCount": 0,
+          "handles": []
+        },
+        "labels": {
+          "policy": "hold-source-until-threshold",
+          "switchThreshold": 0.92,
+          "activePageId": "28_integrated_seismic_resistivity_context",
+          "sourcePageId": "27_seismic_fence_panels",
+          "targetPageId": "28_integrated_seismic_resistivity_context"
+        },
+        "assays": {
+          "policy": "hold-source-until-threshold",
+          "switchThreshold": 0.92,
+          "activePageId": "28_integrated_seismic_resistivity_context",
+          "sourcePageId": "27_seismic_fence_panels",
+          "targetPageId": "28_integrated_seismic_resistivity_context"
+        },
+        "legends": {
+          "stackPolicy": "phased-layout-slide",
+          "resistivityPolicy": "interpolate-source-target",
+          "defaultPolicy": "target-from-start",
+          "sourcePageId": "27_seismic_fence_panels",
+          "targetPageId": "28_integrated_seismic_resistivity_context",
+          "progress": 0.9516697755400697,
+          "exitEnd": 0.34,
+          "layoutEnd": 0.68,
+          "targetInteractiveThreshold": 0.92
+        },
+        "lateReapply": {
+          "totalCount": 43,
+          "duringTransitionCount": 10,
+          "events": [
+            {
+              "sequence": 19,
+              "reason": "async-layer-resolve",
+              "action": "full-current-page-state",
+              "pageId": null,
+              "duringTransition": false,
+              "transitionSourcePageId": null,
+              "transitionTargetPageId": null,
+              "transitionReason": null,
+              "transitionProgress": null,
+              "timeMs": 3912.9000000003725
+            },
+            {
+              "sequence": 20,
+              "reason": "async-layer-resolve",
+              "action": "full-current-page-state",
+              "pageId": null,
+              "duringTransition": false,
+              "transitionSourcePageId": null,
+              "transitionTargetPageId": null,
+              "transitionReason": null,
+              "transitionProgress": null,
+              "timeMs": 3951.9000000003725
+            },
+            {
+              "sequence": 21,
+              "reason": "async-layer-resolve",
+              "action": "full-current-page-state",
+              "pageId": null,
+              "duringTransition": false,
+              "transitionSourcePageId": null,
+              "transitionTargetPageId": null,
+              "transitionReason": null,
+              "transitionProgress": null,
+              "timeMs": 3951.9000000003725
+            },
+            {
+              "sequence": 22,
+              "reason": "async-layer-resolve",
+              "action": "full-current-page-state",
+              "pageId": null,
+              "duringTransition": false,
+              "transitionSourcePageId": null,
+              "transitionTargetPageId": null,
+              "transitionReason": null,
+              "transitionProgress": null,
+              "timeMs": 3951.9000000003725
+            },
+            {
+              "sequence": 23,
+              "reason": "async-layer-resolve",
+              "action": "full-current-page-state",
+              "pageId": null,
+              "duringTransition": false,
+              "transitionSourcePageId": null,
+              "transitionTargetPageId": null,
+              "transitionReason": null,
+              "transitionProgress": null,
+              "timeMs": 4996.10000000149
+            },
+            {
+              "sequence": 24,
+              "reason": "state-reapply",
+              "action": "transition-aware-current-page-state",
+              "pageId": "157_page",
+              "duringTransition": true,
+              "transitionSourcePageId": "156_page",
+              "transitionTargetPageId": "157_page",
+              "transitionReason": "page-click",
+              "transitionProgress": 0.4144997098046884,
+              "timeMs": 14345.900000000373
+            },
+            {
+              "sequence": 25,
+              "reason": "async-layer-resolve",
+              "action": "transition-aware-current-page-state",
+              "pageId": "61_psdm_mt_58_32_source_location_tie",
+              "duringTransition": true,
+              "transitionSourcePageId": "63_borehole_logs_16a_source_ingest",
+              "transitionTargetPageId": "61_psdm_mt_58_32_source_location_tie",
+              "transitionReason": "page-click",
+              "transitionProgress": 1,
+              "timeMs": 109844.30000000075
+            },
+            {
+              "sequence": 26,
+              "reason": "async-layer-resolve",
+              "action": "full-current-page-state",
+              "pageId": "61_psdm_mt_58_32_source_location_tie",
+              "duringTransition": false,
+              "transitionSourcePageId": null,
+              "transitionTargetPageId": null,
+              "transitionReason": null,
+              "transitionProgress": null,
+              "timeMs": 112107.60000000149
+            },
+            {
+              "sequence": 27,
+              "reason": "async-layer-resolve",
+              "action": "transition-aware-current-page-state",
+              "pageId": "176_page",
+              "duringTransition": true,
+              "transitionSourcePageId": "61_psdm_mt_58_32_source_location_tie",
+              "transitionTargetPageId": "176_page",
+              "transitionReason": "page-click",
+              "transitionProgress": 1,
+              "timeMs": 121310.90000000037
+            },
+            {
+              "sequence": 28,
+              "reason": "async-layer-resolve",
+              "action": "transition-aware-current-page-state",
+              "pageId": "176_page",
+              "duringTransition": true,
+              "transitionSourcePageId": "61_psdm_mt_58_32_source_location_tie",
+              "transitionTargetPageId": "176_page",
+              "transitionReason": "page-click",
+              "transitionProgress": 1,
+              "timeMs": 121516.60000000149
+            },
+            {
+              "sequence": 29,
+              "reason": "async-layer-resolve",
+              "action": "full-current-page-state",
+              "pageId": "176_page",
+              "duringTransition": false,
+              "transitionSourcePageId": null,
+              "transitionTargetPageId": null,
+              "transitionReason": null,
+              "transitionProgress": null,
+              "timeMs": 123156
+            },
+            {
+              "sequence": 30,
+              "reason": "async-layer-resolve",
+              "action": "full-current-page-state",
+              "pageId": "176_page",
+              "duringTransition": false,
+              "transitionSourcePageId": null,
+              "transitionTargetPageId": null,
+              "transitionReason": null,
+              "transitionProgress": null,
+              "timeMs": 128892.5
+            },
+            {
+              "sequence": 31,
+              "reason": "async-layer-resolve",
+              "action": "full-current-page-state",
+              "pageId": "176_page",
+              "duringTransition": false,
+              "transitionSourcePageId": null,
+              "transitionTargetPageId": null,
+              "transitionReason": null,
+              "transitionProgress": null,
+              "timeMs": 129985.5
+            },
+            {
+              "sequence": 32,
+              "reason": "async-layer-resolve",
+              "action": "full-current-page-state",
+              "pageId": "176_page",
+              "duringTransition": false,
+              "transitionSourcePageId": null,
+              "transitionTargetPageId": null,
+              "transitionReason": null,
+              "transitionProgress": null,
+              "timeMs": 131158.5
+            },
+            {
+              "sequence": 33,
+              "reason": "async-layer-resolve",
+              "action": "full-current-page-state",
+              "pageId": "176_page",
+              "duringTransition": false,
+              "transitionSourcePageId": null,
+              "transitionTargetPageId": null,
+              "transitionReason": null,
+              "transitionProgress": null,
+              "timeMs": 137703.40000000037
+            },
+            {
+              "sequence": 34,
+              "reason": "async-layer-resolve",
+              "action": "full-current-page-state",
+              "pageId": "176_page",
+              "duringTransition": false,
+              "transitionSourcePageId": null,
+              "transitionTargetPageId": null,
+              "transitionReason": null,
+              "transitionProgress": null,
+              "timeMs": 140041.1000000015
+            },
+            {
+              "sequence": 35,
+              "reason": "async-layer-resolve",
+              "action": "full-current-page-state",
+              "pageId": "176_page",
+              "duringTransition": false,
+              "transitionSourcePageId": null,
+              "transitionTargetPageId": null,
+              "transitionReason": null,
+              "transitionProgress": null,
+              "timeMs": 141289.5
+            },
+            {
+              "sequence": 36,
+              "reason": "async-layer-resolve",
+              "action": "transition-aware-current-page-state",
+              "pageId": "143_page",
+              "duringTransition": true,
+              "transitionSourcePageId": "176_page",
+              "transitionTargetPageId": "143_page",
+              "transitionReason": "page-click",
+              "transitionProgress": 0.02510344827586207,
+              "timeMs": 143507.40000000037
+            },
+            {
+              "sequence": 37,
+              "reason": "async-layer-resolve",
+              "action": "transition-aware-current-page-state",
+              "pageId": "143_page",
+              "duringTransition": true,
+              "transitionSourcePageId": "176_page",
+              "transitionTargetPageId": "143_page",
+              "transitionReason": "page-click",
+              "transitionProgress": 0.6327586206896552,
+              "timeMs": 147912.90000000037
+            },
+            {
+              "sequence": 38,
+              "reason": "async-layer-resolve",
+              "action": "transition-aware-current-page-state",
+              "pageId": "143_page",
+              "duringTransition": true,
+              "transitionSourcePageId": "176_page",
+              "transitionTargetPageId": "143_page",
+              "transitionReason": "page-click",
+              "transitionProgress": 0.6567724137930521,
+              "timeMs": 148087
+            },
+            {
+              "sequence": 39,
+              "reason": "async-layer-resolve",
+              "action": "transition-aware-current-page-state",
+              "pageId": "143_page",
+              "duringTransition": true,
+              "transitionSourcePageId": "176_page",
+              "transitionTargetPageId": "143_page",
+              "transitionReason": "page-click",
+              "transitionProgress": 0.6819172413793617,
+              "timeMs": 148269.30000000075
+            },
+            {
+              "sequence": 40,
+              "reason": "async-layer-resolve",
+              "action": "transition-aware-current-page-state",
+              "pageId": "143_page",
+              "duringTransition": true,
+              "transitionSourcePageId": "176_page",
+              "transitionTargetPageId": "143_page",
+              "transitionReason": "page-click",
+              "transitionProgress": 0.7071448275863097,
+              "timeMs": 148452.20000000112
+            },
+            {
+              "sequence": 41,
+              "reason": "async-layer-resolve",
+              "action": "transition-aware-current-page-state",
+              "pageId": "143_page",
+              "duringTransition": true,
+              "transitionSourcePageId": "176_page",
+              "transitionTargetPageId": "143_page",
+              "transitionReason": "page-click",
+              "transitionProgress": 0.731889655172568,
+              "timeMs": 148631.6000000015
+            },
+            {
+              "sequence": 42,
+              "reason": "async-layer-resolve",
+              "action": "full-current-page-state",
+              "pageId": "143_page",
+              "duringTransition": false,
+              "transitionSourcePageId": null,
+              "transitionTargetPageId": null,
+              "transitionReason": null,
+              "transitionProgress": null,
+              "timeMs": 154297.70000000112
+            },
+            {
+              "sequence": 43,
+              "reason": "async-layer-resolve",
+              "action": "full-current-page-state",
+              "pageId": "143_page",
+              "duringTransition": false,
+              "transitionSourcePageId": null,
+              "transitionTargetPageId": null,
+              "transitionReason": null,
+              "transitionProgress": null,
+              "timeMs": 154617.80000000075
+            }
+          ]
+        }
+      }
+    },
+    "lastTransitionRun": {
+      "mode": "page",
+      "sourceIndex": 59,
+      "targetIndex": 60,
+      "sourcePageId": "26_resistivity_isosurfaces",
+      "targetPageId": "27_seismic_fence_panels",
+      "reason": "page-click",
+      "startedAtMs": 511332.9000000004,
+      "durationMs": 3000,
+      "easing": "easeInOutCubic",
+      "interruptedRunIds": [],
+      "runId": "page-39",
+      "status": "completed",
+      "rawProgress": 1,
+      "easedProgress": 1,
+      "pageTransitionActive": false,
+      "dynamicCameraTransitionActive": false,
+      "sceneTransition": {
+        "active": true,
+        "sourcePageId": "26_resistivity_isosurfaces",
+        "targetPageId": "27_seismic_fence_panels",
+        "reason": "page-click",
+        "activeDataTransitionCount": 0,
+        "snapshotCount": 0,
+        "scalarTweenCount": 0,
+        "layerTweenCount": 0,
+        "workingAreaFocusTweenActive": false,
+        "sceneSectionStyleTweenActive": false,
+        "sceneSectionHelperTransitionSnapshotActive": false,
+        "sceneSectionHelperTransitionOpacity": 1,
+        "layerTweenTick": {
+          "timestampMs": 514325.2,
+          "totalMs": 1.2,
+          "sceneSectionMs": 0,
+          "sceneSectionApply": null,
+          "workingAreaMs": 0,
+          "scalarMs": 0.1,
+          "layerMs": 0,
+          "snapshotMs": 0,
+          "helperSnapshotMs": 0,
+          "envelopeMs": 1.1,
+          "activeSceneTransition": true,
+          "sceneSectionApplyMode": "none",
+          "layerTweenIds": [],
+          "scalarTweenIds": [],
+          "snapshotIds": [],
+          "layerTweenCountBefore": 0,
+          "scalarTweenCountBefore": 0,
+          "snapshotCountBefore": 0,
+          "sceneSectionStyleTweenActiveBefore": false,
+          "helperSnapshotActiveBefore": false,
+          "workingAreaFocusTweenActiveBefore": false
+        },
+        "frameUpdate": {
+          "timestampMs": 514325.2,
+          "totalMs": 2.4,
+          "cameraLockedSunMs": 0,
+          "layerTweensMs": 1.3,
+          "environmentSceneMs": 0.6,
+          "cinematicPostMs": 0,
+          "boreLensMs": 0,
+          "lightingStudioScaleMs": 0.1,
+          "dynamicCameraOrbitCenterScaleMs": 0,
+          "pageCameraMarkerScaleMs": 0,
+          "ezGammaBillboardMs": 0,
+          "sceneSectionTextFacingMs": 0,
+          "sectionIsoThresholdOcclusionMs": 0.1,
+          "topoGridCameraVisibilityMs": 0,
+          "localAtmosphereMs": 0.1,
+          "sceneOverlayTickMs": 0.2,
+          "activeSceneTransition": true
+        },
+        "sectionIsoOverlays": {
+          "opacityPolicy": "split-section-iso-overlay-opacity-from-layer-opacity",
+          "overlayMaterialCount": 16,
+          "independentOverlayMaterialCount": 0,
+          "transitionEnvelopeOverlayMaterialCount": 0,
+          "hiddenWithParentMaterialCount": 16,
+          "layerRenderOpacityMin": 0,
+          "layerRenderOpacityMax": 0,
+          "transitionOpacityMin": 0,
+          "transitionOpacityMax": 0
+        },
+        "sceneSectionHelpers": {
+          "groundTracePolicy": "mirror-delayed-ground-trace-into-helper-snapshot",
+          "liveGroundTraceCount": 0,
+          "snapshotGroundTraceCount": 0,
+          "snapshotActive": false,
+          "transitionOpacity": 1
+        },
+        "productFamilies": [
+          {
+            "layerId": "utah-forge-phase3-demo-boreholes",
+            "layerType": "mesh",
+            "family": "simple-geometry",
+            "policy": "preserve",
+            "transitionKind": "none",
+            "stateSource": "loaded-layer",
+            "loadedAtStart": true,
+            "sourceVisible": true,
+            "targetVisible": true,
+            "sourceOpacity": 1,
+            "targetOpacity": 1,
+            "reason": "layer remains in the same transition state"
+          },
+          {
+            "layerId": "utah-forge-site-boundary",
+            "layerType": "line",
+            "family": "simple-geometry",
+            "policy": "preserve",
+            "transitionKind": "none",
+            "stateSource": "loaded-layer",
+            "loadedAtStart": true,
+            "sourceVisible": true,
+            "targetVisible": true,
+            "sourceOpacity": 1,
+            "targetOpacity": 1,
+            "reason": "layer remains in the same transition state"
+          },
+          {
+            "layerId": "utah-forge-mt-stations",
+            "layerType": "point",
+            "family": "point-markers",
+            "policy": "preserve",
+            "transitionKind": "none",
+            "stateSource": "loaded-layer",
+            "loadedAtStart": true,
+            "sourceVisible": true,
+            "targetVisible": true,
+            "sourceOpacity": 1,
+            "targetOpacity": 1,
+            "reason": "layer remains in the same transition state"
+          },
+          {
+            "layerId": "utah-forge-mt-resistivity-full-density",
+            "layerType": "pointcloud",
+            "family": "point-cloud",
+            "policy": "preserve",
+            "transitionKind": "none",
+            "stateSource": "loaded-layer",
+            "loadedAtStart": true,
+            "sourceVisible": true,
+            "targetVisible": true,
+            "sourceOpacity": 0.05,
+            "targetOpacity": 0.05,
+            "reason": "layer remains in the same transition state"
+          }
+        ],
+        "assignmentTraces": [
+          {
+            "entityKey": "layer:bench-conformance-overlay",
+            "sourcePresence": "hidden",
+            "targetPresence": "absent",
+            "sourceReadiness": "ready",
+            "targetReadiness": "unavailable",
+            "sourceRepresentation": "layer:unknown",
+            "targetRepresentation": "layer:unknown",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:erosion-runoff-planning",
+            "sourcePresence": "hidden",
+            "targetPresence": "absent",
+            "sourceReadiness": "ready",
+            "targetReadiness": "unavailable",
+            "sourceRepresentation": "layer:unknown",
+            "targetRepresentation": "layer:unknown",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:haul-route-equipment-demo",
+            "sourcePresence": "hidden",
+            "targetPresence": "absent",
+            "sourceReadiness": "ready",
+            "targetReadiness": "unavailable",
+            "sourceRepresentation": "layer:unknown",
+            "targetRepresentation": "layer:unknown",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:hydrography-lakes",
+            "sourcePresence": "hidden",
+            "targetPresence": "hidden",
+            "sourceReadiness": "ready",
+            "targetReadiness": "ready",
+            "sourceRepresentation": "layer:polygon",
+            "targetRepresentation": "layer:polygon",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:hydrography-streams",
+            "sourcePresence": "hidden",
+            "targetPresence": "hidden",
+            "sourceReadiness": "ready",
+            "targetReadiness": "ready",
+            "sourceRepresentation": "layer:line",
+            "targetRepresentation": "layer:line",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:naip-2024-tile-diagnostics",
+            "sourcePresence": "hidden",
+            "targetPresence": "hidden",
+            "sourceReadiness": "ready",
+            "targetReadiness": "ready",
+            "sourceRepresentation": "layer:line",
+            "targetRepresentation": "layer:line",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:public-viewshed-overlay",
+            "sourcePresence": "hidden",
+            "targetPresence": "absent",
+            "sourceReadiness": "ready",
+            "targetReadiness": "unavailable",
+            "sourceRepresentation": "layer:unknown",
+            "targetRepresentation": "layer:unknown",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:quarry-drill-traces",
+            "sourcePresence": "hidden",
+            "targetPresence": "absent",
+            "sourceReadiness": "ready",
+            "targetReadiness": "unavailable",
+            "sourceRepresentation": "layer:unknown",
+            "targetRepresentation": "layer:unknown",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:quarry-imagery-base",
+            "sourcePresence": "hidden",
+            "targetPresence": "absent",
+            "sourceReadiness": "ready",
+            "targetReadiness": "unavailable",
+            "sourceRepresentation": "layer:unknown",
+            "targetRepresentation": "layer:unknown",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:quarry-lidar-surface",
+            "sourcePresence": "hidden",
+            "targetPresence": "absent",
+            "sourceReadiness": "ready",
+            "targetReadiness": "unavailable",
+            "sourceRepresentation": "layer:unknown",
+            "targetRepresentation": "layer:unknown",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:quarry-ore-grade-heatmap",
+            "sourcePresence": "hidden",
+            "targetPresence": "absent",
+            "sourceReadiness": "ready",
+            "targetReadiness": "unavailable",
+            "sourceRepresentation": "layer:unknown",
+            "targetRepresentation": "layer:unknown",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:restoration-preview",
+            "sourcePresence": "hidden",
+            "targetPresence": "absent",
+            "sourceReadiness": "ready",
+            "targetReadiness": "unavailable",
+            "sourceRepresentation": "layer:unknown",
+            "targetRepresentation": "layer:unknown",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:slope-stability-anomaly",
+            "sourcePresence": "hidden",
+            "targetPresence": "absent",
+            "sourceReadiness": "ready",
+            "targetReadiness": "unavailable",
+            "sourceRepresentation": "layer:unknown",
+            "targetRepresentation": "layer:unknown",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:stockpile-volume-zones",
+            "sourcePresence": "hidden",
+            "targetPresence": "absent",
+            "sourceReadiness": "ready",
+            "targetReadiness": "unavailable",
+            "sourceRepresentation": "layer:unknown",
+            "targetRepresentation": "layer:unknown",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:terrain",
+            "sourcePresence": "hidden",
+            "targetPresence": "hidden",
+            "sourceReadiness": "ready",
+            "targetReadiness": "ready",
+            "sourceRepresentation": "layer:geotiff",
+            "targetRepresentation": "layer:geotiff",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:topo-cloud-volume-2",
+            "sourcePresence": "hidden",
+            "targetPresence": "hidden",
+            "sourceReadiness": "ready",
+            "targetReadiness": "ready",
+            "sourceRepresentation": "layer:atmosphere-volume",
+            "targetRepresentation": "layer:atmosphere-volume",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:topo-cloud-volume-3",
+            "sourcePresence": "hidden",
+            "targetPresence": "hidden",
+            "sourceReadiness": "ready",
+            "targetReadiness": "ready",
+            "sourceRepresentation": "layer:atmosphere-volume",
+            "targetRepresentation": "layer:atmosphere-volume",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:transport-roads",
+            "sourcePresence": "hidden",
+            "targetPresence": "hidden",
+            "sourceReadiness": "ready",
+            "targetReadiness": "ready",
+            "sourceRepresentation": "layer:line",
+            "targetRepresentation": "layer:line",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:utah-forge-borehole-logs",
+            "sourcePresence": "hidden",
+            "targetPresence": "hidden",
+            "sourceReadiness": "ready",
+            "targetReadiness": "ready",
+            "sourceRepresentation": "layer:mesh",
+            "targetRepresentation": "layer:mesh",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:utah-forge-mt-resistivity-full-density",
+            "sourcePresence": "visible",
+            "targetPresence": "visible",
+            "sourceReadiness": "ready",
+            "targetReadiness": "ready",
+            "sourceRepresentation": "layer:pointcloud",
+            "targetRepresentation": "layer:pointcloud",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "preserve-interpolate",
+            "executionMode": "interpolate-channels",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:preserve-interpolate",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:utah-forge-mt-resistivity-preview",
+            "sourcePresence": "hidden",
+            "targetPresence": "hidden",
+            "sourceReadiness": "ready",
+            "targetReadiness": "ready",
+            "sourceRepresentation": "layer:pointcloud",
+            "targetRepresentation": "layer:pointcloud",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:utah-forge-mt-resistivity-slices",
+            "sourcePresence": "hidden",
+            "targetPresence": "hidden",
+            "sourceReadiness": "ready",
+            "targetReadiness": "ready",
+            "sourceRepresentation": "layer:mesh",
+            "targetRepresentation": "layer:mesh",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:utah-forge-mt-resistivity-threshold-surfaces",
+            "sourcePresence": "hidden",
+            "targetPresence": "hidden",
+            "sourceReadiness": "ready",
+            "targetReadiness": "ready",
+            "sourceRepresentation": "layer:mesh",
+            "targetRepresentation": "layer:mesh",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:utah-forge-mt-resistivity-volume",
+            "sourcePresence": "hidden",
+            "targetPresence": "hidden",
+            "sourceReadiness": "ready",
+            "targetReadiness": "ready",
+            "sourceRepresentation": "layer:volume",
+            "targetRepresentation": "layer:volume",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:utah-forge-mt-stations",
+            "sourcePresence": "visible",
+            "targetPresence": "visible",
+            "sourceReadiness": "ready",
+            "targetReadiness": "ready",
+            "sourceRepresentation": "layer:point",
+            "targetRepresentation": "layer:point",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "preserve-interpolate",
+            "executionMode": "interpolate-channels",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:preserve-interpolate",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:utah-forge-mt-top-contact-surface",
+            "sourcePresence": "hidden",
+            "targetPresence": "hidden",
+            "sourceReadiness": "ready",
+            "targetReadiness": "ready",
+            "sourceRepresentation": "layer:mesh",
+            "targetRepresentation": "layer:mesh",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:utah-forge-mt-top-surface",
+            "sourcePresence": "hidden",
+            "targetPresence": "hidden",
+            "sourceReadiness": "ready",
+            "targetReadiness": "ready",
+            "sourceRepresentation": "layer:mesh",
+            "targetRepresentation": "layer:mesh",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:utah-forge-phase3-demo-boreholes",
+            "sourcePresence": "visible",
+            "targetPresence": "visible",
+            "sourceReadiness": "ready",
+            "targetReadiness": "ready",
+            "sourceRepresentation": "layer:mesh",
+            "targetRepresentation": "layer:mesh",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "preserve-interpolate",
+            "executionMode": "interpolate-channels",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:preserve-interpolate",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:utah-forge-phase3-seismic-browser",
+            "sourcePresence": "hidden",
+            "targetPresence": "hidden",
+            "sourceReadiness": "ready",
+            "targetReadiness": "ready",
+            "sourceRepresentation": "layer:seismic",
+            "targetRepresentation": "layer:seismic",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:utah-forge-phase3-working-area",
+            "sourcePresence": "hidden",
+            "targetPresence": "hidden",
+            "sourceReadiness": "ready",
+            "targetReadiness": "ready",
+            "sourceRepresentation": "layer:line",
+            "targetRepresentation": "layer:line",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:utah-forge-reference-stage",
+            "sourcePresence": "hidden",
+            "targetPresence": "hidden",
+            "sourceReadiness": "ready",
+            "targetReadiness": "ready",
+            "sourceRepresentation": "layer:mesh",
+            "targetRepresentation": "layer:mesh",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:utah-forge-site-boundary",
+            "sourcePresence": "visible",
+            "targetPresence": "visible",
+            "sourceReadiness": "ready",
+            "targetReadiness": "ready",
+            "sourceRepresentation": "layer:line",
+            "targetRepresentation": "layer:line",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "preserve-interpolate",
+            "executionMode": "interpolate-channels",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:preserve-interpolate",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:utah-forge-topo-clouds",
+            "sourcePresence": "hidden",
+            "targetPresence": "hidden",
+            "sourceReadiness": "ready",
+            "targetReadiness": "ready",
+            "sourceRepresentation": "layer:atmosphere-volume",
+            "targetRepresentation": "layer:atmosphere-volume",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:utah-forge-topo-graticule",
+            "sourcePresence": "hidden",
+            "targetPresence": "hidden",
+            "sourceReadiness": "ready",
+            "targetReadiness": "ready",
+            "sourceRepresentation": "layer:line",
+            "targetRepresentation": "layer:line",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": null,
+            "dependencyPolicy": "independent",
+            "changedChannels": [],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:compatible"
+            ]
+          },
+          {
+            "entityKey": "layer:utah-forge-phase3-seismic-browser:object:survey-geometry:lines",
+            "sourcePresence": "visible",
+            "targetPresence": "visible",
+            "sourceReadiness": "ready",
+            "targetReadiness": "ready",
+            "sourceRepresentation": "seismic:survey-geometry",
+            "targetRepresentation": "seismic:survey-geometry",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": "layer:utah-forge-phase3-seismic-browser",
+            "dependencyPolicy": "follow-source",
+            "changedChannels": [],
+            "assignment": "preserve-interpolate",
+            "executionMode": "interpolate-channels",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:preserve-interpolate",
+              "compatibility:compatible",
+              "derived:follow-source:layer:utah-forge-phase3-seismic-browser"
+            ]
+          },
+          {
+            "entityKey": "layer:utah-forge-phase3-seismic-browser:object:survey-geometry:navigation",
+            "sourcePresence": "visible",
+            "targetPresence": "visible",
+            "sourceReadiness": "ready",
+            "targetReadiness": "ready",
+            "sourceRepresentation": "seismic:survey-geometry",
+            "targetRepresentation": "seismic:survey-geometry",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": "layer:utah-forge-phase3-seismic-browser",
+            "dependencyPolicy": "follow-source",
+            "changedChannels": [],
+            "assignment": "preserve-interpolate",
+            "executionMode": "interpolate-channels",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:preserve-interpolate",
+              "compatibility:compatible",
+              "derived:follow-source:layer:utah-forge-phase3-seismic-browser"
+            ]
+          },
+          {
+            "entityKey": "layer:utah-forge-phase3-seismic-browser:object:survey-geometry:receivers",
+            "sourcePresence": "visible",
+            "targetPresence": "visible",
+            "sourceReadiness": "ready",
+            "targetReadiness": "ready",
+            "sourceRepresentation": "seismic:survey-geometry",
+            "targetRepresentation": "seismic:survey-geometry",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": "layer:utah-forge-phase3-seismic-browser",
+            "dependencyPolicy": "follow-source",
+            "changedChannels": [],
+            "assignment": "preserve-interpolate",
+            "executionMode": "interpolate-channels",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:preserve-interpolate",
+              "compatibility:compatible",
+              "derived:follow-source:layer:utah-forge-phase3-seismic-browser"
+            ]
+          },
+          {
+            "entityKey": "layer:utah-forge-phase3-seismic-browser:object:survey-geometry:sources",
+            "sourcePresence": "visible",
+            "targetPresence": "visible",
+            "sourceReadiness": "ready",
+            "targetReadiness": "ready",
+            "sourceRepresentation": "seismic:survey-geometry",
+            "targetRepresentation": "seismic:survey-geometry",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": "layer:utah-forge-phase3-seismic-browser",
+            "dependencyPolicy": "follow-source",
+            "changedChannels": [],
+            "assignment": "preserve-interpolate",
+            "executionMode": "interpolate-channels",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:preserve-interpolate",
+              "compatibility:compatible",
+              "derived:follow-source:layer:utah-forge-phase3-seismic-browser"
+            ]
+          },
+          {
+            "entityKey": "layer:utah-forge-phase3-seismic-browser:product:gdr-1141-forge3d-ani-psdm-stack-unenh:object:3d-volume:volume",
+            "sourcePresence": "visible",
+            "targetPresence": "visible",
+            "sourceReadiness": "ready",
+            "targetReadiness": "ready",
+            "sourceRepresentation": "seismic:3d-volume",
+            "targetRepresentation": "seismic:3d-volume",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": "layer:utah-forge-phase3-seismic-browser",
+            "dependencyPolicy": "follow-source",
+            "changedChannels": [],
+            "assignment": "preserve-interpolate",
+            "executionMode": "interpolate-channels",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:preserve-interpolate",
+              "compatibility:compatible",
+              "derived:follow-source:layer:utah-forge-phase3-seismic-browser"
+            ]
+          },
+          {
+            "entityKey": "layer:utah-forge-phase3-seismic-browser:product:gdr-1141-forge3d-ani-psdm-stack-unenh:object:comparison:single-product",
+            "sourcePresence": "hidden",
+            "targetPresence": "hidden",
+            "sourceReadiness": "ready",
+            "targetReadiness": "ready",
+            "sourceRepresentation": "seismic:comparison",
+            "targetRepresentation": "seismic:comparison",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": "layer:utah-forge-phase3-seismic-browser",
+            "dependencyPolicy": "follow-source",
+            "changedChannels": [],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:compatible",
+              "derived:follow-source:layer:utah-forge-phase3-seismic-browser"
+            ]
+          },
+          {
+            "entityKey": "layer:utah-forge-phase3-seismic-browser:product:gdr-1141-forge3d-ani-psdm-stack-unenh:object:3d-volume:volume:figure-annotation",
+            "sourcePresence": "hidden",
+            "targetPresence": "hidden",
+            "sourceReadiness": "ready",
+            "targetReadiness": "ready",
+            "sourceRepresentation": "seismic:figure-annotation",
+            "targetRepresentation": "seismic:figure-annotation",
+            "compatibility": "compatible",
+            "derivedFromEntityKey": "layer:utah-forge-phase3-seismic-browser:product:gdr-1141-forge3d-ani-psdm-stack-unenh:object:3d-volume:volume",
+            "dependencyPolicy": "follow-source",
+            "changedChannels": [],
+            "assignment": "skip",
+            "executionMode": "none",
+            "fallbackReason": null,
+            "traceReasons": [
+              "assignment:skip",
+              "compatibility:compatible",
+              "derived:follow-source:layer:utah-forge-phase3-seismic-browser:product:gdr-1141-forge3d-ani-psdm-stack-unenh:object:3d-volume:volume"
+            ]
+          }
+        ],
+        "readinessAttachedLayerIds": [],
+        "sceneOverlays": {
+          "policy": "transition-clock-linear-fade",
+          "fadeDurationMs": 800,
+          "lastTransitionClockDurationMs": 3000,
+          "registeredHandleCount": 0,
+          "activeTweenCount": 0,
+          "activeOutlineTweenCount": 0,
+          "visibleHandleCount": 0,
+          "lastPhase": "transition-start",
+          "lastPageId": "27_seismic_fence_panels",
+          "lastResolvedCount": 0,
+          "handles": []
+        },
+        "cinematicPost": {
+          "active": true,
+          "transitionKind": "continuous-post",
+          "sourcePageId": "26_resistivity_isosurfaces",
+          "targetPageId": "27_seismic_fence_panels",
+          "progress": 0.9999999323654815,
+          "policyCount": 13,
+          "channelPolicies": [
+            {
+              "key": "colorGrade",
+              "transitionKind": "continuous"
+            },
+            {
+              "key": "vignette",
+              "transitionKind": "continuous"
+            },
+            {
+              "key": "depthOfField",
+              "transitionKind": "continuous"
+            },
+            {
+              "key": "tiltShift",
+              "transitionKind": "continuous"
+            },
+            {
+              "key": "lensEffects",
+              "transitionKind": "continuous"
+            },
+            {
+              "key": "motionTrails",
+              "transitionKind": "continuous"
+            },
+            {
+              "key": "presentationFrame",
+              "transitionKind": "continuous"
+            },
+            {
+              "key": "compositionGuides",
+              "transitionKind": "continuous"
+            },
+            {
+              "key": "camera.lensPreset",
+              "transitionKind": "discrete"
+            },
+            {
+              "key": "dynamicCamera.dolly",
+              "transitionKind": "timed-shot"
+            },
+            {
+              "key": "dynamicCamera.truck",
+              "transitionKind": "timed-shot"
+            },
+            {
+              "key": "dynamicCamera.crane",
+              "transitionKind": "timed-shot"
+            },
+            {
+              "key": "dynamicCamera.handheld",
+              "transitionKind": "timed-shot"
+            }
+          ]
+        },
+        "lateReapply": {
+          "totalCount": 43,
+          "duringTransitionCount": 10,
+          "events": [
+            {
+              "sequence": 19,
+              "reason": "async-layer-resolve",
+              "action": "full-current-page-state",
+              "pageId": null,
+              "duringTransition": false,
+              "transitionSourcePageId": null,
+              "transitionTargetPageId": null,
+              "transitionReason": null,
+              "transitionProgress": null,
+              "timeMs": 3912.9000000003725
+            },
+            {
+              "sequence": 20,
+              "reason": "async-layer-resolve",
+              "action": "full-current-page-state",
+              "pageId": null,
+              "duringTransition": false,
+              "transitionSourcePageId": null,
+              "transitionTargetPageId": null,
+              "transitionReason": null,
+              "transitionProgress": null,
+              "timeMs": 3951.9000000003725
+            },
+            {
+              "sequence": 21,
+              "reason": "async-layer-resolve",
+              "action": "full-current-page-state",
+              "pageId": null,
+              "duringTransition": false,
+              "transitionSourcePageId": null,
+              "transitionTargetPageId": null,
+              "transitionReason": null,
+              "transitionProgress": null,
+              "timeMs": 3951.9000000003725
+            },
+            {
+              "sequence": 22,
+              "reason": "async-layer-resolve",
+              "action": "full-current-page-state",
+              "pageId": null,
+              "duringTransition": false,
+              "transitionSourcePageId": null,
+              "transitionTargetPageId": null,
+              "transitionReason": null,
+              "transitionProgress": null,
+              "timeMs": 3951.9000000003725
+            },
+            {
+              "sequence": 23,
+              "reason": "async-layer-resolve",
+              "action": "full-current-page-state",
+              "pageId": null,
+              "duringTransition": false,
+              "transitionSourcePageId": null,
+              "transitionTargetPageId": null,
+              "transitionReason": null,
+              "transitionProgress": null,
+              "timeMs": 4996.10000000149
+            },
+            {
+              "sequence": 24,
+              "reason": "state-reapply",
+              "action": "transition-aware-current-page-state",
+              "pageId": "157_page",
+              "duringTransition": true,
+              "transitionSourcePageId": "156_page",
+              "transitionTargetPageId": "157_page",
+              "transitionReason": "page-click",
+              "transitionProgress": 0.4144997098046884,
+              "timeMs": 14345.900000000373
+            },
+            {
+              "sequence": 25,
+              "reason": "async-layer-resolve",
+              "action": "transition-aware-current-page-state",
+              "pageId": "61_psdm_mt_58_32_source_location_tie",
+              "duringTransition": true,
+              "transitionSourcePageId": "63_borehole_logs_16a_source_ingest",
+              "transitionTargetPageId": "61_psdm_mt_58_32_source_location_tie",
+              "transitionReason": "page-click",
+              "transitionProgress": 1,
+              "timeMs": 109844.30000000075
+            },
+            {
+              "sequence": 26,
+              "reason": "async-layer-resolve",
+              "action": "full-current-page-state",
+              "pageId": "61_psdm_mt_58_32_source_location_tie",
+              "duringTransition": false,
+              "transitionSourcePageId": null,
+              "transitionTargetPageId": null,
+              "transitionReason": null,
+              "transitionProgress": null,
+              "timeMs": 112107.60000000149
+            },
+            {
+              "sequence": 27,
+              "reason": "async-layer-resolve",
+              "action": "transition-aware-current-page-state",
+              "pageId": "176_page",
+              "duringTransition": true,
+              "transitionSourcePageId": "61_psdm_mt_58_32_source_location_tie",
+              "transitionTargetPageId": "176_page",
+              "transitionReason": "page-click",
+              "transitionProgress": 1,
+              "timeMs": 121310.90000000037
+            },
+            {
+              "sequence": 28,
+              "reason": "async-layer-resolve",
+              "action": "transition-aware-current-page-state",
+              "pageId": "176_page",
+              "duringTransition": true,
+              "transitionSourcePageId": "61_psdm_mt_58_32_source_location_tie",
+              "transitionTargetPageId": "176_page",
+              "transitionReason": "page-click",
+              "transitionProgress": 1,
+              "timeMs": 121516.60000000149
+            },
+            {
+              "sequence": 29,
+              "reason": "async-layer-resolve",
+              "action": "full-current-page-state",
+              "pageId": "176_page",
+              "duringTransition": false,
+              "transitionSourcePageId": null,
+              "transitionTargetPageId": null,
+              "transitionReason": null,
+              "transitionProgress": null,
+              "timeMs": 123156
+            },
+            {
+              "sequence": 30,
+              "reason": "async-layer-resolve",
+              "action": "full-current-page-state",
+              "pageId": "176_page",
+              "duringTransition": false,
+              "transitionSourcePageId": null,
+              "transitionTargetPageId": null,
+              "transitionReason": null,
+              "transitionProgress": null,
+              "timeMs": 128892.5
+            },
+            {
+              "sequence": 31,
+              "reason": "async-layer-resolve",
+              "action": "full-current-page-state",
+              "pageId": "176_page",
+              "duringTransition": false,
+              "transitionSourcePageId": null,
+              "transitionTargetPageId": null,
+              "transitionReason": null,
+              "transitionProgress": null,
+              "timeMs": 129985.5
+            },
+            {
+              "sequence": 32,
+              "reason": "async-layer-resolve",
+              "action": "full-current-page-state",
+              "pageId": "176_page",
+              "duringTransition": false,
+              "transitionSourcePageId": null,
+              "transitionTargetPageId": null,
+              "transitionReason": null,
+              "transitionProgress": null,
+              "timeMs": 131158.5
+            },
+            {
+              "sequence": 33,
+              "reason": "async-layer-resolve",
+              "action": "full-current-page-state",
+              "pageId": "176_page",
+              "duringTransition": false,
+              "transitionSourcePageId": null,
+              "transitionTargetPageId": null,
+              "transitionReason": null,
+              "transitionProgress": null,
+              "timeMs": 137703.40000000037
+            },
+            {
+              "sequence": 34,
+              "reason": "async-layer-resolve",
+              "action": "full-current-page-state",
+              "pageId": "176_page",
+              "duringTransition": false,
+              "transitionSourcePageId": null,
+              "transitionTargetPageId": null,
+              "transitionReason": null,
+              "transitionProgress": null,
+              "timeMs": 140041.1000000015
+            },
+            {
+              "sequence": 35,
+              "reason": "async-layer-resolve",
+              "action": "full-current-page-state",
+              "pageId": "176_page",
+              "duringTransition": false,
+              "transitionSourcePageId": null,
+              "transitionTargetPageId": null,
+              "transitionReason": null,
+              "transitionProgress": null,
+              "timeMs": 141289.5
+            },
+            {
+              "sequence": 36,
+              "reason": "async-layer-resolve",
+              "action": "transition-aware-current-page-state",
+              "pageId": "143_page",
+              "duringTransition": true,
+              "transitionSourcePageId": "176_page",
+              "transitionTargetPageId": "143_page",
+              "transitionReason": "page-click",
+              "transitionProgress": 0.02510344827586207,
+              "timeMs": 143507.40000000037
+            },
+            {
+              "sequence": 37,
+              "reason": "async-layer-resolve",
+              "action": "transition-aware-current-page-state",
+              "pageId": "143_page",
+              "duringTransition": true,
+              "transitionSourcePageId": "176_page",
+              "transitionTargetPageId": "143_page",
+              "transitionReason": "page-click",
+              "transitionProgress": 0.6327586206896552,
+              "timeMs": 147912.90000000037
+            },
+            {
+              "sequence": 38,
+              "reason": "async-layer-resolve",
+              "action": "transition-aware-current-page-state",
+              "pageId": "143_page",
+              "duringTransition": true,
+              "transitionSourcePageId": "176_page",
+              "transitionTargetPageId": "143_page",
+              "transitionReason": "page-click",
+              "transitionProgress": 0.6567724137930521,
+              "timeMs": 148087
+            },
+            {
+              "sequence": 39,
+              "reason": "async-layer-resolve",
+              "action": "transition-aware-current-page-state",
+              "pageId": "143_page",
+              "duringTransition": true,
+              "transitionSourcePageId": "176_page",
+              "transitionTargetPageId": "143_page",
+              "transitionReason": "page-click",
+              "transitionProgress": 0.6819172413793617,
+              "timeMs": 148269.30000000075
+            },
+            {
+              "sequence": 40,
+              "reason": "async-layer-resolve",
+              "action": "transition-aware-current-page-state",
+              "pageId": "143_page",
+              "duringTransition": true,
+              "transitionSourcePageId": "176_page",
+              "transitionTargetPageId": "143_page",
+              "transitionReason": "page-click",
+              "transitionProgress": 0.7071448275863097,
+              "timeMs": 148452.20000000112
+            },
+            {
+              "sequence": 41,
+              "reason": "async-layer-resolve",
+              "action": "transition-aware-current-page-state",
+              "pageId": "143_page",
+              "duringTransition": true,
+              "transitionSourcePageId": "176_page",
+              "transitionTargetPageId": "143_page",
+              "transitionReason": "page-click",
+              "transitionProgress": 0.731889655172568,
+              "timeMs": 148631.6000000015
+            },
+            {
+              "sequence": 42,
+              "reason": "async-layer-resolve",
+              "action": "full-current-page-state",
+              "pageId": "143_page",
+              "duringTransition": false,
+              "transitionSourcePageId": null,
+              "transitionTargetPageId": null,
+              "transitionReason": null,
+              "transitionProgress": null,
+              "timeMs": 154297.70000000112
+            },
+            {
+              "sequence": 43,
+              "reason": "async-layer-resolve",
+              "action": "full-current-page-state",
+              "pageId": "143_page",
+              "duringTransition": false,
+              "transitionSourcePageId": null,
+              "transitionTargetPageId": null,
+              "transitionReason": null,
+              "transitionProgress": null,
+              "timeMs": 154617.80000000075
+            }
+          ]
+        },
+        "transitionCommit": {
+          "transitionId": "page-39",
+          "commitOwner": "SceneManager",
+          "commitPhase": "tween-completion",
+          "hasFinalized": false,
+          "finalizedAt": null,
+          "suppressedDuplicateAssertions": 0
+        },
+        "commitTraces": [
+          {
+            "transitionId": "page-39",
+            "phase": "tween-completion",
+            "owner": "SceneManager",
+            "attemptedBy": "layerTweenRuntime.tickLayerTweens",
+            "allowed": true,
+            "suppressed": false,
+            "reason": "transition commit observation recorded",
+            "terminalGraphEntityCount": 0,
+            "targetGraphEntityCount": 41,
+            "resolvedTargetGraphEntityCount": 41,
+            "committedGraphEntityCount": 0,
+            "visibleDeltaCount": 0,
+            "visibleDeltas": [],
+            "unresolvedCoverage": []
+          }
+        ]
+      },
+      "consumerDebug": {
+        "presenterOverlay": {
+          "policy": "crossfade-slide",
+          "active": true,
+          "sourcePageId": "26_resistivity_isosurfaces",
+          "targetPageId": "27_seismic_fence_panels",
+          "progress": 1,
+          "slideDirection": 1,
+          "cssTransitionsDisabledWhileActive": true
+        },
+        "sceneOverlays": {
+          "policy": "transition-clock-linear-fade",
+          "fadeDurationMs": 800,
+          "lastTransitionClockDurationMs": 3000,
+          "registeredHandleCount": 0,
+          "activeTweenCount": 0,
+          "activeOutlineTweenCount": 0,
+          "visibleHandleCount": 0,
+          "lastPhase": "transition-start",
+          "lastPageId": "27_seismic_fence_panels",
+          "lastResolvedCount": 0,
+          "handles": []
+        },
+        "labels": {
+          "policy": "hold-source-until-threshold",
+          "switchThreshold": 0.92,
+          "activePageId": "27_seismic_fence_panels",
+          "sourcePageId": "26_resistivity_isosurfaces",
+          "targetPageId": "27_seismic_fence_panels"
+        },
+        "assays": {
+          "policy": "hold-source-until-threshold",
+          "switchThreshold": 0.92,
+          "activePageId": "27_seismic_fence_panels",
+          "sourcePageId": "26_resistivity_isosurfaces",
+          "targetPageId": "27_seismic_fence_panels"
+        },
+        "legends": {
+          "stackPolicy": "phased-layout-slide",
+          "resistivityPolicy": "interpolate-source-target",
+          "defaultPolicy": "target-from-start",
+          "sourcePageId": "26_resistivity_isosurfaces",
+          "targetPageId": "27_seismic_fence_panels",
+          "progress": 1,
+          "exitEnd": 0.34,
+          "layoutEnd": 0.68,
+          "targetInteractiveThreshold": 0.92
+        },
+        "lateReapply": {
+          "totalCount": 43,
+          "duringTransitionCount": 10,
+          "events": [
+            {
+              "sequence": 19,
+              "reason": "async-layer-resolve",
+              "action": "full-current-page-state",
+              "pageId": null,
+              "duringTransition": false,
+              "transitionSourcePageId": null,
+              "transitionTargetPageId": null,
+              "transitionReason": null,
+              "transitionProgress": null,
+              "timeMs": 3912.9000000003725
+            },
+            {
+              "sequence": 20,
+              "reason": "async-layer-resolve",
+              "action": "full-current-page-state",
+              "pageId": null,
+              "duringTransition": false,
+              "transitionSourcePageId": null,
+              "transitionTargetPageId": null,
+              "transitionReason": null,
+              "transitionProgress": null,
+              "timeMs": 3951.9000000003725
+            },
+            {
+              "sequence": 21,
+              "reason": "async-layer-resolve",
+              "action": "full-current-page-state",
+              "pageId": null,
+              "duringTransition": false,
+              "transitionSourcePageId": null,
+              "transitionTargetPageId": null,
+              "transitionReason": null,
+              "transitionProgress": null,
+              "timeMs": 3951.9000000003725
+            },
+            {
+              "sequence": 22,
+              "reason": "async-layer-resolve",
+              "action": "full-current-page-state",
+              "pageId": null,
+              "duringTransition": false,
+              "transitionSourcePageId": null,
+              "transitionTargetPageId": null,
+              "transitionReason": null,
+              "transitionProgress": null,
+              "timeMs": 3951.9000000003725
+            },
+            {
+              "sequence": 23,
+              "reason": "async-layer-resolve",
+              "action": "full-current-page-state",
+              "pageId": null,
+              "duringTransition": false,
+              "transitionSourcePageId": null,
+              "transitionTargetPageId": null,
+              "transitionReason": null,
+              "transitionProgress": null,
+              "timeMs": 4996.10000000149
+            },
+            {
+              "sequence": 24,
+              "reason": "state-reapply",
+              "action": "transition-aware-current-page-state",
+              "pageId": "157_page",
+              "duringTransition": true,
+              "transitionSourcePageId": "156_page",
+              "transitionTargetPageId": "157_page",
+              "transitionReason": "page-click",
+              "transitionProgress": 0.4144997098046884,
+              "timeMs": 14345.900000000373
+            },
+            {
+              "sequence": 25,
+              "reason": "async-layer-resolve",
+              "action": "transition-aware-current-page-state",
+              "pageId": "61_psdm_mt_58_32_source_location_tie",
+              "duringTransition": true,
+              "transitionSourcePageId": "63_borehole_logs_16a_source_ingest",
+              "transitionTargetPageId": "61_psdm_mt_58_32_source_location_tie",
+              "transitionReason": "page-click",
+              "transitionProgress": 1,
+              "timeMs": 109844.30000000075
+            },
+            {
+              "sequence": 26,
+              "reason": "async-layer-resolve",
+              "action": "full-current-page-state",
+              "pageId": "61_psdm_mt_58_32_source_location_tie",
+              "duringTransition": false,
+              "transitionSourcePageId": null,
+              "transitionTargetPageId": null,
+              "transitionReason": null,
+              "transitionProgress": null,
+              "timeMs": 112107.60000000149
+            },
+            {
+              "sequence": 27,
+              "reason": "async-layer-resolve",
+              "action": "transition-aware-current-page-state",
+              "pageId": "176_page",
+              "duringTransition": true,
+              "transitionSourcePageId": "61_psdm_mt_58_32_source_location_tie",
+              "transitionTargetPageId": "176_page",
+              "transitionReason": "page-click",
+              "transitionProgress": 1,
+              "timeMs": 121310.90000000037
+            },
+            {
+              "sequence": 28,
+              "reason": "async-layer-resolve",
+              "action": "transition-aware-current-page-state",
+              "pageId": "176_page",
+              "duringTransition": true,
+              "transitionSourcePageId": "61_psdm_mt_58_32_source_location_tie",
+              "transitionTargetPageId": "176_page",
+              "transitionReason": "page-click",
+              "transitionProgress": 1,
+              "timeMs": 121516.60000000149
+            },
+            {
+              "sequence": 29,
+              "reason": "async-layer-resolve",
+              "action": "full-current-page-state",
+              "pageId": "176_page",
+              "duringTransition": false,
+              "transitionSourcePageId": null,
+              "transitionTargetPageId": null,
+              "transitionReason": null,
+              "transitionProgress": null,
+              "timeMs": 123156
+            },
+            {
+              "sequence": 30,
+              "reason": "async-layer-resolve",
+              "action": "full-current-page-state",
+              "pageId": "176_page",
+              "duringTransition": false,
+              "transitionSourcePageId": null,
+              "transitionTargetPageId": null,
+              "transitionReason": null,
+              "transitionProgress": null,
+              "timeMs": 128892.5
+            },
+            {
+              "sequence": 31,
+              "reason": "async-layer-resolve",
+              "action": "full-current-page-state",
+              "pageId": "176_page",
+              "duringTransition": false,
+              "transitionSourcePageId": null,
+              "transitionTargetPageId": null,
+              "transitionReason": null,
+              "transitionProgress": null,
+              "timeMs": 129985.5
+            },
+            {
+              "sequence": 32,
+              "reason": "async-layer-resolve",
+              "action": "full-current-page-state",
+              "pageId": "176_page",
+              "duringTransition": false,
+              "transitionSourcePageId": null,
+              "transitionTargetPageId": null,
+              "transitionReason": null,
+              "transitionProgress": null,
+              "timeMs": 131158.5
+            },
+            {
+              "sequence": 33,
+              "reason": "async-layer-resolve",
+              "action": "full-current-page-state",
+              "pageId": "176_page",
+              "duringTransition": false,
+              "transitionSourcePageId": null,
+              "transitionTargetPageId": null,
+              "transitionReason": null,
+              "transitionProgress": null,
+              "timeMs": 137703.40000000037
+            },
+            {
+              "sequence": 34,
+              "reason": "async-layer-resolve",
+              "action": "full-current-page-state",
+              "pageId": "176_page",
+              "duringTransition": false,
+              "transitionSourcePageId": null,
+              "transitionTargetPageId": null,
+              "transitionReason": null,
+              "transitionProgress": null,
+              "timeMs": 140041.1000000015
+            },
+            {
+              "sequence": 35,
+              "reason": "async-layer-resolve",
+              "action": "full-current-page-state",
+              "pageId": "176_page",
+              "duringTransition": false,
+              "transitionSourcePageId": null,
+              "transitionTargetPageId": null,
+              "transitionReason": null,
+              "transitionProgress": null,
+              "timeMs": 141289.5
+            },
+            {
+              "sequence": 36,
+              "reason": "async-layer-resolve",
+              "action": "transition-aware-current-page-state",
+              "pageId": "143_page",
+              "duringTransition": true,
+              "transitionSourcePageId": "176_page",
+              "transitionTargetPageId": "143_page",
+              "transitionReason": "page-click",
+              "transitionProgress": 0.02510344827586207,
+              "timeMs": 143507.40000000037
+            },
+            {
+              "sequence": 37,
+              "reason": "async-layer-resolve",
+              "action": "transition-aware-current-page-state",
+              "pageId": "143_page",
+              "duringTransition": true,
+              "transitionSourcePageId": "176_page",
+              "transitionTargetPageId": "143_page",
+              "transitionReason": "page-click",
+              "transitionProgress": 0.6327586206896552,
+              "timeMs": 147912.90000000037
+            },
+            {
+              "sequence": 38,
+              "reason": "async-layer-resolve",
+              "action": "transition-aware-current-page-state",
+              "pageId": "143_page",
+              "duringTransition": true,
+              "transitionSourcePageId": "176_page",
+              "transitionTargetPageId": "143_page",
+              "transitionReason": "page-click",
+              "transitionProgress": 0.6567724137930521,
+              "timeMs": 148087
+            },
+            {
+              "sequence": 39,
+              "reason": "async-layer-resolve",
+              "action": "transition-aware-current-page-state",
+              "pageId": "143_page",
+              "duringTransition": true,
+              "transitionSourcePageId": "176_page",
+              "transitionTargetPageId": "143_page",
+              "transitionReason": "page-click",
+              "transitionProgress": 0.6819172413793617,
+              "timeMs": 148269.30000000075
+            },
+            {
+              "sequence": 40,
+              "reason": "async-layer-resolve",
+              "action": "transition-aware-current-page-state",
+              "pageId": "143_page",
+              "duringTransition": true,
+              "transitionSourcePageId": "176_page",
+              "transitionTargetPageId": "143_page",
+              "transitionReason": "page-click",
+              "transitionProgress": 0.7071448275863097,
+              "timeMs": 148452.20000000112
+            },
+            {
+              "sequence": 41,
+              "reason": "async-layer-resolve",
+              "action": "transition-aware-current-page-state",
+              "pageId": "143_page",
+              "duringTransition": true,
+              "transitionSourcePageId": "176_page",
+              "transitionTargetPageId": "143_page",
+              "transitionReason": "page-click",
+              "transitionProgress": 0.731889655172568,
+              "timeMs": 148631.6000000015
+            },
+            {
+              "sequence": 42,
+              "reason": "async-layer-resolve",
+              "action": "full-current-page-state",
+              "pageId": "143_page",
+              "duringTransition": false,
+              "transitionSourcePageId": null,
+              "transitionTargetPageId": null,
+              "transitionReason": null,
+              "transitionProgress": null,
+              "timeMs": 154297.70000000112
+            },
+            {
+              "sequence": 43,
+              "reason": "async-layer-resolve",
+              "action": "full-current-page-state",
+              "pageId": "143_page",
+              "duringTransition": false,
+              "transitionSourcePageId": null,
+              "transitionTargetPageId": null,
+              "transitionReason": null,
+              "transitionProgress": null,
+              "timeMs": 154617.80000000075
+            }
+          ]
+        }
+      },
+      "completedAtMs": 514832.30000000075
+    }
+  }
+}

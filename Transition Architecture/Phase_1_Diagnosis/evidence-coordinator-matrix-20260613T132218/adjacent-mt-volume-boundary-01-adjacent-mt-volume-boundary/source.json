@@ -1,0 +1,469 @@
+{
+  "caseId": "adjacent-mt-volume-boundary-01",
+  "caseName": "adjacent-mt-volume-boundary",
+  "surfaces": "feature-family coverage: MT volume, MT boundaries, point clouds, seismic products. Page ids are disposable fixture evidence; remediation must target the shared transition rule.",
+  "phase": "source",
+  "fromIndex": 0,
+  "toIndex": 1,
+  "sourcePageId": "156_page",
+  "targetPageId": "157_page",
+  "capturedAt": "2026-06-13T20:24:08.504Z",
+  "state": {
+    "currentIndex": 0,
+    "currentPageId": "156_page",
+    "targetIndex": null,
+    "targetPageId": null,
+    "transitionProgress": 1,
+    "transitionFrame": {
+      "active": false,
+      "sourceIndex": 0,
+      "targetIndex": null,
+      "sourcePageId": "156_page",
+      "targetPageId": null,
+      "progress": 1,
+      "rawProgress": 1,
+      "reason": null,
+      "runId": null
+    },
+    "isTransitioning": false,
+    "transitionContext": null,
+    "sceneTransition": {
+      "active": false,
+      "sourcePageId": null,
+      "targetPageId": null,
+      "reason": null,
+      "activeDataTransitionCount": 0,
+      "snapshotCount": 0,
+      "scalarTweenCount": 0,
+      "layerTweenCount": 0,
+      "workingAreaFocusTweenActive": false,
+      "sceneSectionStyleTweenActive": false,
+      "sceneSectionHelperTransitionSnapshotActive": false,
+      "sceneSectionHelperTransitionOpacity": 1,
+      "layerTweenTick": {
+        "timestampMs": 10328.7,
+        "totalMs": 0,
+        "sceneSectionMs": 0,
+        "sceneSectionApply": null,
+        "workingAreaMs": 0,
+        "scalarMs": 0,
+        "layerMs": 0,
+        "snapshotMs": 0,
+        "helperSnapshotMs": 0,
+        "envelopeMs": 0,
+        "activeSceneTransition": false,
+        "sceneSectionApplyMode": "none",
+        "layerTweenIds": [],
+        "scalarTweenIds": [],
+        "snapshotIds": [],
+        "layerTweenCountBefore": 0,
+        "scalarTweenCountBefore": 0,
+        "snapshotCountBefore": 0,
+        "sceneSectionStyleTweenActiveBefore": false,
+        "helperSnapshotActiveBefore": false,
+        "workingAreaFocusTweenActiveBefore": false
+      },
+      "frameUpdate": {
+        "timestampMs": 10328.7,
+        "totalMs": 0.2,
+        "cameraLockedSunMs": 0,
+        "layerTweensMs": 0,
+        "environmentSceneMs": 0,
+        "cinematicPostMs": 0,
+        "boreLensMs": 0,
+        "lightingStudioScaleMs": 0,
+        "dynamicCameraOrbitCenterScaleMs": 0,
+        "pageCameraMarkerScaleMs": 0,
+        "ezGammaBillboardMs": 0,
+        "sceneSectionTextFacingMs": 0,
+        "sectionIsoThresholdOcclusionMs": 0,
+        "topoGridCameraVisibilityMs": 0,
+        "localAtmosphereMs": 0.1,
+        "sceneOverlayTickMs": 0.1,
+        "activeSceneTransition": false
+      },
+      "sectionIsoOverlays": {
+        "opacityPolicy": "split-section-iso-overlay-opacity-from-layer-opacity",
+        "overlayMaterialCount": 16,
+        "independentOverlayMaterialCount": 0,
+        "transitionEnvelopeOverlayMaterialCount": 0,
+        "hiddenWithParentMaterialCount": 0,
+        "layerRenderOpacityMin": null,
+        "layerRenderOpacityMax": null,
+        "transitionOpacityMin": null,
+        "transitionOpacityMax": null
+      },
+      "sceneSectionHelpers": {
+        "groundTracePolicy": "mirror-delayed-ground-trace-into-helper-snapshot",
+        "liveGroundTraceCount": 0,
+        "snapshotGroundTraceCount": 0,
+        "snapshotActive": false,
+        "transitionOpacity": 1
+      },
+      "productFamilies": [],
+      "assignmentTraces": [],
+      "readinessAttachedLayerIds": [],
+      "sceneOverlays": {
+        "policy": "fixed-duration-linear-fade",
+        "fadeDurationMs": 800,
+        "lastTransitionClockDurationMs": null,
+        "registeredHandleCount": 0,
+        "activeTweenCount": 0,
+        "activeOutlineTweenCount": 0,
+        "visibleHandleCount": 0,
+        "lastPhase": "page",
+        "lastPageId": "156_page",
+        "lastResolvedCount": 0,
+        "handles": []
+      },
+      "cinematicPost": {
+        "active": false,
+        "transitionKind": "continuous-post",
+        "sourcePageId": null,
+        "targetPageId": null,
+        "progress": null,
+        "policyCount": 13,
+        "channelPolicies": [
+          {
+            "key": "colorGrade",
+            "transitionKind": "continuous"
+          },
+          {
+            "key": "vignette",
+            "transitionKind": "continuous"
+          },
+          {
+            "key": "depthOfField",
+            "transitionKind": "continuous"
+          },
+          {
+            "key": "tiltShift",
+            "transitionKind": "continuous"
+          },
+          {
+            "key": "lensEffects",
+            "transitionKind": "continuous"
+          },
+          {
+            "key": "motionTrails",
+            "transitionKind": "continuous"
+          },
+          {
+            "key": "presentationFrame",
+            "transitionKind": "continuous"
+          },
+          {
+            "key": "compositionGuides",
+            "transitionKind": "continuous"
+          },
+          {
+            "key": "camera.lensPreset",
+            "transitionKind": "discrete"
+          },
+          {
+            "key": "dynamicCamera.dolly",
+            "transitionKind": "timed-shot"
+          },
+          {
+            "key": "dynamicCamera.truck",
+            "transitionKind": "timed-shot"
+          },
+          {
+            "key": "dynamicCamera.crane",
+            "transitionKind": "timed-shot"
+          },
+          {
+            "key": "dynamicCamera.handheld",
+            "transitionKind": "timed-shot"
+          }
+        ]
+      },
+      "lateReapply": {
+        "totalCount": 23,
+        "duringTransitionCount": 0,
+        "events": [
+          {
+            "sequence": 1,
+            "reason": "async-layer-resolve",
+            "action": "full-current-page-state",
+            "pageId": null,
+            "duringTransition": false,
+            "transitionSourcePageId": null,
+            "transitionTargetPageId": null,
+            "transitionReason": null,
+            "transitionProgress": null,
+            "timeMs": 229.10000000149012
+          },
+          {
+            "sequence": 2,
+            "reason": "async-layer-resolve",
+            "action": "full-current-page-state",
+            "pageId": null,
+            "duringTransition": false,
+            "transitionSourcePageId": null,
+            "transitionTargetPageId": null,
+            "transitionReason": null,
+            "transitionProgress": null,
+            "timeMs": 238.80000000074506
+          },
+          {
+            "sequence": 3,
+            "reason": "async-layer-resolve",
+            "action": "full-current-page-state",
+            "pageId": null,
+            "duringTransition": false,
+            "transitionSourcePageId": null,
+            "transitionTargetPageId": null,
+            "transitionReason": null,
+            "transitionProgress": null,
+            "timeMs": 244.90000000037253
+          },
+          {
+            "sequence": 4,
+            "reason": "async-layer-resolve",
+            "action": "full-current-page-state",
+            "pageId": null,
+            "duringTransition": false,
+            "transitionSourcePageId": null,
+            "transitionTargetPageId": null,
+            "transitionReason": null,
+            "transitionProgress": null,
+            "timeMs": 246.80000000074506
+          },
+          {
+            "sequence": 5,
+            "reason": "async-layer-resolve",
+            "action": "full-current-page-state",
+            "pageId": null,
+            "duringTransition": false,
+            "transitionSourcePageId": null,
+            "transitionTargetPageId": null,
+            "transitionReason": null,
+            "transitionProgress": null,
+            "timeMs": 1361
+          },
+          {
+            "sequence": 6,
+            "reason": "async-layer-resolve",
+            "action": "full-current-page-state",
+            "pageId": null,
+            "duringTransition": false,
+            "transitionSourcePageId": null,
+            "transitionTargetPageId": null,
+            "transitionReason": null,
+            "transitionProgress": null,
+            "timeMs": 1381.9000000003725
+          },
+          {
+            "sequence": 7,
+            "reason": "async-layer-resolve",
+            "action": "full-current-page-state",
+            "pageId": null,
+            "duringTransition": false,
+            "transitionSourcePageId": null,
+            "transitionTargetPageId": null,
+            "transitionReason": null,
+            "transitionProgress": null,
+            "timeMs": 1382.1000000014901
+          },
+          {
+            "sequence": 8,
+            "reason": "async-layer-resolve",
+            "action": "full-current-page-state",
+            "pageId": null,
+            "duringTransition": false,
+            "transitionSourcePageId": null,
+            "transitionTargetPageId": null,
+            "transitionReason": null,
+            "transitionProgress": null,
+            "timeMs": 1487.9000000003725
+          },
+          {
+            "sequence": 9,
+            "reason": "async-layer-resolve",
+            "action": "full-current-page-state",
+            "pageId": null,
+            "duringTransition": false,
+            "transitionSourcePageId": null,
+            "transitionTargetPageId": null,
+            "transitionReason": null,
+            "transitionProgress": null,
+            "timeMs": 1721.9000000003725
+          },
+          {
+            "sequence": 10,
+            "reason": "async-layer-resolve",
+            "action": "full-current-page-state",
+            "pageId": null,
+            "duringTransition": false,
+            "transitionSourcePageId": null,
+            "transitionTargetPageId": null,
+            "transitionReason": null,
+            "transitionProgress": null,
+            "timeMs": 1781.2000000011176
+          },
+          {
+            "sequence": 11,
+            "reason": "async-layer-resolve",
+            "action": "full-current-page-state",
+            "pageId": null,
+            "duringTransition": false,
+            "transitionSourcePageId": null,
+            "transitionTargetPageId": null,
+            "transitionReason": null,
+            "transitionProgress": null,
+            "timeMs": 1786.4000000003725
+          },
+          {
+            "sequence": 12,
+            "reason": "async-layer-resolve",
+            "action": "full-current-page-state",
+            "pageId": null,
+            "duringTransition": false,
+            "transitionSourcePageId": null,
+            "transitionTargetPageId": null,
+            "transitionReason": null,
+            "transitionProgress": null,
+            "timeMs": 2071.5
+          },
+          {
+            "sequence": 13,
+            "reason": "async-layer-resolve",
+            "action": "full-current-page-state",
+            "pageId": null,
+            "duringTransition": false,
+            "transitionSourcePageId": null,
+            "transitionTargetPageId": null,
+            "transitionReason": null,
+            "transitionProgress": null,
+            "timeMs": 2077
+          },
+          {
+            "sequence": 14,
+            "reason": "async-layer-resolve",
+            "action": "full-current-page-state",
+            "pageId": null,
+            "duringTransition": false,
+            "transitionSourcePageId": null,
+            "transitionTargetPageId": null,
+            "transitionReason": null,
+            "transitionProgress": null,
+            "timeMs": 2448.5
+          },
+          {
+            "sequence": 15,
+            "reason": "async-layer-resolve",
+            "action": "full-current-page-state",
+            "pageId": null,
+            "duringTransition": false,
+            "transitionSourcePageId": null,
+            "transitionTargetPageId": null,
+            "transitionReason": null,
+            "transitionProgress": null,
+            "timeMs": 2677.9000000003725
+          },
+          {
+            "sequence": 16,
+            "reason": "async-layer-resolve",
+            "action": "full-current-page-state",
+            "pageId": null,
+            "duringTransition": false,
+            "transitionSourcePageId": null,
+            "transitionTargetPageId": null,
+            "transitionReason": null,
+            "transitionProgress": null,
+            "timeMs": 2680.7000000011176
+          },
+          {
+            "sequence": 17,
+            "reason": "async-layer-resolve",
+            "action": "full-current-page-state",
+            "pageId": null,
+            "duringTransition": false,
+            "transitionSourcePageId": null,
+            "transitionTargetPageId": null,
+            "transitionReason": null,
+            "transitionProgress": null,
+            "timeMs": 3912.9000000003725
+          },
+          {
+            "sequence": 18,
+            "reason": "async-layer-resolve",
+            "action": "full-current-page-state",
+            "pageId": null,
+            "duringTransition": false,
+            "transitionSourcePageId": null,
+            "transitionTargetPageId": null,
+            "transitionReason": null,
+            "transitionProgress": null,
+            "timeMs": 3912.9000000003725
+          },
+          {
+            "sequence": 19,
+            "reason": "async-layer-resolve",
+            "action": "full-current-page-state",
+            "pageId": null,
+            "duringTransition": false,
+            "transitionSourcePageId": null,
+            "transitionTargetPageId": null,
+            "transitionReason": null,
+            "transitionProgress": null,
+            "timeMs": 3912.9000000003725
+          },
+          {
+            "sequence": 20,
+            "reason": "async-layer-resolve",
+            "action": "full-current-page-state",
+            "pageId": null,
+            "duringTransition": false,
+            "transitionSourcePageId": null,
+            "transitionTargetPageId": null,
+            "transitionReason": null,
+            "transitionProgress": null,
+            "timeMs": 3951.9000000003725
+          },
+          {
+            "sequence": 21,
+            "reason": "async-layer-resolve",
+            "action": "full-current-page-state",
+            "pageId": null,
+            "duringTransition": false,
+            "transitionSourcePageId": null,
+            "transitionTargetPageId": null,
+            "transitionReason": null,
+            "transitionProgress": null,
+            "timeMs": 3951.9000000003725
+          },
+          {
+            "sequence": 22,
+            "reason": "async-layer-resolve",
+            "action": "full-current-page-state",
+            "pageId": null,
+            "duringTransition": false,
+            "transitionSourcePageId": null,
+            "transitionTargetPageId": null,
+            "transitionReason": null,
+            "transitionProgress": null,
+            "timeMs": 3951.9000000003725
+          },
+          {
+            "sequence": 23,
+            "reason": "async-layer-resolve",
+            "action": "full-current-page-state",
+            "pageId": null,
+            "duringTransition": false,
+            "transitionSourcePageId": null,
+            "transitionTargetPageId": null,
+            "transitionReason": null,
+            "transitionProgress": null,
+            "timeMs": 4996.10000000149
+          }
+        ]
+      },
+      "transitionCommit": null,
+      "commitTraces": []
+    },
+    "transitionRun": null,
+    "lastTransitionRun": null
+  }
+}
