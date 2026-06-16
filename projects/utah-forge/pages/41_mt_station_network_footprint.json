@@ -60,9 +60,6 @@
     "utah-forge-mt-top-contact-surface": false
   },
   "layerOverrides": {
-    "terrain": {
-      "opacity": 1
-    },
     "utah-forge-mt-stations": {
       "opacity": 0.82,
       "showLabels": false

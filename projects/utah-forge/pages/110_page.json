@@ -35,9 +35,6 @@
     "utah-forge-mt-stations": {
       "mtStationQcSelectedStationId": "FRG19075",
       "mtStationQcPanelOpen": true
-    },
-    "utah-forge-site-boundary": {
-      "fillOpacity": 0.08
     }
   },
   "dynamicCamera": {

@@ -60,13 +60,6 @@
       "opacity": 0.78,
       "meshSurfaceLiftM": -3725
     },
-    "utah-forge-site-boundary": {
-      "color": "#4dfcff",
-      "fillOpacity": 0.08,
-      "outlineColor": "#a6bebf",
-      "opacity": 1,
-      "lineWidth": 3.2
-    },
     "utah-forge-phase3-demo-boreholes": {
       "demoBoreholeWells": {
         "16A(78)-32": {
@@ -134,18 +127,6 @@
         "labelText": "FORGE surface facility / orientation block",
         "labelLiftM": 25.5
       }
-    },
-    "utah-forge-topo-graticule": {
-      "opacity": 0.78
-    },
-    "transport-roads": {
-      "opacity": 0.78
-    },
-    "hydrography-streams": {
-      "opacity": 0.78
-    },
-    "hydrography-lakes": {
-      "opacity": 0.78
     },
     "utah-forge-mt-stations": {
       "mtStationQcSelectedStationId": "FRG19043",

@@ -1,0 +1,121 @@
+{
+  "id": "177_page",
+  "title": "New page",
+  "camera": {
+    "position": [
+      22210.382781163622,
+      -106107.71474506763,
+      34731.892957111115
+    ],
+    "target": [
+      -7767.389955980874,
+      -15296.268046050607,
+      2640.9571376663434
+    ],
+    "up": [
+      0,
+      0,
+      1
+    ],
+    "fov": 70
+  },
+  "transition": {
+    "duration": 3000,
+    "easing": "easeInOutCubic"
+  },
+  "holdDuration": 4000,
+  "sceneOverrides": {
+    "lightMode": false,
+    "background": "#383838",
+    "lightModeBackground": "#d4d4d4",
+    "fog": {
+      "enabled": true,
+      "color": "#454545",
+      "density": 0.0000037267080745341615,
+      "lightModeColor": "#b5b5b5"
+    }
+  },
+  "visibilityOverrides": {
+    "terrain": true
+  },
+  "layerOverrides": {
+    "utah-forge-scene-section-planes": {
+      "sceneSectionFrames": [
+        {
+          "id": "axis:x",
+          "label": "X Section frame",
+          "axis": "x",
+          "plane": {
+            "enabled": false,
+            "positionM": -5753.338077166321,
+            "invert": false
+          },
+          "frame": {
+            "axisAlignment": "cardinal",
+            "axisAHeading": "Latitude (°)",
+            "axisBHeading": "Elevation (km)",
+            "axisDatum": "latlon",
+            "controlsVisible": true
+          }
+        },
+        {
+          "id": "axis:y",
+          "label": "Y Section frame",
+          "axis": "y",
+          "plane": {
+            "enabled": true,
+            "positionM": -14276.695748094688,
+            "invert": false
+          },
+          "frame": {
+            "controlsVisible": true
+          }
+        },
+        {
+          "id": "axis:z",
+          "label": "Z Section frame",
+          "axis": "z",
+          "plane": {
+            "enabled": false,
+            "positionM": -2200,
+            "invert": false
+          },
+          "frame": {
+            "controlsVisible": true
+          }
+        }
+      ],
+      "sceneSectionActiveFrameId": "axis:y",
+      "sceneSectionFrameEnabled": true,
+      "sceneSectionEnabled": true,
+      "sceneSectionMode": "cutaway",
+      "sceneSectionActiveAxis": "y",
+      "sceneSectionPlanes": {
+        "x": {
+          "enabled": false,
+          "positionM": -5753.338077166321,
+          "invert": false
+        },
+        "y": {
+          "enabled": true,
+          "positionM": -14276.695748094688,
+          "invert": false
+        },
+        "z": {
+          "enabled": false,
+          "positionM": -2200,
+          "invert": false
+        }
+      },
+      "sceneSectionFrameByAxis": {
+        "x": {
+          "axisAlignment": "cardinal",
+          "axisAHeading": "Latitude (°)",
+          "axisBHeading": "Elevation (km)",
+          "axisDatum": "latlon"
+        },
+        "y": {}
+      }
+    }
+  }
+}

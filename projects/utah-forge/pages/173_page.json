@@ -100,7 +100,7 @@
       "utah-forge-phase3-demo-boreholes": {
         "demoBoreholeWells": {
           "16A(78)-32": {
-            "visible": true,
+            "visible": false,
             "pipeDiameterM": 18,
             "color": "#35d7ff",
             "opacity": 0.92,
@@ -123,25 +123,25 @@
             "toeLabelLiftM": 40
           },
           "16B(78)-32": {
-            "visible": true,
+            "visible": false,
             "pipeDiameterM": 16,
             "color": "#ff7440",
             "opacity": 0.92,
             "lineStyle": "solid",
             "dashLengthM": 260,
             "dashGapM": 150,
-            "centerlineVisible": true,
+            "centerlineVisible": false,
             "centerlineWidth": 2,
             "centerlineOpacity": 0.82,
             "centerlineColor": "#ff7440",
-            "collarVisible": true,
+            "collarVisible": false,
             "collarDiameterM": 30,
             "pathTreatment": "survey",
             "smoothingStrength": 0.35,
-            "collarLabelVisible": true,
+            "collarLabelVisible": false,
             "collarLabelText": "16B production",
             "collarLabelLiftM": 95,
-            "toeLabelVisible": true,
+            "toeLabelVisible": false,
             "toeLabelText": "Production toe",
             "toeLabelLiftM": 40
           }
@@ -164,7 +164,7 @@
           "labelLiftM": 25.5
         },
         "affectedByFog": false,
-        "showLabels": true,
+        "showLabels": false,
         "labelKind": "siteElement",
         "labelTextColor": "#f4f0e8",
         "labelTextOpacity": 1,
@@ -196,7 +196,7 @@
           "lineWidth": 3,
           "labelLiftM": 145,
           "topRingOpacity": 0.63,
-          "visible": true
+          "visible": false
         },
         "opacity": 1
       },
@@ -503,7 +503,7 @@
         "scalarLegendVisible": true,
         "affectedByFog": false,
         "showLabels": false,
-        "sectionIsoEnabled": true,
+        "sectionIsoEnabled": false,
         "sectionIsoBandsVisible": true,
         "sectionIsoLinesVisible": true,
         "sectionIsoLevelCount": 19,
@@ -522,9 +522,9 @@
         "opacity": 1,
         "mtIsosurfaceProductId": "mt-isosurface-full-extent",
         "mtThresholdSurfaceVisibility": {
-          "conductive-le-10-ohm-m": true,
+          "conductive-le-10-ohm-m": false,
           "conductive-le-30-ohm-m": false,
-          "resistive-ge-1000-ohm-m": true
+          "resistive-ge-1000-ohm-m": false
         },
         "mtThresholdSurfaceWireframe": false,
         "affectedByFog": false,
@@ -544,7 +544,7 @@
         ],
         "mtSurfaceBoundariesById": {
           "conductive-le-10-ohm-m": {
-            "visible": true,
+            "visible": false,
             "label": "<=10 Ohm-m",
             "color": "#2cc9ff",
             "comparison": "<=",
@@ -564,7 +564,7 @@
             "source": "precomputed"
           },
           "resistive-ge-1000-ohm-m": {
-            "visible": true,
+            "visible": false,
             "label": ">=1000 Ohm-m",
             "color": "#ff637a",
             "comparison": ">=",
@@ -680,7 +680,7 @@
         "seismicAmplitudeMax": 0.92,
         "seismicColormap": "blue-white-red",
         "seismicTimeScale": 3.25,
-        "seismicNavigationVisible": true,
+        "seismicNavigationVisible": false,
         "seismicLegendVisible": true,
         "seismicPresentationBarVisible": true,
         "affectedByFog": false,
@@ -707,11 +707,11 @@
         "sceneSectionEnabled": true,
         "sceneSectionMode": "cutaway",
         "sceneSectionTargetScope": "selected-targets",
-        "sceneSectionActiveAxis": "y",
+        "sceneSectionActiveAxis": "x",
         "sceneSectionPlanes": {
           "x": {
-            "enabled": false,
-            "positionM": -2353.6972244507606,
+            "enabled": true,
+            "positionM": -24644.314572936753,
             "invert": false
           },
           "y": {
@@ -720,7 +720,7 @@
             "invert": false
           },
           "z": {
-            "enabled": false,
+            "enabled": true,
             "positionM": -3347.3611248919174,
             "invert": false
           }
@@ -736,8 +736,8 @@
         "sceneSectionWindowEnabled": true,
         "sceneSectionWindowByAxis": {
           "x": {
-            "minAlongM": -61883.27347169986,
-            "maxAlongM": -8266.059897463416,
+            "minAlongM": -90454.37872075845,
+            "maxAlongM": -64838.19916742156,
             "bottomElevationM": -25000
           },
           "y": {
@@ -753,12 +753,29 @@
         "showLabels": false,
         "sceneSectionFrames": [
           {
+            "id": "axis:z",
+            "label": "Z Section frame",
+            "axis": "z",
+            "plane": {
+              "enabled": true,
+              "positionM": -3347.3611248919174,
+              "invert": false
+            },
+            "frame": {
+              "maxBM": -26922.56961223355,
+              "maxAM": -3448.3514535923605,
+              "minBM": -50982.63583017643,
+              "minAM": -54750.83262365569,
+              "controlsVisible": true
+            }
+          },
+          {
             "id": "axis:x",
             "label": "X Section frame",
             "axis": "x",
             "plane": {
-              "enabled": false,
-              "positionM": -2353.6972244507606,
+              "enabled": true,
+              "positionM": -24644.314572936753,
               "invert": false
             },
             "frame": {
@@ -768,9 +785,9 @@
               "axisDatum": "latlon",
               "minBM": -25000,
               "maxBM": 12250.9622792674,
-              "maxAM": -8266.059897463416,
+              "maxAM": -64838.19916742156,
               "controlsVisible": true,
-              "minAM": -61883.27347169986
+              "minAM": -90454.37872075845
             }
           },
           {
@@ -787,31 +804,16 @@
               "maxAM": 42062.39154411302,
               "minAM": -53311.037790163464,
               "groundTraceWidthM": 160,
-              "controlsVisible": false,
+              "controlsVisible": true,
               "axisAlignment": "cardinal",
               "axisAHeading": "Easting (km)",
-              "axisBHeading": "Elevation (km)"
-            }
-          },
-          {
-            "id": "axis:z",
-            "label": "Z Section frame",
-            "axis": "z",
-            "plane": {
-              "enabled": false,
-              "positionM": -3347.3611248919174,
-              "invert": false
-            },
-            "frame": {
-              "maxBM": -9102.565781890298,
-              "maxAM": -3448.3514535923605,
-              "minBM": -40280.4376520034,
-              "minAM": -54750.83262365569,
-              "controlsVisible": true
+              "axisBHeading": "Elevation (km)",
+              "axesVisible": false,
+              "groundTraceVisible": false
             }
           }
         ],
-        "sceneSectionActiveFrameId": "axis:y",
+        "sceneSectionActiveFrameId": "axis:x",
         "sceneSectionFrameEnabled": true,
         "sceneSectionFrameByAxis": {
           "x": {
@@ -821,28 +823,31 @@
             "axisDatum": "latlon",
             "minBM": -25000,
             "maxBM": 12250.9622792674,
-            "maxAM": -8266.059897463416,
+            "maxAM": -64838.19916742156,
             "controlsVisible": true,
-            "minAM": -61883.27347169986
+            "minAM": -90454.37872075845
           },
           "y": {
             "minBM": -11805.646621885578,
             "maxAM": 42062.39154411302,
             "minAM": -53311.037790163464,
             "groundTraceWidthM": 160,
-            "controlsVisible": false,
+            "controlsVisible": true,
             "axisAlignment": "cardinal",
             "axisAHeading": "Easting (km)",
-            "axisBHeading": "Elevation (km)"
+            "axisBHeading": "Elevation (km)",
+            "axesVisible": false,
+            "groundTraceVisible": false
           },
           "z": {
-            "maxBM": -9102.565781890298,
+            "maxBM": -26922.56961223355,
             "maxAM": -3448.3514535923605,
-            "minBM": -40280.4376520034,
-            "minAM": -54750.83262365569
+            "minBM": -50982.63583017643,
+            "minAM": -54750.83262365569,
+            "controlsVisible": true
           }
         },
-        "sceneSectionWindowActiveAxis": "y",
+        "sceneSectionWindowActiveAxis": "x",
         "sceneSectionHelperVisible": true,
         "sceneSectionObjectVisibilityByFrameId": {
           "axis:y": {
@@ -918,11 +923,7 @@
       }
     },
     "defaultVisibleLayers": [
-      "utah-forge-site-boundary",
-      "utah-forge-mt-stations",
-      "utah-forge-phase3-demo-boreholes",
-      "utah-forge-mt-resistivity-volume",
-      "utah-forge-mt-resistivity-threshold-surfaces"
+      "utah-forge-phase3-demo-boreholes"
     ],
     "scene": {
       "background": "#383838",
@@ -2838,5 +2839,11 @@
     "x": 0.5971354166666666,
     "y": 0.04752823086574655,
     "width": 0.27
+  },
+  "overlay": {
+    "position": "right",
+    "contentFile": "overlays/173_page/text.md",
+    "images": [],
+    "hidden": true
   }
 }

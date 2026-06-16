@@ -228,26 +228,6 @@
         }
       }
     },
-    "utah-forge-phase3-demo-boreholes": {
-      "showLabels": true,
-      "demoBoreholeBlock": {
-        "visible": true,
-        "widthM": 118,
-        "depthM": 68,
-        "heightM": 34,
-        "liftM": 0,
-        "rotationDeg": -24.985,
-        "fillColor": "#f79c9c",
-        "opacity": 0.82,
-        "outlineVisible": true,
-        "outlineColor": "#ffffff",
-        "outlineThickness": 1.5,
-        "outlineOpacity": 0.92,
-        "labelVisible": true,
-        "labelText": "FORGE surface facility / orientation block",
-        "labelLiftM": 25.5
-      }
-    },
     "utah-forge-mt-resistivity-full-density": {
       "scalarLegendVisible": false,
       "scalarInclusionMode": "all-valid"

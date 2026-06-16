@@ -8577,7 +8577,6 @@
     "143_page",
     "170_page",
     "159_page",
-    "47_seismic_footprint_velocity_support",
     "146_page",
     "167_page",
     "160_page",
@@ -8660,7 +8659,13 @@
     "153_page",
     "154_page",
     "155_page",
-    "162_page"
+    "162_page",
+    "177_page",
+    "178_page",
+    "179_page",
+    "47_seismic_footprint_velocity_support",
+    "180_page",
+    "181_page"
   ],
   "presentationDefaults": {
     "transitionDuration": 1400,
@@ -8673,7 +8678,7 @@
     ]
   },
   "watermark": "GeoSee Utah FORGE - Phase 3 seismic + MT",
-  "modified": "2026-06-12T18:06:17.609Z",
+  "modified": "2026-06-13T18:02:49.701Z",
   "registrationFrame": {
     "horizontalCrs": "EPSG:26912",
     "verticalDatum": "layer-specific; terrain/wells use source elevation metres, seismic products record per-product datum, time-domain seismic uses display-derived vertical scale",

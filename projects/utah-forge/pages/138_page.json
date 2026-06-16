@@ -65,9 +65,9 @@
       "sceneSectionWindowActiveAxis": "x",
       "sceneSectionWindowByAxis": {
         "x": {
-          "minAlongM": -44293.7774015172,
-          "maxAlongM": 17889.148055192687,
-          "bottomElevationM": -12592.386890878908
+          "minAlongM": -21610.600515343645,
+          "maxAlongM": 8977.002314020912,
+          "bottomElevationM": -48201.44350664524
         },
         "y": {
           "minAlongM": -53489.89739256331,
@@ -78,7 +78,7 @@
       "sceneSectionPlanes": {
         "x": {
           "enabled": true,
-          "positionM": -4794.999298421379,
+          "positionM": 28292.52873631695,
           "invert": false
         },
         "y": {
@@ -103,9 +103,10 @@
           "axisAHeading": "Latitude (°)",
           "axisBHeading": "Elevation (km)",
           "axisDatum": "latlon",
-          "maxAM": 17889.148055192687,
+          "maxAM": 8977.002314020912,
           "maxBM": 5259.487289179248,
-          "minBM": -12592.386890878908
+          "minBM": -48201.44350664524,
+          "minAM": -21610.600515343645
         }
       },
       "sceneSectionLegendVisible": false,
@@ -117,7 +118,7 @@
           "axis": "x",
           "plane": {
             "enabled": true,
-            "positionM": -4794.999298421379,
+            "positionM": 28292.52873631695,
             "invert": false
           },
           "frame": {
@@ -125,9 +126,10 @@
             "axisAHeading": "Latitude (°)",
             "axisBHeading": "Elevation (km)",
             "axisDatum": "latlon",
-            "maxAM": 17889.148055192687,
+            "maxAM": 8977.002314020912,
             "maxBM": 5259.487289179248,
-            "minBM": -12592.386890878908
+            "minBM": -48201.44350664524,
+            "minAM": -21610.600515343645
           }
         },
         {
@@ -220,10 +222,6 @@
     },
     "utah-forge-site-boundary": {
       "color": "#47c299"
-    },
-    "utah-forge-mt-resistivity-full-density": {
-      "opacity": 0.05,
-      "scalarLegendVisible": true
     },
     "utah-forge-mt-resistivity-volume": {
       "sectionIsoEnabled": true,

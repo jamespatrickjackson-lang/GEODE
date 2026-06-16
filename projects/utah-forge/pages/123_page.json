@@ -223,10 +223,6 @@
     "utah-forge-site-boundary": {
       "color": "#47c299"
     },
-    "utah-forge-mt-resistivity-full-density": {
-      "opacity": 0.05,
-      "scalarLegendVisible": true
-    },
     "utah-forge-mt-resistivity-volume": {
       "sectionIsoEnabled": true,
       "sectionIsoLinesVisible": true,

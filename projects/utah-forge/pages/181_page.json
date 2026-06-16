@@ -1,0 +1,349 @@
+{
+  "id": "181_page",
+  "title": "Y issue 2",
+  "camera": {
+    "position": [
+      -206783.933596638,
+      21662.765250611657,
+      110131.05003768821
+    ],
+    "target": [
+      -7767.389955980874,
+      -15296.268046050607,
+      2640.9571376663434
+    ],
+    "up": [
+      0,
+      0,
+      1
+    ],
+    "fov": 70
+  },
+  "transition": {
+    "duration": 3000,
+    "easing": "easeInOutCubic"
+  },
+  "holdDuration": 4000,
+  "sceneOverrides": {
+    "lightMode": false,
+    "background": "#383838",
+    "lightModeBackground": "#d4d4d4",
+    "fog": {
+      "enabled": true,
+      "color": "#454545",
+      "density": 0.0000037267080745341615,
+      "lightModeColor": "#b5b5b5"
+    },
+    "terrain": {
+      "materialPreset": "image:naip-2024-aerial",
+      "rampLow": "#757470",
+      "rampMid": "#958a72",
+      "rampHigh": "#b8ac89",
+      "elevLowM": -2000,
+      "elevHighM": 75,
+      "surfaceElevationEnabled": false,
+      "surfaceElevationLegendVisible": false,
+      "surfaceElevationColors": [
+        "#b7b1a9",
+        "#948371",
+        "#8d8a86",
+        "#83877d",
+        "#adadad"
+      ],
+      "hillshadeIntensity": 0.75,
+      "rockHueVariance": 0.005,
+      "shadowSharpness": 0.12,
+      "facetStrength": 0.04,
+      "edgeFadeDistanceM": 90000,
+      "edgeFadeShape": "rounded-square",
+      "edgeFadeInsetM": 40000,
+      "edgeFadeCornerRadiusM": 140000,
+      "shadowTint": "#303640",
+      "gridEnabled": false,
+      "gridColor": "#d7d1c7",
+      "gridOpacity": 0.34,
+      "gridSpacingM": 100,
+      "gridLineWidthM": 0.7,
+      "undersideOpacity": 0,
+      "topoImageMaterialSources": [
+        {
+          "id": "ortho-photo",
+          "label": "Ortho photo",
+          "texture4096Path": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/ortho_photo_context_4096.jpg",
+          "texture8192Path": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/ortho_photo_context_8192.jpg",
+          "textureBudget": 4096,
+          "bounds": [
+            -356385.9,
+            3703652,
+            1039320.6,
+            4843097
+          ],
+          "attribution": "USGS, USDA, The National Map: Orthoimagery.",
+          "provenancePath": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/manifest.json",
+          "defaultSurfaceOpacity": 0.78,
+          "defaultOpacity": 1,
+          "defaultHillshadeBlend": 0.45,
+          "defaultBrightness": 0,
+          "defaultContrast": 1,
+          "defaultSaturation": 1
+        },
+        {
+          "id": "naip-2024-aerial",
+          "label": "NAIP 2024 Aerial Image",
+          "texture4096Path": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/naip_2024/naip_2024_regional_4096.webp?v=71d894cdd3c0c64b",
+          "texture8192Path": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/naip_2024/naip_2024_regional_8192.webp?v=684f5a7e42719aa9",
+          "textureBudget": 4096,
+          "format": "webp",
+          "hasAlpha": true,
+          "bounds": [
+            229069.2,
+            4094688,
+            598806,
+            4414308
+          ],
+          "attribution": "USDA Farm Production and Conservation - Business Center, Geospatial Enterprise Operations; UGRC Raster Data Discovery",
+          "provenancePath": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/naip_2024/manifest.json",
+          "defaultSurfaceOpacity": 0.78,
+          "defaultOpacity": 1,
+          "defaultHillshadeBlend": 0.12,
+          "defaultBrightness": 0.08,
+          "defaultContrast": 1.28,
+          "defaultSaturation": 1.18,
+          "detailOverlays": [
+            {
+              "id": "forge-working-area-native",
+              "label": "FORGE working area native detail",
+              "texture4096Path": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/naip_2024/naip_2024_forge_detail_4096.webp",
+              "texture8192Path": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/naip_2024/naip_2024_forge_detail_8192.webp",
+              "textureBudget": 4096,
+              "format": "webp",
+              "hasAlpha": true,
+              "bounds": [
+                333323.4,
+                4260536.4,
+                338238.6,
+                4265451.6
+              ],
+              "resolutionM": 0.6,
+              "opacity": 1,
+              "edgeFeatherM": 450
+            }
+          ]
+        }
+      ],
+      "orthoPhotoTextureBudget": 8192,
+      "orthoPhotoPath": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/naip_2024/naip_2024_regional_8192.webp?v=684f5a7e42719aa9",
+      "orthoPhotoTexture4096Path": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/naip_2024/naip_2024_regional_4096.webp?v=71d894cdd3c0c64b",
+      "orthoPhotoTexture8192Path": "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/public_context/naip_2024/naip_2024_regional_8192.webp?v=684f5a7e42719aa9",
+      "orthoPhotoBounds": [
+        229069.2,
+        4094688,
+        598806,
+        4414308
+      ],
+      "orthoPhotoOpacity": 1,
+      "orthoPhotoHillshadeBlend": 0.12,
+      "orthoPhotoBrightness": 0.08,
+      "orthoPhotoContrast": 1.28,
+      "orthoPhotoSaturation": 1.18,
+      "topoMapBranding": {
+        "visible": false,
+        "logoPath": "projects/utah-forge/branding/UtahFORGE-logo-updated2025-website-black-7015x1482-1-610x129.png",
+        "offsetYM": 375000,
+        "offsetXM": 385000,
+        "heading": "Phase 3| ",
+        "rotationDeg": 111,
+        "logoWidthM": 160000,
+        "logoRenderablePath": "projects/utah-forge/branding/UtahFORGE-logo-updated2025-website-black-7015x1482-1-610x129.png",
+        "logoSourcePath": "projects/utah-forge/branding/UtahFORGE-logo-updated2025-website-black-7015x1482-1-610x129.png",
+        "logoSourceFormat": "png",
+        "subheading": "",
+        "subheadingWeight": 700,
+        "lineGapM": -4500,
+        "layout": "horizontal",
+        "logoOpacity": 0.94,
+        "backgroundEnabled": false,
+        "backgroundColor": "#ffffff",
+        "outlineEnabled": false,
+        "outlineWidthM": 1250,
+        "headingSizeM": 48000,
+        "logoPlacement": "after",
+        "textAlign": "right",
+        "anchor": "north-east",
+        "logoGapM": -39000,
+        "textOpacity": 0.98,
+        "opacity": 0
+      },
+      "surfaceElevationMinM": 375,
+      "surfaceElevationMaxM": 1825,
+      "surfaceElevationColorPositions": [
+        0,
+        0.1508631028701684,
+        0.3457948154551811,
+        0.6437617768516467,
+        1
+      ],
+      "surfaceElevationMidpoints": [
+        0.58,
+        0.48148127217000936,
+        0.3768106006660798,
+        0.6097316162722806
+      ],
+      "surfaceElevationTransitionSoftness": 1,
+      "surfaceElevationColorBlend": 0.5,
+      "surfaceElevationReverse": false,
+      "edgeTopShine": 0,
+      "verticalExaggeration": 3.25,
+      "edgeOutlineEnabled": false,
+      "fogGradientCurve": 4,
+      "orthoPhotoEdgeFadeDistanceM": 25000,
+      "orthoPhotoOutsideFillEnabled": true,
+      "orthoPhotoOutsideSurfaceMode": "topo",
+      "orthoPhotoOutsideColor": "#d4d4d4",
+      "orthoPhotoOutsideOpacity": 1,
+      "orthoPhotoEdgeClipInsetM": 0
+    }
+  },
+  "layerOverrides": {
+    "utah-forge-phase3-seismic-browser": {
+      "seismicNavigationVisible": false
+    },
+    "utah-forge-scene-section-planes": {
+      "sceneSectionFrames": [
+        {
+          "id": "axis:x",
+          "label": "X Section frame",
+          "axis": "x",
+          "plane": {
+            "enabled": true,
+            "positionM": -53897.008556379355,
+            "invert": false
+          },
+          "frame": {
+            "axisAlignment": "cardinal",
+            "axisAHeading": "Latitude (°)",
+            "axisBHeading": "Elevation (km)",
+            "axisDatum": "latlon",
+            "controlsVisible": true,
+            "groundTraceVisible": false,
+            "axesVisible": false,
+            "maxAM": 132615.73967760784,
+            "minBM": 46632.21950019774,
+            "maxBM": 78483.0826209186,
+            "minAM": 67547.04530554698
+          }
+        },
+        {
+          "id": "axis:y",
+          "label": "Y Section frame",
+          "axis": "y",
+          "plane": {
+            "enabled": true,
+            "positionM": 14232.088418787964,
+            "invert": false
+          },
+          "frame": {
+            "controlsVisible": true,
+            "groundTraceVisible": false,
+            "axesVisible": false,
+            "maxAM": 9378.54883439641,
+            "maxBM": 72230.67721967591,
+            "minBM": 24313.688321059322
+          }
+        },
+        {
+          "id": "axis:z",
+          "label": "Z Section frame",
+          "axis": "z",
+          "plane": {
+            "enabled": true,
+            "positionM": 45914.29125976474,
+            "invert": false
+          },
+          "frame": {
+            "controlsVisible": true,
+            "groundTraceVisible": false,
+            "axesVisible": false,
+            "maxBM": -53714.24565022998,
+            "maxAM": 1167.0693469409016,
+            "minAM": -133502.84473026876
+          }
+        }
+      ],
+      "sceneSectionActiveFrameId": "axis:x",
+      "sceneSectionFrameEnabled": true,
+      "sceneSectionEnabled": true,
+      "sceneSectionMode": "cutaway",
+      "sceneSectionActiveAxis": "x",
+      "sceneSectionPlanes": {
+        "x": {
+          "enabled": true,
+          "positionM": -53897.008556379355,
+          "invert": false
+        },
+        "y": {
+          "enabled": true,
+          "positionM": 14232.088418787964,
+          "invert": false
+        },
+        "z": {
+          "enabled": true,
+          "positionM": 45914.29125976474,
+          "invert": false
+        }
+      },
+      "sceneSectionFrameByAxis": {
+        "x": {
+          "axisAlignment": "cardinal",
+          "axisAHeading": "Latitude (°)",
+          "axisBHeading": "Elevation (km)",
+          "axisDatum": "latlon",
+          "controlsVisible": true,
+          "groundTraceVisible": false,
+          "axesVisible": false,
+          "maxAM": 132615.73967760784,
+          "minBM": 46632.21950019774,
+          "maxBM": 78483.0826209186,
+          "minAM": 67547.04530554698
+        },
+        "y": {
+          "controlsVisible": true,
+          "groundTraceVisible": false,
+          "axesVisible": false,
+          "maxAM": 9378.54883439641,
+          "maxBM": 72230.67721967591,
+          "minBM": 24313.688321059322
+        },
+        "z": {
+          "controlsVisible": true,
+          "groundTraceVisible": false,
+          "axesVisible": false,
+          "maxBM": -53714.24565022998,
+          "maxAM": 1167.0693469409016,
+          "minAM": -133502.84473026876
+        }
+      },
+      "sceneSectionWindowEnabled": true,
+      "sceneSectionWindowActiveAxis": "x",
+      "sceneSectionWindowByAxis": {
+        "x": {
+          "minAlongM": 67547.04530554698,
+          "maxAlongM": 132615.73967760784,
+          "bottomElevationM": 46632.21950019774
+        },
+        "y": {
+          "minAlongM": -118667.98253963646,
+          "maxAlongM": 9378.54883439641,
+          "bottomElevationM": 24313.688321059322
+        }
+      }
+    }
+  },
+  "visibilityOverrides": {
+    "utah-forge-site-boundary": false,
+    "utah-forge-phase3-demo-boreholes": false,
+    "utah-forge-mt-stations": false,
+    "utah-forge-mt-resistivity-volume": true,
+    "utah-forge-mt-resistivity-full-density": false
+  }
+}

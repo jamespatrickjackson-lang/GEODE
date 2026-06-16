@@ -27,7 +27,7 @@
   "holdDuration": 4000,
   "accentColor": "#ffcd42",
   "visibilityOverrides": {
-    "utah-forge-phase3-working-area": true,
+    "utah-forge-phase3-working-area": false,
     "terrain": false,
     "utah-forge-phase3-seismic-browser": true,
     "utah-forge-mt-stations": false,
@@ -66,8 +66,14 @@
       "sectionIsoEnabled": false
     },
     "utah-forge-mt-resistivity-full-density": {
-      "scalarLegendVisible": false,
-      "scalarInclusionMode": "all-valid"
+      "scalarLegendVisible": true,
+      "scalarInclusionMode": "thresholded",
+      "scalarFocusMin": 0.8035870950053057,
+      "scalarFocusMax": 2.6688538498765837,
+      "scalarBlendMin": 1.6452318026324897,
+      "scalarBlendMax": 2.6688538498765837,
+      "scalarEdgeLineWidth": 2.1,
+      "scalarEdgeAverage": 0.86
     },
     "utah-forge-mt-resistivity-volume": {
       "scalarLegendVisible": false
