@@ -403,8 +403,11 @@ test("Capture Director scroll animation timeline and handoff package contracts e
 
   for (const expected of [
     "CaptureScrollTimelineV1",
+    "CaptureScrollRecordRequestV1",
     "normalizeCaptureScrollTimeline",
     "validateCaptureScrollTimeline",
+    "createScrollRecordRequest",
+    "validateScrollRecordRequest",
     "sampleCaptureScrollTimeline",
     "CAPTURE_SCROLL_FPS_OPTIONS",
     "DEFAULT_CAPTURE_SCROLL_FPS",
@@ -415,6 +418,7 @@ test("Capture Director scroll animation timeline and handoff package contracts e
   for (const expected of [
     "ScrollHandoffPackageV1",
     "createScrollHandoffManifest",
+    "createPendingScrollHandoffManifest",
     "validateScrollHandoffManifest",
     '"complete"',
     '"partial"',
@@ -423,6 +427,79 @@ test("Capture Director scroll animation timeline and handoff package contracts e
   ]) {
     assert.ok(scrollPackageSource.includes(expected), `scroll package should include ${expected}`);
   }
+});
+
+test("Capture Director scroll accept logic creates package diagnostics without renderer endpoints", () => {
+  const provider = readSource("src", "capture", "CaptureDirectorProvider.tsx");
+  const acceptStart = provider.indexOf("const acceptScrollRenderShell = useCallback");
+  const acceptEnd = provider.indexOf("const overlayContext = useCallback", acceptStart);
+  assert.ok(acceptStart >= 0, "acceptScrollRenderShell block should exist");
+  assert.ok(acceptEnd > acceptStart, "acceptScrollRenderShell block should have a clear end");
+  const acceptBlock = provider.slice(acceptStart, acceptEnd);
+
+  for (const expected of [
+    "createScrollRecordRequest",
+    "validateScrollRecordRequest",
+    "createPendingScrollHandoffManifest",
+    "DEFAULT_CAPTURE_SCROLL_FPS",
+    "deterministicDurationSeconds",
+    "pageTimelineDurationSeconds",
+    "durationFrames - 1",
+    "pageSource",
+    "cameraPathPlaybackValidation.valid",
+    "cameraSource",
+    "setScrollRecordValidationErrors",
+    "setLastScrollPackagePath(null)",
+    "setLastScrollManifestPath(null)",
+    "setError",
+    "setScrollRecordPopoutOpen(false)",
+    "beginCaptureJob",
+    "completeCaptureJob",
+    "kind: \"scroll-package\"",
+    "request",
+    "manifest",
+  ]) {
+    assert.ok(acceptBlock.includes(expected), `scroll accept should include ${expected}`);
+  }
+
+  for (const forbidden of [
+    "startLocalVideoRenderJob",
+    "createExternalVideoRenderJob",
+    "/api/capture/render-video",
+    "/api/capture/video-output",
+    "render-capture-video-job.mjs",
+    "capture-video-outputs",
+  ]) {
+    assert.equal(
+      acceptBlock.includes(forbidden),
+      false,
+      `scroll accept logic must not call renderer boundary ${forbidden}`,
+    );
+  }
+});
+
+test("Capture Director toolbar renders scroll record validation errors without starting render work", () => {
+  const toolbar = readSource("src", "capture", "CaptureDirectorToolbar.tsx");
+  assert.ok(
+    toolbar.includes("scrollRecordValidationErrors"),
+    "toolbar should consume scroll record validation errors",
+  );
+  assert.ok(
+    toolbar.includes("capture-scroll-record-validation-errors"),
+    "toolbar should expose a scroll-specific validation error surface",
+  );
+  assert.ok(
+    toolbar.includes("capture-scroll-output-paths"),
+    "toolbar should keep displaying accepted scroll output paths",
+  );
+  assert.ok(
+    toolbar.includes("DEFAULT_CAPTURE_SCROLL_FPS"),
+    "toolbar scroll frame estimates should use the deterministic scroll FPS",
+  );
+  assert.ok(
+    toolbar.includes("scrollPageBarDurationSeconds"),
+    "toolbar scroll frame estimates should reflect enabled Page Bar clips",
+  );
 });
 
 test("Capture camera path module defines recipe-owned spline helpers", () => {

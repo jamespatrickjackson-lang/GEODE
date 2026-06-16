@@ -104,6 +104,20 @@ function cameraPathV2(overrides = {}) {
   };
 }
 
+function validScrollTimeline(overrides = {}) {
+  return {
+    version: 1,
+    fps: 60,
+    durationSeconds: 4,
+    range: { mode: "full" },
+    pageSource: { mode: "page-bar", fallback: "current-page" },
+    cameraSource: { mode: "camera-path", pathId: "camera-spine" },
+    anchors: [{ id: "intro", label: "Intro", progress: 0, posterFrame: 0 }],
+    outputProfileId: "mp4-review",
+    ...overrides,
+  };
+}
+
 test("capture profiles expose behavior-level mode visibility", async () => {
   const {
     captureVisibilityProfileForMode,
@@ -348,6 +362,233 @@ test("scroll animation timeline validates anchor progress and poster frame bound
   );
   assert.equal(invalidPoster.valid, false);
   assert.match(invalidPoster.errors.join("\n"), /posterFrame/);
+});
+
+test("scroll record requests default to deterministic 60 FPS and validate accepted output state", async () => {
+  const {
+    createScrollRecordRequest,
+    validateScrollRecordRequest,
+  } = await importBundled("src/capture/captureScrollTimeline.ts");
+
+  const request = createScrollRecordRequest({
+    timeline: {
+      version: 1,
+      durationSeconds: 3,
+      range: { mode: "full" },
+      pageSource: { mode: "current-page", fallback: "none" },
+      cameraSource: { mode: "current-camera", pathId: null },
+      anchors: [],
+      outputProfileId: "mp4-review",
+    },
+    format: "mp4",
+    quality: { preset: "1080p", width: 1920, height: 1080 },
+    destination: ".tmp/capture-scroll-outputs",
+    packageName: "task-3-scroll",
+    cleanRender: true,
+    renderRouteIntent: "browser-inline",
+    advancedOptions: { includeDiagnostics: true },
+    createdAt: "2026-06-16T00:00:00.000Z",
+  });
+
+  assert.equal(request.schema, "CaptureScrollRecordRequestV1");
+  assert.equal(request.version, 1);
+  assert.equal(request.timeline.fps, 60);
+  assert.deepEqual(request.frameRange, {
+    startFrame: 0,
+    endFrame: 179,
+    totalFrames: 180,
+  });
+  assert.equal(request.format, "mp4");
+  assert.equal(request.quality.width, 1920);
+  assert.equal(request.destination, ".tmp/capture-scroll-outputs");
+  assert.equal(request.packageName, "task-3-scroll");
+  assert.equal(request.cleanRender, true);
+  assert.equal(request.renderRouteIntent, "browser-inline");
+  assert.equal(validateScrollRecordRequest(request).valid, true);
+});
+
+test("scroll handoff pending manifests derive valid partial package contracts from requests", async () => {
+  const {
+    createScrollRecordRequest,
+  } = await importBundled("src/capture/captureScrollTimeline.ts");
+  const {
+    createPendingScrollHandoffManifest,
+    validateScrollHandoffManifest,
+  } = await importBundled("src/capture/scrollHandoffPackage.ts");
+
+  const request = createScrollRecordRequest({
+    timeline: validScrollTimeline({
+      range: { mode: "frame-range", startFrame: 30, endFrame: 89 },
+    }),
+    format: "mp4",
+    quality: { preset: "4k", width: 3840, height: 2160 },
+    destination: ".tmp/capture-scroll-outputs",
+    packageName: "valid-4k-scroll",
+    cleanRender: true,
+    renderRouteIntent: "local-external",
+    advancedOptions: { includeDiagnostics: true, manualFallbackAccepted: false },
+    createdAt: "2026-06-16T00:00:00.000Z",
+  });
+  const manifest = createPendingScrollHandoffManifest(request);
+
+  assert.equal(manifest.status, "partial");
+  assert.equal(manifest.packageId, "valid-4k-scroll");
+  assert.equal(manifest.createdAt, request.createdAt);
+  assert.deepEqual(manifest.frameRange, request.frameRange);
+  assert.deepEqual(manifest.frames, { directory: null, pattern: null, count: 0 });
+  assert.equal(manifest.media.length, 1);
+  assert.equal(manifest.media[0].role, "primary");
+  assert.equal(manifest.media[0].path, "media/valid-4k-scroll.mp4");
+  assert.equal(manifest.diagnosticsPath, "diagnostics/valid-4k-scroll.json");
+  assert.equal(manifest.sourceContract.request.schema, "CaptureScrollRecordRequestV1");
+  assert.equal(validateScrollHandoffManifest(manifest).valid, true);
+});
+
+test("scroll handoff pending manifests support partial PNG sequence outputs", async () => {
+  const {
+    createScrollRecordRequest,
+  } = await importBundled("src/capture/captureScrollTimeline.ts");
+  const {
+    createPendingScrollHandoffManifest,
+    validateScrollHandoffManifest,
+  } = await importBundled("src/capture/scrollHandoffPackage.ts");
+
+  const request = createScrollRecordRequest({
+    timeline: validScrollTimeline({
+      durationSeconds: 2,
+      range: { mode: "frame-range", startFrame: 10, endFrame: 20 },
+    }),
+    format: "png-sequence",
+    quality: { preset: "1440p", width: 2560, height: 1440 },
+    destination: ".tmp/capture-scroll-outputs",
+    packageName: "png-sequence-scroll",
+    cleanRender: true,
+    renderRouteIntent: "browser-inline",
+    advancedOptions: {},
+    createdAt: "2026-06-16T00:00:00.000Z",
+  });
+  const manifest = createPendingScrollHandoffManifest(request);
+
+  assert.equal(manifest.status, "partial");
+  assert.deepEqual(manifest.frames, {
+    directory: "frames",
+    pattern: "frame-%06d.png",
+    count: 11,
+  });
+  assert.deepEqual(manifest.media, []);
+  assert.equal(validateScrollHandoffManifest(manifest).valid, true);
+});
+
+test("scroll handoff pending manifests assign media roles by scroll output format", async () => {
+  const {
+    createScrollRecordRequest,
+  } = await importBundled("src/capture/captureScrollTimeline.ts");
+  const {
+    createPendingScrollHandoffManifest,
+  } = await importBundled("src/capture/scrollHandoffPackage.ts");
+
+  const cases = [
+    ["mp4", "primary", "video/mp4", "media/media-role-mp4.mp4"],
+    ["webm", "delivery", "video/webm", "media/media-role-webm.webm"],
+    [
+      "scroll-friendly-video",
+      "scroll-friendly",
+      "video/mp4",
+      "media/media-role-scroll-friendly-video.scroll.mp4",
+    ],
+  ];
+
+  for (const [format, role, mimeType, path] of cases) {
+    const request = createScrollRecordRequest({
+      timeline: validScrollTimeline(),
+      format,
+      quality: { preset: "1080p", width: 1920, height: 1080 },
+      destination: ".tmp/capture-scroll-outputs",
+      packageName: `media-role-${format}`,
+      cleanRender: true,
+      renderRouteIntent: "browser-inline",
+      advancedOptions: {},
+      createdAt: "2026-06-16T00:00:00.000Z",
+    });
+    const manifest = createPendingScrollHandoffManifest(request);
+
+    assert.deepEqual(manifest.media, [{ role, path, mimeType }]);
+  }
+});
+
+test("scroll record request validation rejects unsafe package, timing, route, and dimensions", async () => {
+  const {
+    createScrollRecordRequest,
+    validateScrollRecordRequest,
+  } = await importBundled("src/capture/captureScrollTimeline.ts");
+
+  function invalidRequest(overrides) {
+    return validateScrollRecordRequest(
+      createScrollRecordRequest({
+        timeline: validScrollTimeline(),
+        format: "mp4",
+        quality: { preset: "1080p", width: 1920, height: 1080 },
+        destination: ".tmp/capture-scroll-outputs",
+        packageName: "invalid-scroll",
+        cleanRender: true,
+        renderRouteIntent: "browser-inline",
+        advancedOptions: {},
+        createdAt: "2026-06-16T00:00:00.000Z",
+        ...overrides,
+      }),
+    );
+  }
+
+  for (const [label, overrides, pattern] of [
+    ["empty package", { packageName: "   " }, /packageName/],
+    ["unsafe package characters", { packageName: "bad package:name" }, /packageName/],
+    ["reserved package name", { packageName: "CON.json" }, /packageName/],
+    ["bad fps", { timeline: validScrollTimeline({ fps: 24 }) }, /fps/],
+    [
+      "bad frame range",
+      { timeline: validScrollTimeline({ range: { mode: "frame-range", startFrame: 20, endFrame: 10 } }) },
+      /startFrame/,
+    ],
+    ["absolute destination", { destination: "C:\\capture\\out" }, /destination/],
+    ["uri destination", { destination: "file:///tmp/out" }, /destination/],
+    ["parent destination", { destination: "../out" }, /destination/],
+    ["project fixture destination", { destination: "projects/utah-forge/out" }, /destination/],
+    [
+      "4k inline route",
+      { quality: { preset: "4k", width: 3840, height: 2160 } },
+      /local-external/,
+    ],
+    [
+      "malformed 8k",
+      {
+        quality: { preset: "8k", width: 7680, height: 4000 },
+        renderRouteIntent: "local-external",
+      },
+      /8K/,
+    ],
+    [
+      "preset dimension mismatch",
+      {
+        quality: { preset: "6k", width: 7680, height: 4320 },
+        renderRouteIntent: "local-external",
+      },
+      /dimensions/,
+    ],
+    ["unsupported format", { format: "mov" }, /format/],
+  ]) {
+    const validation = invalidRequest(overrides);
+    assert.equal(validation.valid, false, `${label} should be invalid`);
+    assert.match(validation.errors.join("\n"), pattern, label);
+  }
+
+  assert.equal(
+    invalidRequest({
+      quality: { preset: "4k", width: 3840, height: 2160 },
+      renderRouteIntent: "manual-fallback",
+      advancedOptions: { manualFallbackAccepted: true },
+    }).valid,
+    true,
+  );
 });
 
 test("scroll handoff packages validate explicit status and complete outputs", async () => {

@@ -147,6 +147,14 @@ import {
   type CaptureTimelineTrack,
 } from "./captureTimeline";
 import {
+  DEFAULT_CAPTURE_SCROLL_FPS,
+  captureScrollQualityForPreset,
+  createScrollRecordRequest,
+  validateScrollRecordRequest,
+  type CaptureScrollRenderRouteIntent,
+} from "./captureScrollTimeline";
+import { createPendingScrollHandoffManifest } from "./scrollHandoffPackage";
+import {
   captureStillFilename,
   captureStillMimeType,
   normalizeCaptureStillQuality,
@@ -437,6 +445,7 @@ interface CaptureDirectorContextValue {
   setScrollRecordPopoutOpen(open: boolean): void;
   lastScrollPackagePath: string | null;
   lastScrollManifestPath: string | null;
+  scrollRecordValidationErrors: string[];
   acceptScrollRenderShell(): void;
   error: string | null;
   availability: CaptureFeatureAvailability;
@@ -524,7 +533,24 @@ function scrollPackageNameSlug(value: string): string {
     .trim()
     .replace(/[^A-Za-z0-9._-]+/g, "-")
     .replace(/^-+|-+$/g, "");
-  return slug || "geosee-scroll-animation";
+  return slug;
+}
+
+function scrollRenderRouteIntentForQuality(quality: {
+  width: number;
+  height: number;
+}): CaptureScrollRenderRouteIntent {
+  return quality.width >= 3840 || quality.height >= 2160
+    ? "local-external"
+    : "browser-inline";
+}
+
+function scrollFrameNumber(value: number): number {
+  return Number.isFinite(value) ? Math.trunc(value) : Number.NaN;
+}
+
+function scrollJoinPath(base: string, leaf: string): string {
+  return `${base.replace(/[\\/]+$/g, "")}/${leaf}`;
 }
 
 const DETERMINISTIC_EXPORT_DURATION_SECONDS = 4;
@@ -922,6 +948,8 @@ export function CaptureDirectorProvider({
   const [lastScrollManifestPath, setLastScrollManifestPath] = useState<string | null>(
     null,
   );
+  const [scrollRecordValidationErrors, setScrollRecordValidationErrors] =
+    useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [availability, setAvailability] =
     useState<CaptureFeatureAvailability>(() => readAvailability());
@@ -1619,18 +1647,172 @@ export function CaptureDirectorProvider({
     const destination =
       scrollSaveDestination.trim() || ".tmp/capture-scroll-outputs";
     const packageName = scrollPackageNameSlug(scrollOutputPackageName);
-    const formatSlug =
-      scrollOutputFormat === "scroll-friendly-video"
-        ? "scroll-friendly"
-        : scrollOutputFormat;
-    setLastScrollPackagePath(
-      `${destination}/${packageName}-${formatSlug}.scroll-package.json`,
+    const quality = captureScrollQualityForPreset(scrollQualityPreset);
+    const normalizedTimeline = normalizeCaptureTimelineState(captureTimeline);
+    const enabledPageClips = normalizedTimeline.pageClips.filter(
+      (clip) => clip.enabled,
     );
-    setLastScrollManifestPath(
-      `${destination}/${packageName}-${formatSlug}.scroll-manifest.json`,
+    const pageTimelineDurationSeconds = enabledPageClips.reduce(
+      (duration, clip) =>
+        Math.max(
+          duration,
+          clip.startSeconds + clip.transitionSeconds + clip.holdSeconds,
+        ),
+      0,
     );
+    const cameraPathCanRender = cameraPathPlaybackValidation.valid;
+    const range =
+      scrollRangeMode === "frame-range"
+        ? {
+            mode: "frame-range" as const,
+            startFrame: scrollFrameNumber(scrollStartFrame),
+            endFrame: scrollFrameNumber(scrollEndFrame),
+          }
+        : { mode: "full" as const };
+    const durationSeconds =
+      enabledPageClips.length > 0
+        ? Math.max(0.1, pageTimelineDurationSeconds)
+        : Math.max(0.1, deterministicDurationSeconds);
+    const durationFrames = Math.max(
+      1,
+      Math.ceil(durationSeconds * DEFAULT_CAPTURE_SCROLL_FPS),
+    );
+    const anchors =
+      enabledPageClips.length > 0
+        ? enabledPageClips.map((clip) => ({
+            id: clip.id,
+            label: clip.label,
+            progress: Math.max(0, Math.min(1, clip.startSeconds / durationSeconds)),
+            posterFrame: Math.min(
+              durationFrames - 1,
+              Math.max(
+                0,
+                Math.round(clip.startSeconds * DEFAULT_CAPTURE_SCROLL_FPS),
+              ),
+            ),
+          }))
+        : currentPage
+          ? [
+              {
+                id: currentPage.id,
+                label: currentPage.title ?? currentPage.id,
+                progress: 0,
+                posterFrame: 0,
+              },
+            ]
+          : [];
+    const pageSource =
+      enabledPageClips.length > 0
+        ? { mode: "page-bar" as const, fallback: "current-page" as const }
+        : { mode: "current-page" as const, fallback: "none" as const };
+    const cameraSource = cameraPathCanRender
+      ? {
+          mode: "camera-path" as const,
+          pathId: captureCameraPathV3.id,
+        }
+      : { mode: "current-camera" as const, pathId: null };
+    const request = createScrollRecordRequest({
+      timeline: {
+        version: 1,
+        fps: DEFAULT_CAPTURE_SCROLL_FPS,
+        durationSeconds,
+        range,
+        pageSource,
+        cameraSource,
+        anchors,
+        outputProfileId: `scroll-${scrollOutputFormat}`,
+      },
+      format: scrollOutputFormat,
+      quality,
+      destination,
+      packageName,
+      cleanRender: true,
+      renderRouteIntent: scrollRenderRouteIntentForQuality(quality),
+      advancedOptions: {
+        includeDiagnostics: true,
+        manualFallbackAccepted: false,
+        pageClipCount: enabledPageClips.length,
+        cameraPathNodeCount: captureCameraPathV3.nodes.length,
+      },
+    });
+    const validation = validateScrollRecordRequest(request);
+    if (!validation.valid) {
+      setScrollRecordValidationErrors(validation.errors);
+      setLastScrollPackagePath(null);
+      setLastScrollManifestPath(null);
+      setError(null);
+      setScrollRecordPopoutOpen(true);
+      return;
+    }
+
+    let manifest;
+    let job;
+    try {
+      manifest = createPendingScrollHandoffManifest(request);
+      job = beginCaptureJob({
+        kind: "scroll-package",
+        label: "Scroll package",
+        diagnostics: { request, manifest },
+      });
+    } catch (errorValue) {
+      const message = formatCaptureError(errorValue);
+      setScrollRecordValidationErrors([message]);
+      setLastScrollPackagePath(null);
+      setLastScrollManifestPath(null);
+      setError(message);
+      setScrollRecordPopoutOpen(true);
+      return;
+    }
+
+    const packagePath = scrollJoinPath(
+      destination,
+      `${request.packageName}.scroll-package.json`,
+    );
+    const manifestPath = scrollJoinPath(
+      destination,
+      `${request.packageName}.scroll-manifest.json`,
+    );
+    finishCaptureJob(job.id, (entry) =>
+      completeCaptureJob(entry, {
+        output: {
+          filename: `${request.packageName}.scroll-package.json`,
+          mimeType: "application/json",
+          byteLength: 0,
+        },
+        diagnostics: {
+          request,
+          manifest,
+          packagePath,
+          manifestPath,
+        },
+        progress: {
+          phase: "complete",
+          percent: 1,
+          message: "Scroll package manifest prepared.",
+        },
+      }),
+    );
+    setLastScrollPackagePath(packagePath);
+    setLastScrollManifestPath(manifestPath);
+    setScrollRecordValidationErrors([]);
+    setError(null);
     setScrollRecordPopoutOpen(false);
-  }, [scrollOutputFormat, scrollOutputPackageName, scrollSaveDestination]);
+  }, [
+    beginCaptureJob,
+    captureCameraPathV3,
+    cameraPathPlaybackValidation,
+    captureTimeline,
+    currentPage,
+    deterministicDurationSeconds,
+    finishCaptureJob,
+    scrollEndFrame,
+    scrollOutputFormat,
+    scrollOutputPackageName,
+    scrollQualityPreset,
+    scrollRangeMode,
+    scrollSaveDestination,
+    scrollStartFrame,
+  ]);
 
   const overlayContext = useCallback(
     (pageOverride?: PresentationPage | null, pageIndexOverride?: number) => {
@@ -5213,6 +5395,7 @@ export function CaptureDirectorProvider({
       setScrollRecordPopoutOpen,
       lastScrollPackagePath,
       lastScrollManifestPath,
+      scrollRecordValidationErrors,
       acceptScrollRenderShell,
       error,
       availability,
@@ -5370,6 +5553,7 @@ export function CaptureDirectorProvider({
       scrollRecordPopoutOpen,
       lastScrollPackagePath,
       lastScrollManifestPath,
+      scrollRecordValidationErrors,
       acceptScrollRenderShell,
       previewResolution,
       previewResolutionPresetId,

@@ -1,4 +1,9 @@
 import type { CaptureValidationResult } from "./captureTypes";
+import {
+  validateScrollRecordRequest,
+  type CaptureScrollRecordFormat,
+  type CaptureScrollRecordRequestV1,
+} from "./captureScrollTimeline";
 
 export type ScrollHandoffPackageStatus =
   | "complete"
@@ -105,6 +110,63 @@ export function createScrollHandoffManifest(
     schema: "ScrollHandoffPackageV1",
     version: 1,
   };
+}
+
+function mediaForScrollRequest(
+  request: CaptureScrollRecordRequestV1,
+): ScrollHandoffPackageV1["media"] {
+  const mediaByFormat: Record<
+    Exclude<CaptureScrollRecordFormat, "png-sequence">,
+    { role: ScrollHandoffPackageV1["media"][number]["role"]; extension: string; mimeType: string }
+  > = {
+    mp4: { role: "primary", extension: "mp4", mimeType: "video/mp4" },
+    webm: { role: "delivery", extension: "webm", mimeType: "video/webm" },
+    "scroll-friendly-video": {
+      role: "scroll-friendly",
+      extension: "scroll.mp4",
+      mimeType: "video/mp4",
+    },
+  };
+
+  if (request.format === "png-sequence") return [];
+  const spec = mediaByFormat[request.format];
+  return [
+    {
+      role: spec.role,
+      path: `media/${request.packageName}.${spec.extension}`,
+      mimeType: spec.mimeType,
+    },
+  ];
+}
+
+export function createPendingScrollHandoffManifest(
+  request: CaptureScrollRecordRequestV1,
+): ScrollHandoffPackageV1 {
+  const validation = validateScrollRecordRequest(request);
+  if (!validation.valid) {
+    throw new Error(`Invalid scroll record request: ${validation.errors.join(" ")}`);
+  }
+
+  return createScrollHandoffManifest({
+    packageId: request.packageName,
+    status: "partial",
+    createdAt: request.createdAt,
+    outputProfileId: request.timeline.outputProfileId,
+    fps: request.timeline.fps,
+    durationSeconds: request.timeline.durationSeconds,
+    frameRange: request.frameRange,
+    media: mediaForScrollRequest(request),
+    frames:
+      request.format === "png-sequence"
+        ? {
+            directory: "frames",
+            pattern: "frame-%06d.png",
+            count: request.frameRange.totalFrames,
+          }
+        : { directory: null, pattern: null, count: 0 },
+    diagnosticsPath: `diagnostics/${request.packageName}.json`,
+    sourceContract: { request },
+  });
 }
 
 export function validateScrollHandoffManifest(

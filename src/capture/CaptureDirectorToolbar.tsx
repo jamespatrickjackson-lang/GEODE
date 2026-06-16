@@ -31,6 +31,7 @@ import {
   type CapturePageRangeTiming,
   type CaptureScope,
 } from "./capturePageRange";
+import { DEFAULT_CAPTURE_SCROLL_FPS } from "./captureScrollTimeline";
 import type { CaptureStillImageType } from "./screenCaptureSaveOptions";
 import { useEditor } from "../editor/EditorContext";
 import { useCaptureDirector } from "./CaptureDirectorProvider";
@@ -839,6 +840,7 @@ export function CaptureDirectorToolbar() {
     setScrollRecordPopoutOpen,
     lastScrollPackagePath,
     lastScrollManifestPath,
+    scrollRecordValidationErrors,
     acceptScrollRenderShell,
     error,
     availability,
@@ -961,9 +963,22 @@ export function CaptureDirectorToolbar() {
     scrollQualityOptions[2];
   const scrollFrameStart = Math.max(0, Math.floor(scrollStartFrame));
   const scrollFrameEnd = Math.max(scrollFrameStart, Math.floor(scrollEndFrame));
+  const scrollPageClips = captureTimeline.pageClips.filter((clip) => clip.enabled);
+  const scrollPageBarDurationSeconds = scrollPageClips.reduce(
+    (duration, clip) =>
+      Math.max(
+        duration,
+        clip.startSeconds + clip.transitionSeconds + clip.holdSeconds,
+      ),
+    0,
+  );
+  const scrollTimelineDurationSeconds =
+    scrollPageClips.length > 0
+      ? Math.max(0.1, scrollPageBarDurationSeconds)
+      : deterministicDurationSeconds;
   const scrollFullFrameCount = Math.max(
     1,
-    Math.ceil(deterministicDurationSeconds * fps),
+    Math.ceil(scrollTimelineDurationSeconds * DEFAULT_CAPTURE_SCROLL_FPS),
   );
   const scrollEstimatedFrameCount =
     scrollRangeMode === "frame-range"
@@ -2919,6 +2934,16 @@ export function CaptureDirectorToolbar() {
                   </div>
                 )}
                 <div style={rowStyle}>
+                  {scrollRecordValidationErrors.length > 0 && (
+                    <span
+                      data-testid="capture-scroll-record-validation-errors"
+                      role="alert"
+                      title={scrollRecordValidationErrors.join(" ")}
+                      style={{ ...errorStyle, flexBasis: "100%" }}
+                    >
+                      {scrollRecordValidationErrors.join(" ")}
+                    </span>
+                  )}
                   <button
                     type="button"
                     onClick={acceptScrollRenderShell}
