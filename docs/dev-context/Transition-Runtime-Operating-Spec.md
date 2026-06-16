@@ -221,6 +221,22 @@ If target geometry/material/texture/data is not ready:
 - hold source or attach target at current transition opacity when ready
 - record readiness in debug state
 
+## Sanctioned non-transition camera moves
+
+Some camera moves do not create a transition context and must not. The
+free-look return / pose-restore tweens in `PageController` (`tweenTo(pose,
+...)`) move the camera back to the active page's pose without a layer
+transition, commit gate, or visibility envelope. This is correct: a same-page
+camera return changes no effective page/environment state, so there is nothing
+to transition.
+
+Rule: any path that changes effective page or environment state must go through
+`transitionEffectiveLayersForPage` plus the commit gate. A bare pose tween is
+allowed only when the effective graph is unchanged (camera-only return on the
+same page). Do not reuse the free-look pose-tween paths to land on a different
+page or a changed environment; that would silently skip layer transitions,
+readiness handling, and final commit (review success-factor A8).
+
 ## Protected MT scalar/cloud path
 
 MT full-density scalar/cloud transitions currently behave better than other paths.

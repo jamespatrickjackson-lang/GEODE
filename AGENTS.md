@@ -85,6 +85,9 @@ APIs.
   ticks when navigation changes that context; do not repair this with page
   fixture edits.
 - When Global Settings/page 00 is selected, `previewEnvironmentBase` must still
+  preserve page `visibilityOverrides` so authored page navigation can show
+  section, seismic, topo, and layer-presence state while previewing the Global
+  Settings base. It must also
   preserve MT Resistivity Cells authored Log10 Resistivity Window fields
   through the Utah FORGE preview field map. A Log10 Resistivity Window-authored
   page should not require an All Valid Cells/Log10 Resistivity Window click to

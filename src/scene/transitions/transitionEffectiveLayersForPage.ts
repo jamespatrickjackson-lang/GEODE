@@ -24,6 +24,7 @@ import {
 } from "./transitionRenderGraphAdapter";
 import { buildTransitionExecutionPlan } from "./transitionExecutionPlan";
 import { createTransitionCommitGate } from "./transitionCommitGate";
+import { DEFAULT_DETACHED_FADE_MS } from "./transitionDefaults";
 import {
   SCENE_SECTION_AFFECTED_LAYER_IDS,
   SCALAR_TRANSITION_STYLE_FIELDS,
@@ -36,7 +37,7 @@ import {
   type NavigationReason,
 } from "./transitionStyles";
 
-const DEFAULT_LAYER_FADE_MS = 800;
+const DEFAULT_LAYER_FADE_MS = DEFAULT_DETACHED_FADE_MS;
 type EffectiveLayerStyle = ReturnType<typeof effectiveStyle>;
 type StyleField = keyof EffectiveLayerStyle;
 
@@ -743,6 +744,7 @@ export function transitionEffectiveLayersForPage(
   );
   this.layerTweens.clear();
   this.scalarStyleTweens.clear();
+  this.visibilityToggleFades?.clear();
   this.workingAreaFocusTween = null;
   this.sceneSectionStyleTween = null;
   this.sceneSectionHelperTransitionOpacity = 1;
@@ -1150,7 +1152,13 @@ export function transitionEffectiveLayersForPage(
       JSON.stringify(toStyle.sectionIsoTargetIds ?? null)
     );
   });
-  if (sceneSectionStyleChanged || sectionIsoRootStateChanged) {
+  // Crossfade the Section ISO overlay only when it actually changes
+  // incompatibly: an ISO state change (enter/exit/different targets/scalar) or a
+  // discrete/dissolve section change. A pure numeric MOVE (plane slides, ISO
+  // settings unchanged) must NOT crossfade -- the live overlay follows the cut
+  // via `applyMtVolumeCutIsoFollowForMoveTween` (DEC-168). Crossfading a move
+  // holds the source contours at the source position and pops the target in.
+  if (sceneSectionDiscreteChanged || sectionIsoRootStateChanged) {
     this.beginSectionIsoOverlayTransition(
       fromSceneSectionStyle,
       targetSceneSectionStyle,

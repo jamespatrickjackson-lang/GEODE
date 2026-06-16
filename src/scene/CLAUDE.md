@@ -1,21 +1,25 @@
 # src/scene — Agent Guardrails
 
-Three.js scene runtime. R2 split work reduced `SceneManager.ts` below
-the target and moved scene subsystems into focused helper modules.
+Three.js scene runtime. The R2 split moved scene subsystems into focused
+helper modules, but `SceneManager.ts` and `sceneSectionController.ts` have
+since grown well past their post-split targets; treat both as large files
+again. Line counts below are approximate — verify with a count before
+assuming, and never `Read` either in full without `offset`+`limit`.
 
 ## File Size Map
 
 Large — prefer `Grep` and read by line range:
 
-- `SceneManager.ts` — ~2,550 lines (down from ~12,000; target met).
-  Still central orchestration for scene lifecycle and public runtime API.
+- `SceneManager.ts` — ~5,300 lines (over the post-R2 ~2,550 target).
+  Central orchestration for scene lifecycle and public runtime API.
+- `section/sceneSectionController.ts` — ~4,500 lines (over the stated
+  1,200-line cap). Scene-section apply/helper/opacity runtime; the largest
+  extracted scene helper.
 - `terrainMaterial.ts` — ~1,550 lines. Terrain shader material, draping,
   edge fade.
 
 Smaller (safe to read whole):
 
-- `section/sceneSectionController.ts` — ~1,180 lines; largest extracted
-  scene helper and still below the 1,200-line cap.
 - `handles/sceneHandleControllers.ts`, `isoOverlays/volumeCutIsoOverlays.ts`,
   `terrain/terrainStyleController.ts`, `workingArea/workingAreaFocusController.ts`,
   and `transitions/layerTweenRuntime.ts` — R2 extracted helpers.

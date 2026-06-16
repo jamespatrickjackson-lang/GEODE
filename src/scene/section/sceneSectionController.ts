@@ -19,7 +19,6 @@ import {
   UTAH_FORGE_MT_THRESHOLD_SURFACES_LAYER_ID,
   UTAH_FORGE_MT_TOP_CONTACT_SURFACE_LAYER_ID,
   UTAH_FORGE_MT_TOP_SURFACE_LAYER_ID,
-  UTAH_FORGE_SCENE_SECTION_LAYER_ID,
   UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID,
 } from "../../projectModules/utahForge/layerIds";
 import { clamp01, clampRange } from "../styles/styleUtils";
@@ -2898,7 +2897,17 @@ export function interpolatedSceneSectionStyle(this: any,
 
 export function currentSceneSectionStyle(this: any, nowMs = performance.now()): EditableStyle {
   const tween = this.sceneSectionStyleTween;
-  if (!tween) return this.styleForLayer(UTAH_FORGE_SCENE_SECTION_LAYER_ID);
+  // With no active tween, the current section is whatever was last APPLIED.
+  // `lastSceneSectionStyle` is updated by every `applySceneSectionPlanes` (page
+  // load, transition commit, active-to-inactive clear, editor apply) and is the
+  // canonical current section used everywhere else (ISO overlays, helper
+  // visibility, preview ops). `styleForLayer(SCENE_SECTION_LAYER)` is the
+  // `applyStyle`-only authored cache, which the page-load and transition paths
+  // (they call `applySceneSectionPlanes` directly) never update -- reading it
+  // here made `reapplySceneSectionPlanes()` resurrect a cleared section or erase
+  // a just-committed one, desyncing the render from the authored state until an
+  // editor `applyStyle(SECTION)` (a button click) refreshed the cache.
+  if (!tween) return this.lastSceneSectionStyle;
   const t =
     tween.durationMs <= 0 ? 1 : (nowMs - tween.startMs) / tween.durationMs;
   // DEC-164: never snap the whole section because one frame changed. Surviving
@@ -3641,6 +3650,10 @@ export function rebuildSceneSectionHelpers(this: any,
       controlGroup.position.copy(planeCenter);
       controlGroup.quaternion.copy(planeQuaternion);
       controlGroup.userData.sceneSectionHelper = true;
+      // Tag so per-frame `repositionSceneSectionFrameHelpers` can slide/orient
+      // this whole frame helper (outline + handles) to follow the interpolated
+      // cut during a move tween, instead of waiting for the start/commit rebuild.
+      controlGroup.userData.sceneSectionFrameControlGroupFrameId = plane.frameId;
       controlGroup.renderOrder = SCENE_SECTION_CONTROL_OVERLAY_RENDER_ORDER;
 
       const outlineWidthM = referenceOutlineWidthM;
@@ -4108,6 +4121,84 @@ export function rebuildSceneSectionHelpers(this: any,
   }
 }
 
+// Per-frame helper follow during a move tween. The section clip/content is
+// driven by shader uniforms and interpolates smoothly, but the frame helper
+// geometry is rebuilt only at tween start/final commit, so it holds the source
+// pose and snaps at commit. This slides + orients the existing per-frame
+// controlGroups (frame outline + push/pull handles) to the interpolated cut
+// each transition frame. It is a pure transform of existing objects -- NO
+// geometry rebuild, materials, dash phase, or opacity are touched -- so the
+// per-tick-rebuild regressions (cone flat-cube, dash drift, ISO dim-then-snap)
+// cannot recur. Extents (outline size) and the scalar ISO follow are separate.
+export function repositionSceneSectionFrameHelpers(
+  this: any,
+  planes: ResolvedSceneSectionPlane[],
+  sectionFrames: ResolvedSceneSectionFrame[],
+): void {
+  const runtime = this.sceneSectionRuntime;
+  if (!runtime?.group?.visible) return;
+  const controlGroups = new Map<string, THREE.Object3D>();
+  for (const child of runtime.group.children) {
+    const frameId = child.userData?.sceneSectionFrameControlGroupFrameId;
+    if (typeof frameId === "string") controlGroups.set(frameId, child);
+  }
+  if (controlGroups.size === 0) return;
+  for (const plane of planes) {
+    const group = controlGroups.get(plane.frameId);
+    if (!group) continue;
+    const frame =
+      sectionFrames.find(
+        (candidate: ResolvedSceneSectionFrame) =>
+          candidate.frameId === plane.frameId,
+      ) ?? null;
+    const tangentA = frame?.axisAVector.clone() ?? plane.axisAVector.clone();
+    const tangentB = frame?.axisBVector.clone() ?? plane.axisBVector.clone();
+    const planeCenter = frame?.center.clone() ?? plane.point.clone();
+    // Same proper (right-handed) basis as rebuildSceneSectionHelpers (DEC-165):
+    // third column = tangentA x tangentB so the Y frame is not mangled.
+    const orientationNormal = new THREE.Vector3()
+      .crossVectors(tangentA, tangentB)
+      .normalize();
+    const planeBasis = new THREE.Matrix4().makeBasis(
+      tangentA,
+      tangentB,
+      orientationNormal,
+    );
+    group.position.copy(planeCenter);
+    group.quaternion.setFromRotationMatrix(planeBasis);
+
+    // Extents follow: resize the outline rectangle to the interpolated frame
+    // bounds. Only the (cheap) outline geometry is rebuilt; the stored line
+    // width is reused so no material is recreated. Handles ride the control
+    // group transform; their edge offsets refresh at the commit rebuild.
+    if (frame) {
+      const centerA = planeCenter.dot(tangentA);
+      const centerB = planeCenter.dot(tangentB);
+      const minLocalA = frame.minAM - centerA;
+      const maxLocalA = frame.maxAM - centerA;
+      const minLocalB = frame.minBM - centerB;
+      const maxLocalB = frame.maxBM - centerB;
+      group.traverse((child: THREE.Object3D) => {
+        if (child.userData?.sceneSectionOutline !== true) return;
+        const mesh = child as THREE.Mesh;
+        const widthM =
+          typeof child.userData?.sceneSectionFrameLineWidthM === "number"
+            ? child.userData.sceneSectionFrameLineWidthM
+            : SCENE_SECTION_MIN_HELPER_SIZE_M * 0.02;
+        const nextGeometry = buildSceneSectionOutlineGeometry(
+          minLocalA,
+          maxLocalA,
+          minLocalB,
+          maxLocalB,
+          widthM,
+        );
+        mesh.geometry?.dispose();
+        mesh.geometry = nextGeometry;
+      });
+    }
+  }
+}
+
 function resolveSceneSectionMaskContext(this: any, style: EditableStyle) {
   const planes = this.sceneSectionActivePlanes(style);
   const layerTargets = this.sceneSectionLayerIds(style);
@@ -4258,27 +4349,53 @@ export function applySceneSectionPlanes(
   }
   const materialApplyMs = transitionDebugMs(performance.now() - stageStart);
   stageStart = performance.now();
-  if (!options?.transitionFrame) {
+  // A pure MOVE tween (frames interpolate, none dissolve) has no dual-mask, so
+  // the helper opacity stays ~1 throughout. That makes it safe to regenerate
+  // the cut-derived helpers (frame, cones, ground trace, axes, ISO frame
+  // traces) AND the scalar ISO (isobar/isoline/band) overlays at the
+  // interpolated cut every frame, so all of them follow the move instead of
+  // holding the source pose and snapping at commit (DEC-168, extended). The old
+  // per-tick-rebuild regressions do not apply here: the cone is a lit
+  // MeshLambert (no ShaderMaterial flat-cube), the dashed trace follows the
+  // moving line, and helper opacity is ~1 so there is no dim-then-snap. The
+  // start/commit-only gating still holds for non-move (dissolve / dual-mask)
+  // transitions, where per-frame regeneration WOULD snap the dissolving frames.
+  const moveFollowFrame =
+    options?.transitionFrame === true && !options?.maskTransition;
+  if (!options?.transitionFrame || moveFollowFrame) {
     this.rebuildSceneSectionHelpers(
       style,
       planes,
       layerTargets,
       productTargets,
     );
+  } else {
+    // Dual-mask (some frames dissolve): slide the surviving frame helpers only.
+    repositionSceneSectionFrameHelpers.call(this, planes, sectionFrames);
   }
   const helperRebuildMs = transitionDebugMs(performance.now() - stageStart);
   stageStart = performance.now();
   this.applySceneSectionHelperTransitionOpacity();
   const helperOpacityMs = transitionDebugMs(performance.now() - stageStart);
   stageStart = performance.now();
+  // The scalar ISO (isobands/isolines/bands) is NOT regenerated on transition
+  // frames here: doing so registers crossfade transition roots (making a move
+  // crossfade instead of follow) and clears the live overlay when the target
+  // page has the ISO off (making an exit snap instead of fade). The Section ISO
+  // transition owns it during a transition (crossfade for state changes; the
+  // sectionIsoStable envelope protects an unchanged overlay). Following the cut
+  // for a pure move is handled by `applyMtVolumeCutIsoFollowForMoveTween`.
   if (!options?.transitionFrame) {
     this.updateMtVolumeCutIsoOverlays(
       this.styleForLayer(UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID),
     );
+  } else if (moveFollowFrame) {
+    this.applyMtVolumeCutIsoFollowForMoveTween?.();
   }
-  const mtCutIsoUpdate = options?.transitionFrame
-    ? null
-    : this.lastMtVolumeCutIsoUpdateDebug ?? null;
+  const mtCutIsoUpdate =
+    options?.transitionFrame && !moveFollowFrame
+      ? null
+      : this.lastMtVolumeCutIsoUpdateDebug ?? null;
   const mtCutIsoMs = transitionDebugMs(performance.now() - stageStart);
   stageStart = performance.now();
   if (!options?.transitionFrame) {

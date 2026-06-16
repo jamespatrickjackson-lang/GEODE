@@ -167,6 +167,13 @@ for (const field of [
     `transition spatial channels include ${field}`,
   );
 }
+// DEC-166: atmosphere puff/texture fields are baked into per-puff geometry and
+// the mist texture at build time (every one participates in
+// localAtmosphereStructuralKey), so they are declared discrete crossfade in
+// LOCAL_ATMOSPHERE_DISCRETE_STYLE_FIELDS, not interpolable scalar channels.
+// Drift speed/direction and render order are live-applied at transition start
+// (continuous motion / sort order) and are intentionally not transition
+// channels at all.
 for (const field of [
   "atmosphereDensity",
   "atmosphereSoftness",
@@ -176,16 +183,11 @@ for (const field of [
   "atmosphereVerticalFalloff",
   "atmosphereEdgeFade",
   "atmosphereSeed",
-  "atmosphereDriftSpeedMps",
-  "atmosphereDriftDirectionX",
-  "atmosphereDriftDirectionY",
-  "atmosphereDriftDirectionZ",
-  "atmosphereRenderOrder",
 ]) {
   assert.match(
     transitionStylesSource,
     new RegExp(`"${field}"`),
-    `transition scalar channels include ${field}`,
+    `atmosphere discrete crossfade channels include ${field}`,
   );
 }
 for (const field of [

@@ -106,6 +106,7 @@ import {
   type TransitionCommitTrace,
 } from "./transitions/transitionCommitGate";
 import { replanTransitionEntityReadiness } from "./transitions/transitionExecutionPlan";
+import { DEFAULT_DETACHED_FADE_MS } from "./transitions/transitionDefaults";
 import {
   AreaOutlineController,
   type AreaOutlinePreview,
@@ -321,9 +322,21 @@ export type {
 } from "./outlines/AreaOutlineController";
 
 // Fade duration matches the markdown overlay panel (OverlayDisplay's
-// FADE_MS) so chapter transitions feel coherent across UI surfaces.
-const DEFAULT_LAYER_FADE_MS = 800;
+// FADE_MS) so chapter transitions feel coherent across UI surfaces. Shared
+// detached-fade default (A7) so this and SCENE_OVERLAY_FADE_MS tune together.
+const DEFAULT_LAYER_FADE_MS = DEFAULT_DETACHED_FADE_MS;
 const READINESS_ENTER_MIN_REMAINING_MS = 150;
+// Editor/legend visibility toggles fade rather than snap (7.3), matching the
+// slider-style standard. Page loads and transitions stay instant.
+const VISIBILITY_TOGGLE_FADE_MS = 360;
+// Throttle for regenerating the Section ISO contours so they follow a moving
+// section cut. The contour rebuild is ~30-40ms, so regenerating every frame
+// would tank the transition; ~70ms gives a stepped follow that reads as smooth
+// while keeping headroom (DEC-168).
+const SECTION_ISO_MOVE_FOLLOW_INTERVAL_MS = 70;
+function easeInOutCubic(t: number): number {
+  return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+}
 const DEFAULT_CONTOUR_DISTANCE_FADE_NEAR_M = 80;
 const DEFAULT_CONTOUR_DISTANCE_FADE_FAR_M = 420;
 const DEFAULT_CONTOUR_FAR_LINE_SCALE = 0.28;
@@ -780,6 +793,14 @@ export class SceneManager {
   // Page-to-page layer fades. Keyed by layer id; frameUpdate advances material
   // opacity and terrain-composite uniforms until the target page state settles.
   private layerTweens = new Map<string, LayerOpacityTween>();
+  // Editor/legend visibility-toggle fades (7.3). Kept separate from layerTweens
+  // so a non-transition toggle never reaches the transition completion / commit
+  // gate bookkeeping (which falls back to lastTransitionCommitState). Advanced
+  // by frameUpdate; an OFF fade hides the group only once it reaches 0.
+  private visibilityToggleFades = new Map<
+    string,
+    { from: number; to: number; startMs: number; durationMs: number; hideOnDone: boolean }
+  >();
   private scalarStyleTweens = new Map<string, ScalarStyleTween>();
   private layerTransitionSnapshots = new Map<string, LayerTransitionSnapshot>();
   private sectionIsoOverlayTransition: SectionIsoOverlayTransition | null =
@@ -1216,6 +1237,101 @@ export class SceneManager {
     this.reapplyWorkingAreaFocus();
   }
 
+  // 7.3: editor/legend visibility toggles fade the changed layers instead of
+  // binary-flipping them, matching the slider-style standard the MT mode
+  // buttons set. Unchanged layers keep their state with no work. PageController
+  // page loads and the capture exporter keep calling the instant `setVisible`.
+  setVisibleFaded(nextVisible: ReadonlySet<string>): void {
+    // Never fade against a live page transition; fall back to the instant path
+    // (the editor live-apply gate normally defers toggles during transitions,
+    // this is defence in depth).
+    if (this.activeSceneTransitionContext) {
+      this.setVisible(nextVisible);
+      return;
+    }
+    const prev = this.currentVisibleLayerIds ?? new Set<string>();
+    const now = performance.now();
+    for (const [id, group] of this.layers) {
+      const wasVisible = prev.has(id);
+      const willVisible = nextVisible.has(id);
+      if (wasVisible === willVisible) {
+        if (!this.visibilityToggleFades.has(id)) group.visible = willVisible;
+        continue;
+      }
+      const authored = this.authoredLayerOpacity(id);
+      const current = this.currentVisibilityFadeOpacity(id);
+      group.visible = true; // stay rendered while the fade runs (both directions)
+      this.visibilityToggleFades.set(id, {
+        from: current ?? (willVisible ? 0 : authored),
+        to: willVisible ? authored : 0,
+        startMs: now,
+        durationMs: VISIBILITY_TOGGLE_FADE_MS,
+        hideOnDone: !willVisible,
+      });
+    }
+    this.currentVisibleLayerIds = nextVisible;
+    // Same post-visibility bookkeeping as setVisible so aliases, graticules,
+    // topo-aligned overlays, sections, and working-area stay correct.
+    for (const id of Object.keys(CASE_STUDY_B_DEMO_LAYER_ALIASES)) {
+      this.applyCaseStudyBDemoLayerAlias(id, this.styleForLayer(id));
+    }
+    for (const id of this.topoGraticuleLayerIds()) {
+      this.topoRuntime.applyGraticuleStyle(id, this.styleForLayer(id));
+    }
+    this.reapplyTopoAlignedOverlays();
+    this.reapplySceneSectionPlanes();
+    this.reapplyWorkingAreaFocus();
+    // Apply the start opacity immediately so the section/alias reapply above
+    // cannot leave a one-frame full-opacity flash before the first tick.
+    for (const [id, fade] of this.visibilityToggleFades) {
+      this.applyLayerTransitionRenderOpacity(id, fade.from, fade.from > 0.001 ? 1 : 0);
+    }
+  }
+
+  private authoredLayerOpacity(id: string): number {
+    const style = this.styleForLayer(id);
+    if (
+      style &&
+      typeof style.opacity === "number" &&
+      Number.isFinite(style.opacity)
+    ) {
+      return clamp01(style.opacity);
+    }
+    return clamp01(this.baseOpacityForLayer(id));
+  }
+
+  private currentVisibilityFadeOpacity(id: string): number | null {
+    const fade = this.visibilityToggleFades.get(id);
+    if (!fade) return null;
+    const t =
+      fade.durationMs <= 0 ? 1 : (performance.now() - fade.startMs) / fade.durationMs;
+    const eased = t >= 1 ? 1 : easeInOutCubic(t);
+    return fade.from + (fade.to - fade.from) * eased;
+  }
+
+  private tickVisibilityToggleFades(nowMs: number): void {
+    if (this.visibilityToggleFades.size === 0) return;
+    for (const [id, fade] of this.visibilityToggleFades) {
+      const t =
+        fade.durationMs <= 0 ? 1 : (nowMs - fade.startMs) / fade.durationMs;
+      const done = t >= 1;
+      const eased = done ? 1 : easeInOutCubic(t);
+      const opacity = fade.from + (fade.to - fade.from) * eased;
+      this.applyLayerTransitionRenderOpacity(
+        id,
+        opacity,
+        opacity > 0.001 ? 1 : 0,
+      );
+      if (done) {
+        if (fade.hideOnDone) {
+          const group = this.layers.get(id);
+          if (group) group.visible = false;
+        }
+        this.visibilityToggleFades.delete(id);
+      }
+    }
+  }
+
   private targetOpacityForLayer(
     environment: EnvironmentSetup,
     page: PresentationPage,
@@ -1590,11 +1706,21 @@ export class SceneManager {
     id: string,
     group: THREE.Group,
   ): boolean {
-    return (
-      this.isTopoSurfaceLayerId(id) ||
-      this.layerHasScalarPreviewData(group) ||
-      id === UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID
-    );
+    if (this.isTopoSurfaceLayerId(id)) return true;
+    if (id === UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID) return true;
+    // Scalar-tween eligibility is authoritative from the layer spec type,
+    // independent of load timing (DEC-166, review finding 2.3): a
+    // scalar-colored point cloud or scalar volume qualifies before its async
+    // scalar data attaches to geometry, so the same authored change no longer
+    // classifies `continuous` or `none` depending on whether the load happened
+    // to finish at transition setup. Geometry-presence stays as a secondary
+    // readiness OR for loaded layers whose spec type falls through. The
+    // full-density MT layer is also `pointcloud`, but its transition kind is
+    // special-cased to `full-density-scalar` at the classifier, so this path
+    // does not alter the protected MT scalar behavior.
+    const specType = this.layerSpecFor(id)?.type;
+    if (specType === "pointcloud" || specType === "volume") return true;
+    return this.layerHasScalarPreviewData(group);
   }
 
   private cloneTransitionUserData(
@@ -3596,6 +3722,31 @@ export class SceneManager {
     );
   }
 
+  // DEC-168: during a pure section MOVE the ISO does NOT crossfade, so the live
+  // overlay must be regenerated at the interpolated cut to follow it. The
+  // contour rebuild is expensive, so it is throttled -- the cut follows in
+  // steps (still far smoother than the source-position snap of a crossfade).
+  // If a crossfade IS active (an ISO state change owns the overlay) or the ISO
+  // is off, this is a no-op.
+  private lastSectionIsoMoveFollowMs = 0;
+  applyMtVolumeCutIsoFollowForMoveTween(): void {
+    if (this.sectionIsoOverlayTransition) return;
+    const now = performance.now();
+    if (
+      now - this.lastSectionIsoMoveFollowMs <
+      SECTION_ISO_MOVE_FOLLOW_INTERVAL_MS
+    ) {
+      return;
+    }
+    this.lastSectionIsoMoveFollowMs = now;
+    const volStyle = this.styleForLayer(
+      UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID,
+    );
+    if (volStyle.sectionIsoEnabled === true) {
+      this.updateMtVolumeCutIsoOverlays(volStyle, { bypassTransitionHold: true });
+    }
+  }
+
   seismicVolumeIsoOverlayGroup(seismicLayer: THREE.Group): THREE.Group {
     return seismicVolumeIsoOverlayGroupImpl.call(this, seismicLayer);
   }
@@ -4301,6 +4452,7 @@ export class SceneManager {
       : null;
     this.layerTweens.clear();
     this.scalarStyleTweens.clear();
+    this.visibilityToggleFades.clear();
     this.workingAreaFocusTween = null;
     this.sceneSectionStyleTween = null;
     this.sceneSectionHelperTransitionOpacity = 1;
@@ -4347,6 +4499,7 @@ export class SceneManager {
   ): void {
     this.layerTweens.clear();
     this.scalarStyleTweens.clear();
+    this.visibilityToggleFades.clear();
     this.workingAreaFocusTween = null;
     this.sceneSectionStyleTween = null;
     this.sceneSectionHelperTransitionOpacity = 1;
@@ -5067,6 +5220,24 @@ export class SceneManager {
   }
 
   /**
+   * Deterministic settle when the tab regains visibility mid-transition (A4).
+   * RAF is throttled or paused while the tab is hidden, but `performance.now()`
+   * keeps advancing, so on regain every transition clock is already past its
+   * end. Run the per-frame transition stages once, in their fixed order
+   * (layer/section/ISO tweens via `tickLayerTweens`, then the environment scene
+   * transition), so the catch-up lands deterministically instead of each
+   * subsystem independently detecting overrun in an order never exercised
+   * during normal play. The interrupt-finalize safety net (5.2) guarantees the
+   * context is finalized even if the camera completion callback never fires.
+   */
+  settleActiveTransitionAfterVisibilityRegain(): void {
+    if (!this.activeSceneTransitionContext) return;
+    const nowMs = performance.now();
+    this.tickLayerTweens(nowMs);
+    this.updateEnvironmentSceneTransitionFrame(nowMs);
+  }
+
+  /**
    * Per-frame tick. Drives scene-overlay opacity tweens and any
    * camera-locked sun updates.
    */
@@ -5080,6 +5251,7 @@ export class SceneManager {
     stageStart = performance.now();
 
     this.tickLayerTweens(nowMs);
+    this.tickVisibilityToggleFades(nowMs);
     const layerTweensMs = transitionDebugMs(performance.now() - stageStart);
     stageStart = performance.now();
 

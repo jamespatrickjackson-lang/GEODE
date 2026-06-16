@@ -694,7 +694,6 @@ function pageWithoutLayerDeltas(
 ): PresentationPage {
   if (!page.layerOverrides && !page.visibilityOverrides) return page;
   const next = { ...page };
-  delete next.visibilityOverrides;
 
   if (!page.layerOverrides || !previewLayerOverrideFields) {
     delete next.layerOverrides;

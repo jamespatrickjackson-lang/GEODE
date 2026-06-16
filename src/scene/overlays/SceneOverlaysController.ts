@@ -13,8 +13,11 @@ import {
 } from "../../loaders/loadSceneOverlays";
 import { debugLog } from "../../utils/debugLog";
 import { getHeightSampler } from "../heightSampler";
+import { DEFAULT_DETACHED_FADE_MS } from "../transitions/transitionDefaults";
 
-export const SCENE_OVERLAY_FADE_MS = 800;
+// Non-transition overlay applies (editor toggles, mount-time apply) share the
+// detached-fade default (A7). Transition overlay applies take the page clock.
+export const SCENE_OVERLAY_FADE_MS = DEFAULT_DETACHED_FADE_MS;
 const SCENE_OVERLAY_END_CLAMP_MIN_MS = 150;
 
 /**

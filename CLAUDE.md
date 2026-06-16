@@ -83,6 +83,9 @@ copy under review, and required wording from tools, tests, or external APIs.
   ticks when navigation changes that context; do not repair this with page
   fixture edits.
 - When Global Settings/page 00 is selected, `previewEnvironmentBase` must still
+  preserve page `visibilityOverrides` so authored page navigation can show
+  section, seismic, topo, and layer-presence state while previewing the Global
+  Settings base. It must also
   preserve MT Resistivity Cells authored Log10 Resistivity Window fields
   through the Utah FORGE preview field map. A Log10 Resistivity Window-authored
   page should not require an All Valid Cells/Log10 Resistivity Window click to
@@ -156,7 +159,10 @@ without `offset`+`limit`, and prefer `Grep` first to locate the target
 range:
 
 - `src/editor/LayerPanel.tsx` (~2,500 lines; R1 split target met)
-- `src/scene/SceneManager.ts` (~2,550 lines; R2 split target met)
+- `src/scene/SceneManager.ts` (~5,300 lines; grew back past the post-R2
+  ~2,550 target)
+- `src/scene/section/sceneSectionController.ts` (~4,500 lines; over the
+  stated 1,200-line cap)
 - `src/editor/EnvironmentScenePanel.tsx` (~3,800 lines)
 - `src/editor/PagePanel.tsx` (~2,400 lines)
 - `src/editor/topoMap/TopoMapPanel.tsx` (~2,100 lines)

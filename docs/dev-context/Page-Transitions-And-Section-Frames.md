@@ -29,6 +29,13 @@ Skipping this routing has produced the regressions enumerated in **Known
 regressions** below. The runtime fixes are sequenced; the rules here are
 durable.
 
+> Line numbers in this doc are approximate and drift as the (large) source
+> files change. `sceneSectionController.ts` and `SceneManager.ts` are several
+> thousand lines each. Locate code by the named symbol (`rebuildSceneSectionHelpers`,
+> `makeSceneSectionConeMaterial`, `LayerTransitionKind`,
+> `transitionEnvelopeAllowsLayerImpl`, `applySceneSectionHelperTransitionOpacity`),
+> not by the `#Lx` anchor. The rules are the contract; the anchors are hints.
+
 ## Page-agnostic scope rule
 
 Pages are disposable content fixtures. Page numbers, page IDs, titles, matrix
@@ -52,7 +59,7 @@ global transition family that failed:
 ## Transition kind registry
 
 `LayerTransitionKind` is a closed union declared at
-[transitionStyles.ts:104-108](../../src/scene/transitions/transitionStyles.ts#L104-L108):
+[transitionStyles.ts `LayerTransitionKind`](../../src/scene/transitions/transitionStyles.ts#L133-L137):
 
 | Kind | Meaning |
 | --- | --- |
@@ -126,7 +133,7 @@ when entering or leaving sectioned state.
 Layer classification compares resolved source and target presentation state in
 [transitionEffectiveLayersForPage.ts:160-166](../../src/scene/transitions/transitionEffectiveLayersForPage.ts#L160-L166)
 and is gated by `transitionEnvelopeAllowsLayer()` at
-[layerTweenRuntime.ts:24-32](../../src/scene/transitions/layerTweenRuntime.ts#L24-L32).
+[layerTweenRuntime.ts `transitionEnvelopeAllowsLayerImpl`](../../src/scene/transitions/layerTweenRuntime.ts#L64-L73).
 A "missing slide" is almost always one of: layer outside the envelope, no
 snapshot pair produced, or classification resolving to `none`.
 
@@ -176,7 +183,7 @@ The contract:
    - `makeSceneSectionIsoBandMaterial()` `ShaderMaterial` in
      [sectionIsoOverlay.ts:890-1042](../../src/scene/isoOverlays/sectionIsoOverlay.ts#L890-L1042).
    - `makeSceneSectionConeMaterial()` used by the push/pull handles in
-     [sceneSectionController.ts:2398-2476](../../src/scene/section/sceneSectionController.ts#L2398-L2476).
+     [sceneSectionController.ts `makeSceneSectionConeMaterial`](../../src/scene/section/sceneSectionController.ts#L776).
    - The ISO line, ground trace, and intersection trace materials adjacent to
      the above.
 3. During the tween, only **opacity and uniforms** move:
@@ -206,7 +213,7 @@ The contract:
      them.
 4. The **load-bearing offender today** is
    `rebuildSceneSectionHelpers()` at
-   [sceneSectionController.ts:2845-2851](../../src/scene/section/sceneSectionController.ts#L2845-L2851).
+   [sceneSectionController.ts `rebuildSceneSectionHelpers`](../../src/scene/section/sceneSectionController.ts#L3426).
    `applySceneSectionPlanes(style)` calls it unconditionally, including from
    inside `tickLayerTweens()`. Treat invocation of
    `rebuildSceneSectionHelpers()` from inside a tween tick as a regression.
@@ -296,12 +303,12 @@ Before claiming a transition fix:
 
 | Symptom | Surface | Most likely cause |
 | --- | --- | --- |
-| ISO bands dim then snap back at tween end | [sceneSectionController.ts:2845-2851](../../src/scene/section/sceneSectionController.ts#L2845-L2851) | `rebuildSceneSectionHelpers()` ran every tween tick; `sceneSectionHelperTransitionOpacity` snapped to 1.0 at done. |
+| ISO bands dim then snap back at tween end | [sceneSectionController.ts `rebuildSceneSectionHelpers`](../../src/scene/section/sceneSectionController.ts#L3426) | `rebuildSceneSectionHelpers()` ran every tween tick; `sceneSectionHelperTransitionOpacity` snapped to 1.0 at done. |
 | Top-surface line darkens mid-transition then sharpens | same as above | ISO band material re-instantiated each frame; authored opacity read mid-interpolation; transition opacity stacked on top. |
-| Push/pull handle reads as a flat cube during the tween, becomes a cone at the end | [sceneSectionController.ts:2421](../../src/scene/section/sceneSectionController.ts#L2421) | `makeSceneSectionConeMaterial` `ShaderMaterial` was rebuilt; lighting state lost; cone read as flat shaded until the final rebuild. **Not a geometry swap.** |
+| Push/pull handle reads as a flat cube during the tween, becomes a cone at the end | [sceneSectionController.ts `makeSceneSectionConeMaterial`](../../src/scene/section/sceneSectionController.ts#L776) | `makeSceneSectionConeMaterial` `ShaderMaterial` was rebuilt; lighting state lost; cone read as flat shaded until the final rebuild. **Not a geometry swap.** |
 | Dashed frame-intersection trace flickers / dashes drift | [sceneSectionController.ts:2768-2857](../../src/scene/section/sceneSectionController.ts#L2768-L2857) | Same rebuild cause; dash phase reset per rebuild. |
 | Ground trace width pulses across a page transition | rebuild path | Authored width re-applied through the interpolated style each frame; ribbon mesh re-instantiated. |
-| Authored "slide" between two pages does nothing | [transitionEffectiveLayersForPage.ts:160-166](../../src/scene/transitions/transitionEffectiveLayersForPage.ts#L160-L166), [layerTweenRuntime.ts:24-32](../../src/scene/transitions/layerTweenRuntime.ts#L24-L32) | No formal `slide` kind exists. Diagnose: classification, envelope membership, snapshot pair. Do not add a new kind without a decision entry. |
+| Authored "slide" between two pages does nothing | [transitionEffectiveLayersForPage.ts:160-166](../../src/scene/transitions/transitionEffectiveLayersForPage.ts#L160-L166), [layerTweenRuntime.ts `transitionEnvelopeAllowsLayerImpl`](../../src/scene/transitions/layerTweenRuntime.ts#L64-L73) | No formal `slide` kind exists. Diagnose: classification, envelope membership, snapshot pair. Do not add a new kind without a decision entry. |
 | ISO overlay swaps abruptly between source and target resolved states | composition path | DEC-071 composition violated; an overlay write went through `material.opacity` directly instead of the `authored Ã— transition Ã— attenuation` path. |
 
 ## Cross-reference index

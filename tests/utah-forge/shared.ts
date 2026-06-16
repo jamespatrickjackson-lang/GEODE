@@ -3964,3 +3964,241 @@ export async function sectionIsoSceneState(
     };
   }, groupFilter);
 }
+
+export interface RendererMemoryState {
+  geometries: number | null;
+  textures: number | null;
+}
+
+// Reads the live WebGLRenderer resource counts. Used by the soak diagnostic to
+// assert chained transitions release their cloned subtrees / overlay roots back
+// to the pre-run baseline.
+export async function rendererMemoryState(
+  page: Page,
+): Promise<RendererMemoryState> {
+  return page.evaluate(() => {
+    const renderer = (
+      window as unknown as {
+        __scene?: {
+          renderer?: { info?: { memory?: { geometries?: number; textures?: number } } };
+        };
+      }
+    ).__scene?.renderer;
+    const mem = renderer?.info?.memory;
+    return {
+      geometries: typeof mem?.geometries === "number" ? mem.geometries : null,
+      textures: typeof mem?.textures === "number" ? mem.textures : null,
+    };
+  });
+}
+
+export interface TransitionTickSampleResult {
+  totals: number[];
+  debugSeen: number;
+  activeSeen: number;
+  lastDebug: {
+    active: boolean | null;
+    activeDataTransitionCount: number | null;
+    layerTweenCount: number | null;
+    scalarTweenCount: number | null;
+    snapshotCount: number | null;
+    tickActive: boolean | null;
+    tickTotalMs: number | null;
+    layerTweenIds: string[];
+    scalarTweenIds: string[];
+    snapshotIds: string[];
+  } | null;
+}
+
+// Samples the per-frame transition tick cost (lastLayerTweenTickDebug.totalMs)
+// while a transition is running. Used by the frame-budget diagnostic.
+export async function sampleTransitionTickTotals(
+  page: Page,
+  durationMs: number,
+  intervalMs = 16,
+): Promise<TransitionTickSampleResult> {
+  return page.evaluate(
+    async ({ dur, interval }) => {
+      const manager = (
+        window as unknown as {
+          __scene?: {
+            manager?: {
+              getTransitionDebugState?: () => {
+                active?: boolean;
+                activeDataTransitionCount?: number;
+                layerTweenCount?: number;
+                scalarTweenCount?: number;
+                snapshotCount?: number;
+                layerTweenTick?: {
+                  activeSceneTransition?: boolean;
+                  totalMs?: number;
+                  layerTweenIds?: string[];
+                  scalarTweenIds?: string[];
+                  snapshotIds?: string[];
+                } | null;
+              };
+              lastLayerTweenTickDebug?: {
+                activeSceneTransition?: boolean;
+                totalMs?: number;
+                layerTweenIds?: string[];
+                scalarTweenIds?: string[];
+                snapshotIds?: string[];
+              } | null;
+            };
+          };
+        }
+      ).__scene?.manager;
+      const totals: number[] = [];
+      let debugSeen = 0;
+      let activeSeen = 0;
+      let lastDebug: TransitionTickSampleResult["lastDebug"] = null;
+      const end = performance.now() + dur;
+      while (performance.now() < end) {
+        const transitionDebug = manager?.getTransitionDebugState?.();
+        const tick =
+          transitionDebug?.layerTweenTick ??
+          manager?.lastLayerTweenTickDebug ??
+          null;
+        if (tick) {
+          debugSeen += 1;
+          lastDebug = {
+            active:
+              typeof transitionDebug?.active === "boolean"
+                ? transitionDebug.active
+                : null,
+            activeDataTransitionCount:
+              typeof transitionDebug?.activeDataTransitionCount === "number"
+                ? transitionDebug.activeDataTransitionCount
+                : null,
+            layerTweenCount:
+              typeof transitionDebug?.layerTweenCount === "number"
+                ? transitionDebug.layerTweenCount
+                : null,
+            scalarTweenCount:
+              typeof transitionDebug?.scalarTweenCount === "number"
+                ? transitionDebug.scalarTweenCount
+                : null,
+            snapshotCount:
+              typeof transitionDebug?.snapshotCount === "number"
+                ? transitionDebug.snapshotCount
+                : null,
+            tickActive:
+              typeof tick.activeSceneTransition === "boolean"
+                ? tick.activeSceneTransition
+                : null,
+            tickTotalMs:
+              typeof tick.totalMs === "number" ? tick.totalMs : null,
+            layerTweenIds: Array.isArray(tick.layerTweenIds)
+              ? tick.layerTweenIds.slice()
+              : [],
+            scalarTweenIds: Array.isArray(tick.scalarTweenIds)
+              ? tick.scalarTweenIds.slice()
+              : [],
+            snapshotIds: Array.isArray(tick.snapshotIds)
+              ? tick.snapshotIds.slice()
+              : [],
+          };
+        }
+        const hasActiveTransition =
+          transitionDebug?.active === true &&
+          (transitionDebug.activeDataTransitionCount ?? 0) > 0;
+        if (hasActiveTransition) activeSeen += 1;
+        const total = tick?.totalMs;
+        if (hasActiveTransition && tick?.activeSceneTransition === true && typeof total === "number") {
+          totals.push(total);
+        }
+        await new Promise((r) => setTimeout(r, interval));
+      }
+      return { totals, debugSeen, activeSeen, lastDebug };
+    },
+    { dur: durationMs, interval: intervalMs },
+  );
+}
+
+export interface TransitionCleanupState {
+  layerSnapshotRoots: number;
+  sectionIsoTransitionRoots: number;
+  helperTransitionSnapshots: number;
+  activeContext: boolean;
+  layerTweens: number | null;
+  scalarTweens: number | null;
+  sceneSectionStyleTween: boolean | null;
+  sectionIsoOverlayTransition: boolean | null;
+  hasFinalized: boolean | null;
+  lastCommitReason: string | null;
+  suppressedDuplicateAssertions: number | null;
+}
+
+// Reads the transition cleanup invariants directly from the live scene graph
+// and SceneManager: cloned snapshot roots, Section ISO transition roots, and
+// helper snapshots must all be gone, and the active transition context must be
+// null once a transition (or an interrupted-then-completed sequence) settles.
+export async function transitionCleanupState(
+  page: Page,
+): Promise<TransitionCleanupState> {
+  return page.evaluate(() => {
+    const win = window as unknown as {
+      __scene?: {
+        scene?: {
+          children?: Array<{ userData?: Record<string, unknown> }>;
+        };
+        manager?: {
+          activeSceneTransitionContext?: unknown;
+          layerTransitionSnapshots?: { size?: number };
+          scalarStyleTweens?: { size?: number };
+          layerTweens?: { size?: number };
+          sceneSectionStyleTween?: unknown;
+          sectionIsoOverlayTransition?: unknown;
+          lastTransitionCommitState?: {
+            hasFinalized?: boolean;
+            suppressedDuplicateAssertions?: number;
+            commitTraces?: Array<{ reason?: string }>;
+          } | null;
+        };
+      };
+    };
+    const scene = win.__scene?.scene;
+    const manager = win.__scene?.manager;
+    let layerSnapshotRoots = 0;
+    let sectionIsoTransitionRoots = 0;
+    let helperTransitionSnapshots = 0;
+    for (const child of scene?.children ?? []) {
+      const ud = child.userData ?? {};
+      if (ud.sceneSectionHelperTransitionSnapshot === true)
+        helperTransitionSnapshots += 1;
+      else if (ud.sectionIsoOverlayTransitionRoot === true)
+        sectionIsoTransitionRoots += 1;
+      else if (typeof ud.transitionSnapshotForLayer === "string")
+        layerSnapshotRoots += 1;
+    }
+    const commit = manager?.lastTransitionCommitState ?? null;
+    const commitTraces = commit?.commitTraces ?? [];
+    return {
+      layerSnapshotRoots,
+      sectionIsoTransitionRoots,
+      helperTransitionSnapshots,
+      activeContext: manager?.activeSceneTransitionContext != null,
+      layerTweens:
+        typeof manager?.layerTweens?.size === "number"
+          ? manager.layerTweens.size
+          : null,
+      scalarTweens:
+        typeof manager?.scalarStyleTweens?.size === "number"
+          ? manager.scalarStyleTweens.size
+          : null,
+      sceneSectionStyleTween:
+        manager == null ? null : manager.sceneSectionStyleTween != null,
+      sectionIsoOverlayTransition:
+        manager == null ? null : manager.sectionIsoOverlayTransition != null,
+      hasFinalized: commit ? commit.hasFinalized ?? null : null,
+      lastCommitReason:
+        commitTraces.length > 0
+          ? commitTraces[commitTraces.length - 1]?.reason ?? null
+          : null,
+      suppressedDuplicateAssertions:
+        typeof commit?.suppressedDuplicateAssertions === "number"
+          ? commit.suppressedDuplicateAssertions
+          : null,
+    };
+  });
+}

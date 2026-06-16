@@ -170,16 +170,30 @@ test("scene-section frame transition graph presence requires section enablement"
   );
 });
 
-test("transition frame section applies update uniforms without rebuilding helpers", () => {
+test("section helpers regenerate at start/commit and follow during move tweens, not during dual-mask dissolves (DEC-168)", () => {
   assert.match(
     sceneSectionController,
     /transitionFrame\?:\s*boolean/,
     "applySceneSectionPlanes should expose a transition-frame option.",
   );
+  // A pure move tween is a transition frame with no dual-mask; those regenerate
+  // the cut-derived helpers per frame so they follow (DEC-168).
   assert.match(
     sceneSectionController,
-    /if\s*\(!options\?\.transitionFrame\)\s*\{[\s\S]*rebuildSceneSectionHelpers/,
-    "Helper rebuilds should be gated away from transition frames.",
+    /moveFollowFrame\s*=\s*[\s\S]{0,80}options\?\.transitionFrame\s*===\s*true\s*&&\s*!options\?\.maskTransition/,
+    "move-follow is a transition frame without a dual-mask.",
+  );
+  assert.match(
+    sceneSectionController,
+    /if\s*\(!options\?\.transitionFrame\s*\|\|\s*moveFollowFrame\)\s*\{[\s\S]{0,200}rebuildSceneSectionHelpers/,
+    "Helpers rebuild on full applies and on move-follow frames, so they track the cut.",
+  );
+  // Dual-mask (dissolve) transition frames must NOT rebuild -- they slide the
+  // surviving frame helpers (a rebuild would snap the dissolving frames).
+  assert.match(
+    sceneSectionController,
+    /\}\s*else\s*\{[\s\S]{0,200}repositionSceneSectionFrameHelpers/,
+    "Dual-mask transition frames reposition existing helpers instead of rebuilding.",
   );
   assert.match(
     sceneSectionController,

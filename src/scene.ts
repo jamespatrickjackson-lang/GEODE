@@ -967,6 +967,17 @@ export function mountScene(
   };
   window.addEventListener("resize", onResize);
 
+  // A4: when the tab regains visibility mid-transition, RAF resumes with every
+  // transition clock already past its end. Settle the transition deterministically
+  // on the visibility event rather than letting the next (possibly delayed) RAF
+  // catch up each subsystem in an unexercised order.
+  const onVisibilityChange = () => {
+    if (!document.hidden) {
+      manager.settleActiveTransitionAfterVisibilityRegain();
+    }
+  };
+  document.addEventListener("visibilitychange", onVisibilityChange);
+
   let raf = 0;
   const tick = (timeMs: number) => {
     raf = requestAnimationFrame(tick);
@@ -3578,6 +3589,7 @@ export function mountScene(
   const dispose = () => {
     cancelAnimationFrame(raf);
     window.removeEventListener("resize", onResize);
+    document.removeEventListener("visibilitychange", onVisibilityChange);
     renderer.domElement.removeEventListener("mousemove", onCanvasMouseMove);
     renderer.domElement.removeEventListener("mouseleave", onCanvasMouseLeave);
     renderer.domElement.removeEventListener("mousedown", onCanvasMouseDown);

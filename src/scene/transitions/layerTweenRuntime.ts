@@ -10,6 +10,17 @@ function transitionDebugMs(value: number): number {
   return Number(Math.max(0, value).toFixed(3));
 }
 
+// Review verification item 5.2. In the normal path the camera-completion
+// callback finalizes the transition within the same frame its clock ends. A
+// free-look / cancel interrupt can cancel the camera tween without firing that
+// callback, so the layer + ISO clocks elapse with the transition unfinalized,
+// leaving activeSceneTransitionContext alive and the visibility envelope
+// clamping non-target layers indefinitely. After this grace past the
+// transition end with no finalize, the per-frame tick finalizes on its own
+// clock. The grace is long enough that the normal same-frame camera finalize
+// always wins first; the gate suppresses any later duplicate.
+const INTERRUPT_FINALIZE_GRACE_MS = 150;
+
 function transitionEnvelopeOpacity(
   from: number,
   to: number,
@@ -364,6 +375,28 @@ export function tickLayerTweensImpl(this: any, nowMs: number): void {
         });
         if (!transition || transition.commitState?.hasFinalized) {
           this.activeSceneTransitionContext = null;
+        } else if (
+          nowMs - transition.startMs >=
+            Math.max(transition.durationMs, 0) + INTERRUPT_FINALIZE_GRACE_MS &&
+          this.lastEffectiveEnv &&
+          this.lastEffectivePage
+        ) {
+          // 5.2 finalize-on-interrupt: clock elapsed past the grace with no
+          // camera-driven finalize. Finalize on this clock so the context and
+          // visibility envelope cannot leak. recordTransitionCommitAttempt
+          // tags the interrupted reason; the gate suppresses later duplicates.
+          this.recordTransitionCommitAttempt?.({
+            phase: "tween-completion",
+            attemptedBy: "layerTweenRuntime.tickLayerTweens",
+            reason: "interrupted: clock elapsed without camera-driven finalize",
+          });
+          this.finalizePageTransitionCommit?.(
+            this.lastEffectiveEnv,
+            this.lastEffectivePage,
+          );
+          if (this.activeSceneTransitionContext?.commitState?.hasFinalized) {
+            this.activeSceneTransitionContext = null;
+          }
         }
       }
     }

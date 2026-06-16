@@ -5,6 +5,7 @@ import type {
   ProjectLayerSpec,
 } from "../../pages/types";
 import {
+  UTAH_FORGE_BOREHOLE_LOGS_LAYER_ID,
   UTAH_FORGE_MT_RESISTIVITY_FULL_DENSITY_LAYER_ID,
   UTAH_FORGE_MT_RESISTIVITY_SLICES_LAYER_ID,
   UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID,
@@ -250,35 +251,26 @@ export const SCALAR_TRANSITION_STYLE_FIELDS: readonly (keyof EditableStyle)[] = 
   "sectionIsoBandOpacity",
   "sectionIsoFillOffset",
   "sectionIsoSourceOpacity",
-  "atmosphereDensity",
-  "atmosphereSoftness",
-  "atmospherePuffCount",
-  "atmospherePuffScaleM",
-  "atmosphereScaleJitter",
-  "atmosphereVerticalFalloff",
-  "atmosphereEdgeFade",
-  "atmosphereSeed",
-  "atmosphereDriftSpeedMps",
-  "atmosphereDriftDirectionX",
-  "atmosphereDriftDirectionY",
-  "atmosphereDriftDirectionZ",
-  "atmosphereRenderOrder",
-  "boreholeLogTrackOffsetM",
-  "boreholeLogTrackWidthM",
-  "boreholeLogGammaScaleApi",
-  "boreholeLogResistivityMinOhmM",
-  "boreholeLogResistivityMaxOhmM",
-  "boreholeLogCurveFillCutoff",
-  "boreholeLogCurveOpacity",
-  "boreholeLogCurveLineWidthPx",
-  "boreholeLogDepthMinFt",
-  "boreholeLogDepthMaxFt",
-  "boreholeLogVerticalExaggeration",
-  "boreholeLogLithologyOpacity",
-  "boreholeLogLithologyWidthPx",
+  // Atmosphere puff/texture fields and borehole-log geometry fields were
+  // declared here but never interpolated: those layers carry no geometry
+  // `scalarValues`, so they fail `layerSupportsScalarStyleTween`, and both
+  // resolve their fields by rebuilding geometry at apply time
+  // (`localAtmosphereStructuralKey`, `updateUtahForgeBoreholeLogObject`).
+  // They are explicitly declared discrete instead (DEC-166): atmosphere via
+  // `LOCAL_ATMOSPHERE_DISCRETE_STYLE_FIELDS`, borehole via
+  // `BOREHOLE_LOG_DISCRETE_STYLE_FIELDS`.
   ...TOPO_MAP_PUBLIC_SURFACE_CLIP_NUMERIC_STYLE_FIELDS,
 ];
 
+// Atmosphere puff/texture fields are baked into per-puff sprite geometry and
+// the generated mist texture at build time: every field below participates in
+// `localAtmosphereStructuralKey`, so changing any of them forces
+// `rebuildLocalAtmosphereVolume` (new geometry + texture). None is a live
+// shader uniform, so none can interpolate per frame; they are declared discrete
+// crossfade (DEC-166). Drift speed/direction and render order are the only live
+// atmosphere fields; they apply instantly at transition start (continuous
+// motion / sort order, no visual pop) and are intentionally absent from both
+// the scalar and the discrete lists.
 const LOCAL_ATMOSPHERE_DISCRETE_STYLE_FIELDS: readonly (keyof EditableStyle)[] =
   [
     "atmosphereSubtype",
@@ -298,6 +290,27 @@ const LOCAL_ATMOSPHERE_DISCRETE_STYLE_FIELDS: readonly (keyof EditableStyle)[] =
     "atmosphereEdgeFade",
     "atmosphereSeed",
   ];
+
+// Borehole-log track/curve/lithology fields drive ribbon and column geometry
+// rebuilt by `updateUtahForgeBoreholeLogObject` (depth window, vertical
+// exaggeration, track offset/width, curve fill/width). They carry no geometry
+// `scalarValues`, so they cannot interpolate; a change must snapshot-crossfade
+// rather than snap at transition start (DEC-166).
+const BOREHOLE_LOG_DISCRETE_STYLE_FIELDS: readonly (keyof EditableStyle)[] = [
+  "boreholeLogTrackOffsetM",
+  "boreholeLogTrackWidthM",
+  "boreholeLogGammaScaleApi",
+  "boreholeLogResistivityMinOhmM",
+  "boreholeLogResistivityMaxOhmM",
+  "boreholeLogCurveFillCutoff",
+  "boreholeLogCurveOpacity",
+  "boreholeLogCurveLineWidthPx",
+  "boreholeLogDepthMinFt",
+  "boreholeLogDepthMaxFt",
+  "boreholeLogVerticalExaggeration",
+  "boreholeLogLithologyOpacity",
+  "boreholeLogLithologyWidthPx",
+];
 
 export function scalarStyleNumber(
   style: EditableStyle,
@@ -515,6 +528,13 @@ export function forgeDiscreteDataStyleChanged(
       fromStyle,
       toStyle,
       LOCAL_ATMOSPHERE_DISCRETE_STYLE_FIELDS,
+    );
+  }
+  if (layerId === UTAH_FORGE_BOREHOLE_LOGS_LAYER_ID) {
+    return styleFieldsChanged(
+      fromStyle,
+      toStyle,
+      BOREHOLE_LOG_DISCRETE_STYLE_FIELDS,
     );
   }
   if (!UTAH_FORGE_DISCRETE_CROSSFADE_LAYER_IDS.has(layerId)) return false;

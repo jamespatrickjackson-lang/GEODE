@@ -2585,7 +2585,7 @@ export function EditorProvider({
                 ),
                 displayPage,
               );
-        sceneHandle.manager.setVisible(visEnv);
+        sceneHandle.manager.setVisibleFaded(visEnv);
       }
       dispatch({ type: "TOGGLE_ENV_DEFAULT_VISIBLE", layerId });
     },
@@ -3390,7 +3390,7 @@ export function EditorProvider({
               [layerId]: visible,
             },
           });
-          sceneHandle.manager.setVisible(merged);
+          sceneHandle.manager.setVisibleFaded(merged);
         }
       }
       dispatch({
@@ -3431,7 +3431,7 @@ export function EditorProvider({
             ...page,
             visibilityOverrides: overrides,
           });
-          sceneHandle.manager.setVisible(merged);
+          sceneHandle.manager.setVisibleFaded(merged);
         }
       }
       dispatch({ type: "CLEAR_PAGE_VISIBILITY_OVERRIDE", pageId, layerId });

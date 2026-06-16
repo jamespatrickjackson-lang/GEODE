@@ -193,9 +193,11 @@ Current color swatch toggle examples:
   navigation changes that context, so a stale animation cannot overwrite an
   already-windowed page with an old All Valid Cells style.
 - When the editor is on Global Settings/page 00, `previewEnvironmentBase` may
-  strip unrelated page deltas, but it must preserve MT Resistivity Cells authored
-  Log10 Resistivity Window fields for the full-density MT inversion cell
-  centers. A Log10 Resistivity Window-authored page must load with its
+  strip unrelated page style deltas, but it must preserve page
+  `visibilityOverrides` so authored page navigation still shows section,
+  seismic, topo, and layer-presence state. It must also preserve MT Resistivity
+  Cells authored Log10 Resistivity Window fields for the full-density MT
+  inversion cell centers. A Log10 Resistivity Window-authored page must load with its
   log10 resistivity window and isoline detail without requiring an All Valid
   Cells/Log10
   Resistivity Window click. Fix this through the Utah FORGE preview field map,

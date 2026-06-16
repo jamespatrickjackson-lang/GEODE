@@ -2932,3 +2932,123 @@ right-handed. Making the default basis right-handed would change the resolved
 deferred; the orientation fix is the safe resolution. **Guard:** any
 `makeBasis` fed a frame basis must guarantee a right-handed triple. Locked by
 `tests/tools/scene-section-frame-orientation-source.test.mjs`.
+
+## DEC-166 - Scalar-tween eligibility is spec-driven; atmosphere and borehole fields are declared discrete
+
+**Chose:** three related transition-classification declarations, from review
+findings 2.3, 6.1, and 6.2.
+
+1. **Scalar-tween eligibility (2.3)** is resolved from the layer spec type
+   (`pointcloud`, `volume`) plus the explicit topo-surface and MT-volume
+   paths, independent of load timing. Geometry `scalarValues` presence
+   (`layerHasScalarPreviewData`) remains only a secondary OR for loaded layers
+   whose spec type falls through, never the primary gate.
+2. **Atmosphere fields (6.1)** are declared discrete crossfade
+   (`LOCAL_ATMOSPHERE_DISCRETE_STYLE_FIELDS`). Density, softness, edge fade,
+   vertical falloff, puff count/scale/jitter, seed, subtype, and bounds all
+   participate in `localAtmosphereStructuralKey`, so any change rebuilds the
+   puff geometry and mist texture; none is a live shader uniform. Drift
+   speed/direction and render order are the only live atmosphere fields and
+   apply instantly at transition start.
+3. **Borehole-log fields (6.2)** are declared discrete crossfade
+   (`BOREHOLE_LOG_DISCRETE_STYLE_FIELDS`, keyed on
+   `UTAH_FORGE_BOREHOLE_LOGS_LAYER_ID` in `forgeDiscreteDataStyleChanged`).
+   Track offset/width, gamma/resistivity scales, curve fill/opacity/width,
+   depth window, vertical exaggeration, and lithology opacity/width drive
+   ribbon and column geometry rebuilt by `updateUtahForgeBoreholeLogObject`.
+
+The atmosphere and borehole fields were previously listed in
+`SCALAR_TRANSITION_STYLE_FIELDS` as well, but those layers carry no geometry
+`scalarValues`, so the scalar declaration was dead: the fields never
+interpolated and a change snapped at transition start (borehole) or already
+crossfaded via the atmosphere discrete branch. The duplicates are removed so
+each field is declared in exactly one place.
+
+**Why:** the operating spec requires unsupported channels to be explicitly
+declared discrete, not silently snapped, and requires eligibility that does
+not vary by async load timing. Finding 2.3's earlier partial fix covered only
+the topo surface; this generalizes it to the scalar-capable spec types without
+touching the protected MT full-density path (its kind is special-cased at the
+classifier regardless of this predicate) and without enrolling seismic (spec
+type `seismic`, excluded).
+
+**Guard:** atmosphere/borehole live interpolation would require a
+uniform-driven runtime (no geometry rebuild per change) and a new decision
+entry; until then they stay discrete. Do not re-add atmosphere or borehole
+fields to `SCALAR_TRANSITION_STYLE_FIELDS`. Locked by
+`tests/tools/scalar-tween-eligibility-source.test.mjs` and
+`tests/tools/discrete-field-declaration-source.test.mjs`.
+
+## DEC-167 - Global Settings preview preserves page visibility deltas
+
+**Extends:** DEC-112.
+
+**Considered:** keep `previewEnvironmentBase` stripping both page
+`layerOverrides` and `visibilityOverrides`, preserve only the MT Cell Points
+style fields from DEC-112, or preserve page visibility while still filtering
+unrelated page-local style deltas.
+
+**Chose:** `previewEnvironmentBase` preserves page `visibilityOverrides`.
+Global Settings/page 00 remains a virtual editor target, and page-local style
+deltas can still be filtered through `UTAH_FORGE_PREVIEW_LAYER_OVERRIDE_FIELDS`,
+but layer presence is part of page navigation. A page that authors seismic,
+section, topo, or any other layer as visible must resolve as visible even when
+Global Settings is the selected authoring target.
+
+**Why:** stripping `visibilityOverrides` made section/seismic pages resolve
+their authored style while hiding the parent layer group. The symptom looked
+like sections disappeared after load, but the runtime trace showed valid page
+style, loaded meshes, and `targetVisible:false` during transition
+classification. Visibility is not an unrelated cosmetic delta; it is required
+for the target render graph.
+
+**Guard:** do not fix this with page fixtures, page ids, page indexes, or live
+Utah page-pair logic. The resolver rule is page-agnostic. Locked by
+`tests/tools/preview-environment-visibility-source.test.mjs`.
+
+## DEC-168 - Scene-section helpers and ISO follow the cut during a move tween
+
+**Chose:** during a pure section MOVE tween (frames interpolate, none dissolve,
+so no dual-mask), the cut-derived helpers AND the scalar ISO overlays are
+regenerated at the interpolated cut every transition frame, so they follow the
+move instead of holding the source pose and snapping at commit. A move frame is
+detected as `options.transitionFrame === true && !options.maskTransition`. On
+such frames `applySceneSectionPlanes` runs the full `rebuildSceneSectionHelpers`
+(frame outline, push/pull cones, axes, ground trace, ISO frame-intersection
+traces) plus `updateMtVolumeCutIsoOverlays` / `updateSeismicVolumeCutIsoOverlays`
+(isobars / isolines / bands). Dual-mask (dissolve) transition frames do NOT
+rebuild — they only slide the surviving frame helpers via
+`repositionSceneSectionFrameHelpers` (transform + cheap outline-geometry
+resize), because regenerating dissolving frames would snap them.
+
+**Why:** the section clip/content is shader-uniform driven and interpolates
+smoothly, but the helper geometry and the ISO overlays were rebuilt only at
+tween start/final commit, so they held the source pose and snapped at commit
+while the content moved (user-observed: "frame/isobars/ground-trace/axes hold
+then snap"). Supersedes the "helper geometry rebuilt only at tween start/final
+commit" rule of the Page-Transitions directives for the move-only case.
+
+**Why per-frame rebuild is safe for moves (the regressions that motivated the
+gating do not apply):** for a pure move the helper opacity stays ~1 throughout
+(no dissolve), so there is no ISO dim-then-snap; the cone is a lit
+`MeshLambertMaterial` (not the old ShaderMaterial that read flat); and the
+dashed traces follow the smoothly-moving line. Measured cost on Utah FORGE is
+~4ms/frame (helper rebuild ~1.5ms, ISO update ~0ms after the one-time initial
+generation), well under a 16ms frame.
+
+**Scalar ISO (isobands/isolines/bands):** the Section ISO crossfade now starts
+only on an incompatible change -- `sceneSectionDiscreteChanged ||
+sectionIsoRootStateChanged` (was: any `sceneSectionStyleChanged`). A pure move
+therefore does NOT crossfade (crossfading held the source contours at the
+source position and popped the target in -- the "ISO snaps" symptom); instead
+`applyMtVolumeCutIsoFollowForMoveTween` regenerates the live overlay at the
+interpolated cut so it follows. The contour rebuild is ~40ms, so the follow is
+THROTTLED (`SECTION_ISO_MOVE_FOLLOW_INTERVAL_MS`, ~70ms) -- a stepped follow,
+far smoother than the snap. Exit/enter/target-change still crossfade (the
+overlay fades), which also fixed an earlier regression where a per-frame ISO
+update cleared an exiting overlay instantly instead of fading.
+
+**Guard:** the per-frame helper regeneration is scoped to move-only frames
+(`!maskTransition`); never enable it for dual-mask/dissolve frames. The ISO
+follow runs only when no Section ISO crossfade is active. Locked by
+`tests/tools/scene-section-transition-behavior-source.test.mjs`.
