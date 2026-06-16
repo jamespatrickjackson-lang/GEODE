@@ -185,6 +185,256 @@ test("capture frame-time helper rejects invalid inputs", async () => {
   assert.throws(() => getCaptureFrameTime(1, 0), /fps/);
 });
 
+test("scroll animation timeline normalizes FPS, frame ranges, and progress samples", async () => {
+  const {
+    DEFAULT_CAPTURE_SCROLL_FPS,
+    CAPTURE_SCROLL_FPS_OPTIONS,
+    normalizeCaptureScrollTimeline,
+    resolveCaptureScrollFrameRange,
+    sampleCaptureScrollTimeline,
+    validateCaptureScrollTimeline,
+  } = await importBundled("src/capture/captureScrollTimeline.ts");
+
+  assert.equal(DEFAULT_CAPTURE_SCROLL_FPS, 60);
+  assert.deepEqual(CAPTURE_SCROLL_FPS_OPTIONS, [30, 60, 120]);
+
+  const timeline = normalizeCaptureScrollTimeline({
+    version: 1,
+    fps: 60,
+    durationSeconds: 10,
+    range: { mode: "frame-range", startFrame: 120, endFrame: 239 },
+    pageSource: { mode: "page-bar", fallback: "current-page" },
+    cameraSource: { mode: "camera-path", pathId: "camera-spine" },
+    anchors: [{ id: "intro", label: "Intro", progress: 0, posterFrame: 0 }],
+    outputProfileId: "mp4-review",
+  });
+
+  assert.equal(timeline.fps, 60);
+  assert.deepEqual(resolveCaptureScrollFrameRange(timeline), {
+    startFrame: 120,
+    endFrame: 239,
+    totalFrames: 120,
+  });
+  assert.equal(sampleCaptureScrollTimeline(timeline, 180).normalizedProgress, 0.3);
+
+  const invalidRange = validateCaptureScrollTimeline({
+    ...timeline,
+    range: { mode: "frame-range", startFrame: 240, endFrame: 239 },
+  });
+  assert.equal(invalidRange.valid, false);
+  assert.match(invalidRange.errors.join("\n"), /startFrame/);
+});
+
+test("scroll animation timeline does not silently repair malformed frame ranges", async () => {
+  const {
+    normalizeCaptureScrollTimeline,
+    resolveCaptureScrollFrameRange,
+    validateCaptureScrollTimeline,
+  } = await importBundled("src/capture/captureScrollTimeline.ts");
+
+  const timeline = normalizeCaptureScrollTimeline({
+    version: 1,
+    fps: 60,
+    durationSeconds: 2,
+    range: { mode: "frame-range", startFrame: "bad", endFrame: "also-bad" },
+    pageSource: { mode: "page-bar", fallback: "current-page" },
+    cameraSource: { mode: "camera-path", pathId: "camera-spine" },
+    anchors: [],
+    outputProfileId: "mp4-review",
+  });
+  const validation = validateCaptureScrollTimeline(timeline);
+
+  assert.equal(validation.valid, false);
+  assert.match(validation.errors.join("\n"), /startFrame/);
+  assert.match(validation.errors.join("\n"), /endFrame/);
+  assert.throws(() => resolveCaptureScrollFrameRange(timeline), /Invalid capture scroll timeline/);
+});
+
+test("scroll animation timeline rejects invalid sample frames and clamps terminal progress", async () => {
+  const {
+    normalizeCaptureScrollTimeline,
+    sampleCaptureScrollTimeline,
+  } = await importBundled("src/capture/captureScrollTimeline.ts");
+
+  const timeline = normalizeCaptureScrollTimeline({
+    version: 1,
+    fps: 60,
+    durationSeconds: 1,
+    range: { mode: "full" },
+    pageSource: { mode: "page-bar", fallback: "current-page" },
+    cameraSource: { mode: "camera-path", pathId: "camera-spine" },
+    anchors: [],
+    outputProfileId: "mp4-review",
+  });
+
+  for (const frameIndex of [Number.NaN, Infinity, 1.5, -1]) {
+    assert.throws(
+      () => sampleCaptureScrollTimeline(timeline, frameIndex),
+      /frameIndex/,
+    );
+  }
+
+  assert.equal(sampleCaptureScrollTimeline(timeline, 59).normalizedProgress, 1);
+  assert.deepEqual(
+    {
+      clampedFrameIndex: sampleCaptureScrollTimeline(timeline, 60).clampedFrameIndex,
+      normalizedProgress: sampleCaptureScrollTimeline(timeline, 60).normalizedProgress,
+    },
+    { clampedFrameIndex: 59, normalizedProgress: 1 },
+  );
+});
+
+test("scroll animation timeline normalization preserves invalid fps and duration for validation", async () => {
+  const {
+    normalizeCaptureScrollTimeline,
+    validateCaptureScrollTimeline,
+  } = await importBundled("src/capture/captureScrollTimeline.ts");
+
+  const base = {
+    version: 1,
+    fps: 60,
+    durationSeconds: 1,
+    range: { mode: "full" },
+    pageSource: { mode: "page-bar", fallback: "current-page" },
+    cameraSource: { mode: "camera-path", pathId: "camera-spine" },
+    anchors: [],
+    outputProfileId: "mp4-review",
+  };
+
+  const invalidFps = validateCaptureScrollTimeline(
+    normalizeCaptureScrollTimeline({ ...base, fps: 24 }),
+  );
+  assert.equal(invalidFps.valid, false);
+  assert.match(invalidFps.errors.join("\n"), /fps/);
+
+  for (const durationSeconds of [Number.NaN, Infinity, 0, -1]) {
+    const validation = validateCaptureScrollTimeline(
+      normalizeCaptureScrollTimeline({ ...base, durationSeconds }),
+    );
+    assert.equal(validation.valid, false);
+    assert.match(validation.errors.join("\n"), /durationSeconds/);
+  }
+});
+
+test("scroll animation timeline validates anchor progress and poster frame bounds", async () => {
+  const {
+    normalizeCaptureScrollTimeline,
+    validateCaptureScrollTimeline,
+  } = await importBundled("src/capture/captureScrollTimeline.ts");
+
+  const base = {
+    version: 1,
+    fps: 60,
+    durationSeconds: 1,
+    range: { mode: "full" },
+    pageSource: { mode: "page-bar", fallback: "current-page" },
+    cameraSource: { mode: "camera-path", pathId: "camera-spine" },
+    outputProfileId: "mp4-review",
+  };
+  const invalidProgress = validateCaptureScrollTimeline(
+    normalizeCaptureScrollTimeline({
+      ...base,
+      anchors: [{ id: "intro", label: "Intro", progress: 1.5, posterFrame: 0 }],
+    }),
+  );
+  assert.equal(invalidProgress.valid, false);
+  assert.match(invalidProgress.errors.join("\n"), /progress/);
+
+  const invalidPoster = validateCaptureScrollTimeline(
+    normalizeCaptureScrollTimeline({
+      ...base,
+      anchors: [{ id: "intro", label: "Intro", progress: 0.5, posterFrame: 60 }],
+    }),
+  );
+  assert.equal(invalidPoster.valid, false);
+  assert.match(invalidPoster.errors.join("\n"), /posterFrame/);
+});
+
+test("scroll handoff packages validate explicit status and complete outputs", async () => {
+  const {
+    createScrollHandoffManifest,
+    validateScrollHandoffManifest,
+  } = await importBundled("src/capture/scrollHandoffPackage.ts");
+
+  const complete = createScrollHandoffManifest({
+    packageId: "scroll-run-1",
+    status: "complete",
+    createdAt: "2026-06-16T00:00:00.000Z",
+    outputProfileId: "mp4-review",
+    fps: 60,
+    durationSeconds: 2,
+    frameRange: { startFrame: 0, endFrame: 119, totalFrames: 120 },
+    media: [
+      {
+        role: "primary",
+        path: "media/scroll.mp4",
+        mimeType: "video/mp4",
+        byteLength: 1024,
+      },
+    ],
+    sourceContract: { timeline: "scroll" },
+  });
+
+  assert.equal(complete.schema, "ScrollHandoffPackageV1");
+  assert.equal(validateScrollHandoffManifest(complete).valid, true);
+
+  const incomplete = validateScrollHandoffManifest({
+    ...complete,
+    media: [],
+    frames: { directory: null, pattern: null, count: 0 },
+  });
+  assert.equal(incomplete.valid, false);
+  assert.match(incomplete.errors.join("\n"), /complete/);
+
+  const partial = validateScrollHandoffManifest({
+    ...complete,
+    status: "partial",
+    media: [],
+    frames: { directory: null, pattern: null, count: 0 },
+  });
+  assert.equal(partial.valid, true);
+
+  const invalidPath = validateScrollHandoffManifest({
+    ...complete,
+    media: [{ role: "primary", path: "/absolute/out.mp4", mimeType: "video/mp4" }],
+  });
+  assert.equal(invalidPath.valid, false);
+  assert.match(invalidPath.errors.join("\n"), /package-relative/);
+
+  const driveRelativePath = validateScrollHandoffManifest({
+    ...complete,
+    media: [
+      {
+        role: "primary",
+        path: "C:drive-relative.mp4",
+        mimeType: "video/mp4",
+      },
+    ],
+  });
+  assert.equal(driveRelativePath.valid, false);
+  assert.match(driveRelativePath.errors.join("\n"), /package-relative/);
+
+  const uriSchemePath = validateScrollHandoffManifest({
+    ...complete,
+    media: [
+      {
+        role: "primary",
+        path: "data:text/plain",
+        mimeType: "video/mp4",
+      },
+    ],
+  });
+  assert.equal(uriSchemePath.valid, false);
+  assert.match(uriSchemePath.errors.join("\n"), /package-relative/);
+
+  const arraySourceContract = validateScrollHandoffManifest({
+    ...complete,
+    sourceContract: [],
+  });
+  assert.equal(arraySourceContract.valid, false);
+  assert.match(arraySourceContract.errors.join("\n"), /sourceContract/);
+});
+
 test("CaptureCameraPath validates, normalizes, samples, and moves spline-owned keyframes", async () => {
   const {
     createCaptureCameraPathFromKeyframes,

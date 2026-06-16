@@ -36,6 +36,8 @@ const requiredCaptureFiles = [
   "captureJobRuntime.ts",
   "captureJobDiagnostics.ts",
   "externalVideoRenderJob.ts",
+  "captureScrollTimeline.ts",
+  "scrollHandoffPackage.ts",
   "captureVideoSaveOptions.ts",
   "previewVideoTranscoder.ts",
   "CameraPathLineItemEditor.tsx",
@@ -240,6 +242,42 @@ test("Capture Director production types expose panel, still, save, and fidelity 
     '"external-job"',
   ]) {
     assert.ok(source.includes(expected), `captureTypes should include ${expected}`);
+  }
+});
+
+test("Capture Director scroll animation timeline and handoff package contracts exist", () => {
+  const scrollTimelineSource = readSource(
+    "src",
+    "capture",
+    "captureScrollTimeline.ts",
+  );
+  const scrollPackageSource = readSource(
+    "src",
+    "capture",
+    "scrollHandoffPackage.ts",
+  );
+
+  for (const expected of [
+    "CaptureScrollTimelineV1",
+    "normalizeCaptureScrollTimeline",
+    "validateCaptureScrollTimeline",
+    "sampleCaptureScrollTimeline",
+    "CAPTURE_SCROLL_FPS_OPTIONS",
+    "DEFAULT_CAPTURE_SCROLL_FPS",
+  ]) {
+    assert.ok(scrollTimelineSource.includes(expected), `scroll timeline should include ${expected}`);
+  }
+
+  for (const expected of [
+    "ScrollHandoffPackageV1",
+    "createScrollHandoffManifest",
+    "validateScrollHandoffManifest",
+    '"complete"',
+    '"partial"',
+    '"cancelled"',
+    '"failed"',
+  ]) {
+    assert.ok(scrollPackageSource.includes(expected), `scroll package should include ${expected}`);
   }
 });
 

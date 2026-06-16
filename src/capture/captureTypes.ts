@@ -102,6 +102,11 @@ export interface CaptureFeatureAvailability {
   supportedMimeType: string | null;
 }
 
+export interface CaptureValidationResult {
+  valid: boolean;
+  errors: string[];
+}
+
 export interface CaptureLegendItem {
   label: string;
   color?: string;
