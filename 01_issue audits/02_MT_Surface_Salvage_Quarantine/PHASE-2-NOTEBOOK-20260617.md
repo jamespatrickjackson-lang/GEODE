@@ -40,15 +40,32 @@ chokepoints with the existing Impl-delegation pattern; the setup chokepoint is
 `void`-returning so the early-return guard is type-safe.
 Disposition: keep (commit pending below).
 
-## F1 — First migration: opacity -> fade (layerTweens through the pipeline)
-Status: PENDING
-Hypothesis: routing the opacity owner through resolver+applier with the resolver
-default = fade reproduces current opacity fades when the flag is ON, with every
-non-migrated owner unchanged. Likely failure modes: double application (pipeline
-+ old owner both run), flag scoping leaks to other owners, per-frame cost, or the
-group/diff inputs not matching the old per-layer behavior 1:1.
-Change: (to fill)
-Measure: (to fill)
-Result: (to fill)
-Insight: (to fill)
-Disposition: (to fill)
+## F1 — First migration: opacity -> fade (generic fade branch through the pipeline) — done
+Status: DONE (parity)
+Hypothesis: routing the opacity owner through resolver+applier reproduces current
+opacity fades when the flag is ON, with every non-migrated owner unchanged.
+Change:
+- new `src/scene/transitions/entityBehaviorResolver.ts` (`resolveOpacityFade`,
+  pure; fade vs constant at the legacy 0.001 epsilon).
+- `entityBehaviorApplier.ts`: `applyEntityOpacityFade` — single place that sets
+  the layer's generic fade tween via the resolver; returns true (owns it) /
+  false (fall through).
+- `transitionEffectiveLayersForPage.ts`: the generic fade branch (was the inline
+  `layerTweens.set(id,{from:fromOpacity,to:toOpacity,...})`) now: flag ON &&
+  applier-handled -> applier owns it; else legacy set (mutual exclusion).
+- new `tests/tools/entity-behavior-resolver.test.mjs` (4/4).
+Measure: tsc -b exit 0; resolver test 4/4; carve-out + protected batch green;
+42911 — DEV hook `window.__geoseeBehaviorPipeline` present, toggles ON/OFF with
+no error; scene mounts; no console errors.
+Result: parity holds by construction — the applier sets identical from/to
+endpoints, so flag ON == flag OFF for the generic fade. Flag-ON transition A/B
+(navigate pages) remains a human eye-check.
+Insight: the F0 all-or-nothing chokepoints (whole-frame / whole-setup skip)
+CANNOT migrate a single owner — the opacity tween is interwoven with snapshot /
+scalar / section / render-opacity logic in the same per-layer loop. Per-owner
+migration must INTERLEAVE the applier at the specific owner site (here: the
+generic fade branch) with mutual exclusion, not replace the whole setup. The
+all-or-nothing chokepoints are reserved for a future full cutover; per-owner
+increments hook the owner's exact site. Scope this slice = generic fade branch
+only; the snapshot-path and late-attach opacity sets stay legacy (next slices).
+Disposition: keep (commit pending below).

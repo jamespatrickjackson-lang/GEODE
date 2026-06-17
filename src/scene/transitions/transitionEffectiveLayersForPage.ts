@@ -36,7 +36,10 @@ import {
   type LayerTransitionKind,
   type NavigationReason,
 } from "./transitionStyles";
-import { setupEntityBehaviorTransition } from "./entityBehaviorApplier";
+import {
+  applyEntityOpacityFade,
+  setupEntityBehaviorTransition,
+} from "./entityBehaviorApplier";
 
 const DEFAULT_LAYER_FADE_MS = DEFAULT_DETACHED_FADE_MS;
 type EffectiveLayerStyle = ReturnType<typeof effectiveStyle>;
@@ -1444,13 +1447,24 @@ export function transitionEffectiveLayersForPage(
         continue;
       }
 
-      this.layerTweens.set(id, {
-        from: fromOpacity,
-        to: toOpacity,
-        startMs: now,
-        durationMs: duration,
-        easing,
-      });
+      // F1: opacity owner migration (parity). When the pipeline flag is on, the
+      // single applier owns this layer's generic fade tween (mutual exclusion —
+      // the legacy assignment below is skipped). Endpoints are identical, so flag
+      // ON == flag OFF.
+      if (
+        (this as any).perEntityBehaviorActive === true &&
+        applyEntityOpacityFade(this, id, fromOpacity, toOpacity, now, duration, easing)
+      ) {
+        // applier set the tween
+      } else {
+        this.layerTweens.set(id, {
+          from: fromOpacity,
+          to: toOpacity,
+          startMs: now,
+          durationMs: duration,
+          easing,
+        });
+      }
     }
     for (const id of productFamilyLayerIds) {
       if (recordedProductLayerIds.has(id)) continue;
