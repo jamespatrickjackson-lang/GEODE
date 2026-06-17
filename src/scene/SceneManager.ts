@@ -5210,17 +5210,29 @@ export class SceneManager {
   // verifiable as a hard number (count > 0 with the flag ON, 0 with it OFF) —
   // the eye cannot prove parity. Read/reset via the DEV window hooks.
   private entityBehaviorOpacityOwned = 0;
+  private entityBehaviorExitHoldOwned = 0;
 
   noteEntityBehaviorOpacityOwned(): void {
     this.entityBehaviorOpacityOwned += 1;
   }
 
-  entityBehaviorStats(): { opacityTweensOwned: number } {
-    return { opacityTweensOwned: this.entityBehaviorOpacityOwned };
+  noteEntityBehaviorExitHoldOwned(): void {
+    this.entityBehaviorExitHoldOwned += 1;
+  }
+
+  entityBehaviorStats(): {
+    opacityTweensOwned: number;
+    exitHoldsOwned: number;
+  } {
+    return {
+      opacityTweensOwned: this.entityBehaviorOpacityOwned,
+      exitHoldsOwned: this.entityBehaviorExitHoldOwned,
+    };
   }
 
   resetEntityBehaviorStats(): void {
     this.entityBehaviorOpacityOwned = 0;
+    this.entityBehaviorExitHoldOwned = 0;
   }
 
   tickLayerTweens(nowMs: number): void {

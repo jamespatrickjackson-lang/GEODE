@@ -134,7 +134,29 @@ the CLIP channel exit-reveal, NOT opacity — confirms the headline bug is
 clip-hold-on-exit. Next owner = F4 (clip channel).
 Disposition: keep (651095b).
 
-## F4 — clip channel exit-hold (the 20->25 reveal) — PLANNED
+## F4 — clip channel exit-hold (the 20->25 reveal) — ready for eye-check
+Status: DONE (code, flag-gated); VISUAL eye-check PENDING on 20->25
+Change: when the flag is ON and the held-clip source snapshot owns a sectioned
+volume exit (shouldSnapshotScalarVolumeSectionExit), the live scalar exit tween
+is suppressed (mutual exclusion) so the live (inactive-target, un-clipped) volume
+does not render its exterior while fading — only the clipped snapshot fades.
+exitHoldsOwned counter added to entityBehaviorStats. This is the reverted L2 fix,
+now flag-gated and observable (the v1 idea done through the pipeline).
+Measure: tsc -b exit 0; full guard batch green (high-fixes 3/0, scalar-tween 3/0).
+Result (code): flag OFF == current (reveal still present, parity); flag ON
+suppresses the live volume so only the held clip fades. VISUAL gate on 42911:
+A/B `20->25` flag ON vs OFF; `__geoseeBehaviorStats().exitHoldsOwned` > 0 on the
+`20->25` transition confirms the pipeline took the exit.
+Scope/limits (failure = data): leverages the EXISTING volume-only snapshot
+(DEC-173); the threshold/top/contact SURFACES are not snapshotted, so if the
+"cloud" reveal is the surface family (not the raymarch volume) this will not
+fully clear it -> F5 extends the held-clip exit snapshot to the surface family.
+Not the full per-entity section-hold architecture yet; this is the targeted,
+proven L2 fix flag-gated.
+Disposition: keep (commit pending below); revert if the eye-check regresses.
+
+(superseded planning note below)
+## F4 (planning) — clip channel exit-hold
 Status: PLANNED (headline bug; the per-entity clip ownership this branch exists for)
 Target: 20->25 (and any clipped-source -> absent-target). An entity clipped in
 the source and absent in the target must HOLD its source clip while opacity

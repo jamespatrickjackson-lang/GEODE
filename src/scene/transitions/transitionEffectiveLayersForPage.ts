@@ -1325,6 +1325,9 @@ export function transitionEffectiveLayersForPage(
         shouldPreserveScalarVolumeExitStyle &&
         sourceSceneSectionTransitionActive &&
         !targetSceneSectionTransitionActive;
+      const exitHoldOwnedByPipeline =
+        (this as any).perEntityBehaviorActive === true &&
+        shouldSnapshotScalarVolumeSectionExit;
       const shouldTweenScalarVolumeExitStyle =
         id === UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID &&
         !!group &&
@@ -1332,7 +1335,16 @@ export function transitionEffectiveLayersForPage(
         scalarStyleDurationMs > 0 &&
         fromOpacity > 0.001 &&
         toOpacity <= 0.001 &&
-        this.layerSupportsScalarStyleTween(id, group);
+        this.layerSupportsScalarStyleTween(id, group) &&
+        // F4 clip-hold-on-exit (flag ON): when the held-clip source snapshot owns
+        // the sectioned exit, suppress the live scalar tween so the live (now
+        // inactive-target, un-clipped) volume does not render its exterior while
+        // fading — only the clipped snapshot fades. The two exit owners are
+        // mutually exclusive (the L2 fix), gated behind the pipeline flag.
+        !exitHoldOwnedByPipeline;
+      if (exitHoldOwnedByPipeline) {
+        (this as any).noteEntityBehaviorExitHoldOwned();
+      }
       const scalarVolumeExitSourceStyle = shouldTweenScalarVolumeExitStyle
         ? {
             ...fromStyle,
