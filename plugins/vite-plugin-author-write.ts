@@ -998,6 +998,7 @@ const SCROLL_MEDIA_ROLE_BY_FORMAT: Record<
 // The primary format is encoded inline by the first renderer pass; remaining
 // ticked video formats reuse those frames so the scene renders only once.
 async function encodeScrollFormatFromFrames({
+  run,
   projectRoot,
   baseRenderJob,
   frameDir,
@@ -1005,6 +1006,7 @@ async function encodeScrollFormatFromFrames({
   outputPath,
   jobPath,
 }: {
+  run: CaptureScrollPackageRunRecord;
   projectRoot: string;
   baseRenderJob: any;
   frameDir: string;
@@ -1042,12 +1044,18 @@ async function encodeScrollFormatFromFrames({
       windowsHide: true,
       stdio: ["ignore", "pipe", "pipe"],
     });
+    // Track the active encode child so a cancel request can kill it.
+    run.child = child;
     let stderr = "";
     child.stderr.on("data", (chunk) => {
       stderr += String(chunk);
     });
-    child.on("error", rejectEncode);
+    child.on("error", (error) => {
+      run.child = undefined;
+      rejectEncode(error);
+    });
     child.on("close", (code) => {
+      run.child = undefined;
       if (code === 0) resolveEncode();
       else rejectEncode(new Error(stderr.trim() || `scroll re-encode exited with code ${code}`));
     });
@@ -1281,17 +1289,39 @@ async function startCaptureScrollPackageRun({
       // ticked video format from the shared frame render, then list each media
       // file that landed.
       const writtenMedia: ScrollHandoffPackageV1["media"] = [];
+      const encodeWarnings: string[] = [];
+      let cancelledDuringEncode = false;
       for (const target of scrollMediaTargetsForRequest(request)) {
+        if ((run.status as string) === "cancelled") {
+          cancelledDuringEncode = true;
+          break;
+        }
         const absoluteTarget = resolve(packageDir, target.path);
         if (target.path !== mediaRelativePath) {
-          await encodeScrollFormatFromFrames({
-            projectRoot,
-            baseRenderJob: scrollRenderJob,
-            frameDir,
-            format: target.format as "mp4" | "webm" | "scroll-friendly-video",
-            outputPath: absoluteTarget,
-            jobPath: resolve(jobsDir, `${runId}-${target.format}.json`),
-          });
+          try {
+            await encodeScrollFormatFromFrames({
+              run,
+              projectRoot,
+              baseRenderJob: scrollRenderJob,
+              frameDir,
+              format: target.format as "mp4" | "webm" | "scroll-friendly-video",
+              outputPath: absoluteTarget,
+              jobPath: resolve(jobsDir, `${runId}-${target.format}.json`),
+            });
+          } catch (encodeError) {
+            if ((run.status as string) === "cancelled") {
+              cancelledDuringEncode = true;
+              break;
+            }
+            // A failed secondary format must not discard the primary master:
+            // record a warning and keep going.
+            encodeWarnings.push(
+              `Failed to encode ${target.format}: ${
+                encodeError instanceof Error ? encodeError.message : String(encodeError)
+              }`,
+            );
+            continue;
+          }
         }
         const stats = await fs.lstat(absoluteTarget).catch(() => null);
         if (stats?.isFile() && stats.size > 0) {
@@ -1305,6 +1335,26 @@ async function startCaptureScrollPackageRun({
           });
         }
       }
+      if (cancelledDuringEncode) {
+        const cancelledFrameCount = await countCompletedFrames(frameDir);
+        run.status = "cancelled";
+        run.phase = "cancelled";
+        run.completedAt = new Date().toISOString();
+        run.warnings = [...(run.warnings ?? []), ...encodeWarnings];
+        const cancelledManifest = createFinalScrollHandoffManifest({
+          manifest: run.manifest,
+          status: "cancelled",
+          media: writtenMedia,
+          frames: { directory: "frames", pattern: "frame-%06d.png", count: cancelledFrameCount },
+          diagnosticsPath: `diagnostics/${request.packageName}.json`,
+          warnings: [...run.warnings, "Cancelled during multi-format encode."],
+        });
+        run.manifest = cancelledManifest;
+        await writeScrollDiagnostics(run, "cancelled");
+        await writeScrollManifest(run, cancelledManifest);
+        return;
+      }
+      run.warnings = [...(run.warnings ?? []), ...encodeWarnings];
       const posters = await createScrollPosters(packageDir, request);
       const contactSheetPath = await createScrollContactSheet(packageDir, request);
       run.status = "complete";
