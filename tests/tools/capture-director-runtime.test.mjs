@@ -886,6 +886,52 @@ test("Node and browser scroll contracts stay in behavioral parity", async () => 
   );
 });
 
+test("scroll page render plan maps page-bar clips to inclusive frame segments", async () => {
+  const { normalizeCaptureScrollTimeline, resolveScrollPageRenderPlan } =
+    await importBundled("src/capture/captureScrollTimeline.ts");
+
+  const currentPage = normalizeCaptureScrollTimeline({
+    version: 1,
+    fps: 60,
+    durationSeconds: 4,
+    range: { mode: "full" },
+    pageSource: { mode: "current-page", fallback: "current-page", clips: [] },
+    cameraSource: { mode: "camera-path", pathId: "p" },
+    anchors: [],
+    outputProfileId: "mp4",
+  });
+  const fallbackPlan = resolveScrollPageRenderPlan(currentPage);
+  assert.equal(fallbackPlan.length, 1);
+  assert.equal(fallbackPlan[0].pageId, null);
+  assert.deepEqual(
+    [fallbackPlan[0].startFrame, fallbackPlan[0].endFrame, fallbackPlan[0].fallbackMode],
+    [0, 239, "current-page"],
+  );
+
+  const pageBar = normalizeCaptureScrollTimeline({
+    version: 1,
+    fps: 60,
+    durationSeconds: 4,
+    range: { mode: "full" },
+    pageSource: {
+      mode: "page-bar",
+      fallback: "current-page",
+      clips: [
+        { id: "c1", pageId: "page-a", label: "A", enabled: true, locked: false, startSeconds: 0, transitionSeconds: 0, holdSeconds: 2, transitionEasing: "linear" },
+        { id: "c2", pageId: "page-b", label: "B", enabled: true, locked: false, startSeconds: 2, transitionSeconds: 0, holdSeconds: 2, transitionEasing: "linear" },
+      ],
+    },
+    cameraSource: { mode: "camera-path", pathId: "p" },
+    anchors: [],
+    outputProfileId: "mp4",
+  });
+  const plan = resolveScrollPageRenderPlan(pageBar);
+  assert.equal(plan.length, 2);
+  assert.deepEqual(plan.map((segment) => segment.pageId), ["page-a", "page-b"]);
+  assert.deepEqual([plan[0].startFrame, plan[0].endFrame], [0, 119]);
+  assert.deepEqual([plan[1].startFrame, plan[1].endFrame], [120, 239]);
+});
+
 test("scroll handoff pending manifests support partial PNG sequence outputs", async () => {
   const {
     createScrollRecordRequest,

@@ -110,6 +110,13 @@ sequence when PNG Sequence is ticked, posters, a contact sheet, diagnostics, a
 handoff README, and per-file hashes. Cancelled or failed runs keep safely
 written files and mark the manifest `partial`/`cancelled`/`failed`.
 
+When the Page Bar spans multiple pages, the request carries a
+`scrollPageRenderPlan` (one inclusive frame segment per page) so the package is
+page-range-aware and a deterministic multi-page renderer can drive per-frame
+page application. Per-frame page application during the headless render itself
+remains a runtime extension that must be visually verified against a multi-page
+project; the preview path already applies per-frame page source live.
+
 Scroll packages and Render Out videos default under `media_output/`
 (`media_output/capture-scroll-outputs`, `media_output/capture-video-outputs`),
 resolved against the repo root (`C:\GeoSee\GeoSee_Dev\media_output`). The

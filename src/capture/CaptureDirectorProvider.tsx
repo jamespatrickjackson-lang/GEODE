@@ -159,6 +159,7 @@ import {
   createScrollRecordRequest,
   resolveCaptureScrollPlayStartFrame,
   resolvePrimaryScrollFormat,
+  resolveScrollPageRenderPlan,
   sampleCaptureScrollTimeline,
   validateScrollRecordRequest,
   type CaptureScrollRenderRouteIntent,
@@ -1873,6 +1874,15 @@ export function CaptureDirectorProvider({
       anchors,
       outputProfileId: `scroll-${scrollOutputFormat}`,
     };
+    // Page-range render plan: which page renders across which frames. Persisted
+    // in the package so the handoff is page-range-aware and a deterministic
+    // multi-page renderer can drive per-frame page application.
+    let scrollPageRenderPlan: ReturnType<typeof resolveScrollPageRenderPlan> = [];
+    try {
+      scrollPageRenderPlan = resolveScrollPageRenderPlan(timeline);
+    } catch {
+      scrollPageRenderPlan = [];
+    }
     const request = createScrollRecordRequest({
       timeline,
       format: scrollOutputFormat,
@@ -1884,6 +1894,7 @@ export function CaptureDirectorProvider({
       renderRouteIntent: scrollRenderRouteIntentForQuality(quality),
       advancedOptions: {
         includeDiagnostics: true,
+        scrollPageRenderPlan,
         manualFallbackAccepted: false,
         pageClipCount: enabledPageClips.length,
         cameraPathNodeCount: normalizedPath.nodes.length,

@@ -757,6 +757,62 @@ function pageClipDuration(clip: CaptureScrollTimelinePageSourceClip): number {
   return Math.max(0, clip.transitionSeconds) + Math.max(0, clip.holdSeconds);
 }
 
+export interface CaptureScrollPageRenderSegment {
+  clipId: string | null;
+  pageId: string | null;
+  startFrame: number;
+  endFrame: number;
+  fallbackMode: "current-page" | "none";
+}
+
+/**
+ * Resolve which page renders across the scroll frame range. Empty/`current-page`
+ * Page Bar state yields one fallback segment spanning the whole range; a
+ * multi-clip Page Bar yields one inclusive frame segment per page. Used to make
+ * the render package page-range-aware and to drive deterministic per-frame page
+ * application during multi-page rendering.
+ */
+export function resolveScrollPageRenderPlan(
+  timeline: CaptureScrollTimelineV1,
+): CaptureScrollPageRenderSegment[] {
+  const range = resolveCaptureScrollFrameRange(timeline);
+  const fallbackSegment: CaptureScrollPageRenderSegment = {
+    clipId: null,
+    pageId: null,
+    startFrame: range.startFrame,
+    endFrame: range.endFrame,
+    fallbackMode: timeline.pageSource.fallback,
+  };
+  const clips = enabledPageSourceClips(timeline);
+  if (clips.length === 0) return [fallbackSegment];
+
+  const fps = timeline.fps;
+  const segments: CaptureScrollPageRenderSegment[] = [];
+  clips.forEach((clip, index) => {
+    const clipStartFrame = Math.max(
+      range.startFrame,
+      captureScrollFrameForSeconds(clip.startSeconds, fps),
+    );
+    const nextClip = clips[index + 1] ?? null;
+    const clipEndSeconds = nextClip
+      ? nextClip.startSeconds
+      : clip.startSeconds + pageClipDuration(clip);
+    const clipEndFrame = Math.min(
+      range.endFrame,
+      Math.max(clipStartFrame, captureScrollFrameForSeconds(clipEndSeconds, fps) - 1),
+    );
+    if (clipEndFrame < range.startFrame || clipStartFrame > range.endFrame) return;
+    segments.push({
+      clipId: clip.id,
+      pageId: clip.pageId,
+      startFrame: clipStartFrame,
+      endFrame: clipEndFrame,
+      fallbackMode: "none",
+    });
+  });
+  return segments.length > 0 ? segments : [fallbackSegment];
+}
+
 function enabledPageSourceClips(
   timeline: CaptureScrollTimelineV1,
 ): CaptureScrollTimelinePageSourceClip[] {

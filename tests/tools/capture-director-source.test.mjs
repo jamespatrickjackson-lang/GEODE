@@ -487,6 +487,8 @@ test("Capture Director scroll animation timeline and handoff package contracts e
     "resolvePrimaryScrollFormat",
     "normalizeScrollFormats",
     "formats: CaptureScrollRecordFormat[]",
+    "resolveScrollPageRenderPlan",
+    "CaptureScrollPageRenderSegment",
   ]) {
     assert.ok(scrollTimelineSource.includes(expected), `scroll timeline should include ${expected}`);
   }
