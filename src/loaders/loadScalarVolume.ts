@@ -126,6 +126,8 @@ uniform float uDensity;
 uniform float uSampleSteps;
 uniform int uTransferMode;
 uniform int uMaskVisible;
+uniform int uSceneSectionTransitionEnabled;
+uniform float uSceneSectionTransitionProgress;
 uniform int uSceneSectionEnabled;
 uniform int uSceneSectionMode;
 uniform int uSceneSectionPlaneCount;
@@ -144,6 +146,16 @@ uniform vec3 uSceneSectionFrameAxisA[8];
 uniform vec3 uSceneSectionFrameAxisB[8];
 uniform vec4 uSceneSectionFrameBounds[8];
 uniform float uSceneSectionFrameOutsideOpacity[8];
+uniform int uSceneSectionTargetPlaneCount;
+uniform vec3 uSceneSectionTargetNormals[8];
+uniform float uSceneSectionTargetPositions[8];
+uniform int uSceneSectionTargetInvert[8];
+uniform float uSceneSectionTargetPlaneOutsideOpacity[8];
+uniform int uSceneSectionTargetFrameCount;
+uniform vec3 uSceneSectionTargetFrameAxisA[8];
+uniform vec3 uSceneSectionTargetFrameAxisB[8];
+uniform vec4 uSceneSectionTargetFrameBounds[8];
+uniform float uSceneSectionTargetFrameOutsideOpacity[8];
 uniform int uWorkingAreaFocusEnabled;
 uniform vec3 uWorkingAreaFocusBoundsMin;
 uniform vec3 uWorkingAreaFocusBoundsMax;
@@ -210,6 +222,32 @@ float sceneSectionFrameAlpha(vec3 position) {
   return alpha;
 }
 
+float sceneSectionTargetAlpha(vec3 position) {
+  float alpha = 1.0;
+  for (int i = 0; i < 8; i += 1) {
+    if (i >= uSceneSectionTargetPlaneCount) break;
+    vec3 normal = normalize(uSceneSectionTargetNormals[i]);
+    float distance = dot(position, normal) - uSceneSectionTargetPositions[i];
+    if (uSceneSectionTargetInvert[i] == 1) distance = -distance;
+    if (distance > 0.0) {
+      alpha = min(alpha, clamp(uSceneSectionTargetPlaneOutsideOpacity[i], 0.0, 1.0));
+    }
+  }
+  for (int i = 0; i < 8; i += 1) {
+    if (i >= uSceneSectionTargetFrameCount) break;
+    vec3 axisA = normalize(uSceneSectionTargetFrameAxisA[i]);
+    vec3 axisB = normalize(uSceneSectionTargetFrameAxisB[i]);
+    vec4 bounds = uSceneSectionTargetFrameBounds[i];
+    float a = dot(position, axisA);
+    float b = dot(position, axisB);
+    bool inside = a >= bounds.x && a <= bounds.y && b >= bounds.z && b <= bounds.w;
+    if (!inside) {
+      alpha = min(alpha, clamp(uSceneSectionTargetFrameOutsideOpacity[i], 0.0, 1.0));
+    }
+  }
+  return alpha;
+}
+
 float workingAreaFocusAlpha(vec3 position) {
   if (uWorkingAreaFocusEnabled == 0) return 1.0;
   bool inside =
@@ -247,7 +285,18 @@ void main() {
     if (float(i) >= sampleSteps) break;
     if (t > tEnd || accum.a > 0.96) break;
     vec3 position = cameraPosition + rayDirection * t;
-    float sectionAlpha = sceneSectionAlpha(position) * sceneSectionFrameAlpha(position);
+    float sourceAlpha = sceneSectionAlpha(position) * sceneSectionFrameAlpha(position);
+    float sectionAlpha = sourceAlpha;
+    if (uSceneSectionTransitionEnabled != 0) {
+      float targetAlpha = sceneSectionTargetAlpha(position);
+      bool sourceHasSectionMask = uSceneSectionPlaneCount > 0 || uSceneSectionFrameCount > 0;
+      bool targetHasSectionMask = uSceneSectionTargetPlaneCount > 0 || uSceneSectionTargetFrameCount > 0;
+      if (!sourceHasSectionMask && targetHasSectionMask) {
+        sectionAlpha = targetAlpha;
+      } else {
+        sectionAlpha = mix(sourceAlpha, targetAlpha, clamp(uSceneSectionTransitionProgress, 0.0, 1.0));
+      }
+    }
     if (sectionAlpha <= 0.0001) {
       t += stepSize;
       continue;
@@ -401,6 +450,8 @@ async function buildVolumeMesh(
       uSampleSteps: { value: product.displayRecipe?.sampleSteps ?? 96 },
       uTransferMode: { value: transferModeCode(product.displayRecipe?.transferMode) },
       uMaskVisible: { value: product.displayRecipe?.maskVisible === false ? 0 : 1 },
+      uSceneSectionTransitionEnabled: { value: 0 },
+      uSceneSectionTransitionProgress: { value: 0 },
       uSceneSectionEnabled: { value: 0 },
       uSceneSectionMode: { value: 0 },
       uSceneSectionPlaneCount: { value: 0 },
@@ -419,6 +470,16 @@ async function buildVolumeMesh(
       uSceneSectionFrameAxisB: { value: sceneSectionVectorSlots() },
       uSceneSectionFrameBounds: { value: sceneSectionVector4Slots() },
       uSceneSectionFrameOutsideOpacity: { value: sceneSectionNumberSlots(1) },
+      uSceneSectionTargetPlaneCount: { value: 0 },
+      uSceneSectionTargetNormals: { value: sceneSectionVectorSlots() },
+      uSceneSectionTargetPositions: { value: sceneSectionNumberSlots(0) },
+      uSceneSectionTargetInvert: { value: sceneSectionNumberSlots(0) },
+      uSceneSectionTargetPlaneOutsideOpacity: { value: sceneSectionNumberSlots(1) },
+      uSceneSectionTargetFrameCount: { value: 0 },
+      uSceneSectionTargetFrameAxisA: { value: sceneSectionVectorSlots() },
+      uSceneSectionTargetFrameAxisB: { value: sceneSectionVectorSlots() },
+      uSceneSectionTargetFrameBounds: { value: sceneSectionVector4Slots() },
+      uSceneSectionTargetFrameOutsideOpacity: { value: sceneSectionNumberSlots(1) },
       uWorkingAreaFocusEnabled: { value: 0 },
       uWorkingAreaFocusBoundsMin: { value: new THREE.Vector3() },
       uWorkingAreaFocusBoundsMax: { value: new THREE.Vector3() },

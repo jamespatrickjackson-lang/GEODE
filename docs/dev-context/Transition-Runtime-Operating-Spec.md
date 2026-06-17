@@ -151,17 +151,32 @@ Derived roots must never appear at full opacity during a transition if they were
 Section transition behavior is target-active.
 
 Active-to-active:
-- compatible section channels interpolate
-- incompatible helper geometry crossfades
-- derived Section ISO roots crossfade
+- compatible section frames interpolate and keep moving even when helper,
+  control, flip commit state, or target-scope presentation differs
+- incompatible or added/removed section frames crossfade
+- section-affected layer snapshot crossfades are gated to real dissolved frames;
+  scalar/style/visibility owners handle internal changes on compatible moves
+- derived Section ISO roots crossfade only for real dissolved frames or
+  incompatible root enter/exit/identity changes; source and target ISO roots
+  that are both active on a compatible move follow the interpolated cut
+- DEC-171 keeps derived Section ISO roots attached to transition-frame section
+  geometry at the current Section ISO envelope; this does not permit dual-mask
+  helper rebuilds or source section state bleed
 
 Inactive-to-active:
 - target section state fades in
 
 Active-to-inactive or active-to-unrelated:
-- source section masks, helpers, frame controls, ground traces, axes, and Section ISO roots must not carry into the target transition
+- source section masks, live helpers, frame controls, ground traces, axes, cones, frame outlines, crop boxes, live clipping, and live Section ISO roots must not carry into the target transition
 - inactive target section state applies at transition start
 - transition-owned Section ISO roots are discarded, not promoted
+- DEC-169 permits only detached visual Section ISO source roots to fade to zero
+  after being cloned before inactive target application
+- DEC-173 permits transition-owned source layer snapshots to preserve the
+  source scene-section or working-area clipping that was already visible at
+  transition start while those snapshots fade to zero; this does not permit
+  live source section state or helper/control/frame visuals to carry into the
+  inactive target
 
 ## Working-area focus
 

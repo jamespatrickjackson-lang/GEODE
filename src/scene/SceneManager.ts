@@ -200,6 +200,9 @@ import {
   updateSceneSectionPlanarTextFacing as updateSceneSectionPlanarTextFacingImpl,
 } from "./section/sceneSectionController";
 import {
+  applySceneSectionObjectVisibilityBuiltInMaterial,
+} from "./shaders/sceneSectionObjectVisibilityShader";
+import {
   applyWorkingAreaFocusMaterialImpl,
   applyWorkingAreaFocusStyleImpl,
   cleanWorkingAreaFocusVectorImpl,
@@ -1767,13 +1770,130 @@ export class SceneManager {
 
   private cloneTransitionMaterial(material: THREE.Material): THREE.Material {
     const originalUserData = material.userData;
+    const originalClippingPlanes =
+      material.clippingPlanes?.map((plane) => plane.clone()) ?? null;
+    const originalClipIntersection = material.clipIntersection === true;
     material.userData = this.cloneTransitionUserData(originalUserData);
     try {
       const clone = material.clone();
       clone.userData = this.cloneTransitionUserData(originalUserData);
+      this.rehydrateWorkingAreaFocusTransitionMaterial(clone, originalUserData);
+      this.rehydrateSceneSectionTransitionMaterial(
+        clone,
+        originalUserData,
+        originalClippingPlanes,
+        originalClipIntersection,
+      );
       return clone;
     } finally {
       material.userData = originalUserData;
+    }
+  }
+
+  private rehydrateWorkingAreaFocusTransitionMaterial(
+    clone: THREE.Material,
+    originalUserData: Record<string, unknown> | undefined,
+  ): void {
+    if (
+      !originalUserData ||
+      (originalUserData.workingAreaFocusPatched !== true &&
+        originalUserData.workingAreaFocusEnabled !== true)
+    ) {
+      return;
+    }
+    const currentState = this.workingAreaFocusState(
+      this.currentWorkingAreaFocusStyle,
+    );
+    const boundsMin =
+      this.cleanWorkingAreaFocusVector(
+        originalUserData.workingAreaFocusBoundsMin,
+      ) ?? currentState.boundsMin.clone();
+    const boundsMax =
+      this.cleanWorkingAreaFocusVector(
+        originalUserData.workingAreaFocusBoundsMax,
+      ) ?? currentState.boundsMax.clone();
+    const outsideOpacity =
+      typeof originalUserData.workingAreaFocusOutsideOpacity === "number" &&
+      Number.isFinite(originalUserData.workingAreaFocusOutsideOpacity)
+        ? clamp01(originalUserData.workingAreaFocusOutsideOpacity)
+        : 1;
+    const enabled = originalUserData.workingAreaFocusEnabled === true;
+    delete clone.userData.workingAreaFocusPatched;
+    delete clone.userData.workingAreaFocusShader;
+    const state: WorkingAreaFocusState = {
+      ...currentState,
+      enabled,
+      boundsMin,
+      boundsMax,
+    };
+    this.applyWorkingAreaFocusMaterial(
+      clone,
+      enabled,
+      state,
+      outsideOpacity,
+    );
+  }
+
+  private rehydrateSceneSectionTransitionMaterial(
+    clone: THREE.Material,
+    originalUserData: Record<string, unknown> | undefined,
+    originalClippingPlanes: THREE.Plane[] | null,
+    originalClipIntersection: boolean,
+  ): void {
+    if (originalClippingPlanes) {
+      clone.clippingPlanes = originalClippingPlanes;
+      clone.clipIntersection = originalClipIntersection;
+    }
+    if (
+      !originalUserData ||
+      (originalUserData.sceneSectionObjectVisibilityPatched !== true &&
+        originalUserData.sceneSectionObjectVisibilityEnabled !== true &&
+        !originalUserData.sceneSectionObjectVisibilityMaskTransition)
+    ) {
+      return;
+    }
+    const planes = Array.isArray(
+      originalUserData.sceneSectionObjectVisibilityPlanes,
+    )
+      ? (originalUserData.sceneSectionObjectVisibilityPlanes as ResolvedSceneSectionPlane[])
+      : [];
+    const frames = Array.isArray(
+      originalUserData.sceneSectionObjectVisibilityFrames,
+    )
+      ? (originalUserData.sceneSectionObjectVisibilityFrames as ResolvedSceneSectionFrame[])
+      : [];
+    const visibility =
+      originalUserData.sceneSectionObjectVisibility &&
+      typeof originalUserData.sceneSectionObjectVisibility === "object"
+        ? (originalUserData.sceneSectionObjectVisibility as SceneSectionObjectVisibility)
+        : {
+            outsideOpacityByAxis: { x: 1, y: 1, z: 1 },
+            outsideOpacityByFrameId: {},
+            active: false,
+            hasSoftOpacity: false,
+          };
+    const maskTransition =
+      originalUserData.sceneSectionObjectVisibilityMaskTransition &&
+      typeof originalUserData.sceneSectionObjectVisibilityMaskTransition ===
+        "object"
+        ? (originalUserData.sceneSectionObjectVisibilityMaskTransition as SceneSectionMaskTransition)
+        : null;
+    const enabled =
+      originalUserData.sceneSectionObjectVisibilityEnabled === true;
+    delete clone.userData.sceneSectionObjectVisibilityPatched;
+    delete clone.userData.sceneSectionObjectVisibilityShader;
+    applySceneSectionObjectVisibilityBuiltInMaterial(
+      clone,
+      enabled,
+      planes,
+      frames,
+      visibility,
+      maskTransition,
+    );
+    if (originalClippingPlanes) {
+      clone.clippingPlanes = originalClippingPlanes;
+      clone.clipIntersection = originalClipIntersection;
+      clone.needsUpdate = true;
     }
   }
 
@@ -1965,8 +2085,9 @@ export class SceneManager {
       // a chained navigation interrupts a running transition (instant pop
       // out, then pop back in at the next full apply). Leave live roots in
       // the scene at their current envelope; the next transition snapshots
-      // them as sources, and inactive-target exits still clear them through
-      // the section-iso-disabled style path.
+      // them as sources. Inactive-target exits clear live section state through
+      // the section-iso-disabled style path after detached source roots are
+      // cloned for the visual fade.
       delete root.group.userData.sectionIsoOverlayTransitionRoot;
       delete root.group.userData.sectionIsoOverlayTransitionRole;
     }
@@ -1980,12 +2101,15 @@ export class SceneManager {
   private sectionIsoOverlayTransitionShouldStart(
     fromSceneSectionStyle: EditableStyle,
     toSceneSectionStyle: EditableStyle,
+    hasSourceRoots: boolean,
   ): boolean {
-    const sourceActive = fromSceneSectionStyle.sceneSectionEnabled === true;
-    const targetActive = toSceneSectionStyle.sceneSectionEnabled === true;
-    const activeToActive = sourceActive && targetActive;
-    const inactiveToActive = !sourceActive && targetActive;
-    return activeToActive || inactiveToActive;
+    const sourceActive =
+      fromSceneSectionStyle.sceneSectionEnabled === true &&
+      this.sceneSectionActivePlanes(fromSceneSectionStyle).length > 0;
+    const targetActive =
+      toSceneSectionStyle.sceneSectionEnabled === true &&
+      this.sceneSectionActivePlanes(toSceneSectionStyle).length > 0;
+    return targetActive || (sourceActive && hasSourceRoots);
   }
 
   beginSectionIsoOverlayTransition(
@@ -1997,15 +2121,17 @@ export class SceneManager {
   ): void {
     this.discardSectionIsoOverlayTransition();
     if (durationMs <= 0) return;
+    const sourceRootsForTransition = this.sectionIsoOverlayGroupsForTransition();
     if (
       !this.sectionIsoOverlayTransitionShouldStart(
         fromSceneSectionStyle,
         toSceneSectionStyle,
+        sourceRootsForTransition.length > 0,
       )
     ) {
       return;
     }
-    const sourceRoots = this.sectionIsoOverlayGroupsForTransition().map(
+    const sourceRoots = sourceRootsForTransition.map(
       ({ kind, layerId, group }) => {
         const snapshot = this.cloneTransitionObjectTree(
           layerId,
@@ -2062,6 +2188,18 @@ export class SceneManager {
       role: "target",
     });
     this.applyRenderOpacityToTree(group, 1, transition.targetOpacity);
+  }
+
+  unregisterSectionIsoOverlayTransitionTargetRoot(group: THREE.Group): void {
+    const transition = this.sectionIsoOverlayTransition;
+    if (!transition) return;
+    transition.targetRoots = transition.targetRoots.filter(
+      (root) => root.group !== group,
+    );
+    if (group.userData?.sectionIsoOverlayTransitionRole === "target") {
+      delete group.userData.sectionIsoOverlayTransitionRoot;
+      delete group.userData.sectionIsoOverlayTransitionRole;
+    }
   }
 
   tickSectionIsoOverlayTransition(nowMs: number, eased?: number): boolean {
@@ -3715,6 +3853,30 @@ export class SceneManager {
     if (this.sectionIsoOverlayUpdateHeldByTransition("mt-volume", options)) {
       return;
     }
+    const tween = this.sceneSectionStyleTween;
+    const sectionIsoMoveFollowSourceStyle =
+      style.sectionIsoEnabled !== true
+        ? tween?.sectionIsoMoveFollowSourceStyles?.get(
+            UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID,
+          )
+        : undefined;
+    if (sectionIsoMoveFollowSourceStyle && tween) {
+      const progress = this.transitionTweenEasedProgress(
+        tween,
+        performance.now(),
+      );
+      if (progress < 1) {
+        return updateMtVolumeCutIsoOverlaysImpl.call(
+          this,
+          sectionIsoMoveFollowSourceStyle,
+          {
+            ...(options ?? {}),
+            bypassTransitionHold: true,
+            initialTransitionOpacity: 1 - progress,
+          },
+        );
+      }
+    }
     return updateMtVolumeCutIsoOverlaysImpl.call(
       this,
       style,
@@ -3722,15 +3884,12 @@ export class SceneManager {
     );
   }
 
-  // DEC-168: during a pure section MOVE the ISO does NOT crossfade, so the live
-  // overlay must be regenerated at the interpolated cut to follow it. The
-  // contour rebuild is expensive, so it is throttled -- the cut follows in
-  // steps (still far smoother than the source-position snap of a crossfade).
-  // If a crossfade IS active (an ISO state change owns the overlay) or the ISO
-  // is off, this is a no-op.
+  // DEC-168/DEC-171: transition-frame Section ISO roots stay attached to the
+  // interpolated cut. The contour rebuild is throttled; rebuilding every frame
+  // is too expensive, but leaving roots at the source cut makes them snap at
+  // commit or after a later UI style apply.
   private lastSectionIsoMoveFollowMs = 0;
-  applyMtVolumeCutIsoFollowForMoveTween(): void {
-    if (this.sectionIsoOverlayTransition) return;
+  applyMtVolumeCutIsoFollowForTransitionFrame(): void {
     const now = performance.now();
     if (
       now - this.lastSectionIsoMoveFollowMs <
@@ -3739,12 +3898,40 @@ export class SceneManager {
       return;
     }
     this.lastSectionIsoMoveFollowMs = now;
-    const volStyle = this.styleForLayer(
-      UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID,
-    );
-    if (volStyle.sectionIsoEnabled === true) {
-      this.updateMtVolumeCutIsoOverlays(volStyle, { bypassTransitionHold: true });
+    const tween = this.sceneSectionStyleTween;
+    const sectionIsoMoveFollowSourceStyle =
+      tween?.sectionIsoMoveFollowSourceStyles?.get(
+        UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID,
+      );
+    const sectionIsoMoveFollowOpacity =
+      sectionIsoMoveFollowSourceStyle && tween
+        ? 1 - this.transitionTweenEasedProgress(tween, now)
+        : undefined;
+    const sectionIsoTransitionOpacity =
+      sectionIsoMoveFollowOpacity ??
+      this.currentSectionIsoOverlayTransitionOpacity();
+    if (
+      sectionIsoMoveFollowSourceStyle &&
+      sectionIsoMoveFollowOpacity !== undefined
+    ) {
+      this.updateMtVolumeCutIsoOverlays(sectionIsoMoveFollowSourceStyle, {
+        bypassTransitionHold: true,
+        initialTransitionOpacity: sectionIsoMoveFollowOpacity,
+      });
+      return;
     }
+    const volStyle =
+      this.styleForLayer(UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID);
+    if (volStyle.sectionIsoEnabled === true) {
+      this.updateMtVolumeCutIsoOverlays(volStyle, {
+        bypassTransitionHold: true,
+        initialTransitionOpacity: sectionIsoTransitionOpacity,
+      });
+    }
+  }
+
+  applyMtVolumeCutIsoFollowForMoveTween(): void {
+    this.applyMtVolumeCutIsoFollowForTransitionFrame();
   }
 
   seismicVolumeIsoOverlayGroup(seismicLayer: THREE.Group): THREE.Group {

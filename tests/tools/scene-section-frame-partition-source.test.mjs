@@ -240,6 +240,27 @@ test("the classifier wires the per-frame partition onto the tween", () => {
   );
 });
 
+test("the classifier preserves moving frames during non-geometric section changes", () => {
+  assert.doesNotMatch(
+    classifierSource,
+    /sceneSectionDiscreteChanged\s*&&\s*dissolveFrameIds\.size\s*===\s*0[\s\S]{0,240}?movingFrameIds\s*=\s*new Set<string>\(\)/,
+    "global section discrete changes must not erase movingFrameIds; compatible section cuts keep moving while internals fade/commit",
+  );
+});
+
+test("scene-section layer crossfades are gated to real dissolved frames", () => {
+  assert.match(
+    classifierSource,
+    /let sectionHasDissolveForTransition\s*=\s*false/,
+    "classifier should expose whether this transition has real dissolved section frames",
+  );
+  assert.match(
+    classifierSource,
+    /const shouldCrossfadeSceneSection\s*=[\s\S]*sectionHasDissolveForTransition[\s\S]*SCENE_SECTION_AFFECTED_LAYER_IDS/,
+    "section-affected layers should crossfade for actual dissolved frames, not every global section discrete difference",
+  );
+});
+
 test("a moving frame's flip is held to the source side during the glide", () => {
   assert.match(
     controllerSource,

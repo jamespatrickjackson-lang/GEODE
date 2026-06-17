@@ -57,11 +57,16 @@ test("docs define section masks as transition-scene channels without adding a la
   );
 });
 
-test("docs supersede section exit fades with the no-bleed target-active contract", () => {
+test("docs keep no-bleed target-active contract with only detached ISO exit roots", () => {
   assert.match(
     decisions,
     /DEC-100 - Scene section transitions do not bleed into inactive target pages/,
     "Durable decisions should supersede active-to-inactive section exit fades.",
+  );
+  assert.match(
+    decisions,
+    /DEC-169 - Detached Section ISO exit roots fade without section bleed/,
+    "Durable decisions should spell out the narrow detached Section ISO root exception.",
   );
   assert.match(
     transitionDecisionLog,
@@ -70,8 +75,13 @@ test("docs supersede section exit fades with the no-bleed target-active contract
   );
   assert.match(
     transitionDirectives,
-    /active-to-inactive[\s\S]*must not carry source\s+section masks, helpers, frame controls, ground traces, or Section ISO roots/i,
-    "Transition directives should forbid section visuals on inactive or unrelated target pages.",
+    /active-to-inactive[\s\S]*must not carry source\s+section masks, live helpers, frame controls, ground traces, axes, cones,[\s\S]*live Section ISO roots/i,
+    "Transition directives should forbid live section visuals on inactive or unrelated target pages.",
+  );
+  assert.match(
+    transitionDirectives,
+    /DEC-169[\s\S]*detached visual Section ISO source roots to fade to zero/i,
+    "Transition directives should limit the carve-out to detached visual ISO exit roots.",
   );
 });
 
@@ -157,8 +167,18 @@ test("inactive target pages do not carry source section masks into the transitio
   );
   assert.match(
     transitionEffectiveLayers,
-    /else\s+if\s*\(\s*sceneSectionStyleChanged\s*&&\s*!targetSceneSectionTransitionActive\s*\)\s*\{[\s\S]*this\.applySceneSectionPlanes\(\s*targetSceneSectionStyle\s*\)/,
-    "Inactive target pages should apply the target section state immediately instead of fading source masks.",
+    /let applyInactiveTargetSceneSectionAfterLayerSnapshots\s*=\s*false/,
+    "Inactive target section application should be deferred until outgoing source visual snapshots are cloned.",
+  );
+  assert.match(
+    transitionEffectiveLayers,
+    /else\s+if\s*\(\s*sceneSectionStyleChanged\s*&&\s*!targetSceneSectionTransitionActive\s*\)\s*\{[\s\S]*applyInactiveTargetSceneSectionAfterLayerSnapshots\s*=\s*true/,
+    "Inactive target pages should mark target section state for the post-snapshot apply phase.",
+  );
+  assert.match(
+    transitionEffectiveLayers,
+    /else\s+if\s*\(\s*applyInactiveTargetSceneSectionAfterLayerSnapshots\s*\)\s*\{[\s\S]*this\.applySceneSectionPlanes\(\s*targetSceneSectionStyle\s*\)/,
+    "Inactive target pages should still apply target section state immediately after source snapshots are cloned.",
   );
 });
 
@@ -199,6 +219,56 @@ test("section helpers regenerate at start/commit and follow during move tweens, 
     sceneSectionController,
     /applySceneSectionHelperTransitionOpacity\(\)/,
     "Transition frames should still update helper opacity.",
+  );
+});
+
+test("dual-mask frame follow moves axes and ground traces with surviving frames", () => {
+  assert.match(
+    sceneSectionController,
+    /sceneSectionFrameFollowFrameId/,
+    "Non-control section helpers should carry the frame id they follow.",
+  );
+  assert.match(
+    sceneSectionController,
+    /axisLine\.userData\.sceneSectionFrameFollowFrameId\s*=\s*plane\.frameId/,
+    "Scale-axis line geometry should be tagged to follow the moving frame.",
+  );
+  assert.match(
+    sceneSectionController,
+    /traceGroup\.userData\.sceneSectionFrameFollowFrameId\s*=\s*plane\.frameId/,
+    "Ground-trace geometry should be tagged to follow the moving frame.",
+  );
+  assert.match(
+    sceneSectionController,
+    /traceGroup\.userData\.sceneSectionGroundTraceFollowSourcePoint\s*=\s*plane\.point\.clone\(\)/,
+    "Ground-trace geometry should keep the source plane point for terrain-anchored follow.",
+  );
+  assert.match(
+    sceneSectionController,
+    /traceGroup\.userData\.sceneSectionGroundTraceFollowSourceNormal\s*=\s*plane\.normal\.clone\(\)/,
+    "Ground-trace geometry should keep the source plane normal for terrain-anchored follow.",
+  );
+  const repositionBody = sceneSectionController.match(
+    /export function repositionSceneSectionFrameHelpers[\s\S]*?\n}/,
+  );
+  assert.ok(
+    repositionBody,
+    "repositionSceneSectionFrameHelpers should have an inspectable body.",
+  );
+  assert.match(
+    repositionBody[0],
+    /sceneSectionFrameFollowSourceMatrix/,
+    "Dual-mask transition frames should transform non-control helper geometry from its source frame matrix.",
+  );
+  assert.match(
+    repositionBody[0],
+    /followMatrix\.copy\(currentMatrix\)\.multiply\(sourceMatrixInverse\)/,
+    "Scale axes should receive the source-to-current frame transform.",
+  );
+  assert.match(
+    repositionBody[0],
+    /deltaDistance\s*=\s*[\s\S]{0,120}plane\.point\.dot\(sourceNormal\)\s*-\s*sourcePoint\.dot\(sourceNormal\)/,
+    "Ground traces should follow the cut by translating along the section normal, not by lifting with frame-center Z.",
   );
 });
 

@@ -3052,3 +3052,163 @@ update cleared an exiting overlay instantly instead of fading.
 (`!maskTransition`); never enable it for dual-mask/dissolve frames. The ISO
 follow runs only when no Section ISO crossfade is active. Locked by
 `tests/tools/scene-section-transition-behavior-source.test.mjs`.
+
+## DEC-169 - Detached Section ISO exit roots fade without section bleed
+
+**Supersedes:** DEC-100 and TRD-012 only where they forbid detached
+visual-only Section ISO source-root fade-out on active-to-inactive or
+active-to-unrelated transitions. DEC-100/TRD-012 remain authoritative for live
+scene-section state, source section masks, helpers, controls, frame visuals,
+ground traces, axes, cones, crop boxes, live clipping, and inactive target
+application.
+
+**Chose:** source Section ISO/isobar/isoline roots may be cloned as
+transition-owned detached source roots before inactive target section state is
+applied. Those detached roots fade to zero on the page-transition clock and are
+removed or discarded at completion or interruption. The inactive target section
+state still applies immediately; no live source section clipping, helper state,
+frame controls, ground trace, axes, cones, crop box, or page fixture logic may
+carry into the target.
+
+**Why:** DEC-100 correctly stopped source section state from bleeding into
+unsectioned targets, but applying the inactive target before snapshotting
+Section ISO roots made isobars and isolines disappear in one frame. Section ISO
+roots are already transition-owned derived visual roots with a discard path that
+does not promote target roots. Treating the source root as a detached exit
+visual preserves the no-bleed invariant while removing the visible snap.
+
+**State machine:** active-to-inactive fades detached source ISO roots to zero
+while live section state becomes inactive immediately. Inactive-to-active
+attaches target ISO roots at zero/current transition opacity and fades them in.
+Active-to-active incompatible changes crossfade source and target roots.
+Active-to-active pure moves do not crossfade; DEC-168 move-follow remains the
+owner.
+
+**Guard:** do not implement this with page fixtures, page ids, page titles,
+page indexes, page order, Utah live page-pair logic, broad visibility replay,
+per-tick helper rebuilds, or MT scalar ownership changes. Locked by
+`tests/tools/section-iso-transition-smoothing-source.test.mjs` and
+`tests/tools/scene-section-transition-behavior-source.test.mjs`.
+
+## DEC-170 - Compatible section moves outrank non-geometric section differences
+
+**Supersedes:** DEC-164 and DEC-168 only where they allowed a non-frame
+scene-section discrete change to dissolve every otherwise-compatible moving
+frame, or allowed fixed Section ISO roots to crossfade during a compatible
+section move solely because helper/control/flip state changed.
+
+**Chose:** when source and target pages share a compatible section frame, that
+frame stays in `movingFrameIds` and keeps the interpolated section-mask owner.
+Non-geometric section differences such as target scope, helper controls, frame
+flip commit state, or helper presentation state do not erase moving-frame
+ownership. Section-affected layer snapshot crossfades are gated to real
+`dissolveFrameIds`, while scalar/style/visibility owners handle their own
+internal transitions on the moving section envelope.
+
+**Section ISO:** compatible active-to-active section moves do not start fixed
+source/target Section ISO root crossfades for generic section discrete changes.
+When source and target ISO roots are both active on a compatible move, live ISO
+overlays follow the interpolated cut and scalar/style owners may tween the
+internal appearance. Fixed Section ISO root crossfades remain for real dissolved
+frames, inactive-target detached exits from DEC-169, and incompatible ISO root
+enter/exit or identity changes that cannot follow the shared moving frame.
+
+**Why:** page transitions such as section page 20 -> 27 correctly classify the
+shared `axis:x` frame as moving, but the classifier later converted that move to
+a dissolve because the section flip/helper state differed. The visible result
+was the section frame and contour-like contents being left behind, then popping
+or snapping at the end. The runtime should behave as one moving section cut:
+compatible frame geometry moves, while changed internals fade/tween through
+their own owners.
+
+**Guard:** no page fixture, page id, page title, page index, page order, or Utah
+live page-pair logic. Do not weaken DEC-100/TRD-012 inactive-target no-bleed
+rules, DEC-169 detached source-root exit rules, or the MT full-density scalar
+transition path. Locked by
+`tests/tools/scene-section-frame-partition-source.test.mjs` and
+`tests/tools/section-iso-transition-smoothing-source.test.mjs`.
+
+## DEC-171 - Section ISO roots follow transition-frame section geometry
+
+**Supersedes:** DEC-168 only where Section ISO follow behavior was limited to
+pure section moves, and DEC-169 only where target roots could wait until final
+commit to rebuild against the active target section.
+
+**Chose:** transition-frame section applies may update derived Section ISO roots
+against the current interpolated section geometry. This is a root-lifecycle
+owner only: it rebuilds or replaces MT Section ISO root geometry at the current
+Section ISO envelope so isobars, isolines, and bands move with the section cut
+instead of sticking to an old cut and snapping after a later UI/style apply.
+Old transition-owned target roots must unregister before disposal so the
+transition clock never drives stale roots.
+
+**Local controls:** the ISO Volume quick toggle fades
+`sectionIsoSourceOpacity` over 1000 ms on a scoped local RAF before persisting
+the final value. The button must not directly write binary opacity values that
+make the volume snap in or out.
+
+**Guard:** this does not allow per-frame helper rebuilds for dual-mask section
+transitions. It does not carry source masks, helpers, controls, axes, cones,
+ground traces, frame outlines, crop boxes, live clipping, page fixtures, page
+ids, page order, or MT full-density scalar ownership into the fix. Locked by
+`tests/tools/section-iso-transition-smoothing-source.test.mjs`.
+
+## DEC-172 - MT raymarched volume follows section transition masks
+
+**Supersedes:** DEC-171 only where Section ISO root follow was not enough to
+keep the underlying MT raymarched volume spatially aligned with the transition
+section envelope.
+
+**Chose:** the MT scalar-volume raymarch shader consumes the same
+scene-section source/target mask transition uniforms as the terrain and
+built-in material shader paths. Target-active section transitions apply an
+initial transition-frame section state before the first layer-opacity fade tick,
+so a hidden-to-visible MT volume enters already sectioned instead of briefly
+appearing as an unsectioned volume. When the MT volume exits to a hidden target,
+transition setup preserves the source scalar-volume style while the layer
+opacity fades to zero; the target off-style is applied only after the fade
+commit path owns the final state.
+
+**Why:** Section ISO bands, isolines, and helper roots could be moving on the
+section clock while the raymarched volume still used either the source inactive
+section state or a target-hidden style that zeroed source opacity before the
+fade. The visible result was a full-volume cloud appearing before it snapped to
+the section envelope, or a source volume snapping out instead of fading.
+
+**Guard:** this is an app-level scalar-volume/scene-section transition rule.
+Do not repair the behavior with page fixtures, page ids, page titles, page
+indexes, page order, Utah live page-pair logic, launcher changes, broad
+visibility replay, or MT full-density scalar ownership changes. Locked by
+`tests/tools/section-iso-transition-smoothing-source.test.mjs`.
+
+## DEC-173 - Source-masked exit snapshots preserve clipped outgoing visuals
+
+**Supersedes:** DEC-100, TRD-012, and DEC-172 only where they could be read to
+forbid a transition-owned source snapshot from preserving the exact
+scene-section or working-area clipping that was already visible at transition
+start. The inactive target section state still applies immediately to live
+target layers.
+
+**Chose:** when a sectioned or working-area-clipped source layer exits to a
+target page where that layer is hidden or opacity-zero, the outgoing visual may
+be cloned as a transition-owned source snapshot before target section state is
+applied. The snapshot keeps source clipping planes, source section object
+visibility shader hooks, source raymarch section uniforms, and source
+working-area focus state, then fades to zero on the page-transition clock. Live
+target layer state remains target-authored and inactive/unclipped as required.
+
+**Why:** applying inactive target section state before a source exit fade made
+hidden outside-section geometry become visible during the fade. The observed
+failure affected both built-in materials (top/threshold surfaces lost the
+scene-section shader hook and clipping planes on their transition snapshot) and
+the MT raymarched volume (the live layer kept fading, but its source section
+uniforms were cleared to the inactive target). A transition-owned source
+snapshot preserves what was actually visible at transition start without
+carrying live source section state into the target.
+
+**Guard:** no page fixture, page id, page title, page index, page order, or Utah
+live page-pair logic. Do not allow helpers, controls, axes, cones, ground
+traces, frame outlines, crop boxes, or live section clipping to bleed into
+inactive targets. Do not change MT full-density scalar ownership. Locked by
+`tests/tools/working-area-focus-transition-source.test.mjs` and
+`tests/tools/section-iso-transition-smoothing-source.test.mjs`.

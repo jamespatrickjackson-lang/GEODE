@@ -3616,6 +3616,7 @@ export function rebuildSceneSectionHelpers(this: any,
       tangentB,
       orientationNormal,
     );
+    const frameFollowSourceMatrix = planeBasis.clone().setPosition(planeCenter);
     const planeQuaternion = new THREE.Quaternion().setFromRotationMatrix(
       planeBasis,
     );
@@ -3968,6 +3969,9 @@ export function rebuildSceneSectionHelpers(this: any,
       axisLine.name = `${plane.axis.toUpperCase()} section scale axes`;
       axisLine.userData.sceneSectionHelper = true;
       axisLine.userData.sceneSectionScaleAxes = true;
+      axisLine.userData.sceneSectionFrameFollowFrameId = plane.frameId;
+      axisLine.userData.sceneSectionFrameFollowSourceMatrix =
+        frameFollowSourceMatrix.clone();
       axisLine.userData.sceneSectionAxisIntervalM = frame.axisIntervalM;
       axisLine.userData.sceneSectionAxisTextScale = frame.axisTextScale;
       axisLine.renderOrder = SCENE_SECTION_RENDER_ORDER + 1;
@@ -4067,6 +4071,13 @@ export function rebuildSceneSectionHelpers(this: any,
       const traceGroup = new THREE.Group();
       traceGroup.name = `${plane.axis.toUpperCase()} section ground trace`;
       traceGroup.userData.sceneSectionHelper = true;
+      traceGroup.userData.sceneSectionFrameFollowFrameId = plane.frameId;
+      traceGroup.userData.sceneSectionFrameFollowSourceMatrix =
+        frameFollowSourceMatrix.clone();
+      traceGroup.userData.sceneSectionGroundTraceFollowSourcePoint =
+        plane.point.clone();
+      traceGroup.userData.sceneSectionGroundTraceFollowSourceNormal =
+        plane.normal.clone();
       runtime.group.add(traceGroup);
       const origin = this.siteSurfaceGuideOrigin(
         this.layers.get(this.topoSurfaceLayerId()),
@@ -4121,6 +4132,23 @@ export function rebuildSceneSectionHelpers(this: any,
   }
 }
 
+function sceneSectionFrameFollowMatrix(
+  planeCenter: THREE.Vector3,
+  tangentA: THREE.Vector3,
+  tangentB: THREE.Vector3,
+): THREE.Matrix4 {
+  const orientationNormal = new THREE.Vector3()
+    .crossVectors(tangentA, tangentB)
+    .normalize();
+  const matrix = new THREE.Matrix4().makeBasis(
+    tangentA,
+    tangentB,
+    orientationNormal,
+  );
+  matrix.setPosition(planeCenter);
+  return matrix;
+}
+
 // Per-frame helper follow during a move tween. The section clip/content is
 // driven by shader uniforms and interpolates smoothly, but the frame helper
 // geometry is rebuilt only at tween start/final commit, so it holds the source
@@ -4138,14 +4166,20 @@ export function repositionSceneSectionFrameHelpers(
   const runtime = this.sceneSectionRuntime;
   if (!runtime?.group?.visible) return;
   const controlGroups = new Map<string, THREE.Object3D>();
+  const followObjects = new Map<string, THREE.Object3D[]>();
   for (const child of runtime.group.children) {
     const frameId = child.userData?.sceneSectionFrameControlGroupFrameId;
     if (typeof frameId === "string") controlGroups.set(frameId, child);
+    const followFrameId = child.userData?.sceneSectionFrameFollowFrameId;
+    if (typeof followFrameId === "string") {
+      const list = followObjects.get(followFrameId) ?? [];
+      list.push(child);
+      followObjects.set(followFrameId, list);
+    }
   }
-  if (controlGroups.size === 0) return;
+  if (controlGroups.size === 0 && followObjects.size === 0) return;
   for (const plane of planes) {
     const group = controlGroups.get(plane.frameId);
-    if (!group) continue;
     const frame =
       sectionFrames.find(
         (candidate: ResolvedSceneSectionFrame) =>
@@ -4164,14 +4198,57 @@ export function repositionSceneSectionFrameHelpers(
       tangentB,
       orientationNormal,
     );
-    group.position.copy(planeCenter);
-    group.quaternion.setFromRotationMatrix(planeBasis);
+    if (group) {
+      group.position.copy(planeCenter);
+      group.quaternion.setFromRotationMatrix(planeBasis);
+    }
+
+    const currentMatrix = sceneSectionFrameFollowMatrix(
+      planeCenter,
+      tangentA,
+      tangentB,
+    );
+    const followers = followObjects.get(plane.frameId) ?? [];
+    for (const follower of followers) {
+      const sourcePoint =
+        follower.userData?.sceneSectionGroundTraceFollowSourcePoint;
+      const sourceNormal =
+        follower.userData?.sceneSectionGroundTraceFollowSourceNormal;
+      if (
+        sourcePoint instanceof THREE.Vector3 &&
+        sourceNormal instanceof THREE.Vector3
+      ) {
+        const deltaDistance =
+          plane.point.dot(sourceNormal) - sourcePoint.dot(sourceNormal);
+        const translation = sourceNormal
+          .clone()
+          .multiplyScalar(deltaDistance);
+        const followMatrix = new THREE.Matrix4().makeTranslation(
+          translation.x,
+          translation.y,
+          translation.z,
+        );
+        follower.matrixAutoUpdate = false;
+        follower.matrix.copy(followMatrix);
+        follower.matrixWorldNeedsUpdate = true;
+        continue;
+      }
+      const sourceMatrix =
+        follower.userData?.sceneSectionFrameFollowSourceMatrix;
+      if (!(sourceMatrix instanceof THREE.Matrix4)) continue;
+      const sourceMatrixInverse = sourceMatrix.clone().invert();
+      const followMatrix = new THREE.Matrix4();
+      followMatrix.copy(currentMatrix).multiply(sourceMatrixInverse);
+      follower.matrixAutoUpdate = false;
+      follower.matrix.copy(followMatrix);
+      follower.matrixWorldNeedsUpdate = true;
+    }
 
     // Extents follow: resize the outline rectangle to the interpolated frame
     // bounds. Only the (cheap) outline geometry is rebuilt; the stored line
     // width is reused so no material is recreated. Handles ride the control
     // group transform; their edge offsets refresh at the commit rebuild.
-    if (frame) {
+    if (frame && group) {
       const centerA = planeCenter.dot(tangentA);
       const centerB = planeCenter.dot(tangentB);
       const minLocalA = frame.minAM - centerA;
@@ -4378,24 +4455,18 @@ export function applySceneSectionPlanes(
   this.applySceneSectionHelperTransitionOpacity();
   const helperOpacityMs = transitionDebugMs(performance.now() - stageStart);
   stageStart = performance.now();
-  // The scalar ISO (isobands/isolines/bands) is NOT regenerated on transition
-  // frames here: doing so registers crossfade transition roots (making a move
-  // crossfade instead of follow) and clears the live overlay when the target
-  // page has the ISO off (making an exit snap instead of fade). The Section ISO
-  // transition owns it during a transition (crossfade for state changes; the
-  // sectionIsoStable envelope protects an unchanged overlay). Following the cut
-  // for a pure move is handled by `applyMtVolumeCutIsoFollowForMoveTween`.
+  // The scalar ISO (isobands/isolines/bands) follows transition-frame section
+  // geometry through its own throttled owner. That owner may rebuild live target
+  // roots at the current Section ISO envelope, but helper snapshots/masks remain
+  // start/commit-only for dual-mask transitions.
   if (!options?.transitionFrame) {
     this.updateMtVolumeCutIsoOverlays(
       this.styleForLayer(UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID),
     );
-  } else if (moveFollowFrame) {
-    this.applyMtVolumeCutIsoFollowForMoveTween?.();
+  } else {
+    this.applyMtVolumeCutIsoFollowForTransitionFrame?.();
   }
-  const mtCutIsoUpdate =
-    options?.transitionFrame && !moveFollowFrame
-      ? null
-      : this.lastMtVolumeCutIsoUpdateDebug ?? null;
+  const mtCutIsoUpdate = this.lastMtVolumeCutIsoUpdateDebug ?? null;
   const mtCutIsoMs = transitionDebugMs(performance.now() - stageStart);
   stageStart = performance.now();
   if (!options?.transitionFrame) {

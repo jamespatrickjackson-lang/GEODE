@@ -219,6 +219,7 @@ export interface SceneSectionStyleTween {
   // longer snaps the surviving planes or the data they clip.
   movingFrameIds?: ReadonlySet<string>;
   dissolveFrameIds?: ReadonlySet<string>;
+  sectionIsoMoveFollowSourceStyles?: Map<string, EditableStyle>;
   appliedDiscreteTarget?: boolean;
 }
 

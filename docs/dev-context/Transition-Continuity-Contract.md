@@ -103,7 +103,13 @@ Current allowed implementation scope:
 - Narrow target-active section-scene execution owner for scene section mask alpha
   and helper opacity accepted by TRD-010 and bounded by TRD-012.
 - Narrow target-active Section ISO derived-root crossfade owner accepted by
-  TRD-011 and bounded by TRD-012.
+  TRD-011 and bounded by TRD-012, with DEC-169 allowing detached visual
+  Section ISO source-root exit fades for inactive targets and DEC-170 keeping
+  compatible active-to-active Section ISO roots on the moving section envelope
+  instead of fixed-root crossfading generic section discrete changes. DEC-171
+  keeps derived Section ISO roots attached to transition-frame section geometry
+  at the current Section ISO envelope without weakening helper/mask no-bleed
+  rules.
 - Transition execution layer that consumes classifier assignments and dispatches
   registered per-entity operations to existing interpolation kernels, accepted
   by TRD-013 and phase-limited by TRD-014. The current migrated runtime slice is

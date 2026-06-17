@@ -1044,28 +1044,100 @@ export function transitionEffectiveLayersForPage(
       fromSceneSectionStyle,
       targetSceneSectionStyle,
     );
+  const sourceSceneSectionTransitionActive =
+    sceneSectionTransitionActiveForStyle(fromSceneSectionStyle);
   const targetSceneSectionTransitionActive =
     sceneSectionTransitionActiveForStyle(targetSceneSectionStyle);
+  // Section ISO roots crossfade only when their resolved state actually
+  // changes. Matched cut identity with unchanged section masks and unchanged
+  // overlay style must stay continuous (no self-crossfade dip); the live
+  // roots are protected through the sectionIsoStable envelope instead.
+  const sectionIsoRootSourceLayerIds = [
+    UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID,
+    UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID,
+  ];
+  const sectionIsoRootStates = sectionIsoRootSourceLayerIds.map((id) => {
+    const fromStyle = effectiveStyle(fromEnvironment, fromPage, id);
+    const toStyle = effectiveStyle(toEnvironment, toPage, id);
+    const fromOn =
+      sourceSceneSectionTransitionActive &&
+      fromVisible.has(id) &&
+      sectionIsoOverlayVisible(fromStyle);
+    const toOn =
+      targetSceneSectionTransitionActive &&
+      toVisible.has(id) &&
+      sectionIsoOverlayVisible(toStyle);
+    let changed = fromOn !== toOn;
+    if (!changed && toOn) {
+      changed = scalarTransitionStyleChanged(fromStyle, toStyle);
+    }
+    if (
+      !changed &&
+      toOn &&
+      ((fromStyle.sectionIsoLinesVisible !== false) !==
+        (toStyle.sectionIsoLinesVisible !== false) ||
+        (fromStyle.sectionIsoBandsVisible !== false) !==
+          (toStyle.sectionIsoBandsVisible !== false))
+    ) {
+      changed = true;
+    }
+    if (
+      !changed &&
+      toOn &&
+      JSON.stringify(fromStyle.sectionIsoTargetIds ?? null) !==
+      JSON.stringify(toStyle.sectionIsoTargetIds ?? null)
+    ) {
+      changed = true;
+    }
+    return { id, fromStyle, toStyle, fromOn, toOn, changed };
+  });
+  const sectionIsoRootStateChanged = sectionIsoRootStates.some(
+    (state) => state.changed,
+  );
+  const sectionIsoMoveFollowSourceStyles = new Map<
+    string,
+    ReturnType<typeof effectiveStyle>
+  >();
+  let sectionIsoRootStateChangedForTransition = sectionIsoRootStateChanged;
+  let sectionIsoOverlayTransitionStarted = false;
+  let sectionHasDissolveForTransition = false;
+  let applyInactiveTargetSceneSectionAfterLayerSnapshots = false;
   if (
     sceneSectionStyleChanged &&
     duration > 0 &&
     targetSceneSectionTransitionActive
   ) {
     // DEC-164: partition frames per stable id. Surviving frames move; only
-    // changed frames dissolve. A non-frame discrete change (e.g. target scope)
-    // with no per-frame change falls back to dissolving every active frame so
-    // the global retargeting still cross-fades rather than snapping.
+    // changed frames dissolve. Non-geometric section differences (target scope,
+    // controls, flip commit state) must not erase moving-frame ownership; layer
+    // and ISO owners handle their own internal fades while the section moves.
     const sectionPartition = sceneSectionFramePartition(
       fromSceneSectionStyle,
       targetSceneSectionStyle,
     );
-    let movingFrameIds = sectionPartition.movingFrameIds;
-    let dissolveFrameIds = sectionPartition.dissolveFrameIds;
-    if (sceneSectionDiscreteChanged && dissolveFrameIds.size === 0) {
-      dissolveFrameIds = new Set<string>(movingFrameIds);
-      movingFrameIds = new Set<string>();
-    }
+    const movingFrameIds = sectionPartition.movingFrameIds;
+    const dissolveFrameIds = sectionPartition.dissolveFrameIds;
     const sectionHasDissolve = dissolveFrameIds.size > 0;
+    sectionHasDissolveForTransition = sectionHasDissolve;
+    if (!sectionHasDissolve) {
+      const sectionHasCompatibleMove = movingFrameIds.size > 0;
+      for (const state of sectionIsoRootStates) {
+        const { id, fromStyle, fromOn, toOn } = state;
+        if (fromOn && !toOn) {
+          sectionIsoMoveFollowSourceStyles.set(id, fromStyle);
+        }
+      }
+      sectionIsoRootStateChangedForTransition = sectionIsoRootStates.some(
+        (state) => {
+          if (!state.changed) return false;
+          if (sectionIsoMoveFollowSourceStyles.has(state.id)) return false;
+          if (sectionHasCompatibleMove && state.fromOn && state.toOn) {
+            return false;
+          }
+          return true;
+        },
+      );
+    }
     this.sceneSectionStyleTween = {
       fromStyle: fromSceneSectionStyle,
       toStyle: targetSceneSectionStyle,
@@ -1076,6 +1148,10 @@ export function transitionEffectiveLayersForPage(
       maskMode: sectionHasDissolve ? "dual-mask" : "interpolated",
       movingFrameIds,
       dissolveFrameIds,
+      sectionIsoMoveFollowSourceStyles:
+        sectionIsoMoveFollowSourceStyles.size > 0
+          ? sectionIsoMoveFollowSourceStyles
+          : undefined,
     };
     this.sceneSectionHelperTransitionOpacity =
       this.sceneSectionHelperOpacityForTween(this.sceneSectionStyleTween, 0);
@@ -1094,12 +1170,20 @@ export function transitionEffectiveLayersForPage(
   } else if (sceneSectionStyleChanged && !targetSceneSectionTransitionActive) {
     this.sceneSectionStyleTween = null;
     this.sceneSectionHelperTransitionOpacity = 0;
-    // The live runtime applies the inactive target at transition start
-    // (section rules: no source carry). The exit visual is owned by a
-    // transition snapshot fading on the page clock; without it helpers,
-    // frames, axes, and async ground traces pop off in one frame. The
-    // snapshot must be taken before the inactive apply clears the live
-    // helper group.
+    // The live runtime applies inactive target section state on the first
+    // transition setup pass (section rules: no source carry), but only after
+    // source visual layer snapshots clone their already-visible masks. That
+    // keeps outgoing clipped surfaces clipped while they fade to zero.
+    if (duration > 0 && sectionIsoRootStateChanged) {
+      this.beginSectionIsoOverlayTransition(
+        fromSceneSectionStyle,
+        targetSceneSectionStyle,
+        now,
+        duration,
+        easing,
+      );
+      sectionIsoOverlayTransitionStarted = true;
+    }
     if (
       duration > 0 &&
       this.sceneSectionHelperExitSnapshotNeeded?.(
@@ -1109,7 +1193,7 @@ export function transitionEffectiveLayersForPage(
     ) {
       this.beginSceneSectionHelperTransitionSnapshot?.(now, duration, easing);
     }
-    this.applySceneSectionPlanes(targetSceneSectionStyle);
+    applyInactiveTargetSceneSectionAfterLayerSnapshots = true;
   }
   if (sceneSectionStyleChanged) {
     this.activeSceneTransitionContext.productFamilies.push(
@@ -1123,42 +1207,14 @@ export function transitionEffectiveLayersForPage(
       }),
     );
   }
-  // Section ISO roots crossfade only when their resolved state actually
-  // changes. Matched cut identity with unchanged section masks and unchanged
-  // overlay style must stay continuous (no self-crossfade dip); the live
-  // roots are protected through the sectionIsoStable envelope instead.
-  const sectionIsoRootSourceLayerIds = [
-    UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID,
-    UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID,
-  ];
-  const sectionIsoRootStateChanged = sectionIsoRootSourceLayerIds.some((id) => {
-    const fromStyle = effectiveStyle(fromEnvironment, fromPage, id);
-    const toStyle = effectiveStyle(toEnvironment, toPage, id);
-    const fromOn = fromVisible.has(id) && sectionIsoOverlayVisible(fromStyle);
-    const toOn = toVisible.has(id) && sectionIsoOverlayVisible(toStyle);
-    if (fromOn !== toOn) return true;
-    if (!toOn) return false;
-    if (scalarTransitionStyleChanged(fromStyle, toStyle)) return true;
-    if (
-      (fromStyle.sectionIsoLinesVisible !== false) !==
-        (toStyle.sectionIsoLinesVisible !== false) ||
-      (fromStyle.sectionIsoBandsVisible !== false) !==
-        (toStyle.sectionIsoBandsVisible !== false)
-    ) {
-      return true;
-    }
-    return (
-      JSON.stringify(fromStyle.sectionIsoTargetIds ?? null) !==
-      JSON.stringify(toStyle.sectionIsoTargetIds ?? null)
-    );
-  });
-  // Crossfade the Section ISO overlay only when it actually changes
-  // incompatibly: an ISO state change (enter/exit/different targets/scalar) or a
-  // discrete/dissolve section change. A pure numeric MOVE (plane slides, ISO
-  // settings unchanged) must NOT crossfade -- the live overlay follows the cut
-  // via `applyMtVolumeCutIsoFollowForMoveTween` (DEC-168). Crossfading a move
-  // holds the source contours at the source position and pops the target in.
-  if (sceneSectionDiscreteChanged || sectionIsoRootStateChanged) {
+  // Crossfade the Section ISO overlay only when the section has real dissolved
+  // frames or when ISO roots change incompatibly. Compatible section moves keep
+  // live overlays on the interpolated cut; scalar/style owners can then fade or
+  // tween internals without fixed roots being left behind.
+  if (
+    !sectionIsoOverlayTransitionStarted &&
+    (sectionHasDissolveForTransition || sectionIsoRootStateChangedForTransition)
+  ) {
     this.beginSectionIsoOverlayTransition(
       fromSceneSectionStyle,
       targetSceneSectionStyle,
@@ -1166,7 +1222,7 @@ export function transitionEffectiveLayersForPage(
       duration,
       easing,
     );
-  } else {
+  } else if (!sectionIsoOverlayTransitionStarted) {
     this.discardSectionIsoOverlayTransition?.();
   }
 
@@ -1182,6 +1238,8 @@ export function transitionEffectiveLayersForPage(
         sourceState?.style ?? effectiveStyle(fromEnvironment, fromPage, id);
       const targetStyle = effectiveStyle(toEnvironment, toPage, id);
       const sectionIsoStable =
+        sourceSceneSectionTransitionActive &&
+        targetSceneSectionTransitionActive &&
         fromVisible.has(id) &&
         toVisible.has(id) &&
         sectionIsoOverlayVisible(fromStyle) &&
@@ -1220,6 +1278,7 @@ export function transitionEffectiveLayersForPage(
         !!group &&
         duration > 0 &&
         sceneSectionDiscreteChanged &&
+        sectionHasDissolveForTransition &&
         targetSceneSectionTransitionActive &&
         fromOpacity > 0.001 &&
         SCENE_SECTION_AFFECTED_LAYER_IDS.has(id) &&
@@ -1243,18 +1302,57 @@ export function transitionEffectiveLayersForPage(
         fromOpacity > 0.001 &&
         this.layerHasScalarPreviewData(group) &&
         !toVisible.has(id);
+      const shouldPreserveScalarVolumeExitStyle =
+        id === UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID &&
+        !!group &&
+        duration > 0 &&
+        fromOpacity > 0.001 &&
+        toOpacity <= 0.001;
+      const shouldSnapshotScalarVolumeSectionExit =
+        shouldPreserveScalarVolumeExitStyle &&
+        sourceSceneSectionTransitionActive &&
+        !targetSceneSectionTransitionActive;
+      const shouldTweenScalarVolumeExitStyle =
+        id === UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID &&
+        !!group &&
+        duration > 0 &&
+        scalarStyleDurationMs > 0 &&
+        fromOpacity > 0.001 &&
+        toOpacity <= 0.001 &&
+        this.layerSupportsScalarStyleTween(id, group);
+      const scalarVolumeExitSourceStyle = shouldTweenScalarVolumeExitStyle
+        ? {
+            ...fromStyle,
+            scalarVolumeOpacity:
+              typeof fromStyle.scalarVolumeOpacity === "number" &&
+              Number.isFinite(fromStyle.scalarVolumeOpacity)
+                ? fromStyle.scalarVolumeOpacity
+                : typeof fromStyle.opacity === "number" &&
+                    Number.isFinite(fromStyle.opacity)
+                  ? fromStyle.opacity
+                  : fromOpacity,
+          }
+        : fromStyle;
+      const scalarVolumeExitTargetStyle = shouldTweenScalarVolumeExitStyle
+        ? {
+            ...targetStyle,
+            scalarVolumeOpacity: 0,
+          }
+        : targetStyle;
       const transitionSnapshot =
         shouldCrossfadeDiscreteData ||
         shouldCrossfadeScalarStyle ||
-        shouldCrossfadeSceneSection
+        shouldCrossfadeSceneSection ||
+        shouldSnapshotScalarVolumeSectionExit
           ? this.cloneLayerTransitionSnapshot(id, group)
           : null;
       const transitionKind: LayerTransitionKind =
         shouldCrossfadeDiscreteData ||
         shouldCrossfadeScalarStyle ||
-        shouldCrossfadeSceneSection
+        shouldCrossfadeSceneSection ||
+        shouldSnapshotScalarVolumeSectionExit
           ? "discrete-crossfade"
-          : shouldTweenScalarStyle
+          : shouldTweenScalarStyle || shouldTweenScalarVolumeExitStyle
             ? id === UTAH_FORGE_MT_RESISTIVITY_FULL_DENSITY_LAYER_ID
               ? "full-density-scalar"
               : "continuous"
@@ -1274,14 +1372,23 @@ export function transitionEffectiveLayersForPage(
 
       // Apply target page colour/provenance-style immediately, but restore the
       // visual opacity to the old page value before the fade begins.
-      this.applyStyle(id, shouldTweenScalarStyle ? fromStyle : targetStyle);
-      if (shouldTweenScalarStyle) {
+      this.applyStyle(
+        id,
+          shouldTweenScalarStyle || shouldPreserveScalarVolumeExitStyle
+            ? fromStyle
+            : targetStyle,
+      );
+      if (shouldTweenScalarStyle || shouldTweenScalarVolumeExitStyle) {
         this.scalarStyleTweens.set(id, {
           id,
           from: 0,
           to: 1,
-          fromStyle,
-          toStyle: targetStyle,
+          fromStyle: shouldTweenScalarVolumeExitStyle
+            ? scalarVolumeExitSourceStyle
+            : fromStyle,
+          toStyle: shouldTweenScalarVolumeExitStyle
+            ? scalarVolumeExitTargetStyle
+            : targetStyle,
           startMs: now,
           durationMs: Math.max(0, scalarStyleDurationMs),
           easing: scalarStyleEasing,
@@ -1386,6 +1493,13 @@ export function transitionEffectiveLayersForPage(
         ),
       },
     );
+  } else if (this.sceneSectionStyleTween) {
+    this.applySceneSectionPlanes(
+      this.sceneSectionTweenStyle(this.sceneSectionStyleTween, 0),
+      { transitionFrame: true },
+    );
+  } else if (applyInactiveTargetSceneSectionAfterLayerSnapshots) {
+    this.applySceneSectionPlanes(targetSceneSectionStyle);
   } else {
     this.reapplySceneSectionPlanes();
   }

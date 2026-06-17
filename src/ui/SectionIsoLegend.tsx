@@ -33,6 +33,7 @@ import type {
   ScalarSectionIsoTarget,
   SectionIsoTargetGroup,
 } from "../scene/SceneManager";
+import { easeProgress } from "../scene/transitions/transitionStyles";
 
 const UTAH_FORGE_PROJECT_SLUG = "utah-forge";
 const POPOVER_WIDTH_PX = 312;
@@ -41,6 +42,29 @@ const ISO_BUTTON_ACTIVE_BACKGROUND = "#ffffff";
 const ISO_BUTTON_ACTIVE_SUB_INACTIVE_BACKGROUND = "rgba(255, 255, 255, 0.36)";
 const ISO_BUTTON_INACTIVE_BACKGROUND = QUICK_LEGEND_INACTIVE_BACKGROUND;
 const ISO_BUTTON_DISABLED_BACKGROUND = "rgba(128, 134, 145, 0.24)";
+const SECTION_ISO_LOCAL_TOGGLE_TRANSITION_MS = 1000;
+
+function sectionIsoLegendTransitionScopeKey({
+  projectSlug,
+  editingEnvironment,
+  pageId,
+  writePageId,
+  layerId,
+}: {
+  projectSlug: string;
+  editingEnvironment: boolean;
+  pageId: string | null;
+  writePageId: string | null;
+  layerId: string;
+}): string {
+  return [
+    projectSlug,
+    editingEnvironment ? "environment" : "page",
+    pageId ?? "",
+    writePageId ?? "",
+    layerId,
+  ].join("|");
+}
 
 function sectionIsoTargetsSnapshot(manager: {
   listSectionIsoTargets: () => ScalarSectionIsoTarget[];
@@ -453,13 +477,28 @@ export function SectionIsoLegend({
   const { pages, currentIndex, transitionFrame } = usePageController();
   const rootRef = useRef<HTMLElement | null>(null);
   const popoverRef = useRef<HTMLDivElement | null>(null);
+  const volumeTransitionFrameRef = useRef<number | null>(null);
+  const volumeTransitionTokenRef = useRef(0);
+  const volumeTransitionScopeKeyRef = useRef<string | null>(null);
   const [targets, setTargets] = useState<ScalarSectionIsoTarget[]>(() => sectionIsoTargetsSnapshot(sceneHandle.manager));
   const [activeGroup, setActiveGroup] = useState<SectionIsoTargetGroup | "">("");
   const [popoverOpen, setPopoverOpen] = useState(false);
+  const [volumeTransitionTarget, setVolumeTransitionTarget] = useState<
+    boolean | null
+  >(null);
   const [popoverPosition, setPopoverPosition] = useState({
     left: POPOVER_MARGIN_PX,
     top: POPOVER_MARGIN_PX,
   });
+  const cancelIsoVolumeTransition = () => {
+    volumeTransitionTokenRef.current += 1;
+    if (volumeTransitionFrameRef.current !== null) {
+      window.cancelAnimationFrame(volumeTransitionFrameRef.current);
+      volumeTransitionFrameRef.current = null;
+    }
+    volumeTransitionScopeKeyRef.current = null;
+    setVolumeTransitionTarget(null);
+  };
 
   useEffect(() => {
     let lastSignature = "";
@@ -496,6 +535,14 @@ export function SectionIsoLegend({
       window.removeEventListener("resize", update);
     };
   }, [popoverOpen, targets]);
+
+  useEffect(() => () => cancelIsoVolumeTransition(), []);
+
+  useEffect(() => {
+    if (transitionFrame.active) {
+      cancelIsoVolumeTransition();
+    }
+  }, [transitionFrame.active]);
 
   if (state.projectSlug !== UTAH_FORGE_PROJECT_SLUG) return null;
   const legendTextColors = resolveLegendTextColors(
@@ -585,6 +632,7 @@ export function SectionIsoLegend({
     1,
   );
   const showVolume = sourceOpacity > 0.001;
+  const displayedShowVolume = volumeTransitionTarget ?? showVolume;
   const supportsVolumeToggle = groupSupportsVolumeToggle(resolvedGroup);
   const maskVisible = styleBoolean(style, "scalarVolumeMaskVisible", true);
   const bandsActive = enabled && bandsVisible;
@@ -607,6 +655,65 @@ export function SectionIsoLegend({
     } else {
       setEnvLayerStyle(layerId, patch);
     }
+  };
+  const applyLiveSectionIsoStyle = (nextStyle: EditableStyle) => {
+    if (canApplyLiveSceneEdits()) {
+      sceneHandle.manager.applyStyle(layerId, nextStyle);
+    }
+  };
+  const setIsoVolumeVisible = (nextVisible: boolean) => {
+    if (!writesEnabled || !supportsVolumeToggle) return;
+    if (volumeTransitionFrameRef.current !== null) {
+      window.cancelAnimationFrame(volumeTransitionFrameRef.current);
+      volumeTransitionFrameRef.current = null;
+    }
+    const fromOpacity = sourceOpacity;
+    const toOpacity = nextVisible ? 1 : 0;
+    if (Math.abs(fromOpacity - toOpacity) < 0.001) {
+      commit({ sectionIsoSourceOpacity: toOpacity });
+      return;
+    }
+    const transitionToken = volumeTransitionTokenRef.current + 1;
+    volumeTransitionTokenRef.current = transitionToken;
+    const transitionScopeKey = sectionIsoLegendTransitionScopeKey({
+      projectSlug: state.projectSlug,
+      editingEnvironment,
+      pageId: page?.id ?? null,
+      writePageId: writePage?.id ?? null,
+      layerId,
+    });
+    volumeTransitionScopeKeyRef.current = transitionScopeKey;
+    setVolumeTransitionTarget(nextVisible);
+    const startMs = window.performance.now();
+    const tick = (nowMs: number) => {
+      if (
+        transitionToken !== volumeTransitionTokenRef.current ||
+        transitionScopeKey !== volumeTransitionScopeKeyRef.current
+      ) {
+        volumeTransitionFrameRef.current = null;
+        return;
+      }
+      const progress = clamp(
+        (nowMs - startMs) / SECTION_ISO_LOCAL_TOGGLE_TRANSITION_MS,
+        0,
+        1,
+      );
+      const eased = easeProgress(progress, "easeInOutSine");
+      const liveStyle = {
+        ...style,
+        sectionIsoSourceOpacity:
+          fromOpacity + (toOpacity - fromOpacity) * eased,
+      };
+      applyLiveSectionIsoStyle(liveStyle);
+      if (progress < 1) {
+        volumeTransitionFrameRef.current = window.requestAnimationFrame(tick);
+        return;
+      }
+      volumeTransitionFrameRef.current = null;
+      commit({ sectionIsoSourceOpacity: toOpacity });
+      setVolumeTransitionTarget(null);
+    };
+    volumeTransitionFrameRef.current = window.requestAnimationFrame(tick);
   };
   const targetSelectionVisible = (ids: Record<string, boolean>) =>
     activeTargets.some((target) => ids[target.targetKey] !== false);
@@ -674,17 +781,13 @@ export function SectionIsoLegend({
           <button
             type="button"
             aria-label="ISO Volume"
-            aria-pressed={supportsVolumeToggle && showVolume}
+            aria-pressed={supportsVolumeToggle && displayedShowVolume}
             data-testid="section-iso-show-volume"
             title="ISO Volume"
             disabled={!supportsVolumeToggle}
-            onClick={() =>
-              commit({
-                sectionIsoSourceOpacity: showVolume ? 0 : 1,
-              })
-            }
+            onClick={() => setIsoVolumeVisible(!showVolume)}
             style={primaryButtonStyle(
-              supportsVolumeToggle && showVolume,
+              supportsVolumeToggle && displayedShowVolume,
               !supportsVolumeToggle,
             )}
           >
@@ -693,14 +796,14 @@ export function SectionIsoLegend({
           <button
             type="button"
             aria-label="ISO Volume controls"
-            aria-pressed={supportsVolumeToggle && showVolume}
+            aria-pressed={supportsVolumeToggle && displayedShowVolume}
             aria-expanded={popoverOpen}
             data-testid="section-iso-volume-controls"
             title="ISO Volume controls"
             disabled={!supportsVolumeToggle}
             onClick={() => setPopoverOpen((current) => !current)}
             style={availabilityIconButtonStyle({
-              available: supportsVolumeToggle && showVolume,
+              available: supportsVolumeToggle && displayedShowVolume,
               disabled: !supportsVolumeToggle,
             })}
           >
@@ -709,7 +812,7 @@ export function SectionIsoLegend({
           <button
             type="button"
             aria-label="Remove empty"
-            aria-pressed={supportsVolumeToggle && showVolume && maskVisible}
+            aria-pressed={supportsVolumeToggle && displayedShowVolume && maskVisible}
             data-testid="section-iso-remove-empty"
             title="Remove empty"
             disabled={!supportsVolumeToggle}
@@ -719,8 +822,8 @@ export function SectionIsoLegend({
               })
             }
             style={stateIconButtonStyle({
-              active: supportsVolumeToggle && showVolume && maskVisible,
-              parentActive: supportsVolumeToggle && showVolume,
+              active: supportsVolumeToggle && displayedShowVolume && maskVisible,
+              parentActive: supportsVolumeToggle && displayedShowVolume,
               disabled: !supportsVolumeToggle,
             })}
           >

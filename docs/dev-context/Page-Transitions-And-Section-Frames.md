@@ -193,16 +193,27 @@ The contract:
    - ISO band material `uOpacity` and per-helper authored opacity move via the
      composition above.
    - Section ISO source/target roots crossfade when the target page has active
-      section state and Section ISO enters or changes geometry/identity. The
-      transition does not rebuild contour geometry every frame.
-   - Source helper snapshots are allowed only for active-to-active section
-      helper changes. When the target page has section helpers inactive, source
-      frame outlines, cones, ground traces, and scale helpers must not carry
-      into the target transition.
+      section state and a section frame really dissolves, or when Section ISO
+      enters/exits or changes identity in a way that cannot follow a compatible
+      moving frame. When source and target ISO roots are both active on a
+      compatible section move, live ISO overlays follow the interpolated cut and
+      scalar/style owners handle internal appearance changes. DEC-171 also lets
+      transition-frame applies rebuild derived Section ISO roots at the current
+      Section ISO envelope so they stay attached to the moving cut without
+      enabling dual-mask helper rebuilds.
+   - Source helper snapshots are allowed for active-to-active section helper
+      changes and for visual-only helper exits that preserve stable opacity
+      while inactive target section state is applied immediately. When the
+      target page has section helpers inactive, source frame outlines, cones,
+      ground traces, and scale helpers must not remain live or carry section
+      state into the target transition.
    - Active-to-inactive and active-to-unrelated transitions must not carry source
-      section masks, helpers, frame controls, ground traces, or Section ISO roots.
-      They apply the inactive target section state at transition start and discard
-      transition-owned Section ISO roots instead of promoting them.
+      section masks, live helpers, frame controls, ground traces, axes, cones,
+      frame outlines, crop boxes, live clipping, or live Section ISO roots. They
+      apply the inactive target section state at transition start and discard
+      transition-owned Section ISO roots instead of promoting them. DEC-169
+      permits only detached visual Section ISO source roots to fade to zero
+      after being cloned before inactive target application.
    - For active-to-active incompatible helper changes, the outgoing snapshot
      fades out while the live target helper group fades in. This is a true
      crossfade, not two fully opaque helper sets.
@@ -259,6 +270,20 @@ the interpolated geometry on both dual-mask sides (they slide; the data and MT
 volume they clip slide with them), and only `dissolveFrameIds` cross-fade. Do
 not reintroduce a global `discreteChanged` short-circuit that snaps the whole
 section. Locked by `tests/tools/scene-section-frame-partition-source.test.mjs`.
+
+DEC-170 further narrows non-frame section differences: helper/control/flip
+commit state, target scope, or other non-geometric section differences must not
+convert compatible moving frames into dissolve frames. Section-affected layer
+snapshot crossfades are reserved for real `dissolveFrameIds`; otherwise layer
+scalar/style/visibility owners handle internal changes while the section cut
+moves as one envelope.
+
+DEC-173 adds one inactive-target exception: transition-owned source layer
+snapshots may preserve the scene-section or working-area clipping that was
+already visible at transition start while the source visual fades to zero. The
+inactive target section state still applies immediately to live layers; helpers,
+controls, axes, cones, ground traces, frame outlines, crop boxes, and live
+section clipping still must not bleed into inactive targets.
 
 Per DEC-071:
 
@@ -354,9 +379,11 @@ Before claiming a transition fix:
   differs.
 - **Section ISO**: late readability overlay drawn on the section plane;
   authored opacity composes through transition opacity and threshold-surface
-  attenuation, never overwritten. Root lifecycle follows TRD-011 and TRD-012:
-  target-active transitions crossfade source/target roots, while inactive or
-  unrelated target pages discard transition roots at transition start.
+  attenuation, never overwritten. Root lifecycle follows TRD-011, TRD-012,
+  DEC-169, and DEC-171: target-active transitions crossfade source/target roots
+  only where roots cannot follow a compatible moving cut, while inactive or
+  unrelated target pages apply inactive live section state at transition start
+  and may fade only detached visual source roots to zero.
 
 ## Transition Runtime Operating Spec
 

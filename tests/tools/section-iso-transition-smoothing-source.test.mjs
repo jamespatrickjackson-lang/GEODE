@@ -23,6 +23,7 @@ const volumeCutIsoOverlays = readFileSync(
   "src/scene/isoOverlays/volumeCutIsoOverlays.ts",
   "utf8",
 );
+const sectionIsoLegend = readFileSync("src/ui/SectionIsoLegend.tsx", "utf8");
 const transitionDecisionLog = readFileSync(
   "docs/dev-context/Transition-Decision-Log.md",
   "utf8",
@@ -90,7 +91,7 @@ test("new transitions discard Section ISO transition roots instead of promoting 
   );
 });
 
-test("Section ISO roots are not snapshotted for inactive or unrelated target pages", () => {
+test("inactive target Section ISO exits snapshot only detached visual roots", () => {
   assert.doesNotMatch(
     sceneManager,
     /void fromSceneSectionStyle;[\s\S]*void toSceneSectionStyle;/,
@@ -98,13 +99,179 @@ test("Section ISO roots are not snapshotted for inactive or unrelated target pag
   );
   assert.match(
     sceneManager,
-    /sectionIsoOverlayTransitionShouldStart\(\s*fromSceneSectionStyle,\s*toSceneSectionStyle,?\s*\)/,
-    "Section ISO transition start should be gated by source/target section activity.",
+    /sectionIsoOverlayTransitionShouldStart\(\s*fromSceneSectionStyle:\s*EditableStyle,\s*toSceneSectionStyle:\s*EditableStyle,\s*hasSourceRoots:\s*boolean,?\s*\)/,
+    "Section ISO transition start should know whether detached source roots exist.",
   );
   assert.match(
     sceneManager,
-    /if\s*\(\s*!this\.sectionIsoOverlayTransitionShouldStart\(\s*fromSceneSectionStyle,\s*toSceneSectionStyle,?\s*\)\s*\)\s*\{?\s*return/,
-    "Inactive or unrelated target pages should not snapshot source Section ISO roots.",
+    /return\s+targetActive\s*\|\|\s*\(\s*sourceActive\s*&&\s*hasSourceRoots\s*\)/,
+    "Detached source roots may fade out even when the target page has inactive section state.",
+  );
+  assert.match(
+    sceneManager,
+    /const\s+sourceRootsForTransition\s*=\s*this\.sectionIsoOverlayGroupsForTransition\(\)/,
+    "Source roots should be collected before inactive target application clears live roots.",
+  );
+  assert.match(
+    sceneManager,
+    /this\.sectionIsoOverlayTransitionShouldStart\(\s*fromSceneSectionStyle,\s*toSceneSectionStyle,\s*sourceRootsForTransition\.length\s*>\s*0,?\s*\)/,
+    "The start gate should allow source-only detached root exits without live section carry.",
+  );
+  assert.match(
+    transitionEffectiveLayers,
+    /const sourceSceneSectionTransitionActive\s*=\s*sceneSectionTransitionActiveForStyle\(\s*fromSceneSectionStyle\s*\)/,
+    "Section ISO root presence should know whether the source section is active.",
+  );
+  assert.match(
+    transitionEffectiveLayers,
+    /const fromOn\s*=\s*sourceSceneSectionTransitionActive\s*&&\s*fromVisible\.has\(id\)\s*&&\s*sectionIsoOverlayVisible\(fromStyle\)/,
+    "Source Section ISO roots should count as present only when source section state is active.",
+  );
+  assert.match(
+    transitionEffectiveLayers,
+    /const toOn\s*=\s*targetSceneSectionTransitionActive\s*&&\s*toVisible\.has\(id\)\s*&&\s*sectionIsoOverlayVisible\(toStyle\)/,
+    "Inactive target Section ISO styles should not look like live target roots.",
+  );
+  assert.match(
+    transitionEffectiveLayers,
+    /else\s+if\s*\(\s*sceneSectionStyleChanged\s*&&\s*!targetSceneSectionTransitionActive\s*\)\s*\{[\s\S]*?beginSectionIsoOverlayTransition\(\s*fromSceneSectionStyle,\s*targetSceneSectionStyle,\s*now,\s*duration,\s*easing,\s*\)[\s\S]*?applyInactiveTargetSceneSectionAfterLayerSnapshots\s*=\s*true/,
+    "Detached Section ISO source roots should be snapshotted before inactive target state is scheduled.",
+  );
+  assert.match(
+    transitionEffectiveLayers,
+    /else\s+if\s*\(\s*applyInactiveTargetSceneSectionAfterLayerSnapshots\s*\)\s*\{[\s\S]*this\.applySceneSectionPlanes\(\s*targetSceneSectionStyle\s*\)/,
+    "Inactive target state should apply after source-clipped exit snapshots are cloned.",
+  );
+});
+
+test("Section ISO exits during pure section moves follow the moving cut while fading", () => {
+  assert.match(
+    transitionStyles,
+    /sectionIsoMoveFollowSourceStyles\?:\s*Map<string,\s*EditableStyle>/,
+    "Scene-section tweens should carry source ISO styles for move-follow exits.",
+  );
+  assert.match(
+    transitionEffectiveLayers,
+    /const sectionIsoMoveFollowSourceStyles\s*=\s*new Map<\s*string,\s*ReturnType<typeof effectiveStyle>\s*>\(\)/,
+    "Transition setup should prepare a source-style map for moving ISO exits.",
+  );
+  assert.match(
+    transitionEffectiveLayers,
+    /!sectionHasDissolve[\s\S]*fromOn[\s\S]*!toOn[\s\S]*sectionIsoMoveFollowSourceStyles\.set\(id,\s*fromStyle\)/,
+    "Pure section moves with an ISO exit should keep the source ISO style available for follow updates.",
+  );
+  assert.match(
+    transitionEffectiveLayers,
+    /sectionIsoRootStateChangedForTransition\s*=[\s\S]*if\s*\(!state\.changed\)\s*return false[\s\S]*if\s*\(sectionIsoMoveFollowSourceStyles\.has\(state\.id\)\)\s*return false/,
+    "Move-follow ISO exits should not also start a fixed source-root snapshot transition.",
+  );
+  assert.match(
+    transitionEffectiveLayers,
+    /sectionIsoMoveFollowSourceStyles:\s*sectionIsoMoveFollowSourceStyles\.size\s*>\s*0\s*\?\s*sectionIsoMoveFollowSourceStyles\s*:\s*undefined/,
+    "The scene-section tween should own the moving source ISO exit styles.",
+  );
+  assert.match(
+    sceneManager,
+    /sectionIsoMoveFollowSourceStyle\s*=\s*tween\?\.sectionIsoMoveFollowSourceStyles\?\.get\(\s*UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID,?\s*\)/,
+    "Move-follow should prefer the source ISO style when the target turns the overlay off.",
+  );
+  assert.match(
+    sceneManager,
+    /style\.sectionIsoEnabled\s*!==\s*true[\s\S]*sectionIsoMoveFollowSourceStyle[\s\S]*transitionTweenEasedProgress\(\s*tween,\s*performance\.now\(\),?\s*\)[\s\S]*updateMtVolumeCutIsoOverlaysImpl\.call\(\s*this,\s*sectionIsoMoveFollowSourceStyle,/,
+    "Applying a target-off style during a move-follow ISO exit should not clear the moving source contours.",
+  );
+  assert.match(
+    sceneManager,
+    /initialTransitionOpacity:\s*sectionIsoMoveFollowOpacity/,
+    "Source-style move-follow exits should fade on the section transition clock.",
+  );
+});
+
+test("compatible section moves do not start fixed ISO root crossfades for generic section discrete changes", () => {
+  assert.match(
+    transitionEffectiveLayers,
+    /let sectionHasDissolveForTransition\s*=\s*false/,
+    "Transition setup should track real section-frame dissolves separately from global discrete differences.",
+  );
+  assert.doesNotMatch(
+    transitionEffectiveLayers,
+    /sceneSectionDiscreteChanged\s*\|\|\s*sectionIsoRootStateChangedForTransition/,
+    "Generic section discrete changes must not force fixed Section ISO root crossfades during compatible moves.",
+  );
+  assert.match(
+    transitionEffectiveLayers,
+    /sectionHasDissolveForTransition\s*\|\|\s*sectionIsoRootStateChangedForTransition/,
+    "Fixed Section ISO root crossfades should be reserved for dissolved frames or incompatible ISO root changes.",
+  );
+  assert.match(
+    transitionEffectiveLayers,
+    /state\.fromOn\s*&&\s*state\.toOn[\s\S]*return false/,
+    "Compatible moving cuts with source and target ISO roots should let live overlays follow the cut instead of fixed-root crossfading.",
+  );
+});
+
+test("Section ISO target roots follow transition-frame section geometry", () => {
+  assert.match(
+    sceneManager,
+    /applyMtVolumeCutIsoFollowForTransitionFrame\(\):\s*void/,
+    "SceneManager should expose a transition-frame Section ISO follow/rebuild owner.",
+  );
+  const followBody = sceneManager.match(
+    /applyMtVolumeCutIsoFollowForTransitionFrame\(\):\s*void\s*\{[\s\S]*?\n  \}/,
+  );
+  assert.ok(followBody, "Transition-frame follow owner should have an inspectable body.");
+  assert.doesNotMatch(
+    followBody[0],
+    /if\s*\(\s*this\.sectionIsoOverlayTransition\s*\)\s*return/,
+    "Target-root transition frames must not be blocked merely because a Section ISO overlay transition is active.",
+  );
+  assert.match(
+    followBody[0],
+    /initialTransitionOpacity:\s*sectionIsoTransitionOpacity/,
+    "Transition-frame target roots should attach at the current Section ISO envelope.",
+  );
+  assert.match(
+    sceneSectionController,
+    /options\?\.transitionFrame[\s\S]{0,360}applyMtVolumeCutIsoFollowForTransitionFrame\?\.\(\)/,
+    "Transition-frame section applies should update Section ISO roots for enter/dual-mask cases, not only pure moves.",
+  );
+  assert.match(
+    volumeCutIsoOverlays,
+    /unregisterSectionIsoOverlayTransitionTargetRoot\?\.\(\s*group\s*\)/,
+    "Rebuilding a transition-owned target root should unregister the old root before disposal.",
+  );
+});
+
+test("ISO Volume quick toggle fades source volume opacity over one second", () => {
+  assert.match(
+    sectionIsoLegend,
+    /const SECTION_ISO_LOCAL_TOGGLE_TRANSITION_MS = 1000/,
+    "The ISO Volume quick toggle should use the requested one-second transition.",
+  );
+  assert.match(
+    sectionIsoLegend,
+    /function sectionIsoLegendTransitionScopeKey\(/,
+    "Local Section ISO toggle animations should be scoped to the current authoring context.",
+  );
+  assert.match(
+    sectionIsoLegend,
+    /window\.requestAnimationFrame\(tick\)/,
+    "ISO Volume should animate live style writes on requestAnimationFrame.",
+  );
+  assert.match(
+    sectionIsoLegend,
+    /sectionIsoSourceOpacity:\s*fromOpacity\s*\+\s*\(toOpacity\s*-\s*fromOpacity\)\s*\*\s*eased/,
+    "ISO Volume should interpolate source opacity instead of snapping to the final value.",
+  );
+  assert.match(
+    sectionIsoLegend,
+    /setIsoVolumeVisible\(!showVolume\)/,
+    "The quick button should route through the local fade owner.",
+  );
+  assert.doesNotMatch(
+    sectionIsoLegend,
+    /sectionIsoSourceOpacity:\s*showVolume\s*\?\s*0\s*:\s*1/,
+    "The ISO Volume quick button must not directly write a binary opacity patch.",
   );
 });
 
@@ -146,6 +313,76 @@ test("delayed target generation does not attach Section ISO at full opacity", ()
     sceneManager,
     /currentSectionIsoOverlayTransitionOpacity\(\):\s*number/,
     "SceneManager should expose the current Section ISO transition opacity for delayed target builds.",
+  );
+});
+
+test("MT scalar volume enters and exits through section-aware transition ownership", () => {
+  const scalarVolumeLoader = readFileSync("src/loaders/loadScalarVolume.ts", "utf8");
+
+  assert.match(
+    scalarVolumeLoader,
+    /uniform int uSceneSectionTransitionEnabled;/,
+    "The MT raymarch shader should expose the scene-section transition mask gate.",
+  );
+  assert.match(
+    scalarVolumeLoader,
+    /uniform int uSceneSectionTargetFrameCount;/,
+    "The MT raymarch shader should expose target section-frame uniforms.",
+  );
+  assert.match(
+    scalarVolumeLoader,
+    /float sceneSectionTargetAlpha\(vec3 position\)/,
+    "The MT raymarch shader should evaluate the target section mask.",
+  );
+  assert.match(
+    scalarVolumeLoader,
+    /mix\(\s*sourceAlpha\s*,\s*targetAlpha\s*,\s*clamp\(uSceneSectionTransitionProgress/,
+    "The MT raymarch shader should blend source and target section masks on the page transition clock.",
+  );
+  assert.match(
+    scalarVolumeLoader,
+    /bool sourceHasSectionMask\s*=\s*uSceneSectionPlaneCount\s*>\s*0\s*\|\|\s*uSceneSectionFrameCount\s*>\s*0;[\s\S]*bool targetHasSectionMask\s*=\s*uSceneSectionTargetPlaneCount\s*>\s*0\s*\|\|\s*uSceneSectionTargetFrameCount\s*>\s*0;[\s\S]*if\s*\(\s*!sourceHasSectionMask\s*&&\s*targetHasSectionMask\s*\)\s*{[\s\S]*sectionAlpha\s*=\s*targetAlpha;/,
+    "A hidden/unsectioned source volume entering a sectioned target should render against the target section mask from the first visible frame.",
+  );
+  assert.match(
+    transitionEffectiveLayers,
+    /const shouldPreserveScalarVolumeExitStyle\s*=/,
+    "Transition setup should name the MT scalar-volume exit style preservation gate.",
+  );
+  assert.match(
+    transitionEffectiveLayers,
+    /const shouldSnapshotScalarVolumeSectionExit\s*=[\s\S]*shouldPreserveScalarVolumeExitStyle[\s\S]*sourceSceneSectionTransitionActive[\s\S]*!targetSceneSectionTransitionActive/,
+    "Target-hidden MT scalar-volume exits from a source-sectioned page should use a transition-owned source snapshot so inactive target section application cannot unmask the outgoing volume.",
+  );
+  assert.match(
+    transitionEffectiveLayers,
+    /shouldTweenScalarStyle\s*\|\|\s*shouldPreserveScalarVolumeExitStyle\s*\?\s*fromStyle\s*:\s*targetStyle/,
+    "A target-hidden MT volume should keep source style while opacity fades to zero.",
+  );
+  assert.match(
+    transitionEffectiveLayers,
+    /const shouldTweenScalarVolumeExitStyle\s*=/,
+    "Target-hidden MT scalar-volume exits should use a named shader-opacity tween gate.",
+  );
+  assert.match(
+    transitionEffectiveLayers,
+    /scalarVolumeExitTargetStyle[\s\S]*scalarVolumeOpacity:\s*0/,
+    "The MT scalar-volume exit tween should force the shader opacity target to zero.",
+  );
+  assert.match(
+    transitionEffectiveLayers,
+    /if\s*\(\s*shouldTweenScalarStyle\s*\|\|\s*shouldTweenScalarVolumeExitStyle\s*\)\s*{[\s\S]*toStyle:\s*shouldTweenScalarVolumeExitStyle\s*\?[\s\S]*scalarVolumeExitTargetStyle[\s\S]*:\s*targetStyle/,
+    "Target-hidden MT scalar-volume exits should register a scalar style tween instead of relying on layer opacity.",
+  );
+  assert.match(
+    transitionEffectiveLayers,
+    /shouldCrossfadeDiscreteData\s*\|\|[\s\S]*shouldSnapshotScalarVolumeSectionExit[\s\S]*\?\s*this\.cloneLayerTransitionSnapshot\(id,\s*group\)/,
+    "The MT scalar-volume source-section exit snapshot should be created before target section state clears live volume uniforms.",
+  );
+  assert.match(
+    transitionEffectiveLayers,
+    /this\.sceneSectionTweenStyle\(\s*this\.sceneSectionStyleTween,\s*0\s*\)/,
+    "Target-active section transitions should apply an initial transition-frame section state before the first fade tick.",
   );
 });
 

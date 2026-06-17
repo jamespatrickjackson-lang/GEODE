@@ -590,6 +590,7 @@ export function clearMtVolumeCutIsoOverlaysImpl(this: any, volumeLayer?: THREE.G
       volumeLayer ?? this.layers.get(UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID)
     )?.userData.mtVolumeSectionIsoOverlayGroup as THREE.Group | undefined;
     if (!group) return;
+    this.unregisterSectionIsoOverlayTransitionTargetRoot?.(group);
     const parent = group.parent;
     if (parent) parent.remove(group);
     disposeObjectTree(group);
@@ -1216,6 +1217,7 @@ export function clearSeismicVolumeCutIsoOverlaysImpl(this: any, seismicLayer?: T
       seismicLayer ?? this.layers.get(UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID)
     )?.userData.seismicVolumeSectionIsoOverlayGroup as THREE.Group | undefined;
     if (!group) return;
+    this.unregisterSectionIsoOverlayTransitionTargetRoot?.(group);
     const parent = group.parent;
     if (parent) parent.remove(group);
     disposeObjectTree(group);
@@ -1245,6 +1247,7 @@ export function clearSeismicResistivityIsoOverlaysImpl(this: any, seismicLayer?:
       | THREE.Group
       | undefined;
     if (!group) return;
+    this.unregisterSectionIsoOverlayTransitionTargetRoot?.(group);
     const parent = group.parent;
     if (parent) parent.remove(group);
     disposeObjectTree(group);

@@ -205,8 +205,13 @@ for (const field of [
 }
 assert.match(
   transitionSource,
-  /this\.applyStyle\(id,\s*shouldTweenScalarStyle\s*\?\s*fromStyle\s*:\s*targetStyle\)/,
-  "page transition setup applies cloud target styles through the shared style path",
+  /this\.applyStyle\(\s*id,[\s\S]*shouldTweenScalarStyle\s*\|\|\s*shouldPreserveScalarVolumeExitStyle[\s\S]*\?\s*fromStyle[\s\S]*:\s*targetStyle/,
+  "page transition setup applies cloud target styles through the shared style path except the scoped MT volume exit preservation branch",
+);
+assert.match(
+  transitionSource,
+  /const shouldPreserveScalarVolumeExitStyle\s*=[\s\S]*id === UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID/,
+  "the source-style exit preservation branch should stay scoped to the MT scalar volume, not atmosphere clouds",
 );
 assert.match(
   transitionSource,

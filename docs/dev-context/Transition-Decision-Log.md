@@ -277,6 +277,21 @@ identity changes crossfade source and target roots rather than morphing contour
 geometry every frame. Final full apply may land exact target state, but must not
 make Section ISO roots appear at full opacity after the tween.
 
+DEC-170 narrows this for compatible active-to-active section moves: a generic
+section discrete change, such as helper/control/flip commit state, does not
+force fixed Section ISO source/target roots. When source and target ISO roots
+are both active on a compatible moving frame, live overlays follow the
+interpolated cut and scalar/style owners handle internal appearance changes.
+Fixed root crossfades remain for real dissolved frames and incompatible ISO
+root enter/exit or identity changes.
+
+DEC-171 extends the root lifecycle owner to all transition-frame section applies:
+derived Section ISO roots may rebuild at the current Section ISO envelope so
+isobars, isolines, and bands remain attached to the moving section geometry.
+This does not permit dual-mask helper rebuilds, broad source section carryover,
+or full-opacity promotion of late roots. Local ISO Volume quick toggles fade
+`sectionIsoSourceOpacity` over 1000 ms before persisting the final value.
+
 Revisit when: Section ISO contour geometry itself needs continuous morphing, or
 when a non-page transition timing source is introduced for derived section
 overlays.
@@ -295,11 +310,17 @@ when the target page has `sceneSectionEnabled !== true`.
 
 Decision: Section transition smoothing is target-active. Active-to-active
 section changes may use the TRD-010 dual-mask fade and helper crossfade.
-Inactive-to-active changes may fade the target section state in. Active-to-inactive
-and active-to-unrelated transitions must not carry source section masks, helpers,
-frame controls, ground traces, or Section ISO roots. They apply the inactive
-target section state at transition start, prevent helper snapshots, and discard
-transition-owned Section ISO roots without promoting target roots.
+Inactive-to-active changes may fade the target section state in.
+Active-to-inactive and active-to-unrelated transitions must not carry source
+section masks, live helpers, frame controls, ground traces, or live Section ISO
+roots. They apply the inactive target section state at transition start and
+discard transition-owned Section ISO roots without promoting target roots.
+
+DEC-169 narrows this only for detached visual Section ISO source roots:
+isobars/isolines may be cloned before inactive target application, fade to zero
+on the page transition clock, and then be disposed. The exception does not carry
+live section state, source masks, helpers, controls, axes, cones, ground traces,
+frame outlines, crop boxes, or live clipping into inactive targets.
 
 Consequences: Transition graph diagnostics must treat scene-section frame
 presence as active only when `sceneSectionEnabled === true` and
