@@ -1785,6 +1785,17 @@ export class SceneManager {
     try {
       const clone = material.clone();
       clone.userData = this.cloneTransitionUserData(originalUserData);
+      // Section helpers (cones, frame outlines, ground traces) are exempt from
+      // section/working-area clip + shader in the live apply (the
+      // `sceneSectionHelper` skip). Their transition snapshot must match: a
+      // cloned helper that inherits clipping planes or the section visibility
+      // shader renders clipped-to-box -- the "cone flat-cube" during transitions.
+      // Clear any inherited clipping and skip rehydration for helper clones.
+      if (originalUserData?.sceneSectionHelper === true) {
+        clone.clippingPlanes = null;
+        clone.clipIntersection = false;
+        return clone;
+      }
       this.rehydrateWorkingAreaFocusTransitionMaterial(clone, originalUserData);
       this.rehydrateSceneSectionTransitionMaterial(
         clone,
