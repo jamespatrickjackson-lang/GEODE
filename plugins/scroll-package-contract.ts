@@ -64,6 +64,36 @@ export type ScrollHandoffPackageStatus =
   | "cancelled"
   | "failed";
 
+export type CaptureVisibilityGroup =
+  | "sceneCanvas"
+  | "captureNativeAnnotations"
+  | "presenterOverlay"
+  | "sceneLabels"
+  | "legends"
+  | "logo"
+  | "navControls"
+  | "editorSidebar"
+  | "authoringControls"
+  | "debugPanels"
+  | "fullChrome";
+
+export interface ScrollCleanRenderSettingsV1 {
+  enabled: boolean;
+  mode: "scene-only";
+  hiddenGroups: CaptureVisibilityGroup[];
+  exportOverlay: { enabled: boolean; mode: string | null };
+}
+
+export interface ScrollPosterFrameSpec {
+  anchorId: string;
+  frame: number;
+}
+
+export interface ScrollContactSheetFrameSpec {
+  id: string;
+  frame: number;
+}
+
 export interface ScrollHandoffPackageV1 {
   schema: "ScrollHandoffPackageV1";
   version: 1;
@@ -83,8 +113,10 @@ export interface ScrollHandoffPackageV1 {
   frames: { directory: string | null; pattern: string | null; count: number };
   posters: Array<{ anchorId: string; frame: number; path: string }>;
   contactSheetPath: string | null;
+  cleanRender: ScrollCleanRenderSettingsV1;
   sourceContract: Record<string, unknown>;
   diagnosticsPath: string | null;
+  readmePath: string | null;
   hashes: Array<{ path: string; sha256: string }>;
   warnings: string[];
 }
@@ -97,7 +129,9 @@ type CreateScrollHandoffManifestInput = Omit<
   | "frames"
   | "posters"
   | "contactSheetPath"
+  | "cleanRender"
   | "diagnosticsPath"
+  | "readmePath"
   | "hashes"
   | "warnings"
 > &
@@ -108,7 +142,9 @@ type CreateScrollHandoffManifestInput = Omit<
       | "frames"
       | "posters"
       | "contactSheetPath"
+      | "cleanRender"
       | "diagnosticsPath"
+      | "readmePath"
       | "hashes"
       | "warnings"
     >
@@ -132,6 +168,95 @@ function nonNegativeInteger(value: unknown): value is number {
 
 function positiveInteger(value: unknown): value is number {
   return typeof value === "number" && Number.isInteger(value) && value > 0;
+}
+
+const SCENE_ONLY_CAPTURE_VISIBILITY_PROFILE: Record<CaptureVisibilityGroup, boolean> = {
+  sceneCanvas: true,
+  captureNativeAnnotations: false,
+  presenterOverlay: false,
+  sceneLabels: false,
+  legends: false,
+  logo: false,
+  navControls: false,
+  editorSidebar: false,
+  authoringControls: false,
+  debugPanels: false,
+  fullChrome: false,
+};
+
+function hiddenGroupsForSceneOnly(): CaptureVisibilityGroup[] {
+  return (Object.entries(SCENE_ONLY_CAPTURE_VISIBILITY_PROFILE) as Array<
+    [CaptureVisibilityGroup, boolean]
+  >)
+    .filter(([, visible]) => visible === false)
+    .map(([group]) => group);
+}
+
+export function scrollCleanRenderSettingsForRequest(
+  request: Pick<CaptureScrollRecordRequestV1, "cleanRender">,
+): ScrollCleanRenderSettingsV1 {
+  return {
+    enabled: request.cleanRender === true,
+    mode: "scene-only",
+    hiddenGroups: hiddenGroupsForSceneOnly(),
+    exportOverlay: { enabled: false, mode: null },
+  };
+}
+
+function frameInsideRange(
+  frame: number,
+  frameRange: ScrollHandoffPackageV1["frameRange"],
+): boolean {
+  return frame >= frameRange.startFrame && frame <= frameRange.endFrame;
+}
+
+function middleFrame(frameRange: ScrollHandoffPackageV1["frameRange"]): number {
+  return Math.floor((frameRange.startFrame + frameRange.endFrame) / 2);
+}
+
+export function selectScrollPosterFrames(
+  timeline: Pick<CaptureScrollTimelineV1, "anchors">,
+  frameRange: ScrollHandoffPackageV1["frameRange"],
+): ScrollPosterFrameSpec[] {
+  const anchorFrames = timeline.anchors
+    .filter(
+      (anchor) =>
+        Number.isInteger(anchor.posterFrame) &&
+        frameInsideRange(anchor.posterFrame as number, frameRange),
+    )
+    .map((anchor) => ({
+      anchorId: anchor.id,
+      frame: anchor.posterFrame as number,
+    }));
+  if (anchorFrames.length > 0) return anchorFrames;
+  return [
+    { anchorId: "first", frame: frameRange.startFrame },
+    { anchorId: "middle", frame: middleFrame(frameRange) },
+    { anchorId: "last", frame: frameRange.endFrame },
+  ];
+}
+
+export function selectScrollContactSheetFrames(
+  timeline: Pick<CaptureScrollTimelineV1, "anchors">,
+  frameRange: ScrollHandoffPackageV1["frameRange"],
+): ScrollContactSheetFrameSpec[] {
+  const candidates: ScrollContactSheetFrameSpec[] = [
+    { id: "first", frame: frameRange.startFrame },
+    ...timeline.anchors
+      .filter((anchor) => Number.isInteger(anchor.posterFrame))
+      .map((anchor) => ({ id: anchor.id, frame: anchor.posterFrame as number })),
+    { id: "middle", frame: middleFrame(frameRange) },
+    { id: "last", frame: frameRange.endFrame },
+  ];
+  const selected: ScrollContactSheetFrameSpec[] = [];
+  const seen = new Set<number>();
+  for (const { id, frame } of candidates.sort((a, b) => a.frame - b.frame)) {
+    if (!Number.isInteger(frame) || !frameInsideRange(frame, frameRange)) continue;
+    if (seen.has(frame)) continue;
+    seen.add(frame);
+    selected.push({ id, frame });
+  }
+  return selected;
 }
 
 function isCaptureScrollFps(value: unknown): value is CaptureScrollTimelineV1["fps"] {
@@ -501,7 +626,9 @@ function createScrollHandoffManifest(
     frames: { directory: null, pattern: null, count: 0 },
     posters: [],
     contactSheetPath: null,
+    cleanRender: scrollCleanRenderSettingsForRequest({ cleanRender: false }),
     diagnosticsPath: null,
+    readmePath: null,
     hashes: [],
     warnings: [],
     ...input,
@@ -551,6 +678,7 @@ export function createPendingScrollHandoffManifest(
       pattern: "frame-%06d.png",
       count: request.frameRange.totalFrames,
     },
+    cleanRender: scrollCleanRenderSettingsForRequest(request),
     diagnosticsPath: `diagnostics/${request.packageName}.json`,
     sourceContract: { request },
   });
@@ -563,7 +691,9 @@ export function createFinalScrollHandoffManifest({
   frames,
   posters,
   contactSheetPath,
+  cleanRender,
   diagnosticsPath,
+  readmePath,
   hashes,
   warnings,
 }: {
@@ -573,7 +703,9 @@ export function createFinalScrollHandoffManifest({
   frames?: ScrollHandoffPackageV1["frames"];
   posters?: ScrollHandoffPackageV1["posters"];
   contactSheetPath?: string | null;
+  cleanRender?: ScrollHandoffPackageV1["cleanRender"];
   diagnosticsPath?: string | null;
+  readmePath?: string | null;
   hashes?: ScrollHandoffPackageV1["hashes"];
   warnings?: string[];
 }): ScrollHandoffPackageV1 {
@@ -585,8 +717,10 @@ export function createFinalScrollHandoffManifest({
     posters: posters ?? manifest.posters,
     contactSheetPath:
       contactSheetPath === undefined ? manifest.contactSheetPath : contactSheetPath,
+    cleanRender: cleanRender ?? manifest.cleanRender,
     diagnosticsPath:
       diagnosticsPath === undefined ? manifest.diagnosticsPath : diagnosticsPath,
+    readmePath: readmePath === undefined ? manifest.readmePath : readmePath,
     hashes: hashes ?? manifest.hashes,
     warnings: warnings ?? manifest.warnings,
   });
@@ -730,7 +864,40 @@ export function validateScrollHandoffManifest(
   }
 
   validateNullablePackagePath(manifest.contactSheetPath, "manifest.contactSheetPath", errors);
+  if (!isRecord(manifest.cleanRender)) {
+    errors.push("manifest.cleanRender must be an object.");
+  } else {
+    if (typeof manifest.cleanRender.enabled !== "boolean") {
+      errors.push("manifest.cleanRender.enabled must be boolean.");
+    }
+    if (manifest.cleanRender.mode !== "scene-only") {
+      errors.push("manifest.cleanRender.mode must be scene-only.");
+    }
+    if (!Array.isArray(manifest.cleanRender.hiddenGroups)) {
+      errors.push("manifest.cleanRender.hiddenGroups must be an array.");
+    } else {
+      manifest.cleanRender.hiddenGroups.forEach((group, index) => {
+        if (!nonEmptyString(group)) {
+          errors.push(`manifest.cleanRender.hiddenGroups[${index}] is required.`);
+        }
+      });
+    }
+    if (!isRecord(manifest.cleanRender.exportOverlay)) {
+      errors.push("manifest.cleanRender.exportOverlay must be an object.");
+    } else {
+      if (typeof manifest.cleanRender.exportOverlay.enabled !== "boolean") {
+        errors.push("manifest.cleanRender.exportOverlay.enabled must be boolean.");
+      }
+      if (
+        manifest.cleanRender.exportOverlay.mode !== null &&
+        typeof manifest.cleanRender.exportOverlay.mode !== "string"
+      ) {
+        errors.push("manifest.cleanRender.exportOverlay.mode must be a string or null.");
+      }
+    }
+  }
   validateNullablePackagePath(manifest.diagnosticsPath, "manifest.diagnosticsPath", errors);
+  validateNullablePackagePath(manifest.readmePath, "manifest.readmePath", errors);
 
   if (!isRecord(manifest.sourceContract)) {
     errors.push("manifest.sourceContract must be an object.");

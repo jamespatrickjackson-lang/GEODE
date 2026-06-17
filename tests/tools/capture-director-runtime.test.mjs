@@ -886,6 +886,123 @@ test("scroll handoff complete, cancelled, and failed manifests retain package ev
   assert.equal(validateScrollHandoffManifest(failed).valid, true);
 });
 
+test("scroll handoff clean render metadata, README, hashes, and handoff paths validate", async () => {
+  const {
+    createScrollRecordRequest,
+  } = await importBundled("src/capture/captureScrollTimeline.ts");
+  const {
+    createFinalScrollHandoffManifest,
+    createPendingScrollHandoffManifest,
+    scrollCleanRenderSettingsForRequest,
+    validateScrollHandoffManifest,
+  } = await importBundled("src/capture/scrollHandoffPackage.ts");
+
+  const request = createScrollRecordRequest({
+    timeline: validScrollTimeline({ durationSeconds: 2 }),
+    format: "mp4",
+    quality: { preset: "1080p", width: 1920, height: 1080 },
+    destination: ".tmp/capture-scroll-outputs",
+    packageName: "clean-handoff-scroll",
+    cleanRender: true,
+    renderRouteIntent: "browser-inline",
+    advancedOptions: { includeDiagnostics: true },
+    createdAt: "2026-06-16T00:00:00.000Z",
+  });
+  const pending = createPendingScrollHandoffManifest(request);
+  assert.deepEqual(pending.cleanRender, scrollCleanRenderSettingsForRequest(request));
+  assert.equal(pending.cleanRender.enabled, true);
+  assert.equal(pending.cleanRender.mode, "scene-only");
+  assert.ok(pending.cleanRender.hiddenGroups.includes("authoringControls"));
+  assert.ok(pending.cleanRender.hiddenGroups.includes("debugPanels"));
+  assert.deepEqual(pending.cleanRender.exportOverlay, { enabled: false, mode: null });
+
+  const complete = createFinalScrollHandoffManifest({
+    manifest: pending,
+    status: "complete",
+    media: [
+      {
+        role: "primary",
+        path: "media/scroll-master.mp4",
+        mimeType: "video/mp4",
+        byteLength: 4096,
+      },
+    ],
+    frames: { directory: "frames", pattern: "frame-%06d.png", count: 120 },
+    posters: [{ anchorId: "intro", frame: 0, path: "posters/intro-frame-000000.png" }],
+    contactSheetPath: "posters/contact-sheet.png",
+    readmePath: "README.md",
+    diagnosticsPath: "diagnostics/clean-handoff-scroll.json",
+    hashes: [
+      { path: "media/scroll-master.mp4", sha256: "a".repeat(64) },
+      { path: "README.md", sha256: "b".repeat(64) },
+      { path: "posters/contact-sheet.png", sha256: "c".repeat(64) },
+    ],
+  });
+
+  assert.equal(validateScrollHandoffManifest(complete).valid, true);
+  assert.equal(complete.readmePath, "README.md");
+  assert.equal(complete.hashes.length, 3);
+
+  for (const [field, value] of [
+    ["readmePath", "../README.md"],
+    ["contactSheetPath", "file:///tmp/contact-sheet.png"],
+  ]) {
+    const invalid = validateScrollHandoffManifest({ ...complete, [field]: value });
+    assert.equal(invalid.valid, false);
+    assert.match(invalid.errors.join("\n"), /package-relative/);
+  }
+
+  const badHash = validateScrollHandoffManifest({
+    ...complete,
+    hashes: [{ path: "../media/scroll-master.mp4", sha256: "" }],
+  });
+  assert.equal(badHash.valid, false);
+  assert.match(badHash.errors.join("\n"), /hashes\[0\]/);
+});
+
+test("scroll handoff poster and contact sheet frames are deterministic", async () => {
+  const {
+    selectScrollContactSheetFrames,
+    selectScrollPosterFrames,
+  } = await importBundled("src/capture/scrollHandoffPackage.ts");
+
+  const timeline = validScrollTimeline({
+    durationSeconds: 4,
+    anchors: [
+      { id: "intro", label: "Intro", progress: 0, posterFrame: 0 },
+      { id: "center", label: "Center", progress: 0.5, posterFrame: 120 },
+      { id: "dupe", label: "Duplicate", progress: 0.5, posterFrame: 120 },
+      { id: "outro", label: "Outro", progress: 1, posterFrame: 239 },
+    ],
+  });
+  const frameRange = { startFrame: 0, endFrame: 239, totalFrames: 240 };
+
+  assert.deepEqual(selectScrollPosterFrames(timeline, frameRange), [
+    { anchorId: "intro", frame: 0 },
+    { anchorId: "center", frame: 120 },
+    { anchorId: "dupe", frame: 120 },
+    { anchorId: "outro", frame: 239 },
+  ]);
+  assert.deepEqual(selectScrollContactSheetFrames(timeline, frameRange), [
+    { id: "first", frame: 0 },
+    { id: "middle", frame: 119 },
+    { id: "center", frame: 120 },
+    { id: "outro", frame: 239 },
+  ]);
+
+  const fallbackTimeline = validScrollTimeline({ anchors: [] });
+  assert.deepEqual(selectScrollPosterFrames(fallbackTimeline, frameRange), [
+    { anchorId: "first", frame: 0 },
+    { anchorId: "middle", frame: 119 },
+    { anchorId: "last", frame: 239 },
+  ]);
+  assert.deepEqual(selectScrollContactSheetFrames(fallbackTimeline, frameRange), [
+    { id: "first", frame: 0 },
+    { id: "middle", frame: 119 },
+    { id: "last", frame: 239 },
+  ]);
+});
+
 test("CaptureCameraPath validates, normalizes, samples, and moves spline-owned keyframes", async () => {
   const {
     createCaptureCameraPathFromKeyframes,

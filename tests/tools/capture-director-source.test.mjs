@@ -2767,3 +2767,59 @@ test("Scroll package renderer has isolated endpoints, frame retention, and frame
     "scroll package cancel must preserve frames and diagnostics",
   );
 });
+
+test("Scroll package handoff writes clean-render README, posters, contact sheet, and hashes", () => {
+  const handoff = readSource("src", "capture", "scrollHandoffPackage.ts");
+  for (const expected of [
+    "cleanRender",
+    "readmePath",
+    "scrollCleanRenderSettingsForRequest",
+    "selectScrollPosterFrames",
+    "selectScrollContactSheetFrames",
+    "hiddenGroups",
+    "exportOverlay",
+    "scene-only",
+  ]) {
+    assert.ok(handoff.includes(expected), `scroll handoff contract should include ${expected}`);
+  }
+
+  const provider = readSource("src", "capture", "CaptureDirectorProvider.tsx");
+  const scrollAcceptStart = provider.indexOf("const recipe = createCaptureRecipeFromCurrentState", provider.indexOf("acceptScrollRenderShell"));
+  const scrollAcceptEnd = provider.indexOf("const renderJob = createExternalVideoRenderJob", scrollAcceptStart);
+  assert.ok(scrollAcceptStart >= 0 && scrollAcceptEnd > scrollAcceptStart);
+  const scrollRecipeBlock = provider.slice(scrollAcceptStart, scrollAcceptEnd);
+  assert.ok(
+    scrollRecipeBlock.includes('mode: "scene-only"'),
+    "scroll Record should force scene-only clean render mode",
+  );
+  assert.equal(
+    scrollRecipeBlock.includes('mode: "full-ui"') || scrollRecipeBlock.includes('mode: "off"'),
+    false,
+    "scroll Record must not use full UI/off output modes",
+  );
+
+  const authorWritePlugin = readSource("plugins", "vite-plugin-author-write.ts");
+  for (const expected of [
+    "createScrollPosters",
+    "createScrollContactSheet",
+    "writeScrollPackageReadme",
+    "hashScrollPackageFiles",
+    "posters/contact-sheet.png",
+    "README.md",
+    "readmePath",
+    "cleanRender",
+    "hiddenGroups",
+  ]) {
+    assert.ok(authorWritePlugin.includes(expected), `scroll package renderer should include ${expected}`);
+  }
+  assert.equal(
+    authorWritePlugin.includes("contactSheetPath: null"),
+    false,
+    "successful scroll package completion should publish a contact sheet path",
+  );
+
+  const localRunner = readSource("src", "capture", "localScrollPackageRunner.ts");
+  for (const expected of ["contactSheetUrl", "readmeUrl"]) {
+    assert.ok(localRunner.includes(expected), `local scroll status should expose ${expected}`);
+  }
+});

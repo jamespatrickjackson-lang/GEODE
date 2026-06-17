@@ -2,7 +2,7 @@ import type { Plugin, ViteDevServer } from "vite";
 import { promises as fs } from "node:fs";
 import { spawn } from "node:child_process";
 import type { ChildProcess } from "node:child_process";
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import {
   basename,
   dirname,
@@ -14,9 +14,12 @@ import {
   sep,
 } from "node:path";
 import type { IncomingMessage, ServerResponse } from "node:http";
+import sharp from "sharp";
 import {
   createFinalScrollHandoffManifest,
   createPendingScrollHandoffManifest,
+  selectScrollContactSheetFrames,
+  selectScrollPosterFrames,
   validateScrollHandoffManifest,
   validateScrollRecordRequest,
   type CaptureScrollRecordRequestV1,
@@ -159,6 +162,10 @@ interface CaptureScrollPackageRunRecord {
   mediaUrl?: string | null;
   mediaRelativePath?: string | null;
   frameSequenceDir?: string | null;
+  contactSheetRelativePath?: string | null;
+  contactSheetUrl?: string | null;
+  readmeRelativePath?: string | null;
+  readmeUrl?: string | null;
   warnings?: string[];
 }
 
@@ -493,6 +500,8 @@ function captureScrollPackageRunPublicStatus(
     mediaPath: run.mediaPath ?? null,
     mediaUrl: run.mediaUrl ?? null,
     frameSequenceDir: run.frameSequenceDir ?? null,
+    contactSheetUrl: run.contactSheetUrl ?? null,
+    readmeUrl: run.readmeUrl ?? null,
     warnings: run.warnings ?? [],
   };
 }
@@ -549,29 +558,201 @@ function frameRelativePath(frameIndex: number): string {
   return `frames/frame-${String(frameIndex).padStart(6, "0")}.png`;
 }
 
+function safeScrollArtifactId(value: string): string {
+  const cleaned = value
+    .toLowerCase()
+    .replace(/[^a-z0-9_-]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+  return cleaned || "frame";
+}
+
+function escapeSvgText(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
 async function createScrollPosters(
   packageDir: string,
   request: CaptureScrollRecordRequestV1,
 ): Promise<ScrollHandoffPackageV1["posters"]> {
-  const frames = [
-    ["first", request.frameRange.startFrame],
-    [
-      "middle",
-      Math.floor((request.frameRange.startFrame + request.frameRange.endFrame) / 2),
-    ],
-    ["last", request.frameRange.endFrame],
-  ] as const;
   const posters: ScrollHandoffPackageV1["posters"] = [];
   await fs.mkdir(resolve(packageDir, "posters"), { recursive: true });
-  for (const [anchorId, frame] of frames) {
+  for (const { anchorId, frame } of selectScrollPosterFrames(
+    request.timeline,
+    request.frameRange,
+  )) {
     const source = resolve(packageDir, frameRelativePath(frame));
     const stats = await fs.lstat(source).catch(() => null);
     if (!stats?.isFile()) continue;
-    const path = `posters/${anchorId}-frame-${String(frame).padStart(6, "0")}.png`;
+    const path = `posters/${safeScrollArtifactId(anchorId)}-frame-${String(frame).padStart(
+      6,
+      "0",
+    )}.png`;
     await fs.copyFile(source, resolve(packageDir, path));
     posters.push({ anchorId, frame, path });
   }
   return posters;
+}
+
+async function createScrollContactSheet(
+  packageDir: string,
+  request: CaptureScrollRecordRequestV1,
+): Promise<string | null> {
+  const selectedFrames = selectScrollContactSheetFrames(
+    request.timeline,
+    request.frameRange,
+  );
+  const cells: Array<{ id: string; frame: number; input: Buffer }> = [];
+  const width = 360;
+  const height = Math.max(1, Math.round((width * request.quality.height) / request.quality.width));
+  for (const { id, frame } of selectedFrames) {
+    const source = resolve(packageDir, frameRelativePath(frame));
+    const stats = await fs.lstat(source).catch(() => null);
+    if (!stats?.isFile()) continue;
+    const label = escapeSvgText(`${id}  frame ${String(frame).padStart(6, "0")}`);
+    const overlay = Buffer.from(
+      `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">` +
+        `<rect x="0" y="${height - 30}" width="${width}" height="30" fill="rgba(0,0,0,0.72)"/>` +
+        `<text x="12" y="${height - 10}" font-family="Arial, sans-serif" font-size="16" fill="#fff">${label}</text>` +
+        `</svg>`,
+    );
+    const input = await sharp(source)
+      .resize({ width, height, fit: "cover" })
+      .composite([{ input: overlay, left: 0, top: 0 }])
+      .png()
+      .toBuffer();
+    cells.push({ id, frame, input });
+  }
+  if (cells.length === 0) return null;
+
+  await fs.mkdir(resolve(packageDir, "posters"), { recursive: true });
+  const gap = 16;
+  const padding = 16;
+  const columns = Math.min(3, cells.length);
+  const rows = Math.ceil(cells.length / columns);
+  const sheetWidth = padding * 2 + columns * width + (columns - 1) * gap;
+  const sheetHeight = padding * 2 + rows * height + (rows - 1) * gap;
+  const composites = cells.map((cell, index) => ({
+    input: cell.input,
+    left: padding + (index % columns) * (width + gap),
+    top: padding + Math.floor(index / columns) * (height + gap),
+  }));
+  const path = "posters/contact-sheet.png";
+  await sharp({
+    create: {
+      width: sheetWidth,
+      height: sheetHeight,
+      channels: 4,
+      background: "#111827",
+    },
+  })
+    .composite(composites)
+    .png()
+    .toFile(resolve(packageDir, path));
+  return path;
+}
+
+function scrollPackageReadmeText(
+  manifest: ScrollHandoffPackageV1,
+  warnings: string[],
+): string {
+  const request = manifest.sourceContract.request as CaptureScrollRecordRequestV1 | undefined;
+  const media = manifest.media.length > 0
+    ? manifest.media.map((item) => `- ${item.role}: ${item.path}`).join("\n")
+    : "- PNG sequence frames are the primary deliverable.";
+  const anchors = request?.timeline.anchors.length
+    ? request.timeline.anchors
+        .map((anchor) => {
+          const frame =
+            typeof anchor.posterFrame === "number" ? ` frame ${anchor.posterFrame}` : "";
+          return `- ${anchor.label || anchor.id}: progress ${anchor.progress}${frame}`;
+        })
+        .join("\n")
+    : "- No named anchors were provided.";
+  const hiddenGroups = manifest.cleanRender.hiddenGroups.join(", ");
+  const warningText =
+    warnings.length > 0 ? warnings.map((warning) => `- ${warning}`).join("\n") : "- None.";
+  return [
+    `# ${manifest.packageId}`,
+    "",
+    "## Output",
+    media,
+    `- Frames: ${manifest.frames.directory ?? "none"} / ${manifest.frames.pattern ?? "none"} (${manifest.frames.count})`,
+    `- Poster frames: ${manifest.posters.map((poster) => poster.path).join(", ") || "none"}`,
+    `- Contact sheet: ${manifest.contactSheetPath ?? "none"}`,
+    `- Diagnostics: ${manifest.diagnosticsPath ?? "none"}`,
+    "",
+    "## Scroll Timing",
+    `- Duration: ${manifest.durationSeconds}s`,
+    `- FPS: ${manifest.fps}`,
+    `- Frame range: ${manifest.frameRange.startFrame}-${manifest.frameRange.endFrame}`,
+    `- Page source: ${request?.timeline.pageSource.mode ?? "unknown"}`,
+    `- Camera source: ${request?.timeline.cameraSource.mode ?? "unknown"} ${request?.timeline.cameraSource.pathId ?? ""}`.trim(),
+    "",
+    "## Anchors",
+    anchors,
+    "",
+    "## Website Binding",
+    "- Bind scroll progress 0..1 to the full duration and use the manifest frame range for frame-accurate scrubbing.",
+    "- Prefer the scroll-friendly media when present; otherwise use the primary MP4/WebM or PNG sequence.",
+    "- Use poster frames and the contact sheet for visual review before publishing.",
+    "",
+    "## Clean Render",
+    `- Enabled: ${manifest.cleanRender.enabled}`,
+    `- Mode: ${manifest.cleanRender.mode}`,
+    `- Hidden groups: ${hiddenGroups}`,
+    `- Export overlay: ${manifest.cleanRender.exportOverlay.enabled ? (manifest.cleanRender.exportOverlay.mode ?? "enabled") : "disabled"}`,
+    "",
+    "## Warnings",
+    warningText,
+    "",
+  ].join("\n");
+}
+
+async function writeScrollPackageReadme(
+  packageDir: string,
+  manifest: ScrollHandoffPackageV1,
+  warnings: string[],
+): Promise<string> {
+  const path = "README.md";
+  await fs.writeFile(
+    resolve(packageDir, path),
+    scrollPackageReadmeText(manifest, warnings),
+    "utf8",
+  );
+  return path;
+}
+
+async function fileSha256(path: string): Promise<string> {
+  return createHash("sha256").update(await fs.readFile(path)).digest("hex");
+}
+
+async function hashScrollPackageFiles(
+  packageDir: string,
+  paths: string[],
+): Promise<ScrollHandoffPackageV1["hashes"]> {
+  const hashes: ScrollHandoffPackageV1["hashes"] = [];
+  const seen = new Set<string>();
+  for (const path of paths) {
+    if (seen.has(path)) continue;
+    seen.add(path);
+    const absolute = resolve(packageDir, path);
+    const stats = await fs.lstat(absolute).catch(() => null);
+    if (!stats?.isFile()) continue;
+    hashes.push({ path, sha256: await fileSha256(absolute) });
+  }
+  return hashes;
+}
+
+async function renderedFramePaths(packageDir: string): Promise<string[]> {
+  const entries = await fs.readdir(resolve(packageDir, "frames")).catch(() => []);
+  return entries
+    .filter((entry) => /^frame-\d{6}\.png$/i.test(entry))
+    .sort()
+    .map((entry) => `frames/${entry}`);
 }
 
 async function writeScrollManifest(
@@ -599,9 +780,13 @@ async function writeScrollDiagnostics(
     packagePath: run.packagePath,
     request: run.request,
     renderJob: run.renderJob,
+    manifest: run.manifest,
+    cleanRender: run.manifest.cleanRender,
     manifestPath: run.manifestPath,
     mediaPath: run.mediaPath ?? null,
     frameSequenceDir: run.frameSequenceDir ?? null,
+    contactSheetPath: run.contactSheetRelativePath ?? run.manifest.contactSheetPath,
+    readmePath: run.readmeRelativePath ?? run.manifest.readmePath,
     renderedFrames: run.renderedFrames ?? 0,
     totalFrames: run.totalFrames ?? null,
     renderer: run.renderer ?? null,
@@ -1023,11 +1208,21 @@ async function startCaptureScrollPackageRun({
         throw new Error("scroll package renderer completed without media output");
       }
       const posters = await createScrollPosters(packageDir, request);
+      const contactSheetPath = await createScrollContactSheet(packageDir, request);
       run.status = "complete";
       run.phase = "complete";
       run.error = null;
       run.renderedFrames = request.frameRange.totalFrames;
-      const completeManifest = createFinalScrollHandoffManifest({
+      run.contactSheetRelativePath = contactSheetPath;
+      run.contactSheetUrl = contactSheetPath
+        ? `/api/capture/scroll-package-output?runId=${encodeURIComponent(run.runId)}` +
+          "&variant=contact-sheet"
+        : null;
+      run.readmeRelativePath = "README.md";
+      run.readmeUrl =
+        `/api/capture/scroll-package-output?runId=${encodeURIComponent(run.runId)}` +
+        "&variant=readme";
+      let completeManifest = createFinalScrollHandoffManifest({
         manifest: run.manifest,
         status: "complete",
         media:
@@ -1052,11 +1247,31 @@ async function startCaptureScrollPackageRun({
           count: frameCount,
         },
         posters,
-        contactSheetPath: null,
+        contactSheetPath,
+        readmePath: run.readmeRelativePath,
         diagnosticsPath: `diagnostics/${request.packageName}.json`,
         warnings: run.warnings,
       });
+      run.manifest = completeManifest;
+      await writeScrollPackageReadme(packageDir, completeManifest, run.warnings ?? []);
       await writeScrollDiagnostics(run, "complete");
+      const hashPaths = [
+        ...(request.format === "png-sequence"
+          ? await renderedFramePaths(packageDir)
+          : mediaRelativePath
+            ? [mediaRelativePath]
+            : []),
+        ...posters.map((poster) => poster.path),
+        ...(contactSheetPath ? [contactSheetPath] : []),
+        `diagnostics/${request.packageName}.json`,
+        run.readmeRelativePath,
+      ];
+      const hashes = await hashScrollPackageFiles(packageDir, hashPaths);
+      completeManifest = createFinalScrollHandoffManifest({
+        manifest: completeManifest,
+        status: "complete",
+        hashes,
+      });
       await writeScrollManifest(run, completeManifest);
     } catch (error) {
       run.status = "failed";
@@ -1207,6 +1422,28 @@ export function authorWritePlugin(): Plugin {
               servePath = run.diagnosticsPath;
               downloadName = basename(run.diagnosticsPath);
               contentType = "application/json";
+            } else if (variant === "contact-sheet") {
+              if (!run.contactSheetRelativePath) {
+                badRequest(res, "scroll package contact sheet is missing", 404);
+                return;
+              }
+              servePath = resolve(run.packagePath, packageRelativePath(run.contactSheetRelativePath));
+              if (!pathIsInside(run.packagePath, servePath)) {
+                throw new Error("contact sheet path escapes package");
+              }
+              downloadName = basename(servePath);
+              contentType = "image/png";
+            } else if (variant === "readme") {
+              if (!run.readmeRelativePath) {
+                badRequest(res, "scroll package README is missing", 404);
+                return;
+              }
+              servePath = resolve(run.packagePath, packageRelativePath(run.readmeRelativePath));
+              if (!pathIsInside(run.packagePath, servePath)) {
+                throw new Error("README path escapes package");
+              }
+              downloadName = basename(servePath);
+              contentType = "text/markdown; charset=utf-8";
             } else if (variant === "media") {
               if (run.status !== "complete") {
                 badRequest(res, "scroll package media is not complete", 409);

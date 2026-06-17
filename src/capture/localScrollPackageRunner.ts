@@ -42,6 +42,8 @@ export interface LocalScrollPackageRunStatus {
   mediaPath?: string | null;
   mediaUrl?: string | null;
   frameSequenceDir?: string | null;
+  contactSheetUrl?: string | null;
+  readmeUrl?: string | null;
   warnings?: string[];
 }
 
@@ -123,7 +125,14 @@ export async function cancelLocalScrollPackageRenderJob(
 
 export function scrollPackageOutputUrl(
   runId: string,
-  variant: "manifest" | "diagnostics" | "media" | "frame" | "package",
+  variant:
+    | "manifest"
+    | "diagnostics"
+    | "media"
+    | "frame"
+    | "package"
+    | "contact-sheet"
+    | "readme",
   path?: string,
 ): string {
   const params = new URLSearchParams({ runId, variant });

@@ -32,6 +32,7 @@ import {
   type CaptureScope,
 } from "./capturePageRange";
 import { DEFAULT_CAPTURE_SCROLL_FPS } from "./captureScrollTimeline";
+import { scrollPackageOutputUrl } from "./localScrollPackageRunner";
 import type { CaptureStillImageType } from "./screenCaptureSaveOptions";
 import { useEditor } from "../editor/EditorContext";
 import { useCaptureDirector } from "./CaptureDirectorProvider";
@@ -1040,6 +1041,39 @@ export function CaptureDirectorToolbar() {
     ? scrollPackageJob.progress.message ??
       `${scrollPackageStatusLabel} ${scrollPackageRenderedFrames}/${scrollPackageTotalFrames} frames`
     : null;
+  const scrollPackageDiagnostics = scrollPackageJob?.diagnostics ?? {};
+  const scrollPackageRunId =
+    typeof scrollPackageDiagnostics.localScrollPackageRunId === "string"
+      ? scrollPackageDiagnostics.localScrollPackageRunId
+      : null;
+  const scrollManifestUrl =
+    typeof scrollPackageDiagnostics.manifestUrl === "string"
+      ? scrollPackageDiagnostics.manifestUrl
+      : scrollPackageRunId
+        ? scrollPackageOutputUrl(scrollPackageRunId, "manifest")
+        : null;
+  const scrollDiagnosticsUrl = scrollPackageRunId
+    ? scrollPackageOutputUrl(scrollPackageRunId, "diagnostics")
+    : null;
+  const scrollMediaUrl =
+    typeof scrollPackageDiagnostics.outputUrl === "string"
+      ? scrollPackageDiagnostics.outputUrl
+      : null;
+  const scrollContactSheetUrl =
+    typeof scrollPackageDiagnostics.contactSheetUrl === "string"
+      ? scrollPackageDiagnostics.contactSheetUrl
+      : null;
+  const scrollReadmeUrl =
+    typeof scrollPackageDiagnostics.readmeUrl === "string"
+      ? scrollPackageDiagnostics.readmeUrl
+      : null;
+  const scrollPackageArtifactLinks = [
+    { label: "Manifest", url: scrollManifestUrl },
+    { label: "Diagnostics", url: scrollDiagnosticsUrl },
+    { label: "Media", url: scrollMediaUrl },
+    { label: "Contact Sheet", url: scrollContactSheetUrl },
+    { label: "README", url: scrollReadmeUrl },
+  ].filter((link): link is { label: string; url: string } => Boolean(link.url));
   const scrollRenderProgressLabel =
     scrollPackageProgressLabel ?? `Ready 0/${scrollEstimatedFrameCount} frames`;
   const scrollPackageIsRunning =
@@ -3077,6 +3111,23 @@ export function CaptureDirectorToolbar() {
                     {lastScrollPackagePath ?? "Package path pending"} /{" "}
                     {lastScrollManifestPath ?? "Manifest path pending"}
                   </span>
+                )}
+                {scrollPackageArtifactLinks.length > 0 && (
+                  <div
+                    data-testid="capture-scroll-package-artifact-links"
+                    style={{ ...rowStyle, gap: 6 }}
+                  >
+                    {scrollPackageArtifactLinks.map((link) => (
+                      <a
+                        key={link.label}
+                        href={link.url}
+                        download
+                        style={outputLinkStyle}
+                      >
+                        {link.label}
+                      </a>
+                    ))}
+                  </div>
                 )}
               </div>
             </div>
