@@ -36,7 +36,6 @@ import {
   captureCameraPathV2NodeId,
   captureCameraPathV2SegmentId,
   createCaptureCameraPathV2Recorder,
-  insertCaptureCameraPathV2Orbit360,
   moveCaptureCameraPathV2NodePosition,
   moveCaptureCameraPathV2NodeTarget,
   moveCaptureCameraPathV2SegmentAdjacentPositions,
@@ -62,6 +61,7 @@ import {
   cameraPathV3ToRecipeKeyframes,
   captureCameraPathV3SampledPoints,
   downgradeCaptureCameraPathV3ToV2,
+  insertCaptureCameraPathV3Orbit360,
   moveCaptureCameraPathNodeAxis as moveCaptureCameraPathV3NodeAxis,
   moveCaptureCameraPathSplineHandle as moveCaptureCameraPathV3SplineHandle,
   normalizeCaptureCameraPathV3,
@@ -3287,13 +3287,14 @@ export function CaptureDirectorProvider({
       const targetNodeId =
         nodeId ??
         selectedCameraPathNodeId ??
-        [...captureCameraPathV2.nodes]
+        [...captureCameraPathV3.nodes]
           .reverse()
           .find((node) => node.kind === "keyframe")?.id ??
         null;
       if (!targetNodeId) return;
-      const next = applyCaptureCameraPathV2(
-        insertCaptureCameraPathV2Orbit360(captureCameraPathV2, targetNodeId),
+      // Authored directly in V3 so existing spline/aim authoring is preserved.
+      const next = applyCaptureCameraPathV3(
+        insertCaptureCameraPathV3Orbit360(captureCameraPathV3, targetNodeId),
       );
       setSelectedCameraPathNodeId(targetNodeId);
       setSelectedCameraPathKeyframeId(targetNodeId);
@@ -3303,8 +3304,8 @@ export function CaptureDirectorProvider({
       );
     },
     [
-      applyCaptureCameraPathV2,
-      captureCameraPathV2,
+      applyCaptureCameraPathV3,
+      captureCameraPathV3,
       selectedCameraPathNodeId,
     ],
   );

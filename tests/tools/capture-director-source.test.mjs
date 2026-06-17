@@ -1114,6 +1114,7 @@ test("Capture Director provider exposes Camera Path v3 state, compatibility mirr
 
 test("Camera Path authoring exposes orbit insertion, kind pickers, junction markers, and constant-speed orbit segments", () => {
   const pathSource = readSource("src", "capture", "captureCameraPathV2.ts");
+  const pathSourceV3 = readSource("src", "capture", "captureCameraPathV3.ts");
   const provider = readSource("src", "capture", "CaptureDirectorProvider.tsx");
   const toolbar = readSource("src", "capture", "CaptureDirectorToolbar.tsx");
   const timeline = readSource("src", "capture", "CameraPathTimeline.tsx");
@@ -1129,10 +1130,16 @@ test("Camera Path authoring exposes orbit insertion, kind pickers, junction mark
     assert.ok(pathSource.includes(expected), `Camera Path V2 source should include ${expected}`);
   }
 
+  // Orbit authoring is V3-native so existing spline/aim data is preserved.
+  assert.ok(
+    pathSourceV3.includes("export function insertCaptureCameraPathV3Orbit360"),
+    "Camera Path V3 source should export the V3 orbit inserter",
+  );
+
   for (const expected of [
     "addCameraPathOrbit360",
     "addCurrentCameraAsKind",
-    "insertCaptureCameraPathV2Orbit360",
+    "insertCaptureCameraPathV3Orbit360",
     "normalizeCaptureCameraPathV3(nextPath)",
     "normalizeCaptureCameraPathV2(nextPath)",
   ]) {

@@ -1641,6 +1641,69 @@ test("Camera Path default orbit remains circular after V3 playback upgrade", asy
   }
 });
 
+test("V3 orbit inserter preserves authored node aim + exit easing and keeps steps linear", async () => {
+  const {
+    insertCaptureCameraPathV3Orbit360,
+    normalizeCaptureCameraPathV3,
+    sampleCaptureCameraPathV3,
+  } = await importBundled("src/capture/captureCameraPathV3.ts");
+
+  const v3 = normalizeCaptureCameraPathV3({
+    nodes: [
+      {
+        id: "a",
+        kind: "keyframe",
+        position: [10, 0, 4],
+        target: [0, 0, 1],
+        up: [0, 0, 1],
+        fov: 45,
+        holdSecondsAfter: 0,
+        lookMode: "follow-path-tangent",
+      },
+      {
+        id: "b",
+        kind: "keyframe",
+        position: [0, 10, 4],
+        target: [0, 0, 1],
+        up: [0, 0, 1],
+        fov: 45,
+        holdSecondsAfter: 0,
+      },
+    ],
+    segments: [
+      {
+        id: "seg-a-b",
+        fromNodeId: "a",
+        toNodeId: "b",
+        transitionSeconds: 2,
+        timeCurve: { mode: "ease-in-out" },
+      },
+    ],
+  });
+  assert.equal(v3.nodes.find((node) => node.id === "a").aimGeometry.mode, "follow-path-tangent");
+
+  const orbit = insertCaptureCameraPathV3Orbit360(v3, "a", {
+    orbitDurationSeconds: 4,
+    orbitStepCount: 4,
+  });
+
+  // Existing V3 node aim authoring survives the orbit insert (no V2 round-trip).
+  assert.equal(orbit.nodes.find((node) => node.id === "a").aimGeometry.mode, "follow-path-tangent");
+  // The exit segment keeps its authored easing; orbit steps are constant-speed.
+  const exitSegment = orbit.segments.find((segment) => segment.toNodeId === "b");
+  assert.equal(exitSegment.timeCurve.mode, "ease-in-out");
+  const orbitStepSegments = orbit.segments.filter((segment) => segment.toNodeId !== "b");
+  assert.ok(orbitStepSegments.length >= 4);
+  assert.ok(orbitStepSegments.every((segment) => segment.timeCurve.mode === "linear"));
+  // Orbit closes back to the source pose after one full revolution.
+  const start = sampleCaptureCameraPathV3(orbit, 0).position;
+  const closed = sampleCaptureCameraPathV3(orbit, 4).position;
+  assert.ok(
+    Math.hypot(start[0] - closed[0], start[1] - closed[1], start[2] - closed[2]) < 0.05,
+    "orbit should return to the source pose at the end of the revolution",
+  );
+});
+
 test("CaptureRecipe normalization drops empty v2 camera paths", async () => {
   const {
     createCaptureRecipeFromCurrentState,

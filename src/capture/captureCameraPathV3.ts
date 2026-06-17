@@ -940,6 +940,128 @@ export function normalizeCaptureCameraPathV3(
   };
 }
 
+// Insert a 360-degree orbit of transition nodes around a keyframe, authored
+// directly in V3 so existing nodes keep their splineControls/aimGeometry (no
+// lossy V2 round-trip). Orbit step segments are constant-speed linear; the exit
+// segment keeps its authored time curve.
+export function insertCaptureCameraPathV3Orbit360(
+  inputPath: CaptureCameraPathV3,
+  sourceNodeId: string | null | undefined,
+  options: {
+    orbitDurationSeconds?: number;
+    orbitStepCount?: number;
+  } = {},
+): CaptureCameraPathV3 {
+  const path = normalizeCaptureCameraPathV3(inputPath);
+  const sourceIndex = path.nodes.findIndex((node) => node.id === sourceNodeId);
+  if (sourceIndex < 0) return path;
+  const sourceNode = path.nodes[sourceIndex];
+  if (sourceNode.kind !== "keyframe") return path;
+
+  const orbitStepCount = Math.max(
+    4,
+    Math.min(32, Math.round(options.orbitStepCount ?? 12)),
+  );
+  const orbitDurationSeconds =
+    Number.isFinite(options.orbitDurationSeconds) &&
+    (options.orbitDurationSeconds ?? 0) > 0
+      ? Math.min(120, Math.max(0.1, options.orbitDurationSeconds ?? 4))
+      : 4;
+  const orbitStepSeconds = orbitDurationSeconds / orbitStepCount;
+
+  const target = nodeTarget(path, sourceNode);
+  const offset = subVec3(sourceNode.position, target);
+  const horizontalRadius = Math.hypot(offset[0], offset[1]);
+  const radius = horizontalRadius > 0.000_001 ? horizontalRadius : 1;
+  const startAngle = horizontalRadius > 0.000_001 ? Math.atan2(offset[1], offset[0]) : 0;
+  const zOffset = offset[2];
+
+  const usedIds = new Set(path.nodes.map((node) => node.id));
+  const uniqueId = (base: string): string => {
+    if (!usedIds.has(base)) {
+      usedIds.add(base);
+      return base;
+    }
+    for (let index = 2; index < 1000; index += 1) {
+      const candidate = `${base}-${index}`;
+      if (!usedIds.has(candidate)) {
+        usedIds.add(candidate);
+        return candidate;
+      }
+    }
+    const fallback = `${base}-${Date.now()}`;
+    usedIds.add(fallback);
+    return fallback;
+  };
+
+  const orbitNodes: CaptureCameraPathNodeV3[] = [];
+  for (let step = 1; step <= orbitStepCount; step += 1) {
+    const angle = startAngle + (Math.PI * 2 * step) / orbitStepCount;
+    const position: CaptureVec3 =
+      step === orbitStepCount
+        ? cloneVec3(sourceNode.position)
+        : [
+            target[0] + Math.cos(angle) * radius,
+            target[1] + Math.sin(angle) * radius,
+            target[2] + zOffset,
+          ];
+    orbitNodes.push({
+      id: uniqueId(`${sourceNode.id}-orbit-${String(step).padStart(2, "0")}`),
+      kind: "transition",
+      enabled: true,
+      hidden: false,
+      label: `Orbit 360 ${step}/${orbitStepCount}`,
+      timeSeconds: 0,
+      position,
+      target: cloneVec3(target),
+      up: cloneVec3(sourceNode.up),
+      fov: sourceNode.fov,
+      holdSecondsAfter: 0,
+      aimGeometry: sourceNode.aimGeometry,
+      splineControls: DEFAULT_CAPTURE_CAMERA_PATH_SPLINE_CONTROLS_V3,
+    });
+  }
+
+  const outgoingSegment =
+    path.segments.find((segment) => segment.fromNodeId === sourceNode.id) ?? null;
+  const orbitSegments: CaptureCameraPathSegmentV3[] = [];
+  let fromNodeId = sourceNode.id;
+  for (const orbitNode of orbitNodes) {
+    orbitSegments.push({
+      id: captureCameraPathV2SegmentId(fromNodeId, orbitNode.id),
+      fromNodeId,
+      toNodeId: orbitNode.id,
+      enabled: true,
+      hidden: false,
+      transitionSeconds: orbitStepSeconds,
+      timeCurve: { mode: "linear" },
+      pathFairing: { ...DEFAULT_FAIRING_V3 },
+    });
+    fromNodeId = orbitNode.id;
+  }
+  if (outgoingSegment) {
+    // Exit segment keeps its authored time curve; only orbit steps are linear.
+    orbitSegments.push({
+      ...outgoingSegment,
+      id: captureCameraPathV2SegmentId(fromNodeId, outgoingSegment.toNodeId),
+      fromNodeId,
+    });
+  }
+
+  const nodes = [
+    ...path.nodes.slice(0, sourceIndex + 1),
+    ...orbitNodes,
+    ...path.nodes.slice(sourceIndex + 1),
+  ];
+  const segments = outgoingSegment
+    ? path.segments.flatMap((segment) =>
+        segment.id === outgoingSegment.id ? orbitSegments : [segment],
+      )
+    : [...path.segments, ...orbitSegments];
+
+  return normalizeCaptureCameraPathV3({ ...path, nodes, segments });
+}
+
 function validateTimeCurve(
   curve: unknown,
   label: string,
