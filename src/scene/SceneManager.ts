@@ -4526,8 +4526,77 @@ export class SceneManager {
     scalarStyleEasing: EasingName = easing,
     reason: NavigationReason = "programmatic",
     transitionId?: string,
+    startMs?: number,
   ): void {
-    return transitionEffectiveLayersForPageImpl.call(this, fromEnvironment, toEnvironment, fromPage, toPage, durationMs, easing, scalarStyleDurationMs, scalarStyleEasing, reason, transitionId);
+    return transitionEffectiveLayersForPageImpl.call(
+      this,
+      fromEnvironment,
+      toEnvironment,
+      fromPage,
+      toPage,
+      durationMs,
+      easing,
+      scalarStyleDurationMs,
+      scalarStyleEasing,
+      reason,
+      transitionId,
+      startMs,
+    );
+  }
+
+  freezeCapturePageSourceTransitionPreview(
+    nowMs: number = performance.now(),
+  ): void {
+    const pinDurationMs = 1_000_000_000_000;
+    for (const [id, tween] of this.layerTweens) {
+      const group = this.layers.get(id);
+      const opacity = group
+        ? this.currentRenderOpacityForTree(group, tween.to)
+        : tween.to;
+      tween.from = opacity;
+      tween.to = opacity;
+      tween.startMs = nowMs;
+      tween.durationMs = pinDurationMs;
+      tween.easing = "linear";
+    }
+    for (const snapshot of this.layerTransitionSnapshots.values()) {
+      const opacity = this.currentRenderOpacityForTree(
+        snapshot.group,
+        snapshot.to,
+      );
+      snapshot.from = opacity;
+      snapshot.to = opacity;
+      snapshot.startMs = nowMs;
+      snapshot.durationMs = pinDurationMs;
+      snapshot.easing = "linear";
+    }
+    if (this.sceneSectionHelperTransitionSnapshot) {
+      const snapshot = this.sceneSectionHelperTransitionSnapshot;
+      const opacity = this.currentRenderOpacityForTree(
+        snapshot.group,
+        snapshot.to,
+      );
+      snapshot.from = opacity;
+      snapshot.to = opacity;
+      snapshot.startMs = nowMs;
+      snapshot.durationMs = pinDurationMs;
+      snapshot.easing = "linear";
+    }
+    if (this.sectionIsoOverlayTransition) {
+      const opacity = clamp01(this.sectionIsoOverlayTransition.targetOpacity);
+      this.sectionIsoOverlayTransition.startMs = nowMs - opacity * pinDurationMs;
+      this.sectionIsoOverlayTransition.durationMs = pinDurationMs;
+      this.sectionIsoOverlayTransition.easing = "linear";
+      this.sectionIsoOverlayTransition.targetOpacity = opacity;
+    }
+    this.scalarStyleTweens.clear();
+    this.visibilityToggleFades.clear();
+    this.workingAreaFocusTween = null;
+    this.sceneSectionStyleTween = null;
+    this.sceneSectionHelperTransitionOpacity = 1;
+    this.activeSceneTransitionContext = null;
+    this.environmentSceneTransition = null;
+    this.cinematicSceneTransition = null;
   }
 
   /**

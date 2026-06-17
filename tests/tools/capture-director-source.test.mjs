@@ -440,6 +440,8 @@ test("Capture Director scroll animation timeline and handoff package contracts e
   for (const expected of [
     "CaptureScrollTimelineV1",
     "CaptureScrollRecordRequestV1",
+    "CaptureScrollTimelinePageSample",
+    "CaptureScrollTimelinePageSourceClip",
     "normalizeCaptureScrollTimeline",
     "validateCaptureScrollTimeline",
     "createScrollRecordRequest",
@@ -449,6 +451,19 @@ test("Capture Director scroll animation timeline and handoff package contracts e
     "DEFAULT_CAPTURE_SCROLL_FPS",
   ]) {
     assert.ok(scrollTimelineSource.includes(expected), `scroll timeline should include ${expected}`);
+  }
+
+  for (const expected of [
+    "sourcePageId",
+    "targetPageId",
+    "transitionProgress",
+    "transitionEasing",
+    "fallbackMode",
+  ]) {
+    assert.ok(
+      scrollTimelineSource.includes(expected),
+      `scroll timeline page sample should include ${expected}`,
+    );
   }
 
   for (const expected of [
@@ -467,11 +482,14 @@ test("Capture Director scroll animation timeline and handoff package contracts e
 
 test("Capture Director scroll preview and accept logic use path package rendering", () => {
   const provider = readSource("src", "capture", "CaptureDirectorProvider.tsx");
+  const pageController = readSource("src", "pages", "PageController.tsx");
   for (const expected of [
     "scrollPreviewPlaybackUnsubscribeRef",
     "sceneHandle.onTick",
     "sampleCaptureScrollTimeline",
     "sampleCaptureCameraPathV3",
+    "previewCapturePageSource",
+    "clearCapturePageSourcePreview",
     "sceneHandle.setCameraPose",
     "validateCaptureCameraPathV3Playback",
     "resolveCaptureCameraPathV3Timeline",
@@ -479,6 +497,17 @@ test("Capture Director scroll preview and accept logic use path package renderin
     "setScrollPreviewState(\"idle\")",
   ]) {
     assert.ok(provider.includes(expected), `scroll preview should include ${expected}`);
+  }
+  for (const expected of [
+    "previewCapturePageSource:",
+    "clearCapturePageSourcePreview:",
+    "capture-scroll-preview",
+    "capture-scroll-record",
+  ]) {
+    assert.ok(
+      pageController.includes(expected),
+      `PageController should expose capture page source seam ${expected}`,
+    );
   }
 
   const planStart = provider.indexOf("const buildScrollRecordPlan = useCallback");
@@ -500,6 +529,8 @@ test("Capture Director scroll preview and accept logic use path package renderin
     "pageTimelineDurationSeconds",
     "durationFrames - 1",
     "pageSource",
+    "clips: enabledPageClips",
+    "timelineSample.page",
     "cameraPathPlaybackValidation.valid",
     "cameraSource",
     "setScrollRecordValidationErrors",
@@ -529,6 +560,26 @@ test("Capture Director scroll preview and accept logic use path package renderin
       acceptBlock.includes(forbidden),
       false,
       `scroll accept logic must not call old renderer boundary ${forbidden}`,
+    );
+  }
+
+  const scrollCaptureSources = [
+    readSource("src", "capture", "captureScrollTimeline.ts"),
+    acceptBlock,
+  ].join("\n");
+  for (const forbidden of [
+    "projects/",
+    "projects\\\\",
+    "page.title ===",
+    "pageTitle",
+    "pageIndex",
+    "156_page",
+    "157_page",
+  ]) {
+    assert.equal(
+      scrollCaptureSources.includes(forbidden),
+      false,
+      `scroll capture code must not couple to live page fixtures: ${forbidden}`,
     );
   }
 });

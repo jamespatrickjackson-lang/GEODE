@@ -1,4 +1,5 @@
 import type { CaptureValidationResult } from "./captureTypes";
+import type { CaptureTimelineTransitionEasing } from "./captureTimeline";
 
 export const DEFAULT_CAPTURE_SCROLL_FPS = 60;
 export const CAPTURE_SCROLL_FPS_OPTIONS = [30, 60, 120] as const;
@@ -32,6 +33,24 @@ export type CaptureScrollRenderRouteIntent =
 export type CaptureScrollFrameRange =
   | { mode: "full" }
   | { mode: "frame-range"; startFrame: number; endFrame: number };
+
+export interface CaptureScrollTimelinePageSourceClip {
+  id: string;
+  pageId: string;
+  label: string;
+  enabled: boolean;
+  locked: boolean;
+  startSeconds: number;
+  transitionSeconds: number;
+  holdSeconds: number;
+  transitionEasing: CaptureTimelineTransitionEasing;
+}
+
+export interface CaptureScrollTimelinePageSource {
+  mode: "page-bar" | "current-page";
+  fallback: "current-page" | "none";
+  clips: CaptureScrollTimelinePageSourceClip[];
+}
 
 export interface CaptureScrollRecordQuality {
   preset: CaptureScrollQualityPreset;
@@ -72,7 +91,7 @@ export interface CaptureScrollTimelineV1 {
   fps: CaptureScrollFps;
   durationSeconds: number;
   range: CaptureScrollFrameRange;
-  pageSource: { mode: "page-bar" | "current-page"; fallback: "current-page" | "none" };
+  pageSource: CaptureScrollTimelinePageSource;
   cameraSource: { mode: "camera-path" | "current-camera"; pathId: string | null };
   anchors: Array<{ id: string; label: string; progress: number; posterFrame?: number | null }>;
   outputProfileId: string;
@@ -84,12 +103,24 @@ export interface CaptureScrollResolvedFrameRange {
   totalFrames: number;
 }
 
+export interface CaptureScrollTimelinePageSample {
+  clipId: string | null;
+  pageId: string | null;
+  sourcePageId: string | null;
+  targetPageId: string | null;
+  localTimeSeconds: number;
+  transitionProgress: number;
+  transitionEasing: CaptureTimelineTransitionEasing;
+  fallbackMode: "current-page" | "none";
+}
+
 export interface CaptureScrollTimelineSample {
   frameIndex: number;
   clampedFrameIndex: number;
   timeSeconds: number;
   normalizedProgress: number;
   rangeProgress: number;
+  page: CaptureScrollTimelinePageSample;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -102,6 +133,12 @@ function isCaptureScrollFps(value: unknown): value is CaptureScrollFps {
 
 function isCaptureScrollFormat(value: unknown): value is CaptureScrollRecordFormat {
   return CAPTURE_SCROLL_OUTPUT_FORMATS.includes(value as CaptureScrollRecordFormat);
+}
+
+function isCaptureTimelineTransitionEasing(
+  value: unknown,
+): value is CaptureTimelineTransitionEasing {
+  return value === "linear" || value === "ease-in-out";
 }
 
 function isCaptureScrollQualityPreset(
@@ -226,11 +263,16 @@ function fallbackResolvedFrameRange(
       totalFrames: timeline.range.endFrame - timeline.range.startFrame + 1,
     };
   }
-  const durationFrames =
-    isCaptureScrollFps(timeline.fps) &&
+  const validatedFps = isCaptureScrollFps(timeline.fps) ? timeline.fps : 0;
+  const validatedDurationSeconds =
+    validatedFps > 0 &&
     finiteNumber(timeline.durationSeconds) &&
     timeline.durationSeconds > 0
-      ? Math.ceil(timeline.durationSeconds * timeline.fps)
+      ? timeline.durationSeconds
+      : 0;
+  const durationFrames =
+    validatedDurationSeconds > 0
+      ? Math.ceil(validatedDurationSeconds * validatedFps)
       : 0;
   return {
     startFrame: 0,
@@ -264,6 +306,45 @@ function normalizeFrameRange(value: unknown, supplied: boolean): CaptureScrollFr
   return { mode: "full" };
 }
 
+function normalizePageSourceClips(
+  value: unknown,
+): CaptureScrollTimelinePageSourceClip[] {
+  if (!Array.isArray(value)) return [];
+  return value.map((clip, index) => {
+    if (!isRecord(clip)) {
+      return {
+        id: "",
+        pageId: "",
+        label: "",
+        enabled: true,
+        locked: false,
+        startSeconds: Number.NaN,
+        transitionSeconds: Number.NaN,
+        holdSeconds: Number.NaN,
+        transitionEasing: "ease-in-out",
+      };
+    }
+    return {
+      id: nonEmptyString(clip.id) ? clip.id : `clip-${index + 1}`,
+      pageId: nonEmptyString(clip.pageId) ? clip.pageId : "",
+      label: typeof clip.label === "string" ? clip.label : "",
+      enabled: clip.enabled !== false,
+      locked: clip.locked === true,
+      startSeconds:
+        typeof clip.startSeconds === "number" ? clip.startSeconds : Number.NaN,
+      transitionSeconds:
+        typeof clip.transitionSeconds === "number"
+          ? clip.transitionSeconds
+          : Number.NaN,
+      holdSeconds:
+        typeof clip.holdSeconds === "number" ? clip.holdSeconds : Number.NaN,
+      transitionEasing: isCaptureTimelineTransitionEasing(clip.transitionEasing)
+        ? clip.transitionEasing
+        : "ease-in-out",
+    };
+  });
+}
+
 export function normalizeCaptureScrollTimeline(
   timeline: Partial<CaptureScrollTimelineV1>,
 ): CaptureScrollTimelineV1 {
@@ -295,6 +376,7 @@ export function normalizeCaptureScrollTimeline(
     pageSource: {
       mode: pageSource.mode === "current-page" ? "current-page" : "page-bar",
       fallback: pageSource.fallback === "none" ? "none" : "current-page",
+      clips: normalizePageSourceClips(pageSource.clips),
     },
     cameraSource: {
       mode: cameraSource.mode === "current-camera" ? "current-camera" : "camera-path",
@@ -545,6 +627,78 @@ export function resolveCaptureScrollFrameRange(
   };
 }
 
+function pageClipDuration(clip: CaptureScrollTimelinePageSourceClip): number {
+  return Math.max(0, clip.transitionSeconds) + Math.max(0, clip.holdSeconds);
+}
+
+function enabledPageSourceClips(
+  timeline: CaptureScrollTimelineV1,
+): CaptureScrollTimelinePageSourceClip[] {
+  if (timeline.pageSource.mode !== "page-bar") return [];
+  return timeline.pageSource.clips
+    .filter((clip) => clip.enabled)
+    .sort((left, right) => left.startSeconds - right.startSeconds);
+}
+
+function fallbackPageSample(
+  timeline: CaptureScrollTimelineV1,
+  timeSeconds: number,
+): CaptureScrollTimelinePageSample {
+  return {
+    clipId: null,
+    pageId: null,
+    sourcePageId: null,
+    targetPageId: null,
+    localTimeSeconds: Math.max(0, timeSeconds),
+    transitionProgress: 1,
+    transitionEasing: "ease-in-out",
+    fallbackMode: timeline.pageSource.fallback,
+  };
+}
+
+function sampleScrollPageSource(
+  timeline: CaptureScrollTimelineV1,
+  timeSeconds: number,
+): CaptureScrollTimelinePageSample {
+  const clips = enabledPageSourceClips(timeline);
+  if (clips.length === 0) return fallbackPageSample(timeline, timeSeconds);
+
+  const clampedTimeSeconds = Math.max(0, timeSeconds);
+  let clipIndex = clips.findIndex((clip) => {
+    const start = clip.startSeconds;
+    const end = start + pageClipDuration(clip);
+    return clampedTimeSeconds >= start && clampedTimeSeconds < end;
+  });
+  if (clipIndex < 0 && clampedTimeSeconds >= clips[clips.length - 1].startSeconds) {
+    clipIndex = clips.length - 1;
+  }
+  if (clipIndex < 0) return fallbackPageSample(timeline, timeSeconds);
+
+  const clip = clips[clipIndex];
+  const previousClip = clips[clipIndex - 1] ?? null;
+  const localTimeSeconds = Math.max(0, clampedTimeSeconds - clip.startSeconds);
+  const transitionProgress =
+    clip.transitionSeconds > 0
+      ? clamp01(localTimeSeconds / clip.transitionSeconds)
+      : 1;
+  const targetPageId =
+    previousClip &&
+    previousClip.pageId !== clip.pageId &&
+    transitionProgress < 1
+      ? clip.pageId
+      : null;
+  return {
+    clipId: clip.id,
+    pageId: clip.pageId,
+    sourcePageId: targetPageId ? previousClip?.pageId ?? clip.pageId : clip.pageId,
+    targetPageId,
+    localTimeSeconds,
+    transitionProgress,
+    transitionEasing: clip.transitionEasing,
+    fallbackMode: "none",
+  };
+}
+
 export function sampleCaptureScrollTimeline(
   timeline: CaptureScrollTimelineV1,
   frameIndex: number,
@@ -566,6 +720,7 @@ export function sampleCaptureScrollTimeline(
     timeSeconds: clampedFrameIndex / timeline.fps,
     normalizedProgress,
     rangeProgress: clamp01((clampedFrameIndex - range.startFrame) / rangeDuration),
+    page: sampleScrollPageSource(timeline, clampedFrameIndex / timeline.fps),
   };
 }
 
@@ -585,11 +740,16 @@ export function validateCaptureScrollTimeline(
     errors.push("timeline.durationSeconds must be greater than zero.");
   }
 
-  const durationFrames =
-    isCaptureScrollFps(timeline.fps) &&
+  const validatedFps = isCaptureScrollFps(timeline.fps) ? timeline.fps : 0;
+  const validatedDurationSeconds =
+    validatedFps > 0 &&
     finiteNumber(timeline.durationSeconds) &&
     timeline.durationSeconds > 0
-      ? Math.ceil(timeline.durationSeconds * timeline.fps)
+      ? timeline.durationSeconds
+      : 0;
+  const durationFrames =
+    validatedDurationSeconds > 0
+      ? Math.ceil(validatedDurationSeconds * validatedFps)
       : 0;
 
   if (!isRecord(timeline.range)) {
@@ -623,6 +783,66 @@ export function validateCaptureScrollTimeline(
       timeline.pageSource.fallback !== "none"
     ) {
       errors.push("timeline.pageSource.fallback must be current-page or none.");
+    }
+    if (
+      timeline.pageSource.clips !== undefined &&
+      !Array.isArray(timeline.pageSource.clips)
+    ) {
+      errors.push("timeline.pageSource.clips must be an array.");
+    }
+    if (Array.isArray(timeline.pageSource.clips)) {
+      timeline.pageSource.clips.forEach((clip, index) => {
+        if (!isRecord(clip)) {
+          errors.push(`timeline.pageSource.clips[${index}] must be an object.`);
+          return;
+        }
+        if (!nonEmptyString(clip.id)) {
+          errors.push(`timeline.pageSource.clips[${index}].id is required.`);
+        }
+        if (!nonEmptyString(clip.pageId)) {
+          errors.push(`timeline.pageSource.clips[${index}].pageId is required.`);
+        }
+        if (typeof clip.label !== "string") {
+          errors.push(`timeline.pageSource.clips[${index}].label must be a string.`);
+        }
+        if (typeof clip.enabled !== "boolean") {
+          errors.push(`timeline.pageSource.clips[${index}].enabled must be boolean.`);
+        }
+        if (typeof clip.locked !== "boolean") {
+          errors.push(`timeline.pageSource.clips[${index}].locked must be boolean.`);
+        }
+        for (const key of [
+          "startSeconds",
+          "transitionSeconds",
+          "holdSeconds",
+        ] as const) {
+          const value = clip[key];
+          if (!finiteNumber(value) || value < 0) {
+            errors.push(
+              `timeline.pageSource.clips[${index}].${key} must be a non-negative number.`,
+            );
+          }
+        }
+        if (!isCaptureTimelineTransitionEasing(clip.transitionEasing)) {
+          errors.push(
+            `timeline.pageSource.clips[${index}].transitionEasing must be linear or ease-in-out.`,
+          );
+        }
+        if (
+          durationFrames > 0 &&
+          finiteNumber(clip.startSeconds) &&
+          finiteNumber(clip.transitionSeconds) &&
+          finiteNumber(clip.holdSeconds)
+        ) {
+          const clipEndSeconds =
+            clip.startSeconds + clip.transitionSeconds + clip.holdSeconds;
+          if (clipEndSeconds > validatedDurationSeconds + 0.000_001) {
+            errors.push(
+              `Page Bar clip timing must stay inside the scroll timeline duration: ${clip.id}.`,
+            );
+          }
+        }
+      });
     }
   }
 

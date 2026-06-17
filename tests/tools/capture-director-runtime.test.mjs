@@ -239,6 +239,135 @@ test("scroll animation timeline normalizes FPS, frame ranges, and progress sampl
   assert.match(invalidRange.errors.join("\n"), /startFrame/);
 });
 
+test("scroll animation timeline samples Page Bar clips without changing frame identity", async () => {
+  const {
+    normalizeCaptureScrollTimeline,
+    sampleCaptureScrollTimeline,
+    validateCaptureScrollTimeline,
+  } = await importBundled("src/capture/captureScrollTimeline.ts");
+
+  const pageClips = [
+    {
+      id: "clip-a",
+      pageId: "page-a",
+      label: "Page A",
+      enabled: true,
+      locked: false,
+      startSeconds: 0,
+      transitionSeconds: 1,
+      holdSeconds: 1,
+      transitionEasing: "linear",
+    },
+    {
+      id: "clip-b",
+      pageId: "page-b",
+      label: "Page B",
+      enabled: true,
+      locked: false,
+      startSeconds: 2,
+      transitionSeconds: 1,
+      holdSeconds: 1,
+      transitionEasing: "ease-in-out",
+    },
+  ];
+
+  const timeline = normalizeCaptureScrollTimeline({
+    version: 1,
+    fps: 60,
+    durationSeconds: 4,
+    range: { mode: "frame-range", startFrame: 120, endFrame: 179 },
+    pageSource: {
+      mode: "page-bar",
+      fallback: "current-page",
+      clips: pageClips,
+    },
+    cameraSource: { mode: "camera-path", pathId: "camera-spine" },
+    anchors: [],
+    outputProfileId: "mp4-review",
+  });
+
+  assert.equal(validateCaptureScrollTimeline(timeline).valid, true);
+
+  const firstClipSample = sampleCaptureScrollTimeline(timeline, 30);
+  assert.equal(firstClipSample.frameIndex, 30);
+  assert.equal(firstClipSample.page.clipId, "clip-a");
+  assert.equal(firstClipSample.page.pageId, "page-a");
+  assert.equal(firstClipSample.page.sourcePageId, "page-a");
+  assert.equal(firstClipSample.page.targetPageId, null);
+  assert.equal(firstClipSample.page.transitionProgress, 0.5);
+  assert.equal(firstClipSample.page.transitionEasing, "linear");
+  assert.equal(firstClipSample.page.fallbackMode, "none");
+
+  const crossingSample = sampleCaptureScrollTimeline(timeline, 150);
+  assert.equal(crossingSample.frameIndex, 150);
+  assert.equal(crossingSample.clampedFrameIndex, 150);
+  assert.equal(crossingSample.timeSeconds, 2.5);
+  assert.equal(crossingSample.page.clipId, "clip-b");
+  assert.equal(crossingSample.page.pageId, "page-b");
+  assert.equal(crossingSample.page.sourcePageId, "page-a");
+  assert.equal(crossingSample.page.targetPageId, "page-b");
+  assert.equal(crossingSample.page.localTimeSeconds, 0.5);
+  assert.equal(crossingSample.page.transitionProgress, 0.5);
+  assert.equal(crossingSample.page.transitionEasing, "ease-in-out");
+  assert.ok(crossingSample.rangeProgress > 0 && crossingSample.rangeProgress < 1);
+});
+
+test("scroll animation timeline reports current-page fallback and rejects overlong Page Bar clips", async () => {
+  const {
+    normalizeCaptureScrollTimeline,
+    sampleCaptureScrollTimeline,
+    validateCaptureScrollTimeline,
+  } = await importBundled("src/capture/captureScrollTimeline.ts");
+
+  const fallbackTimeline = normalizeCaptureScrollTimeline({
+    version: 1,
+    fps: 60,
+    durationSeconds: 2,
+    range: { mode: "full" },
+    pageSource: {
+      mode: "page-bar",
+      fallback: "current-page",
+      clips: [],
+    },
+    cameraSource: { mode: "camera-path", pathId: "camera-spine" },
+    anchors: [],
+    outputProfileId: "mp4-review",
+  });
+
+  const fallbackSample = sampleCaptureScrollTimeline(fallbackTimeline, 15);
+  assert.equal(fallbackSample.page.clipId, null);
+  assert.equal(fallbackSample.page.pageId, null);
+  assert.equal(fallbackSample.page.sourcePageId, null);
+  assert.equal(fallbackSample.page.targetPageId, null);
+  assert.equal(fallbackSample.page.transitionProgress, 1);
+  assert.equal(fallbackSample.page.transitionEasing, "ease-in-out");
+  assert.equal(fallbackSample.page.fallbackMode, "current-page");
+
+  const overlongTimeline = normalizeCaptureScrollTimeline({
+    ...fallbackTimeline,
+    pageSource: {
+      mode: "page-bar",
+      fallback: "current-page",
+      clips: [
+        {
+          id: "overlong",
+          pageId: "page-c",
+          label: "Page C",
+          enabled: true,
+          locked: false,
+          startSeconds: 1.5,
+          transitionSeconds: 0.75,
+          holdSeconds: 0,
+          transitionEasing: "linear",
+        },
+      ],
+    },
+  });
+  const overlongValidation = validateCaptureScrollTimeline(overlongTimeline);
+  assert.equal(overlongValidation.valid, false);
+  assert.match(overlongValidation.errors.join("\n"), /Page Bar clip timing/);
+});
+
 test("scroll animation timeline does not silently repair malformed frame ranges", async () => {
   const {
     normalizeCaptureScrollTimeline,

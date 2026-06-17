@@ -801,7 +801,12 @@ export function CaptureDirectorProvider({
   children: ReactNode;
 }) {
   const { state } = useEditor();
-  const { pages, currentIndex } = usePageController();
+  const {
+    pages,
+    currentIndex,
+    previewCapturePageSource,
+    clearCapturePageSourcePreview,
+  } = usePageController();
   const [captureMode, setCaptureMode] = useState<CaptureMode>("off");
   const [directorPanel, setDirectorPanelState] =
     useState<CaptureDirectorPanel>("closed");
@@ -1725,8 +1730,16 @@ export function CaptureDirectorProvider({
           : [];
     const pageSource =
       enabledPageClips.length > 0
-        ? { mode: "page-bar" as const, fallback: "current-page" as const }
-        : { mode: "current-page" as const, fallback: "none" as const };
+        ? {
+            mode: "page-bar" as const,
+            fallback: "current-page" as const,
+            clips: enabledPageClips,
+          }
+        : {
+            mode: "current-page" as const,
+            fallback: "none" as const,
+            clips: [],
+          };
     const timeline: CaptureScrollTimelineV1 = {
       version: 1,
       fps: DEFAULT_CAPTURE_SCROLL_FPS,
@@ -1796,10 +1809,12 @@ export function CaptureDirectorProvider({
         setScrollRecordPopoutOpen(false);
         setScrollPreviewState("idle");
         setScrollCurrentFrame(scrollPreviewResetFrame);
+        clearCapturePageSourcePreview("capture-scroll-preview");
         sceneHandle.clearCaptureCameraPathOverlay();
       }
     },
     [
+      clearCapturePageSourcePreview,
       sceneHandle,
       scrollRangeMode,
       scrollStartFrame,
@@ -1813,8 +1828,18 @@ export function CaptureDirectorProvider({
       timeline: CaptureScrollTimelineV1,
       path: CaptureCameraPathV3,
       frameIndex: number,
+      options: { applyPageSource?: boolean } = {},
     ) => {
       const timelineSample = sampleCaptureScrollTimeline(timeline, frameIndex);
+      if (options.applyPageSource !== false) {
+        previewCapturePageSource({
+          sourcePageId: timelineSample.page.sourcePageId,
+          targetPageId: timelineSample.page.targetPageId,
+          transitionProgress: timelineSample.page.transitionProgress,
+          transitionEasing: timelineSample.page.transitionEasing,
+          reason: "capture-scroll-preview",
+        });
+      }
       const cameraSample = sampleCaptureCameraPathV3(
         path,
         timelineSample.timeSeconds,
@@ -1823,17 +1848,19 @@ export function CaptureDirectorProvider({
       setScrollCurrentFrame(timelineSample.clampedFrameIndex);
       return timelineSample;
     },
-    [sceneHandle],
+    [previewCapturePageSource, sceneHandle],
   );
 
   const playScrollPreview = useCallback(() => {
     if (!cameraPathPlaybackValidation.valid) {
+      clearCapturePageSourcePreview("capture-scroll-preview");
       setScrollRecordValidationErrors(cameraPathPlaybackValidation.errors);
       setError(cameraPathPlaybackValidation.errors.join(" "));
       return;
     }
     const { plan, errors } = buildScrollRecordPlan();
     if (!plan) {
+      clearCapturePageSourcePreview("capture-scroll-preview");
       setScrollRecordValidationErrors(errors);
       setError(errors.join(" "));
       return;
@@ -1875,6 +1902,7 @@ export function CaptureDirectorProvider({
     applyScrollPreviewFrame,
     buildScrollRecordPlan,
     cameraPathPlaybackValidation,
+    clearCapturePageSourcePreview,
     sceneHandle,
     scrollCurrentFrame,
     scrollPreviewState,
@@ -1889,6 +1917,7 @@ export function CaptureDirectorProvider({
 
   const stopScrollPreview = useCallback(() => {
     stopScrollPreviewPlayback();
+    clearCapturePageSourcePreview("capture-scroll-preview");
     const { plan } = buildScrollRecordPlan();
     const scrollPreviewResetFrame =
       plan?.request.frameRange.startFrame ??
@@ -1898,6 +1927,7 @@ export function CaptureDirectorProvider({
         plan.request.timeline,
         plan.normalizedPath,
         scrollPreviewResetFrame,
+        { applyPageSource: false },
       );
     } else {
       setScrollCurrentFrame(scrollPreviewResetFrame);
@@ -1906,6 +1936,7 @@ export function CaptureDirectorProvider({
   }, [
     applyScrollPreviewFrame,
     buildScrollRecordPlan,
+    clearCapturePageSourcePreview,
     scrollRangeMode,
     scrollStartFrame,
     stopScrollPreviewPlayback,
@@ -1923,6 +1954,7 @@ export function CaptureDirectorProvider({
         return;
       }
       if (!cameraPathPlaybackValidation.valid) {
+        clearCapturePageSourcePreview("capture-scroll-record");
         setScrollRecordValidationErrors(cameraPathPlaybackValidation.errors);
         setLastScrollPackagePath(null);
         setLastScrollManifestPath(null);
@@ -1933,6 +1965,7 @@ export function CaptureDirectorProvider({
 
       const { plan, errors } = buildScrollRecordPlan();
       if (!plan) {
+        clearCapturePageSourcePreview("capture-scroll-record");
         setScrollRecordValidationErrors(errors);
         setLastScrollPackagePath(null);
         setLastScrollManifestPath(null);
@@ -1943,6 +1976,7 @@ export function CaptureDirectorProvider({
 
       const validation = validateScrollRecordRequest(plan.request);
       if (!validation.valid) {
+        clearCapturePageSourcePreview("capture-scroll-record");
         setScrollRecordValidationErrors(validation.errors);
         setLastScrollPackagePath(null);
         setLastScrollManifestPath(null);
@@ -1953,6 +1987,14 @@ export function CaptureDirectorProvider({
 
       let manifest;
       let job;
+      const startPageSample = sampleCaptureScrollTimeline(
+        plan.request.timeline,
+        plan.request.frameRange.startFrame,
+      ).page;
+      const endPageSample = sampleCaptureScrollTimeline(
+        plan.request.timeline,
+        plan.request.frameRange.endFrame,
+      ).page;
       const abortController = new AbortController();
       try {
         manifest = createPendingScrollHandoffManifest(plan.request);
@@ -1960,7 +2002,11 @@ export function CaptureDirectorProvider({
           kind: "scroll-package",
           label: "Scroll package",
           abortController,
-          diagnostics: { request: plan.request, manifest },
+          diagnostics: {
+            request: plan.request,
+            manifest,
+            scrollPageSamples: { start: startPageSample, end: endPageSample },
+          },
           progress: {
             phase: "preparing",
             renderedFrames: 0,
@@ -1968,6 +2014,7 @@ export function CaptureDirectorProvider({
           },
         });
       } catch (errorValue) {
+        clearCapturePageSourcePreview("capture-scroll-record");
         const message = formatCaptureError(errorValue);
         setScrollRecordValidationErrors([message]);
         setLastScrollPackagePath(null);
@@ -2059,6 +2106,7 @@ export function CaptureDirectorProvider({
             diagnostics: {
               ...entry.diagnostics,
               localScrollPackageRunId: started.runId,
+              scrollPageSamples: { start: startPageSample, end: endPageSample },
               packagePath: started.packagePath,
               manifestPath: started.manifestPath,
               manifestUrl: started.manifestUrl,
@@ -2110,6 +2158,7 @@ export function CaptureDirectorProvider({
               diagnostics: {
                 ...entry.diagnostics,
                 localScrollPackageRunId: latest.runId,
+                scrollPageSamples: { start: startPageSample, end: endPageSample },
                 packagePath: latest.packagePath,
                 manifestPath: latest.manifestPath,
                 manifestUrl: latest.manifestUrl,
@@ -2156,6 +2205,7 @@ export function CaptureDirectorProvider({
             diagnostics: {
               ...entry.diagnostics,
               localScrollPackageRunId: latest.runId,
+              scrollPageSamples: { start: startPageSample, end: endPageSample },
               packagePath: latest.packagePath,
               manifestPath: latest.manifestPath,
               manifestUrl: latest.manifestUrl,
@@ -2177,6 +2227,7 @@ export function CaptureDirectorProvider({
         );
       } catch (scrollError) {
         scrollPackageLocalRunIdRef.current = null;
+        clearCapturePageSourcePreview("capture-scroll-record");
         if (
           abortController.signal.aborted ||
           (scrollError instanceof DOMException &&
@@ -2194,6 +2245,7 @@ export function CaptureDirectorProvider({
         }
       } finally {
         scrollPackageAbortRef.current = null;
+        clearCapturePageSourcePreview("capture-scroll-record");
       }
     })();
   }, [
@@ -2202,6 +2254,7 @@ export function CaptureDirectorProvider({
     buildScrollRecordPlan,
     cameraPathPlaybackValidation,
     captureTimeline,
+    clearCapturePageSourcePreview,
     currentPage,
     finishCaptureJob,
     isDeterministicExporting,
