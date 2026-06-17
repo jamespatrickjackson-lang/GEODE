@@ -1319,14 +1319,7 @@ export function transitionEffectiveLayersForPage(
         scalarStyleDurationMs > 0 &&
         fromOpacity > 0.001 &&
         toOpacity <= 0.001 &&
-        this.layerSupportsScalarStyleTween(id, group) &&
-        // Exit clip-hold rule: when a section-clipped source exits to an absent
-        // target, the held-clip source snapshot owns the visual exit and the
-        // live layer is suppressed. Running the live scalar-opacity tween here
-        // too keeps the live (inactive-target, un-clipped) volume rendering,
-        // which reveals previously-clipped exterior before it fades. The
-        // snapshot path and the live style tween must be mutually exclusive.
-        !shouldSnapshotScalarVolumeSectionExit;
+        this.layerSupportsScalarStyleTween(id, group);
       const scalarVolumeExitSourceStyle = shouldTweenScalarVolumeExitStyle
         ? {
             ...fromStyle,
