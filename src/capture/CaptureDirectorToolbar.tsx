@@ -42,6 +42,7 @@ import {
   resolveCaptureCameraPathBezierSegment,
   resolveCaptureCameraPathV3Timeline,
 } from "./captureCameraPathV3";
+import { captureJobProgressPercent } from "./captureJobRuntime";
 import {
   TECHNICAL_MONO_FONT,
   vibrancyLabel,
@@ -309,6 +310,32 @@ const outputLinkStyle: CSSProperties = {
   display: "inline-flex",
   alignItems: "center",
   textDecoration: "none",
+};
+
+const summaryValueStyle: CSSProperties = {
+  ...statusStyle,
+  maxWidth: 180,
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+  whiteSpace: "nowrap",
+};
+
+const progressTrackStyle: CSSProperties = {
+  position: "relative",
+  flex: "1 1 160px",
+  minWidth: 120,
+  height: 7,
+  overflow: "hidden",
+  borderRadius: 999,
+  background: "rgba(255, 255, 255, 0.09)",
+};
+
+const progressBarStyle: CSSProperties = {
+  position: "absolute",
+  inset: 0,
+  width: 0,
+  borderRadius: 999,
+  background: "linear-gradient(90deg, rgba(120, 218, 196, 0.95), rgba(147, 197, 253, 0.95))",
 };
 
 const fieldHelpStyle: CSSProperties = {
@@ -986,6 +1013,47 @@ export function CaptureDirectorToolbar() {
       : scrollFullFrameCount;
   const scrollRenderSizeLabel = `${scrollQuality.width} x ${scrollQuality.height}`;
   const scrollOutputReady = Boolean(lastScrollPackagePath || lastScrollManifestPath);
+  const scrollPackageJob = [...captureJobs]
+    .reverse()
+    .find((job) => job.kind === "scroll-package");
+  const scrollPackagePercent = captureJobProgressPercent(scrollPackageJob);
+  const scrollPackageRenderedFrames =
+    scrollPackageJob?.progress.renderedFrames ?? 0;
+  const scrollPackageTotalFrames =
+    scrollPackageJob?.progress.totalFrames ?? scrollEstimatedFrameCount;
+  const scrollPackageStatusLabel =
+    scrollPackageJob?.status === "complete"
+      ? "Complete"
+      : scrollPackageJob?.status === "failed"
+        ? "Failed"
+        : scrollPackageJob?.status === "cancelled"
+          ? "Cancelled"
+          : scrollPackageJob?.status === "encoding" ||
+              scrollPackageJob?.progress.phase === "encoding"
+            ? "Encoding"
+            : scrollPackageJob?.status === "rendering"
+              ? "Rendering"
+              : scrollPackageJob
+                ? "Preparing"
+                : "Idle";
+  const scrollPackageProgressLabel = scrollPackageJob
+    ? scrollPackageJob.progress.message ??
+      `${scrollPackageStatusLabel} ${scrollPackageRenderedFrames}/${scrollPackageTotalFrames} frames`
+    : null;
+  const scrollRenderProgressLabel =
+    scrollPackageProgressLabel ?? `Ready 0/${scrollEstimatedFrameCount} frames`;
+  const scrollPackageIsRunning =
+    scrollPackageJob?.status === "queued" ||
+    scrollPackageJob?.status === "preparing" ||
+    scrollPackageJob?.status === "rendering" ||
+    scrollPackageJob?.status === "encoding";
+  const scrollPanelStatusLabel = scrollPackageIsRunning
+    ? scrollPackageProgressLabel ?? scrollPackageStatusLabel
+    : scrollPreviewState === "playing"
+      ? `Playing frame ${scrollCurrentFrame}`
+      : scrollPreviewState === "paused"
+        ? `Paused frame ${scrollCurrentFrame}`
+        : "Idle";
   const stillQualityDisabled = screenCaptureType === "png";
   const cameraPathTimeline = useMemo(
     () => resolveCaptureCameraPathV3Timeline(captureCameraPathV3),
@@ -1727,13 +1795,7 @@ export function CaptureDirectorToolbar() {
                     title="Scroll Animation"
                     expanded={expandedSections["scroll-animation"]}
                   />
-                  <span style={statusStyle}>
-                    {scrollPreviewState === "playing"
-                      ? `Playing frame ${scrollCurrentFrame}`
-                      : scrollPreviewState === "paused"
-                        ? `Paused frame ${scrollCurrentFrame}`
-                        : "Idle"}
-                  </span>
+                  <span style={statusStyle}>{scrollPanelStatusLabel}</span>
                 </button>
                 {expandedSections["scroll-animation"] && (
                   <div style={barContentStyle}>
@@ -1778,15 +1840,6 @@ export function CaptureDirectorToolbar() {
                       >
                         Open Record Popout
                       </button>
-                      <button
-                        data-testid="capture-scroll-advanced-toggle"
-                        type="button"
-                        aria-expanded={scrollAdvancedOpen}
-                        onClick={() => setScrollAdvancedOpen(!scrollAdvancedOpen)}
-                        style={buttonStyle}
-                      >
-                        Advanced
-                      </button>
                     </div>
                     <div style={sectionStyle}>
                       <span style={sectionLabelStyle}>Range</span>
@@ -1797,6 +1850,22 @@ export function CaptureDirectorToolbar() {
                       </span>
                       <span style={sectionLabelStyle}>Render size</span>
                       <span style={statusStyle}>{scrollRenderSizeLabel}</span>
+                      <span style={sectionLabelStyle}>Destination</span>
+                      <span
+                        data-testid="capture-scroll-destination-summary"
+                        title={scrollSaveDestination}
+                        style={summaryValueStyle}
+                      >
+                        {scrollSaveDestination}
+                      </span>
+                      <span style={sectionLabelStyle}>Package</span>
+                      <span
+                        data-testid="capture-scroll-package-summary"
+                        title={scrollOutputPackageName}
+                        style={summaryValueStyle}
+                      >
+                        {scrollOutputPackageName}
+                      </span>
                       {scrollOutputReady && (
                         <button
                           data-testid="capture-scroll-open-output"
@@ -1812,6 +1881,34 @@ export function CaptureDirectorToolbar() {
                           Open Output
                         </button>
                       )}
+                    </div>
+                    <div
+                      data-testid="capture-scroll-render-progress"
+                      style={sectionStyle}
+                    >
+                      <span style={sectionLabelStyle}>Render</span>
+                      <span
+                        data-testid="capture-scroll-render-progress-label"
+                        style={statusStyle}
+                      >
+                        {scrollRenderProgressLabel}
+                      </span>
+                      <div
+                        role="progressbar"
+                        aria-label="Scroll package render progress"
+                        aria-valuemin={0}
+                        aria-valuemax={100}
+                        aria-valuenow={Math.round(scrollPackagePercent * 100)}
+                        style={progressTrackStyle}
+                      >
+                        <div
+                          data-testid="capture-scroll-render-progress-bar"
+                          style={{
+                            ...progressBarStyle,
+                            width: `${Math.round(scrollPackagePercent * 100)}%`,
+                          }}
+                        />
+                      </div>
                     </div>
                   </div>
                 )}
@@ -2754,7 +2851,7 @@ export function CaptureDirectorToolbar() {
                       ))}
                     </select>
                     <span style={fieldHelpStyle}>
-                      Delivery type for the future render handoff.
+                      Delivery type for the scroll package render.
                     </span>
                   </label>
                   <label style={popoutFieldStyle}>
@@ -2776,7 +2873,7 @@ export function CaptureDirectorToolbar() {
                       ))}
                     </select>
                     <span style={fieldHelpStyle}>
-                      Size preset used by the placeholder package.
+                      Size preset used by the scroll package render.
                     </span>
                   </label>
                   <label style={popoutFieldStyle}>
@@ -2810,7 +2907,7 @@ export function CaptureDirectorToolbar() {
                       style={{ ...fieldStyle, width: "100%", paddingRight: 9 }}
                     />
                     <span style={fieldHelpStyle}>
-                      Placeholder folder path; no renderer is started.
+                      Relative folder where the package is written.
                     </span>
                   </label>
                   <label style={popoutFieldStyle}>
@@ -2825,7 +2922,7 @@ export function CaptureDirectorToolbar() {
                       style={{ ...fieldStyle, width: "100%", paddingRight: 9 }}
                     />
                     <span style={fieldHelpStyle}>
-                      Base name for package and manifest placeholders.
+                      Base folder name for manifest, media, frames, and diagnostics.
                     </span>
                   </label>
                   {scrollRangeMode === "frame-range" && (
@@ -2872,6 +2969,15 @@ export function CaptureDirectorToolbar() {
                   <span style={statusStyle}>{scrollEstimatedFrameCount}</span>
                   <span style={sectionLabelStyle}>Render size</span>
                   <span style={statusStyle}>{scrollRenderSizeLabel}</span>
+                  <button
+                    data-testid="capture-scroll-advanced-toggle"
+                    type="button"
+                    aria-expanded={scrollAdvancedOpen}
+                    onClick={() => setScrollAdvancedOpen(!scrollAdvancedOpen)}
+                    style={buttonStyle}
+                  >
+                    Advanced
+                  </button>
                 </div>
                 {scrollAdvancedOpen && (
                   <div data-testid="capture-scroll-advanced-fields" style={sectionStyle}>

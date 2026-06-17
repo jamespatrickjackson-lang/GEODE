@@ -364,6 +364,14 @@ test("Capture Director exposes Scroll Animation path-based package controls", ()
     "Output package name",
     "Estimated frame count",
     "Render size",
+    "capture-scroll-destination-summary",
+    "capture-scroll-package-summary",
+    "capture-scroll-render-progress",
+    "capture-scroll-render-progress-bar",
+    "capture-scroll-render-progress-label",
+    "scrollPackageJob",
+    "scrollPackagePercent",
+    "scrollPackageStatusLabel",
     "scrollPopoutDialogRef",
     "scrollPopoutRestoreFocusRef",
     "closeScrollRecordPopout",
@@ -393,6 +401,27 @@ test("Capture Director exposes Scroll Animation path-based package controls", ()
     scrollBlock.includes("startLocalVideoRenderJob"),
     false,
     "Scroll Animation UI controls should not call the old local video runner directly",
+  );
+  assert.equal(
+    scrollBlock.includes('data-testid="capture-scroll-advanced-toggle"'),
+    false,
+    "Scroll Animation main panel should keep Advanced controls inside the popout",
+  );
+  for (const expected of [
+    'data-testid="capture-scroll-destination-summary"',
+    'data-testid="capture-scroll-package-summary"',
+    'data-testid="capture-scroll-render-progress"',
+    'data-testid="capture-scroll-render-progress-bar"',
+    'data-testid="capture-scroll-render-progress-label"',
+  ]) {
+    assert.ok(scrollBlock.includes(expected), `scroll panel should expose ${expected}`);
+  }
+  const popoutStart = toolbar.indexOf('data-testid="capture-scroll-record-popout-shell"');
+  assert.ok(popoutStart > scrollEnd, "scroll record popout block should exist after the main panel");
+  const popoutBlock = toolbar.slice(popoutStart);
+  assert.ok(
+    popoutBlock.includes('data-testid="capture-scroll-advanced-toggle"'),
+    "Scroll Animation Advanced toggle should live inside the record popout",
   );
 });
 
