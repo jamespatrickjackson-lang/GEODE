@@ -603,6 +603,10 @@ export function mountScene(
       manager.setPerEntityBehaviorActive(value === true);
     devHooks.__geoseeBehaviorStats = () => manager.entityBehaviorStats();
     devHooks.__geoseeBehaviorReset = () => manager.resetEntityBehaviorStats();
+    // Temporary: default the pipeline ON in dev so the quarantine app boots with
+    // F0-F4 active for visual judging. Toggle off with __geoseeBehaviorPipeline(false).
+    // Revert this line once judging is done (the field default stays OFF).
+    manager.setPerEntityBehaviorActive(true);
   }
   for (const spec of layerSpecs) {
     manager.registerLayer(spec);
