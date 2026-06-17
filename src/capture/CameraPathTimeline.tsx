@@ -199,13 +199,16 @@ const pageLaneAddButtonStyle: CSSProperties = {
 
 const nodeKindMarkerButtonStyle: CSSProperties = {
   position: "absolute",
-  top: -4,
+  top: "50%",
   width: 18,
   height: 18,
   padding: 0,
   border: 0,
   background: "transparent",
-  transform: "translateX(-50%)",
+  transform: "translate(-50%, -50%)",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
   cursor: "pointer",
   zIndex: 5,
 };
@@ -1069,7 +1072,13 @@ export function CameraPathTimeline({
           ref={pageLaneRef}
           tabIndex={0}
           aria-label="Page Bar timeline lane"
-          style={{ ...laneStyle, gridRow: 1, overflow: "visible" }}
+          style={{
+            ...laneStyle,
+            gridRow: 1,
+            overflow: "visible",
+            background: "transparent",
+            border: "none",
+          }}
           onClick={(event) => {
             onSelectTimelineTrack("pages");
             event.currentTarget.focus();
@@ -1461,7 +1470,12 @@ export function CameraPathTimeline({
         <div
           ref={blocksLaneRef}
           data-testid="capture-timeline-camera-path-lane"
-          style={{ ...laneStyle, gridRow: 2 }}
+          style={{
+            ...laneStyle,
+            gridRow: 2,
+            background: "transparent",
+            border: "none",
+          }}
           onClick={() => onSelectTimelineTrack("camera-path")}
         >
           <button
@@ -1504,8 +1518,8 @@ export function CameraPathTimeline({
             const style: CSSProperties = {
               position: "absolute",
               left: snapTimelinePercent(block.startSeconds, duration),
-              top: 5,
-              height: 22,
+              top: 4,
+              bottom: 4,
               width: snapTimelineBlockPercent(
                 block.startSeconds,
                 block.durationSeconds,
@@ -1618,7 +1632,7 @@ export function CameraPathTimeline({
                           display: "block",
                           width: 0,
                           height: 0,
-                          margin: "1px auto 0",
+                          margin: "0 auto",
                           borderLeft: "6px solid transparent",
                           borderRight: "6px solid transparent",
                           borderBottom: selected
@@ -1632,7 +1646,7 @@ export function CameraPathTimeline({
                           display: "block",
                           width: 11,
                           height: 11,
-                          margin: "3px auto 0",
+                          margin: "0 auto",
                           borderRadius: "50%",
                           background: selected
                             ? "rgba(255,255,255,1)"

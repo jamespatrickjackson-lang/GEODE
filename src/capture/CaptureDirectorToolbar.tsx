@@ -289,12 +289,6 @@ const cameraAddKindPopoverStyle: CSSProperties = {
   display: "grid",
   gap: 6,
   minWidth: 142,
-  padding: 8,
-  borderRadius: 7,
-  border: "1px solid rgba(255,255,255,0.18)",
-  background: "rgba(14,18,22,0.96)",
-  boxShadow: "0 18px 42px rgba(0,0,0,0.34)",
-  backdropFilter: "blur(16px) saturate(150%)",
 };
 
 const renderButtonStyle: CSSProperties = {
