@@ -203,7 +203,11 @@ test("scroll animation timeline normalizes FPS, frame ranges, and progress sampl
   const {
     DEFAULT_CAPTURE_SCROLL_FPS,
     CAPTURE_SCROLL_FPS_OPTIONS,
+    captureScrollFrameForSeconds,
+    captureScrollSecondsForFrame,
+    clampCaptureScrollFrameToRange,
     normalizeCaptureScrollTimeline,
+    resolveCaptureScrollPlayStartFrame,
     resolveCaptureScrollFrameRange,
     sampleCaptureScrollTimeline,
     validateCaptureScrollTimeline,
@@ -211,6 +215,10 @@ test("scroll animation timeline normalizes FPS, frame ranges, and progress sampl
 
   assert.equal(DEFAULT_CAPTURE_SCROLL_FPS, 60);
   assert.deepEqual(CAPTURE_SCROLL_FPS_OPTIONS, [30, 60, 120]);
+  assert.equal(captureScrollFrameForSeconds(1.004), 60);
+  assert.equal(captureScrollFrameForSeconds(1.009), 61);
+  assert.equal(captureScrollFrameForSeconds(Number.NaN), 0);
+  assert.equal(captureScrollSecondsForFrame(90), 1.5);
 
   const timeline = normalizeCaptureScrollTimeline({
     version: 1,
@@ -229,6 +237,22 @@ test("scroll animation timeline normalizes FPS, frame ranges, and progress sampl
     endFrame: 239,
     totalFrames: 120,
   });
+  assert.equal(
+    clampCaptureScrollFrameToRange(80, resolveCaptureScrollFrameRange(timeline)),
+    120,
+  );
+  assert.equal(
+    clampCaptureScrollFrameToRange(180, resolveCaptureScrollFrameRange(timeline)),
+    180,
+  );
+  assert.equal(
+    resolveCaptureScrollPlayStartFrame(180, resolveCaptureScrollFrameRange(timeline)),
+    180,
+  );
+  assert.equal(
+    resolveCaptureScrollPlayStartFrame(260, resolveCaptureScrollFrameRange(timeline)),
+    120,
+  );
   assert.equal(sampleCaptureScrollTimeline(timeline, 180).normalizedProgress, 0.3);
 
   const invalidRange = validateCaptureScrollTimeline({
@@ -310,6 +334,192 @@ test("scroll animation timeline samples Page Bar clips without changing frame id
   assert.equal(crossingSample.page.transitionProgress, 0.5);
   assert.equal(crossingSample.page.transitionEasing, "ease-in-out");
   assert.ok(crossingSample.rangeProgress > 0 && crossingSample.rangeProgress < 1);
+});
+
+test("scroll page source preview resolves scene source while Camera Path owns pose", async () => {
+  const {
+    normalizeCaptureScrollTimeline,
+    sampleCaptureScrollTimeline,
+  } = await importBundled("src/capture/captureScrollTimeline.ts");
+  const {
+    normalizeCaptureCameraPathV3,
+    sampleCaptureCameraPathV3,
+  } = await importBundled("src/capture/captureCameraPathV3.ts");
+  const {
+    clearCapturePageSourcePreviewDebugState,
+    resolveCapturePageSourcePreview,
+  } = await importBundled("src/pages/capturePageSourcePreview.ts");
+
+  const pages = [
+    {
+      id: "page-a",
+      title: "Synthetic Page A",
+      camera: pose([1000, 0, 100]),
+    },
+    {
+      id: "page-b",
+      title: "Synthetic Page B",
+      camera: pose([2000, 0, 100]),
+      visibilityOverrides: { seismic: true },
+    },
+  ];
+  const timeline = normalizeCaptureScrollTimeline({
+    version: 1,
+    fps: 60,
+    durationSeconds: 4,
+    range: { mode: "full" },
+    pageSource: {
+      mode: "page-bar",
+      fallback: "current-page",
+      clips: [
+        {
+          id: "clip-a",
+          pageId: "page-a",
+          label: "Page A",
+          enabled: true,
+          locked: false,
+          startSeconds: 0,
+          transitionSeconds: 1,
+          holdSeconds: 1,
+          transitionEasing: "linear",
+        },
+        {
+          id: "clip-b",
+          pageId: "page-b",
+          label: "Page B",
+          enabled: true,
+          locked: false,
+          startSeconds: 2,
+          transitionSeconds: 1,
+          holdSeconds: 1,
+          transitionEasing: "ease-in-out",
+        },
+      ],
+    },
+    cameraSource: { mode: "camera-path", pathId: "camera-spine" },
+    anchors: [],
+    outputProfileId: "mp4-review",
+  });
+  const cameraPath = normalizeCaptureCameraPathV3({
+    version: 3,
+    id: "camera-spine",
+    name: "Camera Spine",
+    loop: false,
+    timeline: { durationSeconds: 4 },
+    nodes: [
+      {
+        id: "cam-a",
+        kind: "keyframe",
+        enabled: true,
+        hidden: false,
+        timeSeconds: 0,
+        position: [0, 0, 20],
+        target: [0, 0, 0],
+        up: [0, 1, 0],
+        fov: 50,
+        holdSecondsAfter: 0,
+        aimGeometry: { mode: "free-direction", lensMode: "fixed-fov" },
+      },
+      {
+        id: "cam-b",
+        kind: "keyframe",
+        enabled: true,
+        hidden: false,
+        timeSeconds: 4,
+        position: [8, 0, 20],
+        target: [8, 0, 0],
+        up: [0, 1, 0],
+        fov: 50,
+        holdSecondsAfter: 0,
+        aimGeometry: { mode: "free-direction", lensMode: "fixed-fov" },
+      },
+    ],
+    segments: [
+      {
+        id: "cam-a:cam-b",
+        fromNodeId: "cam-a",
+        toNodeId: "cam-b",
+        enabled: true,
+        hidden: false,
+        transitionSeconds: 4,
+        timeCurve: { mode: "linear" },
+        pathFairing: {
+          continuity: "G1",
+          tension: 0.35,
+          bias: 0,
+          fromInfluenceOut: "auto",
+          toInfluenceIn: "auto",
+          autoHandles: true,
+        },
+      },
+    ],
+  });
+
+  const pageBSample = sampleCaptureScrollTimeline(timeline, 210);
+  const pageBPreview = resolveCapturePageSourcePreview({
+    sample: {
+      sourcePageId: pageBSample.page.sourcePageId,
+      targetPageId: pageBSample.page.targetPageId,
+      transitionProgress: pageBSample.page.transitionProgress,
+      transitionEasing: pageBSample.page.transitionEasing,
+      reason: "capture-scroll-preview",
+    },
+    pages,
+    currentIndex: 0,
+  });
+  const cameraSample = sampleCaptureCameraPathV3(cameraPath, pageBSample.timeSeconds);
+  assert.equal(pageBPreview.resolvedSourcePageId, "page-b");
+  assert.equal(pageBPreview.resolvedTargetPageId, null);
+  assert.equal(pageBPreview.appliedPageId, "page-b");
+  assert.equal(pageBPreview.transitionActive, false);
+  assert.notDeepEqual(cameraSample.position, pages[1].camera.position);
+
+  const crossingSample = sampleCaptureScrollTimeline(timeline, 150);
+  const crossingPreview = resolveCapturePageSourcePreview({
+    sample: {
+      sourcePageId: crossingSample.page.sourcePageId,
+      targetPageId: crossingSample.page.targetPageId,
+      transitionProgress: crossingSample.page.transitionProgress,
+      transitionEasing: crossingSample.page.transitionEasing,
+      reason: "capture-scroll-preview",
+    },
+    pages,
+    currentIndex: 0,
+  });
+  assert.equal(crossingPreview.resolvedSourcePageId, "page-a");
+  assert.equal(crossingPreview.resolvedTargetPageId, "page-b");
+  assert.equal(crossingPreview.transitionActive, true);
+  assert.equal(crossingPreview.transitionProgress, 0.5);
+  assert.equal(crossingPreview.transitionEasing, "ease-in-out");
+
+  const fallbackSample = sampleCaptureScrollTimeline(
+    normalizeCaptureScrollTimeline({
+      ...timeline,
+      pageSource: { mode: "page-bar", fallback: "current-page", clips: [] },
+    }),
+    15,
+  );
+  const fallbackPreview = resolveCapturePageSourcePreview({
+    sample: {
+      sourcePageId: fallbackSample.page.sourcePageId,
+      targetPageId: fallbackSample.page.targetPageId,
+      transitionProgress: fallbackSample.page.transitionProgress,
+      transitionEasing: fallbackSample.page.transitionEasing,
+      reason: "capture-scroll-preview",
+    },
+    pages,
+    currentIndex: 0,
+  });
+  assert.equal(fallbackPreview.fallbackMode, "current-page");
+  assert.equal(fallbackPreview.appliedPageId, "page-a");
+
+  const clearedPreview = clearCapturePageSourcePreviewDebugState(
+    crossingPreview,
+    "page-a",
+  );
+  assert.equal(clearedPreview.active, false);
+  assert.equal(clearedPreview.transitionActive, false);
+  assert.equal(clearedPreview.appliedPageId, "page-a");
 });
 
 test("scroll animation timeline reports current-page fallback and rejects overlong Page Bar clips", async () => {
@@ -2160,6 +2370,129 @@ test("Capture timeline page clips preserve presentation timing and stay independ
     }).page.pageId,
     "phase3-mt",
   );
+});
+
+test("Capture timeline page clip replacement preserves timing", async () => {
+  const {
+    createPageClipFromPresentationPage,
+    normalizeCaptureTimelineState,
+    replaceCaptureTimelinePageClipPage,
+  } = await importBundled("src/capture/captureTimeline.ts");
+
+  const pages = [
+    { id: "page-a", title: "Page A", transition: { duration: 600 }, holdDuration: 2400 },
+    { id: "page-b", title: "Page B", transition: { duration: 300 }, holdDuration: 1700 },
+    { id: "page-c", title: "Page C", transition: { duration: 900 }, holdDuration: 3100 },
+  ];
+  const clip = createPageClipFromPresentationPage(pages[0], { id: "clip-a" });
+  const state = normalizeCaptureTimelineState({
+    version: 1,
+    pageClips: [clip],
+    selectedPageClipId: clip.id,
+  });
+
+  const replaced = replaceCaptureTimelinePageClipPage({
+    state,
+    clipId: clip.id,
+    page: pages[2],
+  });
+
+  assert.equal(replaced.pageClips[0].pageId, "page-c");
+  assert.equal(replaced.pageClips[0].label, "Page C");
+  assert.equal(replaced.pageClips[0].transitionSeconds, clip.transitionSeconds);
+  assert.equal(replaced.pageClips[0].holdSeconds, clip.holdSeconds);
+  assert.equal(replaced.selectedPageClipId, clip.id);
+});
+
+test("Capture timeline frame edits stay local and clamp to neighboring page clips", async () => {
+  const {
+    captureTimelineClipFrameBounds,
+    editCaptureTimelinePageClipFrames,
+    normalizeCaptureTimelineState,
+    removeCaptureTimelinePageClip,
+  } = await importBundled("src/capture/captureTimeline.ts");
+
+  const state = normalizeCaptureTimelineState({
+    version: 1,
+    selectedPageClipId: "clip-b",
+    pageClips: [
+      {
+        id: "clip-a",
+        pageId: "page-a",
+        label: "Page A",
+        enabled: true,
+        locked: false,
+        transitionSeconds: 0,
+        holdSeconds: 1,
+      },
+      {
+        id: "clip-b",
+        pageId: "page-b",
+        label: "Page B",
+        enabled: true,
+        locked: false,
+        transitionSeconds: 0,
+        holdSeconds: 1,
+      },
+      {
+        id: "clip-c",
+        pageId: "page-c",
+        label: "Page C",
+        enabled: true,
+        locked: false,
+        transitionSeconds: 0,
+        holdSeconds: 1,
+      },
+    ],
+  });
+
+  const startEdited = editCaptureTimelinePageClipFrames({
+    state,
+    clipId: "clip-b",
+    fps: 60,
+    startFrame: 30,
+  });
+  assert.deepEqual(
+    startEdited.pageClips.map((clip) => Math.round((clip.transitionSeconds + clip.holdSeconds) * 60)),
+    [30, 90, 60],
+  );
+
+  const endEdited = editCaptureTimelinePageClipFrames({
+    state,
+    clipId: "clip-b",
+    fps: 60,
+    endFrame: 149,
+  });
+  assert.deepEqual(
+    endEdited.pageClips.map((clip) => Math.round((clip.transitionSeconds + clip.holdSeconds) * 60)),
+    [60, 90, 30],
+  );
+
+  const durationEdited = editCaptureTimelinePageClipFrames({
+    state,
+    clipId: "clip-b",
+    fps: 60,
+    durationFrames: 90,
+  });
+  assert.deepEqual(
+    durationEdited.pageClips.map((clip) => Math.round((clip.transitionSeconds + clip.holdSeconds) * 60)),
+    [60, 90, 30],
+  );
+  assert.deepEqual(captureTimelineClipFrameBounds(durationEdited.pageClips[1], 60), {
+    startFrame: 60,
+    endFrame: 149,
+    durationFrames: 90,
+  });
+
+  const removed = removeCaptureTimelinePageClip({ state, clipId: "clip-b" });
+  assert.deepEqual(
+    removed.pageClips.map((clip) => [clip.id, Math.round(clip.startSeconds * 60)]),
+    [
+      ["clip-a", 0],
+      ["clip-c", 60],
+    ],
+  );
+  assert.equal(removed.selectedPageClipId, null);
 });
 
 test("Capture Director toolbar keeps timeline layout blocks when lower helper exists", async () => {

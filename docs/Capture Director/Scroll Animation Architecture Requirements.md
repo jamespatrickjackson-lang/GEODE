@@ -177,6 +177,42 @@ can bind scroll position to `progress` without needing GeoSee internals.
 - Empty Page Bar state may fall back to current-page capture only when the
   manifest records that fallback explicitly.
 
+## Page Bar Authoring Requirements
+
+The Scroll Animation Page Bar is an authoring timeline, not a project-page
+persistence surface.
+
+- `Add Page` must open an explicit searchable list of visible pages. It must not
+  silently insert the current first/default page. The picker floats centered
+  above the bottom bar and scrolls internally when visible pages exceed viewport
+  height.
+- Double-clicking a Page clip label must open the same page picker and replace
+  only that clip's page source while preserving the clip's timing.
+- Clicking a Page clip selects it. Delete or Backspace removes the selected clip
+  only when the Page lane has focus and no text entry is active.
+- Page Bar timing labels are frame-primary at the Scroll Animation FPS. The
+  default editing rate is 60 FPS, and duration labels include seconds in
+  `x.xx s` form.
+- Each Page clip should fill the Page lane and show start frame, end frame, and
+  duration. Double-click on those values opens compact numeric frame entry.
+- The ruler should expose readable frame ticks and snap points that adapt to the
+  total duration. Short Scroll Animation timelines use 0.1-second subdivisions,
+  and ruler lines extend behind the Page and Camera Path bars.
+- Manual playhead placement is live preview authority. Clicking empty
+  timeline/grid space, the time axis, or a Page clip must place the Scroll
+  Animation playhead at the clicked frame and sample the Page Bar scene source
+  before Camera Path pose. Double-click page-name and timing editors must keep
+  editor behavior and must not scrub.
+- `Play` starts from the current Scroll Animation playhead when it is inside the
+  selected frame range; otherwise it starts at the selected range start. `Pause`
+  freezes the sampled page state, and `Stop` clears the capture page-source
+  preview and restores normal authoring state.
+- Manual frame edits and drags must stay local: no global ripple edit is
+  allowed. A boundary operation may affect only the two adjacent clips sharing
+  that boundary.
+- Visual mockups for alternate timeline treatments are deferred and are not part
+  of this slice.
+
 ## Handoff Manifest Requirements
 
 `scroll-manifest.json` must be valid JSON and include enough information for a
@@ -285,11 +321,15 @@ format selection, save targeting, and package-output status.
 Required primary controls:
 
 - `Play`: preview the scroll timeline onscreen using the current scene, Page Bar,
-  Camera Path, anchors, and render preset.
-- `Pause`: pause onscreen preview without changing authored timeline state.
+  Camera Path, anchors, and render preset. The lower timeline footer Play uses
+  this Scroll Animation preview, not Camera Path-only playback.
+- `Pause`: pause onscreen Scroll Animation preview without changing authored
+  timeline state.
 - `Stop`: return preview to the selected start frame or normalized progress
   anchor.
-- `Record`: open a centered popout for final output setup.
+- `Record`: open a centered popout for final output setup. The lower timeline
+  footer red record button opens this Scroll Record popout; Camera Path preview
+  recording stays in the Camera Path panel controls.
 - `Open Output`: open the last completed output package when available.
 
 The Play button is a preview action for camera movement. It should not create

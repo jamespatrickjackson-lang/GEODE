@@ -485,9 +485,16 @@ test("Capture Director scroll preview and accept logic use path package renderin
   const pageController = readSource("src", "pages", "PageController.tsx");
   for (const expected of [
     "scrollPreviewPlaybackUnsubscribeRef",
+    "scrollPreviewTraceRef",
+    "__captureDirectorScrollPreview",
+    "captureScrollFrameForSeconds",
+    "clampCaptureScrollFrameToRange",
+    "resolveCaptureScrollPlayStartFrame",
+    "applyScrollPageSourcePreviewFrame",
     "sceneHandle.onTick",
     "sampleCaptureScrollTimeline",
     "sampleCaptureCameraPathV3",
+    "setScrollPlayheadSeconds",
     "previewCapturePageSource",
     "clearCapturePageSourcePreview",
     "sceneHandle.setCameraPose",
@@ -501,12 +508,176 @@ test("Capture Director scroll preview and accept logic use path package renderin
   for (const expected of [
     "previewCapturePageSource:",
     "clearCapturePageSourcePreview:",
-    "capture-scroll-preview",
-    "capture-scroll-record",
+    "capturePageSourcePreview",
+    "capturePageSourcePreviewTrace",
+    "setCapturePageSourcePreviewTrace",
+    "lastCapturePageSourcePreviewRef",
+    'data-testid="capture-page-source-preview-trace"',
   ]) {
     assert.ok(
       pageController.includes(expected),
       `PageController should expose capture page source seam ${expected}`,
+    );
+  }
+
+  const pagePreviewHelper = readSource("src", "pages", "capturePageSourcePreview.ts");
+  for (const expected of [
+    "resolveCapturePageSourcePreview",
+    "clearCapturePageSourcePreviewDebugState",
+    "resolvedSourcePageId",
+    "resolvedTargetPageId",
+    "appliedPageId",
+    "transitionActive",
+    "selectedCurrentPageId",
+    "capture-scroll-preview",
+    "capture-scroll-record",
+  ]) {
+    assert.ok(
+      pagePreviewHelper.includes(expected),
+      `capture page source preview helper should include ${expected}`,
+    );
+  }
+
+  const previewStart = provider.indexOf("const applyScrollPreviewFrame = useCallback");
+  const previewEnd = provider.indexOf("const playScrollPreview = useCallback", previewStart);
+  assert.ok(previewStart >= 0, "applyScrollPreviewFrame block should exist");
+  assert.ok(previewEnd > previewStart, "applyScrollPreviewFrame block should have a clear end");
+  const previewBlock = provider.slice(previewStart, previewEnd);
+  assert.ok(
+    previewBlock.indexOf("applyScrollPageSourcePreviewFrame") >= 0 &&
+      previewBlock.indexOf("applyScrollPageSourcePreviewFrame") <
+        previewBlock.indexOf("sceneHandle.setCameraPose"),
+    "scroll preview must apply Page Bar scene source before Camera Path pose",
+  );
+  for (const forbidden of [
+    "goto(",
+    "previewAuthoringPage(",
+    "setCurrentIndex",
+    "selectedPageId",
+    "page.camera)",
+  ]) {
+    assert.equal(
+      previewBlock.includes(forbidden),
+      false,
+      `scroll preview frame application must not use page navigation/camera paths: ${forbidden}`,
+    );
+  }
+
+  const scrollPlayheadStart = provider.indexOf("const setScrollPlayheadSeconds = useCallback");
+  const scrollPlayheadEnd = provider.indexOf("const acceptScrollRenderShell = useCallback", scrollPlayheadStart);
+  assert.ok(scrollPlayheadStart >= 0, "setScrollPlayheadSeconds block should exist");
+  assert.ok(scrollPlayheadEnd > scrollPlayheadStart, "setScrollPlayheadSeconds block should have a clear end");
+  const scrollPlayheadBlock = provider.slice(scrollPlayheadStart, scrollPlayheadEnd);
+  for (const expected of [
+    "captureScrollFrameForSeconds",
+    "clampCaptureScrollFrameToRange",
+    "applyScrollPreviewFrame",
+    "setCameraPathScrubTimeSecondsState",
+    "setScrollPreviewState(\"paused\")",
+  ]) {
+    assert.ok(
+      scrollPlayheadBlock.includes(expected),
+      `scroll playhead placement should include ${expected}`,
+    );
+  }
+  const validScrollPlayheadBlock = scrollPlayheadBlock.slice(
+    scrollPlayheadBlock.indexOf("const frameIndex = clampCaptureScrollFrameToRange"),
+  );
+  assert.ok(
+    validScrollPlayheadBlock.indexOf("applyScrollPreviewFrame") >= 0 &&
+      validScrollPlayheadBlock.indexOf("applyScrollPreviewFrame") <
+        validScrollPlayheadBlock.indexOf("setCameraPathScrubTimeSecondsState"),
+    "scroll playhead placement should route through the shared Page Bar then Camera Path preview before publishing the scrub marker",
+  );
+  for (const forbidden of [
+    "goto(",
+    "previewAuthoringPage(",
+    "setCurrentIndex",
+    "setSelectedPage",
+    "pageOrder",
+    "projects/",
+  ]) {
+    assert.equal(
+      scrollPlayheadBlock.includes(forbidden),
+      false,
+      `scroll playhead placement must not navigate, reorder, or write project pages: ${forbidden}`,
+    );
+  }
+
+  const pageSourceFrameStart = provider.indexOf(
+    "const applyScrollPageSourcePreviewFrame = useCallback",
+  );
+  const pageSourceFrameEnd = provider.indexOf(
+    "const applyScrollPreviewFrame = useCallback",
+    pageSourceFrameStart,
+  );
+  assert.ok(pageSourceFrameStart >= 0, "applyScrollPageSourcePreviewFrame block should exist");
+  assert.ok(
+    pageSourceFrameEnd > pageSourceFrameStart,
+    "applyScrollPageSourcePreviewFrame block should have a clear end",
+  );
+  const pageSourceFrameBlock = provider.slice(pageSourceFrameStart, pageSourceFrameEnd);
+  for (const expected of [
+    "sampleCaptureScrollTimeline",
+    "previewCapturePageSource",
+    "setScrollCurrentFrame",
+    "scrollPreviewTraceRef",
+  ]) {
+    assert.ok(
+      pageSourceFrameBlock.includes(expected),
+      `scroll page source preview frame should include ${expected}`,
+    );
+  }
+
+  const pagePreviewStart = pageController.indexOf("const previewCapturePageSource = useCallback");
+  const pagePreviewEnd = pageController.indexOf(
+    "const clearCapturePageSourcePreview = useCallback",
+    pagePreviewStart,
+  );
+  assert.ok(pagePreviewStart >= 0, "previewCapturePageSource block should exist");
+  assert.ok(pagePreviewEnd > pagePreviewStart, "previewCapturePageSource block should have a clear end");
+  const pagePreviewBlock = pageController.slice(pagePreviewStart, pagePreviewEnd);
+  for (const expected of [
+    "resolveCapturePageSourcePreview",
+    "applyEffectiveVisibilityForPage",
+    "applyEffectiveStylesForPage",
+    "applyPageScene",
+    "applySceneOverlaysForPage",
+    "setCapturePageSourcePreviewTrace(previewState)",
+    "beginEnvironmentSceneTransition",
+    "beginCinematicSceneTransition",
+    "freezeCapturePageSourceTransitionPreview",
+  ]) {
+    assert.ok(pagePreviewBlock.includes(expected), `Page source preview should apply ${expected}`);
+  }
+  for (const forbidden of [
+    "goto(",
+    "previewAuthoringPage(",
+    "setCurrentIndex",
+    "pageOrder",
+    "projects/",
+    "projects\\\\",
+  ]) {
+    assert.equal(
+      pagePreviewBlock.includes(forbidden),
+      false,
+      `Page source preview must not mutate authoring/page fixtures: ${forbidden}`,
+    );
+  }
+
+  const pageClearStart = pageController.indexOf("const clearCapturePageSourcePreview = useCallback");
+  const pageClearEnd = pageController.indexOf("const applyAuthoringPageNow = useCallback", pageClearStart);
+  assert.ok(pageClearStart >= 0, "clearCapturePageSourcePreview block should exist");
+  assert.ok(pageClearEnd > pageClearStart, "clearCapturePageSourcePreview block should have a clear end");
+  const pageClearBlock = pageController.slice(pageClearStart, pageClearEnd);
+  for (const expected of [
+    "clearCapturePageSourcePreviewDebugState",
+    "const clearedTrace",
+    "setCapturePageSourcePreviewTrace(clearedTrace)",
+  ]) {
+    assert.ok(
+      pageClearBlock.includes(expected),
+      `Page source preview clear should update DOM trace with ${expected}`,
     );
   }
 
@@ -730,6 +901,7 @@ test("Capture Director provider exposes Camera Path v3 state, compatibility mirr
     "setCameraPathDisplayOptions",
     "setCameraPathEquationOverlayOptions",
     "cameraPathPreviewMonitor",
+    "saveCameraPathPreviewStill",
     "renderCameraPathPreviewFrame",
     "selectedCameraPathNodeId",
     "setSelectedCameraPathNodeId",
@@ -784,6 +956,61 @@ test("Capture Director provider exposes Camera Path v3 state, compatibility mirr
     /cameraPath:\s*cameraPathForRecipeSnapshot/,
     "recipe snapshots should pass the v3 cameraPath through the provider",
   );
+  const previewMonitorStart = provider.indexOf("const imageUrl = sceneHandle.renderCameraPathPreviewFrame");
+  const previewMonitorEnd = provider.indexOf("const activeNode =", previewMonitorStart);
+  assert.ok(previewMonitorStart >= 0, "provider should render the Camera Path preview monitor");
+  assert.ok(previewMonitorEnd > previewMonitorStart, "preview monitor render block should have a clear end");
+  const previewMonitorBlock = provider.slice(previewMonitorStart, previewMonitorEnd);
+  for (const expected of [
+    "pose: sample",
+    "width: 3840",
+    "height: 2160",
+    'mimeType: "image/png"',
+    "maxDimension: null",
+  ]) {
+    assert.ok(
+      previewMonitorBlock.includes(expected),
+      `preview monitor keyframe image should avoid downsampling with ${expected}`,
+    );
+  }
+
+  const previewSaveStart = provider.indexOf("const saveCameraPathPreviewStill = useCallback");
+  const previewSaveEnd = provider.indexOf("const saveRecipe = useCallback", previewSaveStart);
+  assert.ok(previewSaveStart >= 0, "provider should expose a Camera Path preview still save action");
+  assert.ok(previewSaveEnd > previewSaveStart, "preview still save block should have a clear end");
+  const previewSaveBlock = provider.slice(previewSaveStart, previewSaveEnd);
+  for (const expected of [
+    "cameraPathPreviewMonitor.timeSeconds",
+    "sampleCaptureCameraPathV3",
+    "sceneHandle.beginCaptureFullResolutionAssets",
+    "await sceneHandle.waitForCaptureFidelityReady",
+    "sceneHandle.renderCameraPathPreviewFrame",
+    "width: 3840",
+    "height: 2160",
+    'mimeType: "image/png"',
+    "maxDimension: null",
+    "sceneHandle.endCaptureFullResolutionAssets",
+    "saveCaptureStillBlobWithPicker",
+    "captureStillFilename",
+  ]) {
+    assert.ok(
+      previewSaveBlock.includes(expected),
+      `preview still save should re-render the preview pipeline at high resolution with ${expected}`,
+    );
+  }
+  for (const forbidden of [
+    "exportDeterministicStill",
+    "createRecipeSnapshot",
+    "beginCaptureFidelityLock",
+    "setCameraPose",
+    "renderCaptureFrame",
+  ]) {
+    assert.equal(
+      previewSaveBlock.includes(forbidden),
+      false,
+      `preview still save must not use the main-viewer still route: ${forbidden}`,
+    );
+  }
 });
 
 test("Capture Director provider guards Play Path and preview recording with playback validation", () => {
@@ -1081,6 +1308,7 @@ test("Capture Camera Path v2 UI exposes row editors, transition editors, and tim
     "capture-path-default-spline-coupling",
     "capture-path-preview-monitor-mode",
     "capture-path-preview-monitor",
+    "capture-path-preview-save-4k",
     "capture-path-play",
     "capture-path-pause",
     "capture-path-preview-resolution",
@@ -1132,35 +1360,144 @@ test("Capture Camera Path v2 UI exposes row editors, transition editors, and tim
     "capture-timeline-pages-lane",
     "capture-timeline-page-add-button",
     "capture-timeline-page-add-menu",
+    "capture-timeline-page-picker",
+    "capture-timeline-page-picker-search",
+    "capture-timeline-page-picker-option",
+    "capture-timeline-page-frame-start",
+    "capture-timeline-page-frame-end",
+    "capture-timeline-page-duration",
+    "capture-timeline-frame-editor",
+    "capture-timeline-frame-ruler",
+    "capture-timeline-frame-ruler-tick",
     "capture-timeline-camera-path-lane",
-    "capture-timeline-spine-bar",
-    "capture-timeline-spine-thumb",
-    "capture-timeline-spine-graduation",
+    "capture-timeline-frame-grid",
+    "capture-timeline-frame-grid-tick",
     "capture-timeline-time-axis",
     "capture-timeline-time-axis-tick",
     "capture-timeline-time-scale",
     "capture-timeline-time-scale-label",
-    "capture-timeline-spine-play",
-    "capture-timeline-spine-icon-play",
-    "capture-timeline-spine-icon-pause",
     "capture-timeline-camera-scrub-marker",
     "cameraScrubMarkerStyle",
-    "timelinePauseIconStyle",
-    "timelineSpinePlayButtonStyle",
+    "globalPlayheadStyle",
+    "pagePickerListStyle",
+    "formatFrameDurationLabel",
     "capture-timeline-add-current-camera",
     "capture-timeline-icon-add-camera",
     "capture-timeline-add-group",
+    "emptyLaneAddButtonStyle",
     "pageLaneAddButtonStyle",
     "pageLaneContentOffsetPx",
     "setPageAddMenuOpen",
     "timelineScaleForDuration",
+    "timelineFrameGraduations",
     "snapTimelinePercent",
     "snapTimelineBlockPercent",
+    "timelineTrackPercentStyle",
     "capture-timeline-add-current-page",
     "capture-timeline-add-page-range",
+    "onSetScrollPlayheadSeconds",
+    "placeScrollPlayheadFromPointer",
+    "timelineSecondsFromPointerEvent",
+    "timelineFrameSeconds",
   ]) {
     assert.ok(lowerTimelineSource.includes(expected), `timeline should include ${expected}`);
   }
+  assert.ok(
+    source.includes('data-testid="capture-scroll-preview-trace"') &&
+      source.includes("scrollPreviewTrace") &&
+      source.includes("JSON.stringify"),
+    "toolbar should expose a hidden DEV scroll preview trace JSON node for browser automation",
+  );
+  assert.ok(
+    lowerTimelineSource.includes("onSetScrollPlayheadSeconds(nextSeconds)") &&
+      lowerTimelineSource.includes('data-testid="capture-timeline-pages-content"') &&
+      lowerTimelineSource.includes('data-testid="capture-timeline-time-axis"'),
+    "timeline empty grid/time-axis placement should call the shared Scroll playhead path",
+  );
+  const pageClipClickStart = lowerTimelineSource.indexOf('data-testid="capture-timeline-page-clip"');
+  const pageClipClickEnd = lowerTimelineSource.indexOf('data-testid="capture-timeline-page-boundary"', pageClipClickStart);
+  assert.ok(pageClipClickStart >= 0, "page clip block should exist");
+  assert.ok(pageClipClickEnd > pageClipClickStart, "page clip block should have a clear end");
+  const pageClipClickBlock = lowerTimelineSource.slice(pageClipClickStart, pageClipClickEnd);
+  assert.ok(
+    pageClipClickBlock.includes("placeScrollPlayheadFromPointer(event, clip)") &&
+      pageClipClickBlock.includes("onSelectPageClip(clip.id)"),
+    "clicking a Page Bar clip should both select it and place the Scroll playhead inside the clip",
+  );
+  const pageFrameEditorBlock = lowerTimelineSource.slice(
+    lowerTimelineSource.indexOf("const renderFrameValue ="),
+    lowerTimelineSource.indexOf("return (", lowerTimelineSource.indexOf("const renderFrameValue =")),
+  );
+  assert.ok(
+    pageFrameEditorBlock.includes("onDoubleClick={(event) =>") &&
+      pageFrameEditorBlock.includes("event.stopPropagation()") &&
+      !pageFrameEditorBlock.includes("placeScrollPlayheadFromPointer"),
+    "Page clip timing editor double-clicks should open editors without accidental Scroll playhead placement",
+  );
+  assert.ok(
+    lowerTimelineSource.includes('position: "fixed"') &&
+      lowerTimelineSource.includes('left: "50%"') &&
+      lowerTimelineSource.includes('top: "50%"') &&
+      lowerTimelineSource.includes('transform: "translate(-50%, -50%)"') &&
+      lowerTimelineSource.includes('overflowY: "auto"') &&
+      lowerTimelineSource.includes("pagePickerListStyle") &&
+      lowerTimelineSource.includes("createPortal") &&
+      lowerTimelineSource.includes("document.body"),
+    "Page picker should portal to the page body, float centered above the bottom timeline, and keep long page lists scrollable",
+  );
+  assert.ok(
+    lowerTimelineSource.includes("Math.round(fps / 10)") &&
+      lowerTimelineSource.includes("for (let frame = 0; frame <= totalFrames; frame += step)") &&
+      lowerTimelineSource.includes("frame % safeFps === 0") &&
+      lowerTimelineSource.includes("capture-timeline-frame-grid") &&
+      lowerTimelineSource.includes("capture-timeline-frame-grid-tick"),
+    "frame grid should use 0-based 0.1s snap subdivisions at 60 FPS and extend through the full lower timeline",
+  );
+  assert.ok(
+    lowerTimelineSource.includes('? "34px 34px 28px 20px 20px 20px 20px 20px"') &&
+      lowerTimelineSource.includes(': "34px 34px 28px"'),
+    "Pages and Camera Path lane containers should use matching 34px row heights",
+  );
+  const frameRulerBlock = lowerTimelineSource.slice(
+    lowerTimelineSource.indexOf('data-testid="capture-timeline-frame-ruler"'),
+    lowerTimelineSource.indexOf("{pageLayout.pageClips.map"),
+  );
+  const timeAxisBlock = lowerTimelineSource.slice(
+    lowerTimelineSource.indexOf('data-testid="capture-timeline-time-axis"'),
+    lowerTimelineSource.indexOf('data-testid="capture-timeline-camera-path-lane"'),
+  );
+  assert.ok(
+    frameRulerBlock.includes('data-testid="capture-timeline-frame-ruler-tick"') &&
+      !frameRulerBlock.includes("graduation.label"),
+    "frame ruler should keep grid ticks but not duplicate the seconds axis with small frame-number labels",
+  );
+  assert.ok(
+    timeAxisBlock.includes("frameGraduations.map") &&
+      /formatTimelineScaleLabel\(\s*graduation\.frame\s*\/\s*CAPTURE_TIMELINE_DEFAULT_FPS\s*,?\s*\)/.test(timeAxisBlock) &&
+      !timeAxisBlock.includes("graduations.map"),
+    "time axis ticks and labels should use the same zero-based frame graduations as the grid",
+  );
+  assert.ok(
+    lowerTimelineSource.includes('data-testid="capture-timeline-frame-grid"') &&
+      lowerTimelineSource.includes('data-testid="capture-timeline-time-axis"') &&
+      lowerTimelineSource.includes('data-testid="capture-timeline-time-axis-tick"') &&
+      lowerTimelineSource.includes('data-testid="capture-timeline-time-scale-label"') &&
+      lowerTimelineSource.includes('data-testid="capture-timeline-playhead"') &&
+      lowerTimelineSource.includes('top: 0') &&
+      lowerTimelineSource.includes('bottom: 0') &&
+      lowerTimelineSource.includes('zIndex: 0') &&
+      lowerTimelineSource.includes('gridRow: 3') &&
+      !lowerTimelineSource.includes('data-testid="capture-timeline-scrubber"') &&
+      !lowerTimelineSource.includes('data-testid="capture-timeline-spine-bar"'),
+    "timeline should keep the frame grid, time axis, labels, and vertical playhead while removing only the horizontal scrub slider",
+  );
+  assert.ok(
+    lowerTimelineSource.includes("formatFrameDurationLabel") &&
+      lowerTimelineSource.includes(".toFixed(2)") &&
+      lowerTimelineSource.includes("displayValue") &&
+      lowerTimelineSource.includes("frameBounds.durationFrames"),
+    "Page clip duration labels should show frames plus seconds while keeping numeric frame editing",
+  );
   assert.ok(
     providerSource.includes("const setCameraPathScrubTimeSeconds = useCallback") &&
       !providerSource.includes(
@@ -1176,18 +1513,49 @@ test("Capture Camera Path v2 UI exposes row editors, transition editors, and tim
     assert.ok(source.includes(expected), `toolbar should include ${expected}`);
   }
   assert.ok(
-    lowerTimelineSource.indexOf('data-testid="capture-timeline-spine-bar"') <
-      lowerTimelineSource.indexOf('data-testid="capture-timeline-time-axis"') &&
+    lowerTimelineSource.includes('data-testid="capture-timeline-camera-path-lane"') &&
+      lowerTimelineSource.includes('data-testid="capture-timeline-time-axis"') &&
       !lowerTimelineSource.includes('data-testid="capture-timeline-time-graph-lane"') &&
       !lowerTimelineSource.includes("<span>Capture Timeline</span>") &&
-      !lowerTimelineSource.includes('data-testid="capture-timeline-timecode"'),
-    "timeline should remove the heading/timecode and hide the Time Graph lane",
+      !lowerTimelineSource.includes('data-testid="capture-timeline-timecode"') &&
+      !lowerTimelineSource.includes('data-testid="capture-timeline-spine-bar"') &&
+      !lowerTimelineSource.includes('data-testid="capture-timeline-scrubber"') &&
+      !lowerTimelineSource.includes("spineTrackStyle") &&
+      !lowerTimelineSource.includes("spineThumbStyle") &&
+      !lowerTimelineSource.includes("spineRangeInputStyle"),
+    "timeline should remove the heading/timecode, hide the Time Graph lane, and drop the horizontal spine scrub slider",
+  );
+  assert.ok(
+    lowerTimelineSource.includes("emptyLaneAddButtonStyle") &&
+      lowerTimelineSource.includes('background: "rgba(255,255,255,0.055)"') &&
+      lowerTimelineSource.includes("const pageLaneAddButtonStyle") &&
+      lowerTimelineSource.includes("const cameraPathLaneAddButtonStyle") &&
+      !lowerTimelineSource.includes("linear-gradient(180deg, rgba(255,255,255,0.12)"),
+    "Page and Camera Path plus buttons should use the same subdued shade as empty timeline lanes instead of a brighter button background",
   );
   assert.ok(
     lowerTimelineSource.includes("left: snapTimelinePercent(") &&
       lowerTimelineSource.includes("width: snapTimelineBlockPercent(") &&
       lowerTimelineSource.includes("snapTimelineDeltaSeconds("),
     "page clips, camera blocks, and time graph curves should align to the shared graduated timeline rail",
+  );
+  for (const expected of [
+    "replaceCaptureTimelinePageClipPage",
+    "editCaptureTimelinePageClipFrames",
+    "removeCaptureTimelinePageClip",
+    "captureTimelineClipFrameBounds",
+  ]) {
+    assert.ok(captureTimelineSource.includes(expected), `capture timeline should include ${expected}`);
+  }
+  assert.ok(
+    lowerTimelineSource.includes("onOpenPagePicker") &&
+      lowerTimelineSource.includes("onReplacePageClipPage") &&
+      lowerTimelineSource.includes("onRemovePageClip") &&
+      lowerTimelineSource.includes("onEditPageClipFrames") &&
+      lowerTimelineSource.includes('event.key === "Delete"') &&
+      lowerTimelineSource.includes('event.key === "Backspace"') &&
+      lowerTimelineSource.includes("isEditableTimelineTarget"),
+    "Page Bar should expose picker replacement, focus-safe Delete/Backspace removal, and frame editing hooks",
   );
   assert.ok(
       lowerTimelineSource.includes("selectTimelineCameraBlock") &&
@@ -1216,19 +1584,22 @@ test("Capture Camera Path v2 UI exposes row editors, transition editors, and tim
     lowerTimelineSource.includes("capture-timeline-time-axis-tick") &&
       lowerTimelineSource.includes("height: graduation.major ? 10 : 5") &&
       !lowerTimelineSource.includes("<span style={laneLabelStyle}>Ruler</span>"),
-    "timeline should replace the fake Ruler lane with a real graduated time axis under the scrub bar",
+    "timeline should replace the fake Ruler lane with a real graduated time axis below the editing lanes",
   );
   assert.ok(
     source.includes('data-testid="capture-director-bottom-actions"') &&
       source.includes('data-testid="capture-timeline-transport-actions"') &&
-      source.includes('aria-label="Play timeline"') &&
-      source.includes('aria-label="Pause timeline"') &&
-      source.includes('aria-label="Record path preview"') &&
+      source.includes('aria-label="Play scroll timeline"') &&
+      source.includes('aria-label="Pause scroll timeline"') &&
+      source.includes('aria-label="Open scroll record"') &&
       source.indexOf('data-testid="capture-recipe-actions"') <
         source.indexOf('data-testid="capture-timeline-transport-actions"') &&
       !lowerTimelineSource.includes('data-testid="capture-timeline-play"') &&
       !lowerTimelineSource.includes('data-testid="capture-timeline-pause"') &&
       !lowerTimelineSource.includes('data-testid="capture-timeline-record-preview"') &&
+      !lowerTimelineSource.includes('data-testid="capture-timeline-spine-play"') &&
+      !lowerTimelineSource.includes("timelineSpinePlayButtonStyle") &&
+      !lowerTimelineSource.includes('data-testid="capture-timeline-scrubber"') &&
       lowerTimelineSource.includes('aria-label="Add current camera"') &&
       lowerTimelineSource.includes("cameraPathLaneAddButtonStyle") &&
       lowerTimelineSource.includes("cameraPathLaneContentOffsetPx") &&
@@ -1237,6 +1608,33 @@ test("Capture Camera Path v2 UI exposes row editors, transition editors, and tim
       !lowerTimelineSource.includes(">Record Preview<"),
     "timeline transport controls should be icon-only footer buttons on the far side of the panel action row",
   );
+  const timelineTransportStart = source.indexOf("const timelineTransportActions = (");
+  const timelineTransportEnd = source.indexOf("  return (", timelineTransportStart);
+  assert.ok(timelineTransportStart >= 0, "timeline transport block should exist");
+  assert.ok(timelineTransportEnd > timelineTransportStart, "timeline transport block should have a clear end");
+  const timelineTransportBlock = source.slice(timelineTransportStart, timelineTransportEnd);
+  for (const expected of [
+    "onClick={playScrollPreview}",
+    "onClick={pauseScrollPreview}",
+    "onClick={openScrollRecordPopout}",
+  ]) {
+    assert.ok(
+      timelineTransportBlock.includes(expected),
+      `lower timeline transport should use Scroll Animation action ${expected}`,
+    );
+  }
+  for (const forbidden of [
+    "onClick={playCameraPath}",
+    "onClick={stopCameraPathPlayback}",
+    "startCameraPathPreviewRecording",
+    "Record path preview",
+  ]) {
+    assert.equal(
+      timelineTransportBlock.includes(forbidden),
+      false,
+      `lower timeline transport should not use Camera Path-only action ${forbidden}`,
+    );
+  }
   assert.ok(
     lowerTimelineSource.indexOf('data-testid="capture-timeline-camera-path-lane"') <
         lowerTimelineSource.indexOf('data-testid="capture-timeline-add-current-camera"') &&
@@ -1266,6 +1664,14 @@ test("Capture Camera Path v2 UI exposes row editors, transition editors, and tim
       !lowerTimelineSource.includes("capture-timeline-show-diagnostics") &&
       !lowerTimelineSource.includes("capture-timeline-duration"),
     "timeline page controls should open from a plus button inside the Pages bar and drop permanent left-rail add clutter",
+  );
+  assert.ok(
+    !source.includes("const pageId = pageRangeStartId ?? capturePageOptions[0]?.id") &&
+      source.includes("pageOptions={capturePageOptions}") &&
+      source.includes("replacePageClipPage") &&
+      source.includes("editPageClipFrames") &&
+      source.includes("removePageClip"),
+    "Add Page should use an explicit page picker instead of silently inserting the first/default page",
   );
   assert.ok(
     lowerTimelineSource.includes('pointerEvents: "none"') &&
@@ -1304,15 +1710,11 @@ test("Capture Camera Path v2 UI exposes row editors, transition editors, and tim
       "cameraPathScrubTimeSeconds >= playbackTimeline.durationSeconds - 0.001",
     ) &&
       providerSource.includes("cameraPathPlaybackStartScrubSecondsRef.current = playbackStartSeconds") &&
-      lowerTimelineSource.includes('"Play timeline from spine"') &&
-      lowerTimelineSource.includes('"Pause timeline from spine"') &&
-      lowerTimelineSource.includes('"Play timeline from spine"') &&
-      lowerTimelineSource.includes("if (isPlaying)") &&
-      lowerTimelineSource.includes("capture-timeline-spine-icon-pause") &&
-      source.includes("isPlaying={cameraPathTimelinePlaying}") &&
-      source.includes("onPause={stopCameraPathPlayback}") &&
-      source.includes("onPlay={playCameraPath}"),
-    "timeline play should restart from 0s when the scrubber is already at the end",
+      source.includes("onClick={playCameraPath}") &&
+      source.includes("onClick={stopCameraPathPlayback}") &&
+      !lowerTimelineSource.includes('"Play timeline from spine"') &&
+      !lowerTimelineSource.includes("capture-timeline-spine-icon-pause"),
+    "footer timeline play should restart from 0s when the scrubber is already at the end without duplicating play controls in the spine",
   );
   assert.ok(
     source.includes('data-testid="capture-recipe-actions"') &&
@@ -1394,7 +1796,6 @@ test("Capture Camera Path v2 UI exposes row editors, transition editors, and tim
   for (const expected of [
     "export function CameraPathTimeline",
     "capture-timeline-bar",
-    "capture-timeline-scrubber",
     "capture-timeline-time-axis",
     "capture-timeline-playhead",
     "capture-timeline-continuity-marker",
@@ -1411,6 +1812,12 @@ test("Capture Camera Path v2 UI exposes row editors, transition editors, and tim
       `CameraPathTimeline should include ${expected}`,
     );
   }
+  assert.ok(
+    !timelineSource.includes("capture-timeline-scrubber") &&
+      !timelineSource.includes("spineTrackStyle") &&
+      !timelineSource.includes("spineThumbStyle"),
+    "CameraPathTimeline should rely on the vertical playhead and time axis, not a horizontal white scrub slider",
+  );
 });
 
 test("Capture Camera Path video preview defaults 4K recording to 30 FPS and preserves end-stop callback", () => {
@@ -1640,6 +2047,9 @@ test("scene handle exposes capture sizing and after-render hooks", () => {
     "clearCaptureCameraPathOverlay",
     "setCaptureCameraPathInteraction",
     "renderCameraPathPreviewFrame",
+    "beginCaptureFullResolutionAssets",
+    "waitForCaptureFidelityReady",
+    "endCaptureFullResolutionAssets",
   ]) {
     assert.ok(sceneSource.includes(method), `SceneHandle should include ${method}`);
   }
@@ -1655,6 +2065,111 @@ test("scene handle exposes capture sizing and after-render hooks", () => {
     postSource.includes("setPixelRatio(pixelRatio: number): void"),
     "postprocessing handle should expose pixel-ratio updates",
   );
+  const previewFrameStart = sceneSource.indexOf("const renderCameraPathPreviewFrame = ({");
+  const previewFrameEnd = sceneSource.indexOf("const getCaptureCapabilities = () =>", previewFrameStart);
+  assert.ok(previewFrameStart >= 0, "scene should define the Camera Path preview renderer");
+  assert.ok(previewFrameEnd > previewFrameStart, "preview renderer block should have a clear end");
+  const previewFrameBlock = sceneSource.slice(previewFrameStart, previewFrameEnd);
+  for (const expected of [
+    "mimeType = \"image/jpeg\"",
+    "imageQuality = 0.76",
+    "maxDimension = null",
+    "maxDimension === null",
+    "canvas.toDataURL(mimeType, imageQuality)",
+  ]) {
+    assert.ok(
+      previewFrameBlock.includes(expected),
+      `preview renderer should default to uncapped Capture Director output while preserving explicit thumbnail support: ${expected}`,
+    );
+  }
+});
+
+test("Capture Director fidelity lock forces full topo texture and source terrain detail", () => {
+  const sceneSource = readSource("src", "scene.ts");
+  const managerSource = readSource("src", "scene", "SceneManager.ts");
+  const topoRuntimeSource = readSource("src", "topoMap", "runtime.ts");
+  const topoSurfaceSource = readSource("src", "topoMap", "surfaceRuntime.ts");
+  const terrainLoaderSource = readSource("src", "loaders", "loadTerrain.ts");
+  const stillExporterSource = readSource(
+    "src",
+    "capture",
+    "deterministicStillExporter.ts",
+  );
+  const frameExporterSource = readSource(
+    "src",
+    "capture",
+    "deterministicFrameSequenceExporter.ts",
+  );
+  const tileExporterSource = readSource(
+    "src",
+    "capture",
+    "deterministicStillTileExporter.ts",
+  );
+
+  const fidelityStart = sceneSource.indexOf("const beginCaptureFidelityLock = (options");
+  const fidelityEnd = sceneSource.indexOf("const endCaptureFidelityLock =", fidelityStart);
+  assert.ok(fidelityStart >= 0, "scene should define a capture fidelity lock");
+  assert.ok(fidelityEnd > fidelityStart, "capture fidelity lock should have a clear body");
+  const fidelityBlock = sceneSource.slice(fidelityStart, fidelityEnd);
+  assert.ok(
+    sceneSource.includes("manager.setCaptureFullResolution(true)"),
+    "scene handle should force full topo resolution before capture rendering",
+  );
+  assert.ok(
+    fidelityBlock.includes("beginCaptureFullResolutionAssets()"),
+    "capture fidelity lock should force full topo resolution before rendering",
+  );
+  assert.ok(
+    sceneSource.includes("manager.setCaptureFullResolution(false)"),
+    "capture fidelity restore should release full topo resolution after rendering",
+  );
+  assert.ok(
+    managerSource.includes("setCaptureFullResolution(enabled: boolean): void"),
+    "SceneManager should expose a capture-only full-resolution topo toggle",
+  );
+  assert.ok(
+    topoRuntimeSource.includes("setCaptureFullResolution(enabled: boolean): void"),
+    "TopoMapRuntime should route the capture full-resolution toggle",
+  );
+  assert.ok(
+    topoRuntimeSource.includes("this.surface.setCaptureFullResolution(this.surfaceGroup(), enabled)"),
+    "TopoMapRuntime should apply the capture full-resolution toggle to the surface runtime",
+  );
+  for (const expected of [
+    "private captureFullResolution = false",
+    "setCaptureFullResolution(",
+    "lodHandle?.setCaptureDetailLock?.(enabled)",
+    "terrain.orthoPhotoTexture8192Path ?? terrain.orthoPhotoPath",
+    "this.captureFullResolution && source.texture8192Path",
+  ]) {
+    assert.ok(
+      topoSurfaceSource.includes(expected),
+      `topo surface capture mode should include ${expected}`,
+    );
+  }
+  for (const expected of [
+    "setCaptureDetailLock(locked: boolean): void",
+    "captureDetailLocked",
+    "rebuildTerrain(\"source\", 1)",
+    "capture-source-lod-lock",
+    "terrainLodCaptureLocked",
+    "terrainLodFullRaster",
+  ]) {
+    assert.ok(
+      terrainLoaderSource.includes(expected),
+      `terrain loader should support source-detail capture LOD with ${expected}`,
+    );
+  }
+  for (const [name, source] of [
+    ["deterministic still exporter", stillExporterSource],
+    ["deterministic frame exporter", frameExporterSource],
+    ["external still tile exporter", tileExporterSource],
+  ]) {
+    assert.ok(
+      source.includes("await sceneHandle.waitForCaptureFidelityReady?.()"),
+      `${name} should wait for full-resolution topo assets before reading pixels`,
+    );
+  }
 });
 
 test("scene camera path overlay v2 stays runtime-owned and editor-gated", () => {

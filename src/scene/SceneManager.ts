@@ -5435,6 +5435,14 @@ export class SceneManager {
     this.topoRuntime.disposeOrthoPhotoTexture();
   }
 
+  setCaptureFullResolution(enabled: boolean): void {
+    this.topoRuntime.setCaptureFullResolution(enabled);
+  }
+
+  waitForCaptureFullResolution(): Promise<void> {
+    return this.topoRuntime.waitForCaptureFullResolution();
+  }
+
   /**
    * Editor entry point: load a freshly-added overlay and register it.
    * Awaits the heightSampler internally (via the loader) so the

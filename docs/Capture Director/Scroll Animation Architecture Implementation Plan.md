@@ -617,3 +617,59 @@ git commit -m "feat: complete scroll animation render handoff"
 - Page Bar preview/record override does not persist editor page selection.
 - Page transitions are sampled through the transition runtime contract or a deterministic equivalent.
 - No page fixture edits are needed for tests or runtime behavior.
+
+## Task 8: Page Bar Precision Editor
+
+**Intent:** Make the lower Page Bar precise enough for Scroll Animation timing
+without changing render output contracts.
+
+- Add a floating searchable page picker for `Add Page` and clip page
+  replacement. The picker uses visible page options and does not silently insert
+  the first/default page. It floats centered above the lower bar and scrolls
+  internally for long page lists.
+- Add selected-clip removal through Delete and Backspace only when the Page lane
+  has focus and no text input is active.
+- Use frame-primary labels at the Scroll Animation FPS. The default editing rate
+  is 60 FPS, with duration labels also showing `x.xx s` time.
+- Show start frame, end frame, and duration on each lane-filling Page clip.
+  Double-clicking a frame value opens compact numeric entry.
+- Add readable frame ruler ticks and snap points that scale with total timeline
+  duration. For short timelines, the lower grid uses 0.1-second subdivisions and
+  extends behind the Page and Camera Path bars.
+- Keep edits local. Manual frame edits and boundary drags must affect only the
+  selected clip and, when a shared boundary is involved, the one adjacent clip.
+  Do not ripple timing across the full Page Bar line.
+- Keep this as an authoring UI slice. Do not modify scroll package rendering,
+  output manifests, page fixtures, or project files.
+
+## Task 9: Scroll Page Bar Playhead Scene Preview
+
+**Intent:** Make the lower Scroll Animation playhead the live preview authority
+for Page Bar scene state while Camera Path remains the only camera-pose source.
+
+- Add shared scroll playhead frame helpers for deterministic 60 FPS
+  seconds-to-frame conversion, range clamping, and playback start selection.
+- Route lower timeline placement through one provider-owned controller:
+  seconds -> frame -> selected frame range -> `sampleCaptureScrollTimeline()` ->
+  `previewCapturePageSource()` -> `sampleCaptureCameraPathV3()` ->
+  `sceneHandle.setCameraPose()`.
+- Clicking empty timeline/grid rail space, the time axis, or a Page clip places
+  the Scroll Animation playhead. Clicking a Page clip also selects that clip and
+  uses the clicked position inside the clip. Double-click page-name and timing
+  editors keep editor behavior and do not scrub.
+- `Play` starts from the current Scroll Animation playhead when it is inside the
+  selected frame range; otherwise it starts at the range start. `Pause` leaves
+  the sampled page state visible. `Stop` resets to the range start and clears
+  capture page-source preview.
+- Keep `window.__captureDirectorScrollPreview` DEV-only and add a hidden
+  `data-testid="capture-scroll-preview-trace"` JSON DOM mirror for browser
+  automation.
+- Lower timeline footer Play/Pause use `playScrollPreview()` and
+  `pauseScrollPreview()`, while the red footer record action opens the Scroll
+  Record popout. Camera Path-only play and record preview remain available from
+  the Camera Path panel controls.
+- Add a hidden DEV-only `data-testid="capture-page-source-preview-trace"` mirror
+  of the Page Controller capture page-source state so browser checks can verify
+  the sampled page was resolved and applied without relying on page globals.
+- Do not call page navigation, selected-page setters, `pageOrder`, or
+  `projects/**` writes from this playhead path.

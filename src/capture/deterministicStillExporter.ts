@@ -174,6 +174,7 @@ export async function exportDeterministicStill({
         pixelRatio: 1,
       });
     }
+    await sceneHandle.waitForCaptureFidelityReady?.();
 
     const cameraPose =
       stillCameraPose ??

@@ -20,6 +20,7 @@ interface TerrainGridHandle {
 
 interface TerrainLodHandle {
   updateCameraLod(camera: THREE.Camera): void;
+  setCaptureDetailLock?(locked: boolean): void;
 }
 
 export interface TerrainEdgeFadeState {
@@ -115,11 +116,49 @@ export class TopoSurfaceRuntime {
   private topoImageDetailTexturePath: string | null = null;
   private topoImageDetailTexture: THREE.Texture | null = null;
   private topoImageDetailTextureSeq = 0;
+  private captureFullResolution = false;
+  private captureFullResolutionTextureLoads: Promise<void>[] = [];
 
   constructor(private readonly options: TopoSurfaceRuntimeOptions) {}
 
   setTerrain(terrain: NonNullable<SceneProperties["terrain"]>): void {
     this.terrain = terrain;
+  }
+
+  setCaptureFullResolution(
+    terrainGroup: THREE.Group | undefined,
+    enabled: boolean,
+  ): void {
+    if (this.captureFullResolution === enabled) {
+      terrainGroup?.traverse((obj) => {
+        const lodHandle = (obj as THREE.Object3D).userData?.terrainLodHandle as
+          | TerrainLodHandle
+          | undefined;
+        lodHandle?.setCaptureDetailLock?.(enabled);
+      });
+      return;
+    }
+    this.captureFullResolution = enabled;
+    this.captureFullResolutionTextureLoads = [];
+    terrainGroup?.traverse((obj) => {
+      const lodHandle = (obj as THREE.Object3D).userData?.terrainLodHandle as
+        | TerrainLodHandle
+        | undefined;
+      lodHandle?.setCaptureDetailLock?.(enabled);
+    });
+    this.applyOrthoPhotoTexture(terrainGroup, this.terrain);
+    this.applyTopoImageDetailOverlay(terrainGroup, this.terrain);
+  }
+
+  waitForCaptureFullResolution(): Promise<void> {
+    return Promise.allSettled(this.captureFullResolutionTextureLoads).then(
+      () => undefined,
+    );
+  }
+
+  private trackCaptureTextureLoad(promise: Promise<void>): void {
+    if (!this.captureFullResolution) return;
+    this.captureFullResolutionTextureLoads.push(promise.catch(() => undefined));
   }
 
   dispose(): void {
@@ -509,6 +548,9 @@ export class TopoSurfaceRuntime {
     },
     terrain: NonNullable<SceneProperties["terrain"]>,
   ): string | undefined {
+    if (this.captureFullResolution && source.texture8192Path) {
+      return source.texture8192Path;
+    }
     const budget =
       terrain.orthoPhotoTextureBudget === 8192
         ? 8192
@@ -568,9 +610,9 @@ export class TopoSurfaceRuntime {
     this.topoImageDetailTexturePath = path;
     const seq = ++this.topoImageDetailTextureSeq;
     const url = assetUrl(path, this.options.resolveAssetPath);
-    new THREE.TextureLoader().load(
-      url,
-      (texture) => {
+    const loadPromise = new THREE.TextureLoader()
+      .loadAsync(url)
+      .then((texture) => {
         if (
           seq !== this.topoImageDetailTextureSeq ||
           this.topoImageDetailTexturePath !== path
@@ -581,9 +623,8 @@ export class TopoSurfaceRuntime {
         configureTopoTexture(texture, this.options.maxAnisotropy());
         this.topoImageDetailTexture = texture;
         this.applyTopoImageDetailBounds(terrainGroup, overlay, texture, opacity);
-      },
-      undefined,
-      (error) => {
+      })
+      .catch((error) => {
         if (seq === this.topoImageDetailTextureSeq) {
           console.error(
             `[TopoMapRuntime] topo image detail texture failed: ${url}`,
@@ -591,8 +632,8 @@ export class TopoSurfaceRuntime {
           );
           this.clearTopoImageDetailOverlay(terrainGroup);
         }
-      },
-    );
+      });
+    this.trackCaptureTextureLoad(loadPromise);
   }
 
   private applyOrthoPhotoTexture(
@@ -603,7 +644,14 @@ export class TopoSurfaceRuntime {
       typeof terrain.orthoPhotoOpacity === "number"
         ? terrain.orthoPhotoOpacity
         : 0;
-    const path = opacity > 0.001 ? terrain.orthoPhotoPath?.trim() : "";
+    const path =
+      opacity > 0.001
+        ? (
+            this.captureFullResolution
+              ? terrain.orthoPhotoTexture8192Path ?? terrain.orthoPhotoPath
+              : terrain.orthoPhotoPath
+          )?.trim()
+        : "";
     if (!path) {
       if (this.orthoPhotoTexturePath || this.orthoPhotoTexture) {
         this.clearOrthoPhotoTexture(terrainGroup);
@@ -624,9 +672,9 @@ export class TopoSurfaceRuntime {
     this.orthoPhotoTexturePath = path;
     const seq = ++this.orthoPhotoTextureSeq;
     const url = assetUrl(path, this.options.resolveAssetPath);
-    new THREE.TextureLoader().load(
-      url,
-      (texture) => {
+    const loadPromise = new THREE.TextureLoader()
+      .loadAsync(url)
+      .then((texture) => {
         if (
           seq !== this.orthoPhotoTextureSeq ||
           this.orthoPhotoTexturePath !== path
@@ -637,14 +685,13 @@ export class TopoSurfaceRuntime {
         configureTopoTexture(texture, this.options.maxAnisotropy());
         this.orthoPhotoTexture = texture;
         this.setOrthoPhotoTexture(terrainGroup, texture);
-      },
-      undefined,
-      (error) => {
+      })
+      .catch((error) => {
         if (seq === this.orthoPhotoTextureSeq) {
           console.error(`[TopoMapRuntime] ortho photo texture failed: ${url}`, error);
           this.clearOrthoPhotoTexture(terrainGroup);
         }
-      },
-    );
+      });
+    this.trackCaptureTextureLoad(loadPromise);
   }
 }

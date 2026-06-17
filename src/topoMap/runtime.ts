@@ -94,6 +94,14 @@ export class TopoMapRuntime {
     this.surface.disposeOrthoPhotoTexture(this.surfaceGroup());
   }
 
+  setCaptureFullResolution(enabled: boolean): void {
+    this.surface.setCaptureFullResolution(this.surfaceGroup(), enabled);
+  }
+
+  waitForCaptureFullResolution(): Promise<void> {
+    return this.surface.waitForCaptureFullResolution();
+  }
+
   applyEnvironment({
     sceneProperties,
     sunDirection,

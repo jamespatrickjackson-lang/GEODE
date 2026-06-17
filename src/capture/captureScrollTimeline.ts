@@ -123,6 +123,52 @@ export interface CaptureScrollTimelineSample {
   page: CaptureScrollTimelinePageSample;
 }
 
+function normalizeFrameMathFps(fps: unknown): number {
+  return typeof fps === "number" && Number.isFinite(fps) && fps > 0
+    ? Math.round(fps)
+    : DEFAULT_CAPTURE_SCROLL_FPS;
+}
+
+export function captureScrollFrameForSeconds(
+  seconds: number,
+  fps: number = DEFAULT_CAPTURE_SCROLL_FPS,
+): number {
+  const safeSeconds = Number.isFinite(seconds) ? Math.max(0, seconds) : 0;
+  return Math.max(0, Math.round(safeSeconds * normalizeFrameMathFps(fps)));
+}
+
+export function captureScrollSecondsForFrame(
+  frameIndex: number,
+  fps: number = DEFAULT_CAPTURE_SCROLL_FPS,
+): number {
+  const safeFrame = Number.isFinite(frameIndex)
+    ? Math.max(0, Math.round(frameIndex))
+    : 0;
+  return safeFrame / normalizeFrameMathFps(fps);
+}
+
+export function clampCaptureScrollFrameToRange(
+  frameIndex: number,
+  range: CaptureScrollResolvedFrameRange,
+): number {
+  const safeFrame = Number.isFinite(frameIndex)
+    ? Math.max(0, Math.round(frameIndex))
+    : range.startFrame;
+  return Math.max(range.startFrame, Math.min(safeFrame, range.endFrame));
+}
+
+export function resolveCaptureScrollPlayStartFrame(
+  currentFrame: number,
+  range: CaptureScrollResolvedFrameRange,
+): number {
+  const safeFrame = Number.isFinite(currentFrame)
+    ? Math.max(0, Math.round(currentFrame))
+    : range.startFrame;
+  return safeFrame >= range.startFrame && safeFrame <= range.endFrame
+    ? safeFrame
+    : range.startFrame;
+}
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }

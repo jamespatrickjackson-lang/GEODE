@@ -142,19 +142,26 @@ import {
 import {
   createPageClipFromPresentationPage,
   createPageClipsFromRange,
+  editCaptureTimelinePageClipFrames,
   normalizeCaptureTimelineState,
+  removeCaptureTimelinePageClip,
+  replaceCaptureTimelinePageClipPage,
   resizeCaptureTimelineBoundary,
   type CaptureTimelineState,
   type CaptureTimelineTrack,
 } from "./captureTimeline";
 import {
   DEFAULT_CAPTURE_SCROLL_FPS,
+  captureScrollFrameForSeconds,
   captureScrollQualityForPreset,
+  clampCaptureScrollFrameToRange,
   createScrollRecordRequest,
+  resolveCaptureScrollPlayStartFrame,
   sampleCaptureScrollTimeline,
   validateScrollRecordRequest,
   type CaptureScrollRenderRouteIntent,
   type CaptureScrollRecordQuality,
+  type CaptureScrollTimelineSample,
   type CaptureScrollTimelineV1,
 } from "./captureScrollTimeline";
 import { createPendingScrollHandoffManifest } from "./scrollHandoffPackage";
@@ -259,8 +266,17 @@ interface CaptureDirectorContextValue {
   addCurrentPageClip(): void;
   addPageClip(pageId: string): void;
   addPageRangeClips(startId: string, endId: string): void;
+  replacePageClipPage(clipId: string, pageId: string): void;
   removePageClip(clipId: string): void;
   clearPageClips(): void;
+  editPageClipFrames(
+    clipId: string,
+    edit: {
+      startFrame?: number | null;
+      endFrame?: number | null;
+      durationFrames?: number | null;
+    },
+  ): void;
   setPageClipEnabled(clipId: string, enabled: boolean): void;
   setPageClipLocked(clipId: string, locked: boolean): void;
   selectPageClip(clipId: string | null): void;
@@ -289,6 +305,7 @@ interface CaptureDirectorContextValue {
   beginCameraPathFocusPick(nodeId: string): void;
   cameraPathScrubTimeSeconds: number;
   setCameraPathScrubTimeSeconds(seconds: number): void;
+  setScrollPlayheadSeconds(seconds: number): void;
   cameraPathTimelinePlaying: boolean;
   playCameraPathTimeline(): void;
   pauseCameraPathTimeline(): void;
@@ -420,6 +437,7 @@ interface CaptureDirectorContextValue {
   externalStillJobUrl: string | null;
   externalStillJobFilename: string | null;
   externalStillJobCommand: string | null;
+  saveCameraPathPreviewStill(): Promise<void>;
   externalVideoJobUrl: string | null;
   externalVideoJobFilename: string | null;
   externalVideoJobCommand: string | null;
@@ -448,6 +466,7 @@ interface CaptureDirectorContextValue {
   scrollAdvancedOpen: boolean;
   setScrollAdvancedOpen(open: boolean): void;
   scrollPreviewState: CaptureScrollPreviewState;
+  scrollPreviewTrace: CaptureDirectorScrollPreviewTraceState;
   playScrollPreview(): void;
   pauseScrollPreview(): void;
   stopScrollPreview(): void;
@@ -586,7 +605,34 @@ function scrollVideoFormat(
   return format === "webm" ? "webm" : "mp4";
 }
 
+async function dataUrlToStillBlob(dataUrl: string, mimeType: string): Promise<Blob> {
+  const response = await fetch(dataUrl);
+  if (!response.ok) {
+    throw new Error("Camera Path preview image could not be read for saving.");
+  }
+  const blob = await response.blob();
+  return blob.type ? blob : blob.slice(0, blob.size, mimeType);
+}
+
 const DETERMINISTIC_EXPORT_DURATION_SECONDS = 4;
+
+interface CaptureDirectorScrollPreviewTraceState {
+  currentFrame: number | null;
+  sampledPage: CaptureScrollTimelineSample["page"] | null;
+  sampledCameraPathTimeSeconds: number | null;
+  previewState: CaptureScrollPreviewState;
+  appliedPageSource: boolean;
+  updatedAt: string | null;
+}
+
+const INITIAL_SCROLL_PREVIEW_TRACE: CaptureDirectorScrollPreviewTraceState = {
+  currentFrame: null,
+  sampledPage: null,
+  sampledCameraPathTimeSeconds: null,
+  previewState: "idle",
+  appliedPageSource: false,
+  updatedAt: null,
+};
 
 declare global {
   interface Window {
@@ -604,6 +650,9 @@ declare global {
       capabilities(): ReturnType<SceneHandle["getCaptureCapabilities"]> & {
         supportsViewOffsetTiles: true;
       };
+    };
+    __captureDirectorScrollPreview?: {
+      getState(): CaptureDirectorScrollPreviewTraceState;
     };
   }
 }
@@ -979,6 +1028,12 @@ export function CaptureDirectorProvider({
   const [scrollAdvancedOpen, setScrollAdvancedOpen] = useState(false);
   const [scrollPreviewState, setScrollPreviewState] =
     useState<CaptureScrollPreviewState>("idle");
+  const [scrollPreviewTrace, setScrollPreviewTrace] =
+    useState<CaptureDirectorScrollPreviewTraceState>(INITIAL_SCROLL_PREVIEW_TRACE);
+  const scrollPreviewTraceRef = useRef<CaptureDirectorScrollPreviewTraceState>(
+    INITIAL_SCROLL_PREVIEW_TRACE,
+  );
+  const scrollPageSourcePreviewSignatureRef = useRef<string | null>(null);
   const [scrollRecordPopoutOpen, setScrollRecordPopoutOpen] = useState(false);
   const [lastScrollPackagePath, setLastScrollPackagePath] = useState<string | null>(
     null,
@@ -1131,19 +1186,47 @@ export function CaptureDirectorProvider({
     },
     [appendPageClips, equalHoldSeconds, pageRangeTiming, pages],
   );
+  const replacePageClipPage = useCallback(
+    (clipId: string, pageId: string) => {
+      const page = pages.find((entry) => entry.id === pageId);
+      if (!page) return;
+      setCaptureTimeline((previous) =>
+        replaceCaptureTimelinePageClipPage({
+          state: previous,
+          clipId,
+          page,
+        }),
+      );
+      setSelectedTimelineTrack("pages");
+    },
+    [pages],
+  );
   const removePageClip = useCallback((clipId: string) => {
-    setCaptureTimeline((previous) => {
-      const normalized = normalizeCaptureTimelineState(previous);
-      return normalizeCaptureTimelineState({
-        ...normalized,
-        pageClips: normalized.pageClips.filter((clip) => clip.id !== clipId),
-        selectedPageClipId:
-          normalized.selectedPageClipId === clipId
-            ? null
-            : normalized.selectedPageClipId,
-      });
-    });
+    setCaptureTimeline((previous) =>
+      removeCaptureTimelinePageClip({ state: previous, clipId }),
+    );
   }, []);
+  const editPageClipFrames = useCallback(
+    (
+      clipId: string,
+      edit: {
+        startFrame?: number | null;
+        endFrame?: number | null;
+        durationFrames?: number | null;
+      },
+    ) => {
+      setCaptureTimeline((previous) =>
+        editCaptureTimelinePageClipFrames({
+          state: previous,
+          clipId,
+          fps: DEFAULT_CAPTURE_SCROLL_FPS,
+          ...edit,
+        }),
+      );
+      setSelectedTimelineTrack("pages");
+    },
+    [],
+  );
   const clearPageClips = useCallback(() => {
     setCaptureTimeline((previous) =>
       normalizeCaptureTimelineState({
@@ -1823,15 +1906,18 @@ export function CaptureDirectorProvider({
     ],
   );
 
-  const applyScrollPreviewFrame = useCallback(
+  const applyScrollPageSourcePreviewFrame = useCallback(
     (
       timeline: CaptureScrollTimelineV1,
-      path: CaptureCameraPathV3,
       frameIndex: number,
-      options: { applyPageSource?: boolean } = {},
+      options: {
+        applyPageSource?: boolean;
+        previewState?: CaptureScrollPreviewState;
+      } = {},
     ) => {
       const timelineSample = sampleCaptureScrollTimeline(timeline, frameIndex);
-      if (options.applyPageSource !== false) {
+      const shouldApplyPageSource = options.applyPageSource !== false;
+      if (shouldApplyPageSource) {
         previewCapturePageSource({
           sourcePageId: timelineSample.page.sourcePageId,
           targetPageId: timelineSample.page.targetPageId,
@@ -1840,16 +1926,119 @@ export function CaptureDirectorProvider({
           reason: "capture-scroll-preview",
         });
       }
+      setScrollCurrentFrame(timelineSample.clampedFrameIndex);
+      const nextTrace = {
+        currentFrame: timelineSample.clampedFrameIndex,
+        sampledPage: timelineSample.page,
+        sampledCameraPathTimeSeconds: timelineSample.timeSeconds,
+        previewState: options.previewState ?? scrollPreviewState,
+        appliedPageSource: shouldApplyPageSource,
+        updatedAt: new Date().toISOString(),
+      };
+      scrollPreviewTraceRef.current = nextTrace;
+      setScrollPreviewTrace(nextTrace);
+      return timelineSample;
+    },
+    [previewCapturePageSource, scrollPreviewState],
+  );
+
+  const applyScrollPreviewFrame = useCallback(
+    (
+      timeline: CaptureScrollTimelineV1,
+      path: CaptureCameraPathV3,
+      frameIndex: number,
+      options: {
+        applyPageSource?: boolean;
+        previewState?: CaptureScrollPreviewState;
+      } = {},
+    ) => {
+      const timelineSample = applyScrollPageSourcePreviewFrame(
+        timeline,
+        frameIndex,
+        options,
+      );
       const cameraSample = sampleCaptureCameraPathV3(
         path,
         timelineSample.timeSeconds,
       );
       sceneHandle.setCameraPose(cameraSample);
-      setScrollCurrentFrame(timelineSample.clampedFrameIndex);
+      setCameraPathScrubTimeSecondsState(timelineSample.timeSeconds);
       return timelineSample;
     },
-    [previewCapturePageSource, sceneHandle],
+    [applyScrollPageSourcePreviewFrame, sceneHandle],
   );
+
+  useEffect(() => {
+    if (!import.meta.env.DEV || typeof window === "undefined") return;
+    const debugHandle = {
+      getState: () => ({
+        ...scrollPreviewTraceRef.current,
+        currentFrame: scrollCurrentFrame,
+        previewState: scrollPreviewState,
+      }),
+    };
+    window.__captureDirectorScrollPreview = debugHandle;
+    return () => {
+      if (window.__captureDirectorScrollPreview === debugHandle) {
+        delete window.__captureDirectorScrollPreview;
+      }
+    };
+  }, [scrollCurrentFrame, scrollPreviewState]);
+
+  useEffect(() => {
+    if (
+      directorPanel === "closed" ||
+      selectedTimelineTrack !== "pages" ||
+      scrollPreviewState === "playing"
+    ) {
+      scrollPageSourcePreviewSignatureRef.current = null;
+      return;
+    }
+    const pageClipSignature = captureTimeline.pageClips
+      .map(
+        (clip) =>
+          [
+            clip.id,
+            clip.pageId,
+            clip.enabled ? "1" : "0",
+            clip.locked ? "1" : "0",
+            clip.startSeconds,
+            clip.transitionSeconds,
+            clip.holdSeconds,
+            clip.transitionEasing,
+          ].join(":"),
+      )
+      .join("|");
+    const signature = [
+      directorPanel,
+      selectedTimelineTrack,
+      scrollPreviewState,
+      scrollCurrentFrame,
+      cameraPathDurationSeconds,
+      pageClipSignature,
+    ].join("::");
+    if (scrollPageSourcePreviewSignatureRef.current === signature) return;
+    scrollPageSourcePreviewSignatureRef.current = signature;
+    const { plan } = buildScrollRecordPlan();
+    if (!plan) return;
+    const frameRange = plan.request.frameRange;
+    const frameIndex = Math.max(
+      frameRange.startFrame,
+      Math.min(scrollCurrentFrame, frameRange.endFrame),
+    );
+    applyScrollPageSourcePreviewFrame(plan.request.timeline, frameIndex, {
+      previewState: scrollPreviewState,
+    });
+  }, [
+    applyScrollPageSourcePreviewFrame,
+    buildScrollRecordPlan,
+    cameraPathDurationSeconds,
+    captureTimeline,
+    directorPanel,
+    scrollCurrentFrame,
+    scrollPreviewState,
+    selectedTimelineTrack,
+  ]);
 
   const playScrollPreview = useCallback(() => {
     if (!cameraPathPlaybackValidation.valid) {
@@ -1867,15 +2056,16 @@ export function CaptureDirectorProvider({
     }
     stopCameraPathPlayback();
     stopScrollPreviewPlayback();
-    const rangeStart = plan.request.frameRange.startFrame;
     const rangeEnd = plan.request.frameRange.endFrame;
-    const startFrame =
-      scrollPreviewState === "paused"
-        ? Math.max(rangeStart, Math.min(scrollCurrentFrame, rangeEnd))
-        : rangeStart;
+    const startFrame = resolveCaptureScrollPlayStartFrame(
+      scrollCurrentFrame,
+      plan.request.frameRange,
+    );
     scrollPreviewPlaybackStartFrameRef.current = startFrame;
     scrollPreviewPlaybackStartMsRef.current = null;
-    applyScrollPreviewFrame(plan.request.timeline, plan.normalizedPath, startFrame);
+    applyScrollPreviewFrame(plan.request.timeline, plan.normalizedPath, startFrame, {
+      previewState: "playing",
+    });
     setScrollRecordValidationErrors([]);
     setError(null);
     setScrollPreviewState("playing");
@@ -1892,7 +2082,9 @@ export function CaptureDirectorProvider({
         rangeEnd,
         scrollPreviewPlaybackStartFrameRef.current + elapsedFrames,
       );
-      applyScrollPreviewFrame(plan.request.timeline, plan.normalizedPath, nextFrame);
+      applyScrollPreviewFrame(plan.request.timeline, plan.normalizedPath, nextFrame, {
+        previewState: "playing",
+      });
       if (nextFrame >= rangeEnd) {
         stopScrollPreviewPlayback();
         setScrollPreviewState("paused");
@@ -1927,7 +2119,7 @@ export function CaptureDirectorProvider({
         plan.request.timeline,
         plan.normalizedPath,
         scrollPreviewResetFrame,
-        { applyPageSource: false },
+        { applyPageSource: false, previewState: "idle" },
       );
     } else {
       setScrollCurrentFrame(scrollPreviewResetFrame);
@@ -1941,6 +2133,57 @@ export function CaptureDirectorProvider({
     scrollStartFrame,
     stopScrollPreviewPlayback,
   ]);
+
+  const setScrollPlayheadSeconds = useCallback(
+    (seconds: number) => {
+      const frameFromSeconds = captureScrollFrameForSeconds(
+        seconds,
+        DEFAULT_CAPTURE_SCROLL_FPS,
+      );
+      if (!cameraPathPlaybackValidation.valid) {
+        stopScrollPreviewPlayback();
+        clearCapturePageSourcePreview("capture-scroll-preview");
+        setScrollCurrentFrame(frameFromSeconds);
+        setCameraPathScrubTimeSecondsState(Math.max(0, seconds));
+        setScrollPreviewState("idle");
+        setScrollRecordValidationErrors(cameraPathPlaybackValidation.errors);
+        setError(cameraPathPlaybackValidation.errors.join(" "));
+        return;
+      }
+      const { plan, errors } = buildScrollRecordPlan();
+      if (!plan) {
+        stopScrollPreviewPlayback();
+        clearCapturePageSourcePreview("capture-scroll-preview");
+        setScrollCurrentFrame(frameFromSeconds);
+        setCameraPathScrubTimeSecondsState(Math.max(0, seconds));
+        setScrollPreviewState("idle");
+        setScrollRecordValidationErrors(errors);
+        setError(errors.join(" "));
+        return;
+      }
+      stopCameraPathPlayback();
+      stopScrollPreviewPlayback();
+      const frameIndex = clampCaptureScrollFrameToRange(
+        captureScrollFrameForSeconds(seconds, plan.request.timeline.fps),
+        plan.request.frameRange,
+      );
+      applyScrollPreviewFrame(plan.request.timeline, plan.normalizedPath, frameIndex, {
+        previewState: "paused",
+      });
+      setCameraPathScrubTimeSecondsState(frameIndex / plan.request.timeline.fps);
+      setScrollRecordValidationErrors([]);
+      setError(null);
+      setScrollPreviewState("paused");
+    },
+    [
+      applyScrollPreviewFrame,
+      buildScrollRecordPlan,
+      cameraPathPlaybackValidation,
+      clearCapturePageSourcePreview,
+      stopCameraPathPlayback,
+      stopScrollPreviewPlayback,
+    ],
+  );
 
   const acceptScrollRenderShell = useCallback(() => {
     void (async () => {
@@ -3982,8 +4225,10 @@ export function CaptureDirectorProvider({
     const sample = sampleCaptureCameraPathV3(captureCameraPathV3, timeSeconds);
     const imageUrl = sceneHandle.renderCameraPathPreviewFrame({
       pose: sample,
-      width: 280,
-      height: 158,
+      width: 3840,
+      height: 2160,
+      mimeType: "image/png",
+      maxDimension: null,
     });
     const activeNode =
       selectedNode ??
@@ -4357,6 +4602,153 @@ export function CaptureDirectorProvider({
     state.manifest.id,
     state.manifest.layers,
     state.projectSlug,
+  ]);
+
+  const saveCameraPathPreviewStill = useCallback(async () => {
+    if (
+      isRecording ||
+      isDeterministicExporting ||
+      screenCaptureStatus === "rendering" ||
+      isCaptureJobRunning(activeCaptureJob)
+    ) {
+      setError("Another capture job is already running.");
+      return;
+    }
+    if (!cameraPathPreviewMonitor.visible || !cameraPathPreviewMonitor.imageUrl) {
+      setError("Camera Path preview is not visible.");
+      return;
+    }
+
+    const stillType: CaptureStillImageType = "png";
+    const mimeType = captureStillMimeType(stillType) as "image/png";
+    const sample = sampleCaptureCameraPathV3(
+      captureCameraPathV3,
+      cameraPathPreviewMonitor.timeSeconds,
+    );
+    const label = cameraPathPreviewMonitor.label ?? "camera-path-preview";
+    const saveFilename = captureStillFilename(
+      `geosee-${state.projectSlug ?? state.manifest.id}-${label}-4k`,
+      stillType,
+    );
+
+    clearScreenCaptureOutput();
+    setScreenCaptureStatus("rendering");
+    setScreenCaptureSaveMessage(null);
+    setError(null);
+
+    let stillJobId: string | null = null;
+    try {
+      const job = beginCaptureJob({
+        kind: "still",
+        label: "Camera Path Preview Still",
+        diagnostics: {
+          captureMode: "camera-path-preview",
+          width: 3840,
+          height: 2160,
+          source: "camera-path-preview-renderer",
+          timeSeconds: cameraPathPreviewMonitor.timeSeconds,
+          previewLabel: label,
+        },
+      });
+      stillJobId = job.id;
+      updateCaptureJob(job.id, (entry) =>
+        updateCaptureJobStatus(entry, "rendering", {
+          progress: { phase: "rendering", percent: 0 },
+        }),
+      );
+    } catch (jobError) {
+      setScreenCaptureStatus("idle");
+      setError(formatCaptureError(jobError));
+      return;
+    }
+
+    const activeStillJobId = stillJobId;
+    if (!activeStillJobId) return;
+    sceneHandle.beginCaptureFullResolutionAssets();
+    try {
+      await sceneHandle.waitForCaptureFidelityReady();
+      const previewImageUrl = sceneHandle.renderCameraPathPreviewFrame({
+        pose: sample,
+        width: 3840,
+        height: 2160,
+        mimeType: "image/png",
+        maxDimension: null,
+      });
+      if (!previewImageUrl) {
+        throw new Error("Camera Path preview renderer did not produce an image.");
+      }
+      const blob = await dataUrlToStillBlob(previewImageUrl, mimeType);
+      validateStillBlob(blob);
+      const saveResult = await saveCaptureStillBlobWithPicker({
+        blob,
+        filename: saveFilename,
+        type: stillType,
+      });
+      if (saveResult.status === "cancelled") {
+        setScreenCaptureStatus("idle");
+        setError("Camera Path preview still save was cancelled.");
+        finishCaptureJob(activeStillJobId, (job) =>
+          cancelCaptureJob(job, {
+            reason: "Camera Path preview still save was cancelled.",
+          }),
+        );
+        return;
+      }
+      const outputUrl = URL.createObjectURL(blob);
+      const cleanup = () => URL.revokeObjectURL(outputUrl);
+      screenCaptureOutputCleanupRef.current = cleanup;
+      setScreenCaptureOutputBlob(blob);
+      setScreenCaptureOutputUrl(outputUrl);
+      setScreenCaptureOutputFilename(saveFilename);
+      setScreenCaptureSaveMessage(
+        saveResult.status === "saved"
+          ? "Camera Path preview still saved. Download link ready."
+          : "Save picker unavailable. Download link ready.",
+      );
+      setScreenCaptureStatus("complete");
+      finishCaptureJob(activeStillJobId, (job) =>
+        completeCaptureJob(job, {
+          output: {
+            blob,
+            url: outputUrl,
+            filename: saveFilename,
+            mimeType,
+            byteLength: blob.size,
+            cleanup,
+          },
+          diagnostics: {
+            outputByteLength: blob.size,
+            saveDestination: saveResult.status,
+            width: 3840,
+            height: 2160,
+            source: "camera-path-preview-renderer",
+            timeSeconds: cameraPathPreviewMonitor.timeSeconds,
+            previewLabel: label,
+          },
+        }),
+      );
+    } catch (captureError) {
+      setScreenCaptureStatus("idle");
+      clearScreenCaptureOutput();
+      setError(formatCaptureError(captureError));
+      finishCaptureJob(activeStillJobId, (job) => failCaptureJob(job, captureError));
+    } finally {
+      sceneHandle.endCaptureFullResolutionAssets();
+    }
+  }, [
+    activeCaptureJob,
+    beginCaptureJob,
+    cameraPathPreviewMonitor,
+    captureCameraPathV3,
+    clearScreenCaptureOutput,
+    finishCaptureJob,
+    isDeterministicExporting,
+    isRecording,
+    sceneHandle,
+    screenCaptureStatus,
+    state.manifest.id,
+    state.projectSlug,
+    updateCaptureJob,
   ]);
 
   const saveRecipe = useCallback(() => {
@@ -5705,8 +6097,10 @@ export function CaptureDirectorProvider({
       addCurrentPageClip,
       addPageClip,
       addPageRangeClips,
+      replacePageClipPage,
       removePageClip,
       clearPageClips,
+      editPageClipFrames,
       setPageClipEnabled,
       setPageClipLocked,
       selectPageClip,
@@ -5731,6 +6125,7 @@ export function CaptureDirectorProvider({
       beginCameraPathFocusPick,
       cameraPathScrubTimeSeconds,
       setCameraPathScrubTimeSeconds,
+      setScrollPlayheadSeconds,
       cameraPathTimelinePlaying,
       playCameraPathTimeline,
       pauseCameraPathTimeline,
@@ -5823,6 +6218,7 @@ export function CaptureDirectorProvider({
       externalStillJobUrl,
       externalStillJobFilename,
       externalStillJobCommand,
+      saveCameraPathPreviewStill,
       externalVideoJobUrl,
       externalVideoJobFilename,
       externalVideoJobCommand,
@@ -5851,6 +6247,7 @@ export function CaptureDirectorProvider({
       scrollAdvancedOpen,
       setScrollAdvancedOpen,
       scrollPreviewState,
+      scrollPreviewTrace,
       playScrollPreview,
       pauseScrollPreview,
       stopScrollPreview,
@@ -5889,6 +6286,8 @@ export function CaptureDirectorProvider({
       addCurrentPageClip,
       addPageClip,
       addPageRangeClips,
+      replacePageClipPage,
+      removePageClip,
       capturePageOptions,
       capturePageRange,
       captureMode,
@@ -5909,6 +6308,7 @@ export function CaptureDirectorProvider({
       beginCameraPathFocusPick,
       cameraPathScrubTimeSeconds,
       setCameraPathScrubTimeSeconds,
+      setScrollPlayheadSeconds,
       cameraPathTimelinePlaying,
       playCameraPathTimeline,
       pauseCameraPathTimeline,
@@ -5976,6 +6376,7 @@ export function CaptureDirectorProvider({
       deterministicOutputFilename,
       deterministicOutputUrl,
       equalHoldSeconds,
+      editPageClipFrames,
       externalStillJobFilename,
       externalStillJobCommand,
       externalStillJobUrl,
@@ -6010,6 +6411,7 @@ export function CaptureDirectorProvider({
       scrollOutputPackageName,
       scrollAdvancedOpen,
       scrollPreviewState,
+      scrollPreviewTrace,
       playScrollPreview,
       pauseScrollPreview,
       stopScrollPreview,
@@ -6042,6 +6444,7 @@ export function CaptureDirectorProvider({
       screenCaptureQuality,
       screenCaptureSaveMessage,
       screenCaptureType,
+      saveCameraPathPreviewStill,
       setEqualHoldSeconds,
       setPageClipEnabled,
       setPageClipLocked,

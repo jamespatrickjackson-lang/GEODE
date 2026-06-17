@@ -738,8 +738,10 @@ export function CaptureDirectorToolbar() {
     addCurrentPageClip,
     addPageClip,
     addPageRangeClips,
+    replacePageClipPage,
+    removePageClip,
     clearPageClips,
-    setPageClipEnabled,
+    editPageClipFrames,
     setPageClipLocked,
     selectPageClip,
     resizeTimelineBoundary,
@@ -760,7 +762,7 @@ export function CaptureDirectorToolbar() {
     beginCameraPathFocusPick,
     cameraPathScrubTimeSeconds,
     setCameraPathScrubTimeSeconds,
-    cameraPathTimelinePlaying,
+    setScrollPlayheadSeconds,
     cameraPathVisible,
     setCameraPathVisible,
     cameraPathPlaying,
@@ -834,6 +836,7 @@ export function CaptureDirectorToolbar() {
     externalStillJobUrl,
     externalStillJobFilename,
     externalStillJobCommand,
+    saveCameraPathPreviewStill,
     externalVideoJobUrl,
     externalVideoJobFilename,
     externalVideoJobCommand,
@@ -861,6 +864,7 @@ export function CaptureDirectorToolbar() {
     scrollAdvancedOpen,
     setScrollAdvancedOpen,
     scrollPreviewState,
+    scrollPreviewTrace,
     playScrollPreview,
     pauseScrollPreview,
     stopScrollPreview,
@@ -1123,6 +1127,27 @@ export function CaptureDirectorToolbar() {
   const recipeActions = (
     <div data-testid="capture-recipe-actions" style={recipeActionsStyle}>
       <button
+        data-testid="capture-path-preview-save-4k"
+        aria-label="Save Camera Path preview at 4K"
+        title="Save Camera Path preview at 4K"
+        type="button"
+        disabled={!cameraPathPreviewMonitor.visible || screenCaptureStatus === "rendering"}
+        onClick={() => void saveCameraPathPreviewStill()}
+        style={{
+          ...recipeIconButtonStyle,
+          opacity:
+            cameraPathPreviewMonitor.visible && screenCaptureStatus !== "rendering"
+              ? 1
+              : 0.45,
+          cursor:
+            cameraPathPreviewMonitor.visible && screenCaptureStatus !== "rendering"
+              ? "pointer"
+              : "not-allowed",
+        }}
+      >
+        <RecipeActionIcon kind="save" testId="capture-path-preview-icon-save-4k" />
+      </button>
+      <button
         data-testid="capture-save-recipe"
         aria-label="Save recipe"
         title="Save recipe"
@@ -1188,11 +1213,11 @@ export function CaptureDirectorToolbar() {
     >
       <button
         data-testid="capture-timeline-play"
-        aria-label="Play timeline"
-        title="Play"
+        aria-label="Play scroll timeline"
+        title="Play scroll timeline"
         type="button"
         disabled={!cameraPathPlaybackValidation.valid}
-        onClick={playCameraPath}
+        onClick={playScrollPreview}
         style={transportButtonStyle}
       >
         <span
@@ -1203,10 +1228,10 @@ export function CaptureDirectorToolbar() {
       </button>
       <button
         data-testid="capture-timeline-pause"
-        aria-label="Pause timeline"
-        title="Pause"
+        aria-label="Pause scroll timeline"
+        title="Pause scroll timeline"
         type="button"
-        onClick={stopCameraPathPlayback}
+        onClick={pauseScrollPreview}
         style={transportButtonStyle}
       >
         <span
@@ -1217,11 +1242,11 @@ export function CaptureDirectorToolbar() {
       </button>
       <button
         data-testid="capture-timeline-record-preview"
-        aria-label="Record path preview"
-        title="Record path preview"
+        aria-label="Open scroll record"
+        title="Open scroll record"
         type="button"
         disabled={!cameraPathPlaybackValidation.valid}
-        onClick={() => void startCameraPathPreviewRecording()}
+        onClick={openScrollRecordPopout}
         style={transportPrimaryButtonStyle}
       >
         <span
@@ -3132,6 +3157,15 @@ export function CaptureDirectorToolbar() {
               </div>
             </div>
           )}
+          {import.meta.env.DEV && (
+            <pre
+              data-testid="capture-scroll-preview-trace"
+              hidden
+              aria-hidden="true"
+            >
+              {JSON.stringify(scrollPreviewTrace)}
+            </pre>
+          )}
           <CameraPathTimeline
             path={captureCameraPathV3}
             timeline={cameraPathTimeline}
@@ -3140,17 +3174,15 @@ export function CaptureDirectorToolbar() {
             selectedNodeId={selectedCameraPathNodeId ?? selectedCameraPathKeyframeId}
             selectedSegmentId={selectedCameraPathSegmentId}
             scrubSeconds={timelineScrubSeconds}
-            canPlay={cameraPathPlaybackValidation.valid}
-            isPlaying={cameraPathTimelinePlaying}
             onScrub={setCameraPathScrubTimeSeconds}
-            onPlay={playCameraPath}
-            onPause={stopCameraPathPlayback}
+            onSetScrollPlayheadSeconds={setScrollPlayheadSeconds}
             onAddCurrentCamera={addCurrentCameraKeyframe}
             onAddCurrentPageClip={addCurrentPageClip}
-            onAddPageClip={() => {
-              const pageId = pageRangeStartId ?? capturePageOptions[0]?.id;
-              if (pageId) addPageClip(pageId);
-            }}
+            pageOptions={capturePageOptions}
+            onAddPageClip={addPageClip}
+            onReplacePageClipPage={replacePageClipPage}
+            onRemovePageClip={removePageClip}
+            onEditPageClipFrames={editPageClipFrames}
             onAddPageRangeClips={() => {
               const startId = pageRangeStartId ?? capturePageOptions[0]?.id;
               const endId = pageRangeEndId ?? startId;
@@ -3171,7 +3203,6 @@ export function CaptureDirectorToolbar() {
             onSelectTimelineTrack={setSelectedTimelineTrack}
             onSetNodeHoldSeconds={setCameraPathNodeHoldSecondsAfter}
             onSetSegmentTransitionSeconds={setCameraPathSegmentTransitionSeconds}
-            onSetPageClipEnabled={setPageClipEnabled}
             onSetPageClipLocked={setPageClipLocked}
             onResizeTimelineBoundary={resizeTimelineBoundary}
           />

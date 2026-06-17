@@ -24,6 +24,13 @@ import type { SceneHandle, SceneTargetBox, SceneTargetEventDetail } from "../sce
 import { CameraTweener } from "./cameraTween";
 import { applyPose } from "./capturePose";
 import {
+  clearCapturePageSourcePreviewDebugState,
+  resolveCapturePageSourcePreview,
+  type CapturePageSourcePreviewReason,
+  type CapturePageSourcePreviewSample,
+  type CapturePageSourcePreviewDebugState,
+} from "./capturePageSourcePreview";
+import {
   poseForFocusFit,
   poseForFocusZoom,
   vec3FromArray,
@@ -84,18 +91,6 @@ type ReapplyCurrentPageStateReason =
   | "state-reapply"
   | "async-layer-resolve"
   | "editor-deferred-flush";
-
-type CapturePageSourcePreviewReason =
-  | "capture-scroll-preview"
-  | "capture-scroll-record";
-
-interface CapturePageSourcePreviewSample {
-  sourcePageId: string | null;
-  targetPageId: string | null;
-  transitionProgress: number;
-  transitionEasing: CaptureTimelineTransitionEasing;
-  reason: CapturePageSourcePreviewReason;
-}
 
 interface PageTransitionFrame {
   active: boolean;
@@ -1043,6 +1038,12 @@ export function PageControllerProvider({
   const transitionRunRef = useRef<TransitionRunDebugState | null>(null);
   const lastTransitionRunRef = useRef<TransitionRunDebugState | null>(null);
   const capturePageSourcePreviewActiveRef = useRef(false);
+  const lastCapturePageSourcePreviewRef =
+    useRef<CapturePageSourcePreviewDebugState | null>(null);
+  const [capturePageSourcePreviewTrace, setCapturePageSourcePreviewTrace] =
+    useState<CapturePageSourcePreviewDebugState>(() =>
+      clearCapturePageSourcePreviewDebugState(null, null),
+    );
   const smoothnessTraceSerialRef = useRef(0);
   const smoothnessTraceRef = useRef<TransitionSmoothnessTrace | null>(null);
   const smoothnessTraceFrameRef = useRef<number | null>(null);
@@ -2442,16 +2443,24 @@ export function PageControllerProvider({
   const previewCapturePageSource = useCallback(
     (sample: CapturePageSourcePreviewSample) => {
       const pagesNow = pagesRef.current;
-      const sourcePage = sample.sourcePageId
-        ? pagesNow.find((page) => page.id === sample.sourcePageId) ?? null
+      const previewState = resolveCapturePageSourcePreview({
+        sample,
+        pages: pagesNow,
+        currentIndex: currentIndexRef.current,
+      });
+      lastCapturePageSourcePreviewRef.current = previewState;
+      setCapturePageSourcePreviewTrace(previewState);
+      const sourcePage = previewState.resolvedSourcePageId
+        ? pagesNow.find((page) => page.id === previewState.resolvedSourcePageId) ?? null
         : null;
-      const targetPage = sample.targetPageId
-        ? pagesNow.find((page) => page.id === sample.targetPageId) ?? null
+      const targetPage = previewState.resolvedTargetPageId
+        ? pagesNow.find((page) => page.id === previewState.resolvedTargetPageId) ?? null
         : null;
       const currentPage = pagesNow[currentIndexRef.current] ?? null;
-      const transitionProgress = clamp01(sample.transitionProgress);
+      const transitionProgress = previewState.transitionProgress;
 
       if (
+        previewState.transitionActive &&
         sourcePage &&
         targetPage &&
         sourcePage.id !== targetPage.id &&
@@ -2563,6 +2572,14 @@ export function PageControllerProvider({
 
   const clearCapturePageSourcePreview = useCallback(
     (_reason: CapturePageSourcePreviewReason) => {
+      const selectedCurrentPageId =
+        pagesRef.current[currentIndexRef.current]?.id ?? null;
+      const clearedTrace = clearCapturePageSourcePreviewDebugState(
+        lastCapturePageSourcePreviewRef.current,
+        selectedCurrentPageId,
+      );
+      lastCapturePageSourcePreviewRef.current = clearedTrace;
+      setCapturePageSourcePreviewTrace(clearedTrace);
       if (!capturePageSourcePreviewActiveRef.current) return;
       capturePageSourcePreviewActiveRef.current = false;
       activeSceneTransitionRef.current = null;
@@ -3168,14 +3185,26 @@ export function PageControllerProvider({
       getState: () => {
         const transitionRun = snapshotTransitionRun(transitionRunRef.current);
         const transitionFrame = transitionFrameState(transitionRun);
+        const currentPageId =
+          pagesRef.current[currentIndexRef.current]?.id ?? null;
+        const capturePreviewState =
+          lastCapturePageSourcePreviewRef.current ??
+          clearCapturePageSourcePreviewDebugState(null, currentPageId);
         return {
           currentIndex: currentIndexRef.current,
-          currentPageId: pagesRef.current[currentIndexRef.current]?.id ?? null,
+          currentPageId,
           targetIndex: targetIndexRef.current,
           targetPageId:
             targetIndexRef.current !== null
               ? pagesRef.current[targetIndexRef.current]?.id ?? null
               : null,
+          capturePageSourcePreview: {
+            ...capturePreviewState,
+            active:
+              capturePageSourcePreviewActiveRef.current &&
+              capturePreviewState.active,
+            selectedCurrentPageId: currentPageId,
+          },
           transitionProgress: transitionFrame.progress,
           transitionFrame,
           isTransitioning: isTransitioningRef.current,
@@ -3290,6 +3319,15 @@ export function PageControllerProvider({
 
   return (
     <PageControllerContext.Provider value={value}>
+      {import.meta.env.DEV && (
+        <pre
+          data-testid="capture-page-source-preview-trace"
+          hidden
+          aria-hidden="true"
+        >
+          {JSON.stringify(capturePageSourcePreviewTrace)}
+        </pre>
+      )}
       {children}
     </PageControllerContext.Provider>
   );
