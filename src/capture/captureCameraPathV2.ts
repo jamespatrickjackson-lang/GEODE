@@ -222,6 +222,17 @@ function lerpVec3(a: CaptureVec3, b: CaptureVec3, t: number): CaptureVec3 {
   return [lerp(a[0], b[0], t), lerp(a[1], b[1], t), lerp(a[2], b[2], t)];
 }
 
+function uniqueNodeId(path: CaptureCameraPathV2, baseId: string): string {
+  const existing = new Set(path.nodes.map((node) => node.id));
+  const safeBase = baseId.trim() || captureCameraPathV2NodeId(path.nodes.length);
+  if (!existing.has(safeBase)) return safeBase;
+  for (let index = 2; index < 1000; index += 1) {
+    const candidate = `${safeBase}-${index}`;
+    if (!existing.has(candidate)) return candidate;
+  }
+  return `${safeBase}-${Date.now()}`;
+}
+
 function safeSeconds(value: unknown): number {
   return finiteNumber(value) ? Math.max(0, value) : 0;
 }
@@ -895,6 +906,131 @@ export function cameraPathV2NodeFromPose({
     lookMode,
     ...(focusPointId ? { focusPointId } : {}),
   };
+}
+
+export function linearizeCaptureCameraPathV2Transitions(
+  inputPath: CaptureCameraPathV2,
+): CaptureCameraPathV2 {
+  const path = normalizeCaptureCameraPathV2(inputPath);
+  return normalizeCaptureCameraPathV2({
+    ...path,
+    nodes: path.nodes.map((node) =>
+      node.kind === "transition"
+        ? { ...node, holdSecondsAfter: 0 }
+        : node,
+    ),
+    segments: path.segments.map((segment) => ({
+      ...segment,
+      easing: "linear" as const,
+    })),
+  });
+}
+
+export function insertCaptureCameraPathV2Orbit360(
+  inputPath: CaptureCameraPathV2,
+  sourceNodeId: string | null | undefined,
+  options: {
+    orbitDurationSeconds?: number;
+    orbitStepCount?: number;
+  } = {},
+): CaptureCameraPathV2 {
+  const path = linearizeCaptureCameraPathV2Transitions(inputPath);
+  const sourceIndex = path.nodes.findIndex((node) => node.id === sourceNodeId);
+  if (sourceIndex < 0) return path;
+  const sourceNode = path.nodes[sourceIndex];
+  if (sourceNode.kind !== "keyframe") return path;
+
+  const orbitStepCount = Math.max(
+    4,
+    Math.min(32, Math.round(options.orbitStepCount ?? 12)),
+  );
+  const orbitDurationSeconds =
+    Number.isFinite(options.orbitDurationSeconds) &&
+    (options.orbitDurationSeconds ?? 0) > 0
+      ? Math.min(120, Math.max(0.1, options.orbitDurationSeconds ?? 4))
+      : 4;
+  const orbitStepSeconds = orbitDurationSeconds / orbitStepCount;
+  const sourcePose = poseFromNode(path, sourceNode);
+  const offset = subVec3(sourcePose.position, sourcePose.target);
+  const horizontalRadius = Math.hypot(offset[0], offset[1]);
+  const radius = horizontalRadius > 0.000_001 ? horizontalRadius : 1;
+  const startAngle = horizontalRadius > 0.000_001 ? Math.atan2(offset[1], offset[0]) : 0;
+  const zOffset = offset[2];
+  const orbitNodes: CaptureCameraPathNodeV2[] = [];
+  for (let step = 1; step <= orbitStepCount; step += 1) {
+    const angle = startAngle + (Math.PI * 2 * step) / orbitStepCount;
+    const position: CaptureVec3 =
+      step === orbitStepCount
+        ? cloneVec3(sourcePose.position)
+        : [
+            sourcePose.target[0] + Math.cos(angle) * radius,
+            sourcePose.target[1] + Math.sin(angle) * radius,
+            sourcePose.target[2] + zOffset,
+          ];
+    orbitNodes.push({
+      ...cameraPathV2NodeFromPose({
+        id: uniqueNodeId(path, `${sourceNode.id}-orbit-${String(step).padStart(2, "0")}`),
+        kind: "transition",
+        pose: {
+          position,
+          target: cloneVec3(sourcePose.target),
+          up: cloneVec3(sourcePose.up),
+          fov: sourcePose.fov,
+        },
+        lookMode: sourceNode.lookMode,
+        focusPointId: sourceNode.focusPointId,
+      }),
+      label: `Orbit 360 ${step}/${orbitStepCount}`,
+    });
+  }
+
+  const outgoingSegment = path.segments.find(
+    (segment) => segment.fromNodeId === sourceNode.id,
+  );
+  const orbitSegments: CaptureCameraPathSegmentV2[] = [];
+  let fromNodeId = sourceNode.id;
+  for (const orbitNode of orbitNodes) {
+    orbitSegments.push({
+      id: captureCameraPathV2SegmentId(fromNodeId, orbitNode.id),
+      fromNodeId,
+      toNodeId: orbitNode.id,
+      enabled: true,
+      hidden: false,
+      transitionSeconds: orbitStepSeconds,
+      easing: "linear",
+    });
+    fromNodeId = orbitNode.id;
+  }
+  if (outgoingSegment) {
+    orbitSegments.push({
+      ...outgoingSegment,
+      id: captureCameraPathV2SegmentId(fromNodeId, outgoingSegment.toNodeId),
+      fromNodeId,
+      easing: "linear",
+    });
+  }
+
+  const nodes = [
+    ...path.nodes.slice(0, sourceIndex + 1),
+    ...orbitNodes,
+    ...path.nodes.slice(sourceIndex + 1),
+  ];
+  const segments = outgoingSegment
+    ? path.segments.flatMap((segment) =>
+        segment.id === outgoingSegment.id
+          ? orbitSegments
+          : [{ ...segment, easing: "linear" as const }],
+      )
+    : [...path.segments, ...orbitSegments].map((segment) => ({
+        ...segment,
+        easing: "linear" as const,
+      }));
+
+  return normalizeCaptureCameraPathV2({
+    ...path,
+    nodes,
+    segments,
+  });
 }
 
 export function resolveCaptureCameraPathV2Timeline(

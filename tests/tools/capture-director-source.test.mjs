@@ -1093,6 +1093,90 @@ test("Capture Director provider exposes Camera Path v3 state, compatibility mirr
   }
 });
 
+test("Camera Path authoring exposes orbit insertion, kind pickers, junction markers, and linear transitions", () => {
+  const pathSource = readSource("src", "capture", "captureCameraPathV2.ts");
+  const provider = readSource("src", "capture", "CaptureDirectorProvider.tsx");
+  const toolbar = readSource("src", "capture", "CaptureDirectorToolbar.tsx");
+  const timeline = readSource("src", "capture", "CameraPathTimeline.tsx");
+  const transitionEditor = readSource("src", "capture", "CameraPathTransitionEditor.tsx");
+
+  for (const expected of [
+    "insertCaptureCameraPathV2Orbit360",
+    "linearizeCaptureCameraPathV2Transitions",
+    "orbitStepCount",
+    "orbitDurationSeconds",
+    "Orbit 360",
+  ]) {
+    assert.ok(pathSource.includes(expected), `Camera Path V2 source should include ${expected}`);
+  }
+
+  for (const expected of [
+    "addCameraPathOrbit360",
+    "addCurrentCameraAsKind",
+    "linearizeCaptureCameraPathV2Transitions",
+    "linearizeCaptureCameraPathV3Transitions",
+    "timeCurve: { mode: \"linear\" }",
+    "easing: \"linear\"",
+  ]) {
+    assert.ok(provider.includes(expected), `provider should include ${expected}`);
+  }
+  const cameraPathAuthoringStart = provider.indexOf("const addCurrentCameraAsKind");
+  const cameraPathAuthoringEnd = provider.indexOf("const setCameraPathNodeKind", cameraPathAuthoringStart);
+  assert.ok(
+    cameraPathAuthoringStart >= 0 && cameraPathAuthoringEnd > cameraPathAuthoringStart,
+    "provider camera path authoring block should be locatable",
+  );
+  const cameraPathAuthoringBlock = provider.slice(cameraPathAuthoringStart, cameraPathAuthoringEnd);
+  assert.equal(
+    cameraPathAuthoringBlock.includes('easing: "ease-in-out"'),
+    false,
+    "provider should not author Camera Path transitions with ease-in-out",
+  );
+
+  for (const expected of [
+    "cameraAddKindPopover",
+    "openCameraAddKindPopover",
+    "capture-camera-add-kind-popover",
+    "capture-timeline-add-camera-kind-popover",
+    "capture-camera-add-kind-keyframe",
+    "capture-camera-add-kind-transition",
+    "capture-path-orbit-360",
+    "addCameraPathOrbit360",
+  ]) {
+    assert.ok(toolbar.includes(expected), `toolbar should expose ${expected}`);
+  }
+  assert.equal(
+    toolbar.includes('data-testid="capture-keyframe-add" type="button" onClick={addCurrentCameraKeyframe}'),
+    false,
+    "Add Current Camera should open a kind picker instead of directly adding a keyframe",
+  );
+
+  for (const expected of [
+    "capture-timeline-node-kind-marker",
+    "capture-timeline-node-kind-keyframe",
+    "capture-timeline-node-kind-transition",
+    "onOpenCameraNodeKindPicker",
+    "onAddCurrentCamera(event, \"timeline\")",
+    "onDoubleClick",
+    "data-node-kind",
+    "triangle",
+    "circle",
+  ]) {
+    assert.ok(timeline.includes(expected), `Camera Path timeline should include ${expected}`);
+  }
+
+  const easingBlock =
+    transitionEditor.match(/data-testid="capture-path-transition-easing"[\s\S]*?<\/select>/)?.[0] ?? "";
+  const curveBlock =
+    transitionEditor.match(/data-testid="capture-path-time-curve"[\s\S]*?<\/select>/)?.[0] ?? "";
+  assert.ok(easingBlock.includes('<option value="linear">Linear</option>'));
+  assert.equal(easingBlock.includes("ease-in-out"), false);
+  assert.ok(curveBlock.includes('<option value="linear">Linear</option>'));
+  assert.equal(curveBlock.includes("ease-in"), false);
+  assert.equal(curveBlock.includes("ease-out"), false);
+  assert.equal(curveBlock.includes("custom-ramp"), false);
+});
+
 test("Capture Director provider guards Play Path and preview recording with playback validation", () => {
   const provider = readSource("src", "capture", "CaptureDirectorProvider.tsx");
   for (const expected of [
@@ -1782,8 +1866,8 @@ test("Capture Camera Path v2 UI exposes row editors, transition editors, and tim
       source.includes("render: false") &&
       source.includes("still: false") &&
       source.includes('"camera-path": false') &&
-      source.includes("onAddCurrentCamera={addCurrentCameraKeyframe}"),
-    "Capture Director panels should start collapsed and timeline plus button should add the current camera",
+      source.includes("onAddCurrentCamera={openCameraAddKindPopover}"),
+    "Capture Director panels should start collapsed and timeline plus button should open the camera kind picker",
   );
   assert.ok(
     providerSource.includes(

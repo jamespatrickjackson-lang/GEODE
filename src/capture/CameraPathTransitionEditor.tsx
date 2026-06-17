@@ -141,9 +141,6 @@ export function CameraPathTransitionEditor({
 }) {
   const enabled = segment.enabled !== false;
   const hidden = segment.hidden === true;
-  const timeCurve = v3Segment?.timeCurve ?? {
-    mode: segment.easing === "ease-in-out" ? "ease-in-out" : "linear",
-  };
   const fairing = v3Segment?.pathFairing ?? {
     continuity: "G1" as const,
     tension: 0.35,
@@ -237,29 +234,24 @@ export function CameraPathTransitionEditor({
           <span>Easing</span>
           <select
             data-testid="capture-path-transition-easing"
-            value={segment.easing}
+            value="linear"
             onChange={(event) =>
-              onEasingChange(segment.id, event.currentTarget.value as "linear" | "ease-in-out")
+              onEasingChange(segment.id, event.currentTarget.value as "linear")
             }
             style={fieldStyle}
           >
             <option value="linear">Linear</option>
-            <option value="ease-in-out">Ease</option>
           </select>
         </label>
         <label style={labelStyle}>
           <span>Curve</span>
           <select
             data-testid="capture-path-time-curve"
-            value={timeCurve.mode}
+            value="linear"
             onChange={(event) => setTimeCurveMode(event.currentTarget.value as CaptureCameraPathTimeCurveModeV3)}
             style={fieldStyle}
           >
             <option value="linear">Linear</option>
-            <option value="ease-in">Ease in</option>
-            <option value="ease-out">Ease out</option>
-            <option value="ease-in-out">Ease in/out</option>
-            <option value="custom-ramp">Custom ramp</option>
           </select>
         </label>
       </div>

@@ -36,6 +36,8 @@ import {
   captureCameraPathV2NodeId,
   captureCameraPathV2SegmentId,
   createCaptureCameraPathV2Recorder,
+  insertCaptureCameraPathV2Orbit360,
+  linearizeCaptureCameraPathV2Transitions,
   moveCaptureCameraPathV2NodePosition,
   moveCaptureCameraPathV2NodeTarget,
   moveCaptureCameraPathV2SegmentAdjacentPositions,
@@ -323,7 +325,9 @@ interface CaptureDirectorContextValue {
   stopCameraPathPlayback(): void;
   startCameraPathPreviewRecording(): Promise<void>;
   addCameraPathKeyframe(): void;
+  addCurrentCameraAsKind(kind: CaptureCameraPathNodeKindV2): void;
   addCameraPathTransitionNode(segmentId?: string | null): void;
+  addCameraPathOrbit360(nodeId?: string | null): void;
   setCameraPathNodeKind(nodeId: string, kind: CaptureCameraPathNodeKindV2): void;
   setCameraPathNodeEnabled(nodeId: string, enabled: boolean): void;
   setCameraPathNodeHidden(nodeId: string, hidden: boolean): void;
@@ -684,6 +688,18 @@ function deterministicExportDurationSeconds(): number {
     return Math.min(override, DETERMINISTIC_EXPORT_DURATION_SECONDS);
   }
   return DETERMINISTIC_EXPORT_DURATION_SECONDS;
+}
+
+function linearizeCaptureCameraPathV3Transitions(
+  inputPath: CaptureCameraPathV3,
+): CaptureCameraPathV3 {
+  return normalizeCaptureCameraPathV3({
+    ...inputPath,
+    segments: inputPath.segments.map((segment) => ({
+      ...segment,
+      timeCurve: { mode: "linear" },
+    })),
+  });
 }
 
 function captureCapabilitiesForPreflight(sceneHandle: SceneHandle): {
@@ -2944,7 +2960,7 @@ export function CaptureDirectorProvider({
   }, []);
 
   const applyCaptureCameraPathV3 = useCallback((nextPath: CaptureCameraPathV3) => {
-    const normalized = normalizeCaptureCameraPathV3(nextPath);
+    const normalized = linearizeCaptureCameraPathV3Transitions(nextPath);
     setCaptureCameraPathV3(normalized);
     setCaptureCameraPathV2(downgradeCaptureCameraPathV3ToV2(normalized));
     setCameraPathDisplayOptionsState(normalized.displayOptions);
@@ -2957,7 +2973,7 @@ export function CaptureDirectorProvider({
   }, [fps]);
 
   const applyCaptureCameraPathV2 = useCallback((nextPath: CaptureCameraPathV2) => {
-    const normalized = normalizeCaptureCameraPathV2(nextPath);
+    const normalized = linearizeCaptureCameraPathV2Transitions(nextPath);
     const upgraded = upgradeCaptureCameraPathV2ToV3(normalized);
     setCaptureCameraPathV2(normalized);
     setCaptureCameraPathV3(upgraded);
@@ -3059,12 +3075,12 @@ export function CaptureDirectorProvider({
     setScreenCaptureQualityState(Math.max(0.01, safeQuality));
   }, []);
 
-  const addCurrentCameraKeyframe = useCallback(() => {
+  const addCurrentCameraAsKind = useCallback((kind: CaptureCameraPathNodeKindV2) => {
     const pose = capturePose(sceneHandle.camera, sceneHandle.controls);
     const nodeId = captureCameraPathV2NodeId(captureCameraPathV2.nodes.length);
     const nodes = [
       ...captureCameraPathV2.nodes,
-      cameraPathV2NodeFromPose({ id: nodeId, kind: "keyframe", pose }),
+      cameraPathV2NodeFromPose({ id: nodeId, kind, pose }),
     ];
     const segments = [...captureCameraPathV2.segments];
     const previous = captureCameraPathV2.nodes[captureCameraPathV2.nodes.length - 1];
@@ -3076,7 +3092,7 @@ export function CaptureDirectorProvider({
         enabled: true,
         hidden: false,
         transitionSeconds: 2,
-        easing: "ease-in-out",
+        easing: "linear",
       });
     }
     const next = applyCaptureCameraPathV2({
@@ -3088,6 +3104,10 @@ export function CaptureDirectorProvider({
     setSelectedCameraPathNodeId(nodeId);
     setCameraPathScrubTimeSecondsState(next.timeline.durationSeconds);
   }, [applyCaptureCameraPathV2, captureCameraPathV2, sceneHandle]);
+
+  const addCurrentCameraKeyframe = useCallback(() => {
+    addCurrentCameraAsKind("keyframe");
+  }, [addCurrentCameraAsKind]);
 
   const addCameraPathKeyframe = addCurrentCameraKeyframe;
 
@@ -3199,7 +3219,7 @@ export function CaptureDirectorProvider({
             entry.id === segmentId || entry.id === selectedCameraPathSegmentId,
         ) ?? captureCameraPathV2.segments[captureCameraPathV2.segments.length - 1];
       if (!segment) {
-        addCurrentCameraKeyframe();
+        addCurrentCameraAsKind("transition");
         return;
       }
       const fromIndex = captureCameraPathV2.nodes.findIndex(
@@ -3232,7 +3252,7 @@ export function CaptureDirectorProvider({
             enabled: segment.enabled,
             hidden: segment.hidden,
             transitionSeconds: splitSeconds,
-            easing: segment.easing,
+            easing: "linear",
           },
           {
             id: captureCameraPathV2SegmentId(nodeId, segment.toNodeId),
@@ -3241,7 +3261,7 @@ export function CaptureDirectorProvider({
             enabled: segment.enabled,
             hidden: segment.hidden,
             transitionSeconds: splitSeconds,
-            easing: segment.easing,
+            easing: "linear",
           },
         ]);
       applyCaptureCameraPathV2({ ...captureCameraPathV2, nodes, segments });
@@ -3250,10 +3270,37 @@ export function CaptureDirectorProvider({
       setSelectedCameraPathSegmentId(null);
     },
     [
-      addCurrentCameraKeyframe,
+      addCurrentCameraAsKind,
       applyCaptureCameraPathV2,
       captureCameraPathV2,
       selectedCameraPathSegmentId,
+    ],
+  );
+
+  const addCameraPathOrbit360 = useCallback(
+    (nodeId?: string | null) => {
+      const targetNodeId =
+        nodeId ??
+        selectedCameraPathNodeId ??
+        [...captureCameraPathV2.nodes]
+          .reverse()
+          .find((node) => node.kind === "keyframe")?.id ??
+        null;
+      if (!targetNodeId) return;
+      const next = applyCaptureCameraPathV2(
+        insertCaptureCameraPathV2Orbit360(captureCameraPathV2, targetNodeId),
+      );
+      setSelectedCameraPathNodeId(targetNodeId);
+      setSelectedCameraPathKeyframeId(targetNodeId);
+      setSelectedCameraPathSegmentId(null);
+      setCameraPathScrubTimeSecondsState(
+        next.nodes.find((node) => node.id === targetNodeId)?.timeSeconds ?? 0,
+      );
+    },
+    [
+      applyCaptureCameraPathV2,
+      captureCameraPathV2,
+      selectedCameraPathNodeId,
     ],
   );
 
@@ -3332,8 +3379,9 @@ export function CaptureDirectorProvider({
 
   const setCameraPathSegmentEasing = useCallback(
     (segmentId: string, easing: "linear" | "ease-in-out") => {
+      void easing;
       applyCaptureCameraPathV2(
-        setCaptureCameraPathV2SegmentEasing(captureCameraPathV2, segmentId, easing),
+        setCaptureCameraPathV2SegmentEasing(captureCameraPathV2, segmentId, "linear"),
       );
     },
     [applyCaptureCameraPathV2, captureCameraPathV2],
@@ -3391,10 +3439,11 @@ export function CaptureDirectorProvider({
 
   const setCameraPathSegmentTimeCurve = useCallback(
     (segmentId: string, curve: CaptureCameraPathTimeCurveV3) => {
+      void curve;
       applyCaptureCameraPathV3({
         ...captureCameraPathV3,
         segments: captureCameraPathV3.segments.map((segment) =>
-          segment.id === segmentId ? { ...segment, timeCurve: curve } : segment,
+          segment.id === segmentId ? { ...segment, timeCurve: { mode: "linear" } } : segment,
         ),
       });
     },
@@ -6168,7 +6217,9 @@ export function CaptureDirectorProvider({
       stopCameraPathPlayback,
       startCameraPathPreviewRecording,
       addCameraPathKeyframe,
+      addCurrentCameraAsKind,
       addCameraPathTransitionNode,
+      addCameraPathOrbit360,
       setCameraPathNodeKind,
       setCameraPathNodeEnabled,
       setCameraPathNodeHidden,
@@ -6352,7 +6403,9 @@ export function CaptureDirectorProvider({
       stopCameraPathPlayback,
       startCameraPathPreviewRecording,
       addCameraPathKeyframe,
+      addCurrentCameraAsKind,
       addCameraPathTransitionNode,
+      addCameraPathOrbit360,
       setCameraPathNodeKind,
       setCameraPathNodeEnabled,
       setCameraPathNodeHidden,
