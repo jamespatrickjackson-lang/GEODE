@@ -342,7 +342,6 @@ test("Capture Director exposes Scroll Animation path-based package controls", ()
     "capture-scroll-pause",
     "capture-scroll-stop",
     "capture-scroll-record",
-    "capture-scroll-record-popout",
     "capture-scroll-advanced-toggle",
     "Accept and Render",
     "Open Output",
@@ -1391,7 +1390,7 @@ test("Capture Director Playwright specs are split and legacy monolith is not tim
     .filter((timeoutMs) => timeoutMs > 120_000);
   const allInOneSignals = [
     "Realtime Capture",
-    "Render Out",
+    "Video Capture",
     "Still Capture",
     "Camera Path",
   ].filter((label) => legacySource.includes(label));
@@ -1421,7 +1420,7 @@ test("Capture Director workflow UI is split into task panels", () => {
     "capture-realtime-panel",
     "Realtime Capture",
     "capture-render-panel",
-    "Render Out",
+    "Video Capture",
     "capture-still-panel",
     "Still Capture",
     "capture-camera-path-panel",
@@ -3117,7 +3116,7 @@ test("Capture Director provider and toolbar expose split realtime and render-out
   }
   for (const expected of [
     "Realtime Capture",
-    "Render Out",
+    "Video Capture",
     "Camera Path",
     "capture-export-format-select",
     "capture-preview-resolution-select",
@@ -3285,7 +3284,7 @@ test("Capture Job Runtime and deterministic path render wiring exist", () => {
     "capture-path-render-download",
     "capture-path-render-status",
     "capture-path-render-details",
-    "Record Path Video",
+    "capture-path-record-start",
     "Convert Preview to MP4",
     "Download Preview MP4",
     "Save Preview MP4",

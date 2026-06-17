@@ -123,13 +123,6 @@ const dockStyle: CSSProperties = {
   fontFamily: TECHNICAL_MONO_FONT,
 };
 
-const headerStyle: CSSProperties = {
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "space-between",
-  gap: 10,
-  padding: "0 2px 2px",
-};
 
 const sectionStackStyle: CSSProperties = {
   display: "flex",
@@ -483,6 +476,58 @@ const recordIconStyle: CSSProperties = {
   background: "#ff3b3b",
   boxShadow: "0 0 0 2px rgba(255,255,255,0.16)",
 };
+
+const stopIconStyle: CSSProperties = {
+  width: 11,
+  height: 11,
+  borderRadius: 2,
+  background: "rgba(255,255,255,0.94)",
+};
+
+const TRANSPORT_ICON_STYLE: Record<
+  "play" | "pause" | "record" | "stop",
+  CSSProperties
+> = {
+  play: playIconStyle,
+  pause: pauseIconStyle,
+  record: recordIconStyle,
+  stop: stopIconStyle,
+};
+
+// Shared compact transport control. All container transports (Play / Pause /
+// Record / Stop) render as icon buttons; Stop sits at the end.
+function TransportIconButton({
+  testId,
+  label,
+  icon,
+  onClick,
+  disabled,
+  primary,
+}: {
+  testId: string;
+  label: string;
+  icon: "play" | "pause" | "record" | "stop";
+  onClick: () => void;
+  disabled?: boolean;
+  primary?: boolean;
+}) {
+  return (
+    <button
+      data-testid={testId}
+      type="button"
+      aria-label={label}
+      title={label}
+      disabled={disabled}
+      onClick={onClick}
+      style={{
+        ...(primary ? transportPrimaryButtonStyle : transportButtonStyle),
+        opacity: disabled ? 0.45 : 1,
+      }}
+    >
+      <span aria-hidden="true" style={TRANSPORT_ICON_STYLE[icon]} />
+    </button>
+  );
+}
 
 const previewMonitorPanelStyle: CSSProperties = {
   width: "100%",
@@ -1371,15 +1416,6 @@ export function CaptureDirectorToolbar() {
           style={toolbarRootStyle}
         >
           <div data-testid="capture-director-dock" style={dockStyle}>
-            <div data-testid="capture-director-panel" style={headerStyle}>
-              <span style={{ fontWeight: 780 }}>Capture Director</span>
-              <span style={statusStyle}>
-                {armedMode === "full-ui"
-                  ? "Full UI tutorial capture"
-                  : "App-owned marketing capture"}
-              </span>
-            </div>
-
             <div
               data-testid="capture-director-section-stack"
               style={sectionStackStyle}
@@ -1468,30 +1504,21 @@ export function CaptureDirectorToolbar() {
                 </label>
               </div>
               <div style={rowStyle}>
-                <button
-                  data-testid="capture-start"
-                  type="button"
+                <TransportIconButton
+                  testId="capture-start"
+                  label="Start realtime recording"
+                  icon="record"
+                  primary
                   disabled={isRecording || !canStart}
                   onClick={() => void startRecording()}
-                  style={{
-                    ...primaryButtonStyle,
-                    opacity: !isRecording && canStart ? 1 : 0.48,
-                  }}
-                >
-                  Start Recording
-                </button>
-                <button
-                  data-testid="capture-stop"
-                  type="button"
+                />
+                <TransportIconButton
+                  testId="capture-stop"
+                  label="Stop realtime recording"
+                  icon="stop"
                   disabled={!isRecording}
                   onClick={() => void stopRecording()}
-                  style={{
-                    ...stopButtonStyle,
-                    opacity: isRecording ? 1 : 0.48,
-                  }}
-                >
-                  Stop Recording
-                </button>
+                />
                 {outputUrl && (
                   <a
                     data-testid="capture-download"
@@ -1508,7 +1535,7 @@ export function CaptureDirectorToolbar() {
               <CollapsibleCaptureSection
                 panelTestId="capture-render-panel"
                 headerTestId="capture-render-header"
-                title="Render Out"
+                title="Video Capture"
                 expanded={expandedSections.render}
                 onToggle={() => updateSectionExpanded("render")}
                 status={
@@ -1952,46 +1979,31 @@ export function CaptureDirectorToolbar() {
                 {expandedSections["scroll-animation"] && (
                   <div style={barContentStyle}>
                     <div style={rowStyle}>
-                      <button
-                        data-testid="capture-scroll-play"
-                        type="button"
+                      <TransportIconButton
+                        testId="capture-scroll-play"
+                        label="Play scroll preview"
+                        icon="play"
                         onClick={playScrollPreview}
-                        style={buttonStyle}
-                      >
-                        Play
-                      </button>
-                      <button
-                        data-testid="capture-scroll-pause"
-                        type="button"
+                      />
+                      <TransportIconButton
+                        testId="capture-scroll-pause"
+                        label="Pause scroll preview"
+                        icon="pause"
                         onClick={pauseScrollPreview}
-                        style={buttonStyle}
-                      >
-                        Pause
-                      </button>
-                      <button
-                        data-testid="capture-scroll-stop"
-                        type="button"
+                      />
+                      <TransportIconButton
+                        testId="capture-scroll-record"
+                        label="Record scroll animation"
+                        icon="record"
+                        primary
+                        onClick={openScrollRecordPopout}
+                      />
+                      <TransportIconButton
+                        testId="capture-scroll-stop"
+                        label="Stop scroll preview"
+                        icon="stop"
                         onClick={stopScrollPreview}
-                        style={buttonStyle}
-                      >
-                        Stop
-                      </button>
-                      <button
-                        data-testid="capture-scroll-record"
-                        type="button"
-                        onClick={openScrollRecordPopout}
-                        style={primaryButtonStyle}
-                      >
-                        Record
-                      </button>
-                      <button
-                        data-testid="capture-scroll-record-popout"
-                        type="button"
-                        onClick={openScrollRecordPopout}
-                        style={buttonStyle}
-                      >
-                        Open Record Popout
-                      </button>
+                      />
                     </div>
                     <div style={sectionStyle}>
                       <span style={sectionLabelStyle}>Range</span>
@@ -2153,27 +2165,37 @@ export function CaptureDirectorToolbar() {
                     ))}
                   </select>
                 </label>
-                <button data-testid="capture-path-play" type="button" disabled={!cameraPathPlaybackValidation.valid} onClick={playCameraPath} style={buttonStyle}>
-                  Play Path
-                </button>
-                <button data-testid="capture-path-pause" type="button" onClick={stopCameraPathPlayback} style={buttonStyle}>
-                  Pause
-                </button>
-                <button data-testid="capture-path-record-start" type="button" disabled={!cameraPathPlaybackValidation.valid} onClick={() => void startCameraPathPreviewRecording()} style={primaryButtonStyle}>
-                  Record Path Video
-                </button>
-                <button
-                  data-testid="capture-path-record-stop"
-                  type="button"
+                <TransportIconButton
+                  testId="capture-path-play"
+                  label="Play camera path"
+                  icon="play"
+                  disabled={!cameraPathPlaybackValidation.valid}
+                  onClick={playCameraPath}
+                />
+                <TransportIconButton
+                  testId="capture-path-pause"
+                  label="Pause camera path"
+                  icon="pause"
+                  onClick={stopCameraPathPlayback}
+                />
+                <TransportIconButton
+                  testId="capture-path-record-start"
+                  label="Record camera path video"
+                  icon="record"
+                  primary
+                  disabled={!cameraPathPlaybackValidation.valid}
+                  onClick={() => void startCameraPathPreviewRecording()}
+                />
+                <TransportIconButton
+                  testId="capture-path-record-stop"
+                  label="Stop camera path video"
+                  icon="stop"
                   disabled={!isRecording}
                   onClick={() => {
                     stopCameraPathPlayback();
                     void stopRecording();
                   }}
-                  style={buttonStyle}
-                >
-                  Stop Video
-                </button>
+                />
                 <span data-testid="capture-path-record-status" style={statusStyle}>
                   {isRecording
                     ? `Recording ${formatElapsed(elapsedSeconds)}`
