@@ -26,6 +26,7 @@ import {
 } from "../loaders/topoLineMaterial";
 import {
   applyMtThresholdSurfaceMaterialOpacity,
+  createMtThresholdSurfaceMaterial,
   MT_THRESHOLD_SURFACE_POLICY,
   SURFACE_RENDER_ORDER,
 } from "../loaders/surfaceRenderPolicy";
@@ -2143,8 +2144,18 @@ export class SceneManager {
           sectionIsoOverlayTransitionRoot: true,
           sectionIsoOverlayTransitionRole: "source",
         };
-        const parent = group.parent ?? this.scene;
-        parent.add(snapshot);
+        // Salvage (CODEX_003): detach the source-root snapshot to the neutral
+        // scene parent with the source world transform baked in, so target
+        // application that hides/clears the live layer parent cannot drag the
+        // fading exit snapshot with it.
+        group.updateWorldMatrix(true, false);
+        snapshot.matrix.copy(group.matrixWorld);
+        snapshot.matrix.decompose(
+          snapshot.position,
+          snapshot.quaternion,
+          snapshot.scale,
+        );
+        this.scene.add(snapshot);
         this.applyRenderOpacityToTree(snapshot, 1, 1);
         return {
           kind,
@@ -4154,6 +4165,7 @@ export class SceneManager {
       return;
     }
     const wantedIds = new Set(liveBoundaries.map((boundary) => boundary.id));
+    let createdLiveBoundary = false;
     for (const child of [...group.children]) {
       if (
         child.userData?.mtSurfaceBoundaryLive === true &&
@@ -4191,20 +4203,38 @@ export class SceneManager {
         comparison: boundary.comparison,
       });
       if (!geometry) continue;
-      const material = new THREE.MeshStandardMaterial({
-        color: boundary.color,
-        transparent: true,
-        opacity: styleNumber(style, "opacity", 0.86, 0, 1) * boundary.opacity,
-        roughness: styleNumber(style, "mtThresholdSurfaceRoughness", 0.64, 0, 1),
-        metalness: styleNumber(style, "mtThresholdSurfaceMetalness", 0, 0, 1),
-        side:
-          style.mtThresholdSurfaceSide === "front"
-            ? THREE.FrontSide
-            : THREE.DoubleSide,
-        depthWrite: true,
-        depthTest: true,
-      });
-      material.emissive.set(0xffffff);
+      // Salvage (CODEX_003): build live threshold surfaces through the shared
+      // surface render-policy material so transition snapshots and working-area
+      // focus rehydration treat runtime-generated surfaces identically to
+      // loaded ones. Opacity routes through the masked-policy helper instead of
+      // a raw material.opacity write.
+      const material = createMtThresholdSurfaceMaterial();
+      material.color.set(boundary.color);
+      // Salvage correction: createMtThresholdSurfaceMaterial enables
+      // vertexColors for the loaded mesh-preview path, but live marching-cubes
+      // geometry (extractRuntimeMarchingCubesGeometry) is position-only. Leaving
+      // vertexColors on would multiply the diffuse by an unbound vColor and drop
+      // the boundary color. Drive color from material.color instead.
+      material.vertexColors = false;
+      material.userData.preserveVertexColors = false;
+      material.roughness = styleNumber(
+        style,
+        "mtThresholdSurfaceRoughness",
+        0.64,
+        0,
+        1,
+      );
+      material.metalness = styleNumber(
+        style,
+        "mtThresholdSurfaceMetalness",
+        0,
+        0,
+        1,
+      );
+      material.side =
+        style.mtThresholdSurfaceSide === "front"
+          ? THREE.FrontSide
+          : THREE.DoubleSide;
       material.emissiveIntensity = styleNumber(
         style,
         "mtThresholdSurfaceEmissiveBoost",
@@ -4212,6 +4242,21 @@ export class SceneManager {
         0,
         1,
       );
+      applyMtThresholdSurfaceMaterialOpacity(
+        material,
+        styleNumber(style, "opacity", 0.86, 0, 1) * boundary.opacity,
+        false,
+        true,
+      );
+      material.userData.mtThresholdSurfaceMasterOpacity = styleNumber(
+        style,
+        "opacity",
+        0.86,
+        0,
+        1,
+      );
+      material.userData.mtThresholdSurfaceBoundaryOpacity = boundary.opacity;
+      material.userData.mtThresholdSurfaceWireframe = false;
       const mesh = new THREE.Mesh(geometry, material);
       mesh.name = boundary.label;
       mesh.renderOrder = SURFACE_RENDER_ORDER.meshPreview + 0.01;
@@ -4225,6 +4270,12 @@ export class SceneManager {
         mtThresholdSurface: boundary,
       };
       group.add(mesh);
+      createdLiveBoundary = true;
+    }
+    if (createdLiveBoundary) {
+      // Newly attached live surfaces must be patched by working-area focus
+      // before they can render during a transition (DEC-173 rehydration).
+      this.reapplyWorkingAreaFocus();
     }
   }
 

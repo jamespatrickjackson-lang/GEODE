@@ -1,0 +1,588 @@
+diff --git a/src/scene/SceneManager.ts b/src/scene/SceneManager.ts
+index 01d0255..69ce31f 100644
+--- a/src/scene/SceneManager.ts
++++ b/src/scene/SceneManager.ts
+@@ -26,6 +26,7 @@ import {
+ } from "../loaders/topoLineMaterial";
+ import {
+   applyMtThresholdSurfaceMaterialOpacity,
++  createMtThresholdSurfaceMaterial,
+   MT_THRESHOLD_SURFACE_POLICY,
+   SURFACE_RENDER_ORDER,
+ } from "../loaders/surfaceRenderPolicy";
+@@ -270,6 +271,7 @@ import {
+ import {
+   blendEnvironmentSceneTransitionFrame,
+   createEnvironmentSceneTransition,
++  resolveBackgroundFogState,
+   syntheticSceneForEnvironmentFrame,
+   type EnvironmentSceneTransitionFrame,
+   type EnvironmentSceneTransitionRuntime,
+@@ -2035,37 +2037,75 @@ export class SceneManager {
+       layerId: string;
+       group: THREE.Group;
+     }> = [];
++    const seen = new Set<THREE.Object3D>();
++    const addGroup = (
++      kind: SectionIsoOverlayTransitionRootKind,
++      layerId: string,
++      group: THREE.Group | undefined,
++    ): void => {
++      if (!group?.parent || seen.has(group)) return;
++      seen.add(group);
++      groups.push({ kind, layerId, group });
++    };
+     const mtLayer = this.layers.get(UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID);
+     const mtGroup = mtLayer?.userData.mtVolumeSectionIsoOverlayGroup as
+       | THREE.Group
+       | undefined;
+-    if (mtGroup?.parent) {
+-      groups.push({
+-        kind: "mt-volume",
+-        layerId: UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID,
+-        group: mtGroup,
+-      });
+-    }
++    addGroup("mt-volume", UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID, mtGroup);
+     const seismicLayer = this.layers.get(UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID);
+     const seismicVolumeGroup = seismicLayer?.userData
+       .seismicVolumeSectionIsoOverlayGroup as THREE.Group | undefined;
+-    if (seismicVolumeGroup?.parent) {
+-      groups.push({
+-        kind: "seismic-volume",
+-        layerId: UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID,
+-        group: seismicVolumeGroup,
+-      });
+-    }
++    addGroup(
++      "seismic-volume",
++      UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID,
++      seismicVolumeGroup,
++    );
+     const seismicResistivityGroup = seismicLayer?.userData
+       .seismicResistivitySectionIsoOverlayGroup as THREE.Group | undefined;
+-    if (seismicResistivityGroup?.parent) {
+-      groups.push({
+-        kind: "seismic-resistivity",
+-        layerId: UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID,
+-        group: seismicResistivityGroup,
++    addGroup(
++      "seismic-resistivity",
++      UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID,
++      seismicResistivityGroup,
++    );
++    this.collectScalarSectionIsoOverlayRootsForTransition(groups, seen);
++    return groups;
++  }
++
++  private sectionIsoRootWithinRegisteredOverlayGroup(root: THREE.Object3D): boolean {
++    let parent = root.parent;
++    while (parent) {
++      const data = parent.userData ?? {};
++      if (
++        data.mtVolumeSectionIsoOverlayGroup === true ||
++        data.seismicVolumeSectionIsoOverlayGroup === true ||
++        data.seismicResistivitySectionIsoOverlayGroup === true
++      ) {
++        return true;
++      }
++      parent = parent.parent;
++    }
++    return false;
++  }
++
++  private collectScalarSectionIsoOverlayRootsForTransition(
++    groups: Array<{
++      kind: SectionIsoOverlayTransitionRootKind;
++      layerId: string;
++      group: THREE.Group;
++    }>,
++    seen: Set<THREE.Object3D>,
++  ): void {
++    for (const [layerId, layer] of this.layers) {
++      layer.traverse((obj: THREE.Object3D) => {
++        const root = obj.userData?.scalarSectionIsoOverlayRoot;
++        if (!(root instanceof THREE.Group)) return;
++        if (!root.parent || seen.has(root)) return;
++        if (root.userData?.sectionIsoOverlayTransitionRoot === true) return;
++        if (this.sectionIsoRootWithinRegisteredOverlayGroup(root)) return;
++        seen.add(root);
++        groups.push({ kind: "scalar-section", layerId, group: root });
+       });
+     }
+-    return groups;
+   }
+ 
+   discardSectionIsoOverlayTransition(): void {
+@@ -2143,8 +2183,14 @@ export class SceneManager {
+           sectionIsoOverlayTransitionRoot: true,
+           sectionIsoOverlayTransitionRole: "source",
+         };
+-        const parent = group.parent ?? this.scene;
+-        parent.add(snapshot);
++        group.updateWorldMatrix(true, false);
++        snapshot.matrix.copy(group.matrixWorld);
++        snapshot.matrix.decompose(
++          snapshot.position,
++          snapshot.quaternion,
++          snapshot.scale,
++        );
++        this.scene.add(snapshot);
+         this.applyRenderOpacityToTree(snapshot, 1, 1);
+         return {
+           kind,
+@@ -3388,6 +3434,7 @@ export class SceneManager {
+         inactiveCinematicSceneTransitionDebugState();
+       this.applyEnvironment(environment);
+       this.applyPageScene(nextPage);
++      this.commitEnvironmentSceneTargetFrame(environment, nextPage);
+       this.sceneOverlayController.applySceneOverlaysAtTransitionEnd(
+         environment,
+         nextPage,
+@@ -4154,6 +4201,7 @@ export class SceneManager {
+       return;
+     }
+     const wantedIds = new Set(liveBoundaries.map((boundary) => boundary.id));
++    let createdLiveBoundary = false;
+     for (const child of [...group.children]) {
+       if (
+         child.userData?.mtSurfaceBoundaryLive === true &&
+@@ -4191,20 +4239,20 @@ export class SceneManager {
+         comparison: boundary.comparison,
+       });
+       if (!geometry) continue;
+-      const material = new THREE.MeshStandardMaterial({
+-        color: boundary.color,
+-        transparent: true,
+-        opacity: styleNumber(style, "opacity", 0.86, 0, 1) * boundary.opacity,
+-        roughness: styleNumber(style, "mtThresholdSurfaceRoughness", 0.64, 0, 1),
+-        metalness: styleNumber(style, "mtThresholdSurfaceMetalness", 0, 0, 1),
+-        side:
+-          style.mtThresholdSurfaceSide === "front"
+-            ? THREE.FrontSide
+-            : THREE.DoubleSide,
+-        depthWrite: true,
+-        depthTest: true,
+-      });
+-      material.emissive.set(0xffffff);
++      const material = createMtThresholdSurfaceMaterial();
++      material.color.set(boundary.color);
++      material.roughness = styleNumber(
++        style,
++        "mtThresholdSurfaceRoughness",
++        0.64,
++        0,
++        1,
++      );
++      material.metalness = styleNumber(style, "mtThresholdSurfaceMetalness", 0, 0, 1);
++      material.side =
++        style.mtThresholdSurfaceSide === "front"
++          ? THREE.FrontSide
++          : THREE.DoubleSide;
+       material.emissiveIntensity = styleNumber(
+         style,
+         "mtThresholdSurfaceEmissiveBoost",
+@@ -4212,6 +4260,21 @@ export class SceneManager {
+         0,
+         1,
+       );
++      applyMtThresholdSurfaceMaterialOpacity(
++        material,
++        styleNumber(style, "opacity", 0.86, 0, 1) * boundary.opacity,
++        false,
++        true,
++      );
++      material.userData.mtThresholdSurfaceMasterOpacity = styleNumber(
++        style,
++        "opacity",
++        0.86,
++        0,
++        1,
++      );
++      material.userData.mtThresholdSurfaceBoundaryOpacity = boundary.opacity;
++      material.userData.mtThresholdSurfaceWireframe = false;
+       const mesh = new THREE.Mesh(geometry, material);
+       mesh.name = boundary.label;
+       mesh.renderOrder = SURFACE_RENDER_ORDER.meshPreview + 0.01;
+@@ -4225,6 +4288,10 @@ export class SceneManager {
+         mtThresholdSurface: boundary,
+       };
+       group.add(mesh);
++      createdLiveBoundary = true;
++    }
++    if (createdLiveBoundary) {
++      this.reapplyWorkingAreaFocus();
+     }
+   }
+ 
+@@ -4844,6 +4911,23 @@ export class SceneManager {
+     }
+   }
+ 
++  private commitEnvironmentSceneTargetFrame(
++    environment: EnvironmentSetup,
++    page: PresentationPage,
++  ): void {
++    const targetState = resolveBackgroundFogState(
++      resolveCinematicSceneForTransition(environment, page),
++    );
++    const frame: EnvironmentSceneTransitionFrame = {
++      ...targetState,
++      progress: 1,
++      done: true,
++    };
++    this.environmentSceneTransition = null;
++    this.applyEnvironmentSceneTransitionFrame(frame);
++    this.currentEnvironmentSceneTransitionFrame = frame;
++  }
++
+   private layerFogDensityForFrame(
+     style: EditableStyle,
+     fallback: number,
+diff --git a/src/scene/transitions/transitionEffectiveLayersForPage.ts b/src/scene/transitions/transitionEffectiveLayersForPage.ts
+index 10c767d..ee2be22 100644
+--- a/src/scene/transitions/transitionEffectiveLayersForPage.ts
++++ b/src/scene/transitions/transitionEffectiveLayersForPage.ts
+@@ -9,9 +9,13 @@ import {
+ import { CASE_STUDY_B_DEMO_LAYER_ALIASES } from "../../projectModules/caseStudyB/demoLayerAliases";
+ import {
+   UTAH_FORGE_MT_RESISTIVITY_FULL_DENSITY_LAYER_ID,
++  UTAH_FORGE_MT_RESISTIVITY_PREVIEW_LAYER_ID,
++  UTAH_FORGE_MT_RESISTIVITY_SLICES_LAYER_ID,
+   UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID,
++  UTAH_FORGE_MT_THRESHOLD_SURFACES_LAYER_ID,
+   UTAH_FORGE_SCENE_SECTION_LAYER_ID,
+   UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID,
++  UTAH_FORGE_WORKING_AREA_FOCUS_LAYER_ID,
+ } from "../../projectModules/utahForge/layerIds";
+ import {
+   productTransitionDecisionsForLayer,
+@@ -1034,6 +1038,13 @@ export function transitionEffectiveLayersForPage(
+     toPage,
+     UTAH_FORGE_SCENE_SECTION_LAYER_ID,
+   );
++  const sourceWorkingAreaFocusStyle = effectiveStyle(
++    fromEnvironment,
++    fromPage,
++    UTAH_FORGE_WORKING_AREA_FOCUS_LAYER_ID,
++  );
++  const sourceWorkingAreaFocusTargetLayerIds =
++    this.workingAreaFocusTargetLayerIds(sourceWorkingAreaFocusStyle);
+   const sceneSectionStyleChanged = sceneSectionTransitionStyleChanged(
+     fromSceneSectionStyle,
+     targetSceneSectionStyle,
+@@ -1053,6 +1064,8 @@ export function transitionEffectiveLayersForPage(
+   // overlay style must stay continuous (no self-crossfade dip); the live
+   // roots are protected through the sectionIsoStable envelope instead.
+   const sectionIsoRootSourceLayerIds = [
++    UTAH_FORGE_MT_RESISTIVITY_SLICES_LAYER_ID,
++    UTAH_FORGE_MT_RESISTIVITY_PREVIEW_LAYER_ID,
+     UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID,
+     UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID,
+   ];
+@@ -1312,6 +1325,15 @@ export function transitionEffectiveLayersForPage(
+         shouldPreserveScalarVolumeExitStyle &&
+         sourceSceneSectionTransitionActive &&
+         !targetSceneSectionTransitionActive;
++      const shouldSnapshotWorkingAreaClippedExit =
++        id === UTAH_FORGE_MT_THRESHOLD_SURFACES_LAYER_ID &&
++        !!group &&
++        duration > 0 &&
++        fromOpacity > 0.001 &&
++        toOpacity <= 0.001 &&
++        sourceWorkingAreaFocusTargetLayerIds.has(id) &&
++        this.workingAreaFocusOutsideOpacity(sourceWorkingAreaFocusStyle, id) <
++          0.999;
+       const shouldTweenScalarVolumeExitStyle =
+         id === UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID &&
+         !!group &&
+@@ -1343,14 +1365,16 @@ export function transitionEffectiveLayersForPage(
+         shouldCrossfadeDiscreteData ||
+         shouldCrossfadeScalarStyle ||
+         shouldCrossfadeSceneSection ||
+-        shouldSnapshotScalarVolumeSectionExit
++        shouldSnapshotScalarVolumeSectionExit ||
++        shouldSnapshotWorkingAreaClippedExit
+           ? this.cloneLayerTransitionSnapshot(id, group)
+           : null;
+       const transitionKind: LayerTransitionKind =
+         shouldCrossfadeDiscreteData ||
+         shouldCrossfadeScalarStyle ||
+         shouldCrossfadeSceneSection ||
+-        shouldSnapshotScalarVolumeSectionExit
++        shouldSnapshotScalarVolumeSectionExit ||
++        shouldSnapshotWorkingAreaClippedExit
+           ? "discrete-crossfade"
+           : shouldTweenScalarStyle || shouldTweenScalarVolumeExitStyle
+             ? id === UTAH_FORGE_MT_RESISTIVITY_FULL_DENSITY_LAYER_ID
+diff --git a/src/scene/transitions/transitionStyles.ts b/src/scene/transitions/transitionStyles.ts
+index bee2928..5413acc 100644
+--- a/src/scene/transitions/transitionStyles.ts
++++ b/src/scene/transitions/transitionStyles.ts
+@@ -91,7 +91,8 @@ export interface LayerTransitionSnapshot extends LayerOpacityTween {
+ export type SectionIsoOverlayTransitionRootKind =
+   | "mt-volume"
+   | "seismic-volume"
+-  | "seismic-resistivity";
++  | "seismic-resistivity"
++  | "scalar-section";
+ 
+ export interface SectionIsoOverlayTransitionRoot {
+   kind: SectionIsoOverlayTransitionRootKind;
+diff --git a/tests/tools/environment-scene-transition-source.test.mjs b/tests/tools/environment-scene-transition-source.test.mjs
+index 5f25b42..49ba450 100644
+--- a/tests/tools/environment-scene-transition-source.test.mjs
++++ b/tests/tools/environment-scene-transition-source.test.mjs
+@@ -154,6 +154,72 @@ test("SceneManager applies environment-scene frames before cinematic post frames
+   );
+ });
+ 
++test("final transition commit lands target background and fog after full page apply", () => {
++  const sceneManager = readSource("src", "scene", "SceneManager.ts");
++
++  assert.match(
++    sceneManager,
++    /resolveBackgroundFogState/,
++    "SceneManager should resolve the target background/fog state for final landing.",
++  );
++  assert.match(
++    sceneManager,
++    /private\s+commitEnvironmentSceneTargetFrame\(\s*environment:\s*EnvironmentSetup,\s*page:\s*PresentationPage,?\s*\)/,
++    "SceneManager should expose a narrow final environment-scene landing helper.",
++  );
++  const helperBody = sceneManager.match(
++    /private\s+commitEnvironmentSceneTargetFrame\([\s\S]*?\n  \}/,
++  );
++  assert.ok(helperBody, "Final environment landing helper should be inspectable.");
++  assert.match(
++    helperBody[0],
++    /resolveCinematicSceneForTransition\(\s*environment,\s*page\s*\)/,
++    "Final landing should use the same resolved target scene as transition frames.",
++  );
++  assert.match(
++    helperBody[0],
++    /resolveBackgroundFogState\(/,
++    "Final landing should derive the exact target background/fog frame.",
++  );
++  assert.match(
++    helperBody[0],
++    /const frame:\s*EnvironmentSceneTransitionFrame\s*=\s*\{[\s\S]*progress:\s*1[\s\S]*done:\s*true[\s\S]*this\.applyEnvironmentSceneTransitionFrame\(\s*frame\s*\)/s,
++    "Final landing should apply a terminal background/fog frame.",
++  );
++
++  const finalizeStart = sceneManager.indexOf("finalizePageTransitionCommit(");
++  const finalizeEnd = sceneManager.indexOf(
++    "private transitionTweenEasedProgress(",
++    finalizeStart,
++  );
++  const finalizeBody =
++    finalizeStart >= 0 && finalizeEnd > finalizeStart
++      ? sceneManager.slice(finalizeStart, finalizeEnd)
++      : null;
++  assert.ok(finalizeBody, "Final commit body should be inspectable.");
++  const applyEnvironmentIndex = finalizeBody.indexOf(
++    "this.applyEnvironment(environment)",
++  );
++  const applyPageSceneIndex = finalizeBody.indexOf(
++    "this.applyPageScene(nextPage)",
++  );
++  const finalLandingIndex = finalizeBody.indexOf(
++    "this.commitEnvironmentSceneTargetFrame(environment, nextPage)",
++  );
++  assert.ok(
++    applyEnvironmentIndex >= 0,
++    "Final commit should still apply the full target environment.",
++  );
++  assert.ok(
++    applyPageSceneIndex > applyEnvironmentIndex,
++    "Final commit should apply the target page after the full environment.",
++  );
++  assert.ok(
++    finalLandingIndex > applyPageSceneIndex,
++    "The resolved target background/fog frame should be the final writer.",
++  );
++});
++
+ test("topo runtime exposes a narrow fog-frame path", () => {
+   const topoRuntime = readSource("src", "topoMap", "runtime.ts");
+   const surfaceRuntime = readSource("src", "topoMap", "surfaceRuntime.ts");
+diff --git a/tests/tools/section-iso-transition-smoothing-source.test.mjs b/tests/tools/section-iso-transition-smoothing-source.test.mjs
+index b8357a6..59645d7 100644
+--- a/tests/tools/section-iso-transition-smoothing-source.test.mjs
++++ b/tests/tools/section-iso-transition-smoothing-source.test.mjs
+@@ -242,6 +242,80 @@ test("Section ISO target roots follow transition-frame section geometry", () =>
+   );
+ });
+ 
++test("generic scalar Section ISO roots participate in detached exit fades", () => {
++  assert.match(
++    transitionStyles,
++    /\|\s*"scalar-section"/,
++    "The Section ISO transition root kind should include generic scalar section roots.",
++  );
++  assert.match(
++    transitionEffectiveLayers,
++    /UTAH_FORGE_MT_RESISTIVITY_SLICES_LAYER_ID/,
++    "Transition classification should treat MT slice Section ISO roots as source roots.",
++  );
++  assert.match(
++    transitionEffectiveLayers,
++    /UTAH_FORGE_MT_RESISTIVITY_PREVIEW_LAYER_ID/,
++    "Transition classification should treat MT preview Section ISO roots as source roots.",
++  );
++  assert.match(
++    sceneManager,
++    /sectionIsoRootWithinRegisteredOverlayGroup\(/,
++    "Generic root collection should avoid duplicating roots already owned by dedicated overlay groups.",
++  );
++  assert.match(
++    sceneManager,
++    /collectScalarSectionIsoOverlayRootsForTransition\(/,
++    "SceneManager should collect scalar-section roots outside the dedicated MT/seismic overlay groups.",
++  );
++  assert.match(
++    sceneManager,
++    /scalarSectionIsoOverlayRoot/,
++    "Generic scalar section roots should be discovered through their root marker.",
++  );
++  assert.match(
++    sceneManager,
++    /kind:\s*"scalar-section"/,
++    "Generic scalar Section ISO roots should be cloned as scalar-section transition roots.",
++  );
++});
++
++test("detached Section ISO source roots do not inherit hidden live layer parents", () => {
++  const transitionStart = sceneManager.indexOf("beginSectionIsoOverlayTransition(");
++  const transitionEnd = sceneManager.indexOf(
++    "currentSectionIsoOverlayTransitionOpacity()",
++    transitionStart,
++  );
++  const transitionBody =
++    transitionStart >= 0 && transitionEnd > transitionStart
++      ? sceneManager.slice(transitionStart, transitionEnd)
++      : null;
++  assert.ok(
++    transitionBody,
++    "Section ISO transition setup should have an inspectable body.",
++  );
++  assert.doesNotMatch(
++    transitionBody,
++    /const parent\s*=\s*group\.parent\s*\?\?\s*this\.scene/,
++    "Source root snapshots must not stay under the live layer parent that target application can hide.",
++  );
++  assert.match(
++    transitionBody,
++    /group\.updateWorldMatrix\(\s*true,\s*false\s*\)/,
++    "Source root snapshots should capture the source root world transform before detaching.",
++  );
++  assert.match(
++    transitionBody,
++    /snapshot\.matrix\.copy\(\s*group\.matrixWorld\s*\)/,
++    "Detached source root snapshots should preserve source-root world placement.",
++  );
++  assert.match(
++    transitionBody,
++    /this\.scene\.add\(\s*snapshot\s*\)/,
++    "Detached source root snapshots should fade from a neutral scene parent.",
++  );
++});
++
+ test("ISO Volume quick toggle fades source volume opacity over one second", () => {
+   assert.match(
+     sectionIsoLegend,
+diff --git a/tests/tools/working-area-focus-transition-source.test.mjs b/tests/tools/working-area-focus-transition-source.test.mjs
+index fcdd4b7..d5a1ae0 100644
+--- a/tests/tools/working-area-focus-transition-source.test.mjs
++++ b/tests/tools/working-area-focus-transition-source.test.mjs
+@@ -7,11 +7,50 @@ const workingAreaFocusController = readFileSync(
+   "src/scene/workingArea/workingAreaFocusController.ts",
+   "utf8",
+ );
++const transitionEffectiveLayers = readFileSync(
++  "src/scene/transitions/transitionEffectiveLayersForPage.ts",
++  "utf8",
++);
+ const sceneSectionObjectVisibilityShader = readFileSync(
+   "src/scene/shaders/sceneSectionObjectVisibilityShader.ts",
+   "utf8",
+ );
+ 
++test("live MT threshold surfaces receive working-area focus before transition fade frames", () => {
++  assert.match(
++    sceneManager,
++    /createMtThresholdSurfaceMaterial/,
++    "Runtime-generated MT threshold surfaces should use the same material policy as loaded threshold surfaces.",
++  );
++  const liveBoundaryBody = sceneManager.match(
++    /ensureLiveMtSurfaceBoundaries\([\s\S]*?\n  \}/,
++  );
++  assert.ok(
++    liveBoundaryBody,
++    "SceneManager should expose an inspectable live MT boundary generator.",
++  );
++  assert.match(
++    liveBoundaryBody[0],
++    /const material = createMtThresholdSurfaceMaterial\(\)/,
++    "Live threshold surfaces should inherit surface render-policy metadata used by transition opacity snapshots.",
++  );
++  assert.match(
++    liveBoundaryBody[0],
++    /let createdLiveBoundary = false/,
++    "Live threshold generation should track whether new surfaces were attached.",
++  );
++  assert.match(
++    liveBoundaryBody[0],
++    /createdLiveBoundary = true/,
++    "Newly attached live threshold surfaces should be marked for immediate focus reapply.",
++  );
++  assert.match(
++    liveBoundaryBody[0],
++    /if\s*\(\s*createdLiveBoundary\s*\)[\s\S]*this\.reapplyWorkingAreaFocus\(\)/,
++    "New live threshold surfaces must be patched by working-area focus before they can render during a transition.",
++  );
++});
++
+ test("transition snapshot material clones rehydrate working-area focus shader hooks", () => {
+   assert.match(
+     workingAreaFocusController,
+@@ -51,6 +90,39 @@ test("transition snapshot material clones rehydrate working-area focus shader ho
+   );
+ });
+ 
++test("source-visible target-hidden MT threshold exits keep source working-area clipping", () => {
++  assert.match(
++    transitionEffectiveLayers,
++    /UTAH_FORGE_MT_THRESHOLD_SURFACES_LAYER_ID/,
++    "Transition setup should classify MT threshold surfaces explicitly.",
++  );
++  assert.match(
++    transitionEffectiveLayers,
++    /sourceWorkingAreaFocusStyle\s*=\s*effectiveStyle\([\s\S]*?fromEnvironment[\s\S]*?fromPage[\s\S]*?UTAH_FORGE_WORKING_AREA_FOCUS_LAYER_ID/s,
++    "Transition setup should resolve source working-area focus before target application.",
++  );
++  assert.match(
++    transitionEffectiveLayers,
++    /sourceWorkingAreaFocusTargetLayerIds\s*=[\s\S]*?this\.workingAreaFocusTargetLayerIds\(\s*sourceWorkingAreaFocusStyle\s*\)/s,
++    "Transition setup should know which source layers were clipped by working-area focus.",
++  );
++  assert.match(
++    transitionEffectiveLayers,
++    /const shouldSnapshotWorkingAreaClippedExit\s*=/,
++    "Target-hidden working-area clipped exits should have a named snapshot gate.",
++  );
++  assert.match(
++    transitionEffectiveLayers,
++    /id\s*===\s*UTAH_FORGE_MT_THRESHOLD_SURFACES_LAYER_ID[\s\S]*toOpacity\s*<=\s*0\.001[\s\S]*sourceWorkingAreaFocusTargetLayerIds\.has\(id\)[\s\S]*this\.workingAreaFocusOutsideOpacity\(\s*sourceWorkingAreaFocusStyle,\s*id\s*\)\s*<\s*0\.999/s,
++    "Source-visible target-hidden MT thresholds should snapshot when their source was working-area clipped.",
++  );
++  assert.match(
++    transitionEffectiveLayers,
++    /shouldCrossfadeDiscreteData\s*\|\|[\s\S]*shouldSnapshotWorkingAreaClippedExit[\s\S]*\?\s*this\.cloneLayerTransitionSnapshot\(id,\s*group\)/,
++    "Working-area clipped exits should use the source snapshot path before target hiding.",
++  );
++});
++
+ test("transition snapshot material clones rehydrate scene-section object-visibility shader hooks", () => {
+   assert.match(
+     sceneSectionObjectVisibilityShader,
