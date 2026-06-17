@@ -1,6 +1,6 @@
 import { spawn } from "node:child_process";
 import { readFileSync } from "node:fs";
-import { mkdir, rm, stat, writeFile } from "node:fs/promises";
+import { mkdir, readdir, rm, stat, writeFile } from "node:fs/promises";
 import { dirname, extname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import sharp from "sharp";
@@ -44,7 +44,7 @@ function usageDiagnostics() {
     schema: DIAGNOSTICS_SCHEMA,
     status: "error",
     error:
-      "Usage: node tools/render-capture-video-job.mjs --job <job.json> --out <output.mp4|output.webm> [--synthetic] [--app-url <url>] [--diagnostics <path>] [--frame-dir <dir>] [--frames-only] [--superscale <1-4>] [--no-gpu] [--allow-software] [--master prores4444|none] [--no-keep-frames]",
+      "Usage: node tools/render-capture-video-job.mjs --job <job.json> --out <output.mp4|output.webm> [--synthetic] [--app-url <url>] [--diagnostics <path>] [--frame-dir <dir>] [--frames-only] [--reuse-frames] [--superscale <1-4>] [--no-gpu] [--allow-software] [--master prores4444|none] [--no-keep-frames]",
     modes: ["--job <job.json> --out <output>"],
   };
 }
@@ -543,6 +543,7 @@ async function runRenderJob({
   keepFrames = true,
   frameDirOverride = null,
   framesOnly = false,
+  reuseFrames = false,
   superscale = DEFAULT_SUPERSCALE,
   gpu = true,
   allowSoftware = false,
@@ -572,8 +573,25 @@ async function runRenderJob({
     tiles: plan.grid.tileCount,
   });
 
+  let reusedFrameCount = 0;
   try {
-    if (!synthetic) {
+    if (reuseFrames) {
+      const existingFrames = (await readdir(frameDir).catch(() => [])).filter((entry) =>
+        /^frame-\d{6}\.png$/i.test(entry),
+      );
+      if (existingFrames.length === 0) {
+        throw new Error(
+          "--reuse-frames requires pre-rendered frames in --frame-dir",
+        );
+      }
+      reusedFrameCount = existingFrames.length;
+      emitProgress({
+        phase: "prepare",
+        totalFrames: job.video.totalFrames,
+        reuseFrames: true,
+        renderedFrames: reusedFrameCount,
+      });
+    } else if (!synthetic) {
       browser = await chromium.launch({
         headless: true,
         args: gpu ? GPU_LAUNCH_ARGS : [],
@@ -601,7 +619,8 @@ async function runRenderJob({
       );
     }
 
-    for (let frameOffset = 0; frameOffset < job.video.totalFrames; frameOffset += 1) {
+    if (!reuseFrames)
+      for (let frameOffset = 0; frameOffset < job.video.totalFrames; frameOffset += 1) {
       const actualFrameIndex = frameInputStartNumber(job) + frameOffset;
       const outputFramePath = framePath(frameDir, actualFrameIndex);
       const renderedTiles = synthetic
@@ -704,7 +723,7 @@ async function runRenderJob({
       supersample: plan.render.superscale,
       gpu: gpuInfo,
       browserCapabilities: capabilities,
-      frameCount: frameDiagnostics.length,
+      frameCount: reuseFrames ? reusedFrameCount : frameDiagnostics.length,
       outputs,
       playableOutput: outputPath,
       masterOutput: masterPath,
@@ -719,7 +738,7 @@ async function runRenderJob({
     return diagnostics;
   } finally {
     if (browser) await browser.close();
-    if (!keepFrames) {
+    if (!keepFrames && !reuseFrames) {
       await rm(frameRoot, { recursive: true, force: true });
     }
   }
@@ -736,6 +755,7 @@ function parseArgs(argv) {
     keepFrames: true,
     frameDirOverride: null,
     framesOnly: false,
+    reuseFrames: false,
     superscale: DEFAULT_SUPERSCALE,
     gpu: true,
     allowSoftware: false,
@@ -758,6 +778,8 @@ function parseArgs(argv) {
       args.frameDirOverride = argv[++index];
     } else if (arg === "--frames-only") {
       args.framesOnly = true;
+    } else if (arg === "--reuse-frames") {
+      args.reuseFrames = true;
     } else if (arg === "--keep-frames") {
       args.keepFrames = true;
     } else if (arg === "--no-keep-frames") {

@@ -18,6 +18,7 @@ import sharp from "sharp";
 import {
   createFinalScrollHandoffManifest,
   createPendingScrollHandoffManifest,
+  scrollMediaTargetsForRequest,
   selectScrollContactSheetFrames,
   selectScrollPosterFrames,
   validateScrollHandoffManifest,
@@ -46,7 +47,7 @@ import {
 // these endpoints because they only ever see the published build.
 
 const ALLOWED_PREFIX = "projects/";
-const DEFAULT_SCROLL_PACKAGE_OUTPUT_DIR = ".tmp/capture-scroll-outputs";
+const DEFAULT_SCROLL_PACKAGE_OUTPUT_DIR = "media_output/capture-scroll-outputs";
 
 interface WriteBody {
   path: string;
@@ -845,7 +846,7 @@ async function startCaptureVideoRun({
   const runId = randomUUID();
   const outputFilename = safeVideoOutputFilename(job, body.outputFilename);
   const jobsDir = resolve(projectRoot, ".tmp", "capture-video-jobs");
-  const outputDir = resolve(projectRoot, ".tmp", "capture-video-outputs");
+  const outputDir = resolve(projectRoot, "media_output", "capture-video-outputs");
   await fs.mkdir(jobsDir, { recursive: true });
   await fs.mkdir(outputDir, { recursive: true });
   const jobPath = resolve(jobsDir, `${runId}.json`);
@@ -982,6 +983,75 @@ async function startCaptureVideoRun({
   });
 
   return run;
+}
+
+const SCROLL_MEDIA_ROLE_BY_FORMAT: Record<
+  "mp4" | "webm" | "scroll-friendly-video",
+  ScrollHandoffPackageV1["media"][number]["role"]
+> = {
+  mp4: "primary",
+  webm: "delivery",
+  "scroll-friendly-video": "scroll-friendly",
+};
+
+// Encode one additional scroll output format from the shared frame render.
+// The primary format is encoded inline by the first renderer pass; remaining
+// ticked video formats reuse those frames so the scene renders only once.
+async function encodeScrollFormatFromFrames({
+  projectRoot,
+  baseRenderJob,
+  frameDir,
+  format,
+  outputPath,
+  jobPath,
+}: {
+  projectRoot: string;
+  baseRenderJob: any;
+  frameDir: string;
+  format: "mp4" | "webm" | "scroll-friendly-video";
+  outputPath: string;
+  jobPath: string;
+}): Promise<void> {
+  const job = {
+    ...baseRenderJob,
+    video: {
+      ...baseRenderJob?.video,
+      format: format === "webm" ? "webm" : "mp4",
+      encodingProfile:
+        format === "scroll-friendly-video" ? "scroll-friendly-video" : undefined,
+    },
+  };
+  await fs.writeFile(jobPath, `${JSON.stringify(job, null, 2)}\n`, "utf8");
+  const args = [
+    "tools/render-capture-video-job.mjs",
+    "--job",
+    jobPath,
+    "--reuse-frames",
+    "--frame-dir",
+    frameDir,
+    "--out",
+    outputPath,
+    "--diagnostics",
+    `${jobPath}.diagnostics.json`,
+    "--master",
+    "none",
+  ];
+  await new Promise<void>((resolveEncode, rejectEncode) => {
+    const child = spawn(process.execPath, args, {
+      cwd: projectRoot,
+      windowsHide: true,
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+    let stderr = "";
+    child.stderr.on("data", (chunk) => {
+      stderr += String(chunk);
+    });
+    child.on("error", rejectEncode);
+    child.on("close", (code) => {
+      if (code === 0) resolveEncode();
+      else rejectEncode(new Error(stderr.trim() || `scroll re-encode exited with code ${code}`));
+    });
+  });
 }
 
 async function startCaptureScrollPackageRun({
@@ -1207,6 +1277,34 @@ async function startCaptureScrollPackageRun({
       if (mediaPath && (!mediaStats?.isFile() || mediaStats.size <= 0)) {
         throw new Error("scroll package renderer completed without media output");
       }
+      // The primary format is already encoded inline. Encode every remaining
+      // ticked video format from the shared frame render, then list each media
+      // file that landed.
+      const writtenMedia: ScrollHandoffPackageV1["media"] = [];
+      for (const target of scrollMediaTargetsForRequest(request)) {
+        const absoluteTarget = resolve(packageDir, target.path);
+        if (target.path !== mediaRelativePath) {
+          await encodeScrollFormatFromFrames({
+            projectRoot,
+            baseRenderJob: scrollRenderJob,
+            frameDir,
+            format: target.format as "mp4" | "webm" | "scroll-friendly-video",
+            outputPath: absoluteTarget,
+            jobPath: resolve(jobsDir, `${runId}-${target.format}.json`),
+          });
+        }
+        const stats = await fs.lstat(absoluteTarget).catch(() => null);
+        if (stats?.isFile() && stats.size > 0) {
+          writtenMedia.push({
+            role: SCROLL_MEDIA_ROLE_BY_FORMAT[
+              target.format as "mp4" | "webm" | "scroll-friendly-video"
+            ],
+            path: target.path,
+            mimeType: target.mimeType,
+            byteLength: stats.size,
+          });
+        }
+      }
       const posters = await createScrollPosters(packageDir, request);
       const contactSheetPath = await createScrollContactSheet(packageDir, request);
       run.status = "complete";
@@ -1225,22 +1323,7 @@ async function startCaptureScrollPackageRun({
       let completeManifest = createFinalScrollHandoffManifest({
         manifest: run.manifest,
         status: "complete",
-        media:
-          mediaRelativePath && mediaStats?.isFile()
-            ? [
-                {
-                  role:
-                    request.format === "webm"
-                      ? "delivery"
-                      : request.format === "scroll-friendly-video"
-                        ? "scroll-friendly"
-                        : "primary",
-                  path: mediaRelativePath,
-                  mimeType: request.format === "webm" ? "video/webm" : "video/mp4",
-                  byteLength: mediaStats.size,
-                },
-              ]
-            : [],
+        media: writtenMedia,
         frames: {
           directory: "frames",
           pattern: "frame-%06d.png",
@@ -1256,11 +1339,10 @@ async function startCaptureScrollPackageRun({
       await writeScrollPackageReadme(packageDir, completeManifest, run.warnings ?? []);
       await writeScrollDiagnostics(run, "complete");
       const hashPaths = [
-        ...(request.format === "png-sequence"
+        ...writtenMedia.map((media) => media.path),
+        ...(request.formats.includes("png-sequence")
           ? await renderedFramePaths(packageDir)
-          : mediaRelativePath
-            ? [mediaRelativePath]
-            : []),
+          : []),
         ...posters.map((poster) => poster.path),
         ...(contactSheetPath ? [contactSheetPath] : []),
         `diagnostics/${request.packageName}.json`,

@@ -1,5 +1,12 @@
 # Scroll Animation Capture Director Implementation Plan
 
+> **Completed (2026-06-17).** This plan shipped to `main` (merge `290cd71`):
+> Tasks 1-9 landed plus the 2026-06-17 closeout. Unchecked `- [ ]` boxes below
+> reflect the original drafting state, not remaining work. Net changes vs. the
+> plan: FPS is 30/60 only (120 dropped per closeout), Record output is
+> multi-format (a checkbox list, not a single format), and package output
+> defaults to `media_output/`. See DEC-174 and `docs/capture-director/README.md`.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Build a scroll-animation Render Out workflow in Capture Director that previews authored camera/page motion, records deterministic 60 FPS output up to 8K, and produces a designer-ready `ScrollHandoffPackageV1`.

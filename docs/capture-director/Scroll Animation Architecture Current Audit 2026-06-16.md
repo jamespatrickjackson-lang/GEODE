@@ -1,8 +1,18 @@
 # Scroll Animation Architecture Current Capture Director Audit
 
+> **Superseded (2026-06-17).** Findings CD-SA-001..016 below describe the
+> pre-implementation state. The Scroll Animation feature has since shipped to
+> `main` (merge `290cd71`). The 2026-06-17 closeout resolved the open gaps:
+> dedicated scroll panel, centered Record popout, `CaptureScrollTimelineV1`,
+> `ScrollHandoffPackageV1`, frame-range slicing, partial-package status, Page
+> Bar override, and the local package renderer all exist. FPS is 30/60 only
+> (120 dropped), Record output is multi-format, and package media defaults to
+> `media_output/`. Kept as historical context. See DEC-174 and the production
+> notes in `docs/capture-director/README.md`.
+
 Date: 2026-06-16
 
-Status: audit-only findings before implementation planning
+Status: superseded by shipped implementation (was: audit-only findings)
 
 Repository checkout: `C:\GeoSee\GeoSee_Dev`
 
@@ -15,7 +25,7 @@ audit does not classify or alter that unrelated work.
 ## Scope
 
 This audit compares the current Capture Director architecture against
-`docs/Capture Director/Scroll Animation Architecture Requirements.md`.
+`docs/capture-director/Scroll Animation Architecture Requirements.md`.
 
 This pass inspected Capture Director source, local renderer tooling, runtime
 tests, current capture decisions, and the transition operating contract. It
@@ -257,8 +267,8 @@ render preset, and the same sampling contract as final output.
 
 Evidence:
 
-- `docs/Capture Director/Scroll Animation Architecture Requirements.md:287-297`
-- `docs/Capture Director/Scroll Animation Architecture Requirements.md:404-409`
+- `docs/capture-director/Scroll Animation Architecture Requirements.md:287-297`
+- `docs/capture-director/Scroll Animation Architecture Requirements.md:404-409`
 - `src/capture/CameraPathTimeline.tsx:919-926`
 - `src/capture/CaptureDirectorToolbar.tsx:2387-2392`
 
@@ -276,7 +286,7 @@ range, and save destination are not presented through a centered Record popout.
 Evidence:
 
 - `src/capture/CaptureDirectorToolbar.tsx:1059-1310`
-- `docs/Capture Director/Scroll Animation Architecture Requirements.md:300-356`
+- `docs/capture-director/Scroll Animation Architecture Requirements.md:300-356`
 
 Requirement impact: the requested simple-first Record setup flow is missing:
 Format, Quality, Full Video/Frame Range, Save Location, explanations, Advanced
@@ -385,8 +395,8 @@ no long-edge 8192 option.
 Evidence:
 
 - `src/capture/captureResolution.ts:22-71`
-- `docs/Capture Director/Scroll Animation Architecture Requirements.md:125-139`
-- `docs/Capture Director/Scroll Animation Architecture Requirements.md:208-220`
+- `docs/capture-director/Scroll Animation Architecture Requirements.md:125-139`
+- `docs/capture-director/Scroll Animation Architecture Requirements.md:208-220`
 
 Requirement impact: exact 8K UHD exists, but the requested quality ladder from
 1080p through 8K is incomplete.
@@ -403,8 +413,8 @@ Evidence:
 
 - `src/capture/capturePageRange.ts:1-37`
 - `src/capture/CaptureDirectorToolbar.tsx:1160-1272`
-- `docs/Capture Director/Scroll Animation Architecture Requirements.md:86-88`
-- `docs/Capture Director/Scroll Animation Architecture Requirements.md:309-313`
+- `docs/capture-director/Scroll Animation Architecture Requirements.md:86-88`
+- `docs/capture-director/Scroll Animation Architecture Requirements.md:309-313`
 
 Requirement impact: page range and frame range are different concepts. Scroll
 output needs frame `startFrame` and `endFrame` validation after final timeline
@@ -461,8 +471,8 @@ generation exists for scroll anchors.
 Evidence:
 
 - `tools/render-capture-video-job.mjs:589-595`
-- `docs/Capture Director/Scroll Animation Architecture Requirements.md:112-115`
-- `docs/Capture Director/Scroll Animation Architecture Requirements.md:191-193`
+- `docs/capture-director/Scroll Animation Architecture Requirements.md:112-115`
+- `docs/capture-director/Scroll Animation Architecture Requirements.md:191-193`
 
 Requirement impact: review and website handoff lose the visual index needed for
 high-quality scrollytelling integration.

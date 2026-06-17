@@ -77,6 +77,51 @@ page-source fields are also mirrored into hidden DEV-only DOM node
 `data-testid="capture-page-source-preview-trace"`. These handles are DEV-only
 and read-only.
 
+## Scroll Animation Output
+
+The Scroll Animation panel is a peer Capture Director production area
+(`CaptureDirectorPanel = "scroll-animation"`). The lower footer transport drives
+its preview: `Play`/`Pause`/`Stop` sample the Page Bar plus Camera Path through
+`CaptureScrollTimelineV1`, and the red record action opens the centered Scroll
+Record popout. Preview never writes files; Record produces a package.
+
+`CaptureScrollTimelineV1` is the deterministic scroll contract: `fps` (30 or 60,
+default 60), `durationSeconds`, normalized progress, a zero-based inclusive
+frame `range`, Page Bar `pageSource`, Camera Path `cameraSource`, and `anchors`.
+120 FPS is not supported. Frame ranges store seconds/progress so a frame range
+derives cleanly from the selected FPS.
+
+The Record popout selects output through a **Formats checkbox list**: tick any
+combination of `MP4`, `WebM`, `Scroll-Friendly Video`, and `PNG Sequence`. The
+request carries every ticked format in `CaptureScrollRecordRequestV1.formats`
+and derives a single primary `format` by render priority
+(`mp4 > scroll-friendly-video > webm > png-sequence`). Quality is `1080p`,
+`1440p`, `4K`, `6K`, or `8K`; Range is full video or an inclusive frame range;
+the popout also takes a save destination and package name, with per-format
+Advanced fields revealed only for ticked formats.
+
+`Accept and Render` validates the request, then the local renderer **renders
+frames once and encodes each ticked video format from that shared frame pass**
+(`render-capture-video-job.mjs --reuse-frames`), so the scene renders a single
+time regardless of how many formats are selected. Output is a
+`ScrollHandoffPackageV1` folder with `media[]` (one entry per ticked video
+format: `primary` MP4, `delivery` WebM, `scroll-friendly` MP4), a PNG `frames/`
+sequence when PNG Sequence is ticked, posters, a contact sheet, diagnostics, a
+handoff README, and per-file hashes. Cancelled or failed runs keep safely
+written files and mark the manifest `partial`/`cancelled`/`failed`.
+
+Scroll packages and Render Out videos default under `media_output/`
+(`media_output/capture-scroll-outputs`, `media_output/capture-video-outputs`),
+resolved against the repo root (`C:\GeoSee\GeoSee_Dev\media_output`). The
+operator can override the scroll save destination in the popout. `media_output/`
+is gitignored.
+
+The dev-only package endpoints are `/api/capture/scroll-package/start`,
+`/status`, `/cancel`, `/availability`, and `/api/capture/scroll-package-output`.
+The Node-side contract mirror in `plugins/scroll-package-contract.ts` is kept in
+parity with the browser `src/capture/` contracts by a guard in
+`tests/tools/capture-director-source.test.mjs`.
+
 ## Camera Path Workflow
 
 Camera Path uses `CaptureCameraPathV3` as the editable authoring model. Loaded

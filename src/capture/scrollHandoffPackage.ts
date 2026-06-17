@@ -230,15 +230,24 @@ function mediaForScrollRequest(
     },
   };
 
-  if (request.format === "png-sequence") return [];
-  const spec = mediaByFormat[request.format];
-  return [
-    {
+  const formats =
+    Array.isArray(request.formats) && request.formats.length > 0
+      ? request.formats
+      : [request.format];
+  const media: ScrollHandoffPackageV1["media"] = [];
+  const seenRoles = new Set<ScrollHandoffPackageV1["media"][number]["role"]>();
+  for (const format of formats) {
+    if (format === "png-sequence") continue;
+    const spec = mediaByFormat[format];
+    if (!spec || seenRoles.has(spec.role)) continue;
+    seenRoles.add(spec.role);
+    media.push({
       role: spec.role,
       path: `media/${spec.extension}`,
       mimeType: spec.mimeType,
-    },
-  ];
+    });
+  }
+  return media;
 }
 
 export function createPendingScrollHandoffManifest(

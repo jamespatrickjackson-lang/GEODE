@@ -157,6 +157,7 @@ import {
   clampCaptureScrollFrameToRange,
   createScrollRecordRequest,
   resolveCaptureScrollPlayStartFrame,
+  resolvePrimaryScrollFormat,
   sampleCaptureScrollTimeline,
   validateScrollRecordRequest,
   type CaptureScrollRenderRouteIntent,
@@ -450,6 +451,8 @@ interface CaptureDirectorContextValue {
   pathRenderSaveMessage: string | null;
   scrollOutputFormat: CaptureScrollOutputFormat;
   setScrollOutputFormat(format: CaptureScrollOutputFormat): void;
+  scrollOutputFormats: CaptureScrollOutputFormat[];
+  toggleScrollOutputFormat(format: CaptureScrollOutputFormat): void;
   scrollQualityPreset: CaptureScrollQualityPreset;
   setScrollQualityPreset(preset: CaptureScrollQualityPreset): void;
   scrollRangeMode: CaptureScrollRangeMode;
@@ -1010,8 +1013,29 @@ export function CaptureDirectorProvider({
     useState<string | null>(null);
   const [pathRenderSaveMessage, setPathRenderSaveMessage] =
     useState<string | null>(null);
-  const [scrollOutputFormat, setScrollOutputFormat] =
-    useState<CaptureScrollOutputFormat>("mp4");
+  const [scrollOutputFormats, setScrollOutputFormats] = useState<
+    CaptureScrollOutputFormat[]
+  >(["mp4"]);
+  const scrollOutputFormat = useMemo<CaptureScrollOutputFormat>(
+    () =>
+      resolvePrimaryScrollFormat(
+        scrollOutputFormats.length > 0 ? scrollOutputFormats : ["mp4"],
+      ),
+    [scrollOutputFormats],
+  );
+  const setScrollOutputFormat = useCallback((format: CaptureScrollOutputFormat) => {
+    setScrollOutputFormats([format]);
+  }, []);
+  const toggleScrollOutputFormat = useCallback(
+    (format: CaptureScrollOutputFormat) => {
+      setScrollOutputFormats((previous) =>
+        previous.includes(format)
+          ? previous.filter((entry) => entry !== format)
+          : [...previous, format],
+      );
+    },
+    [],
+  );
   const [scrollQualityPreset, setScrollQualityPreset] =
     useState<CaptureScrollQualityPreset>("4k");
   const [scrollRangeMode, setScrollRangeMode] =
@@ -1020,7 +1044,7 @@ export function CaptureDirectorProvider({
   const [scrollEndFrame, setScrollEndFrame] = useState(239);
   const [scrollCurrentFrame, setScrollCurrentFrame] = useState(0);
   const [scrollSaveDestination, setScrollSaveDestination] = useState(
-    ".tmp/capture-scroll-outputs",
+    "media_output/capture-scroll-outputs",
   );
   const [scrollOutputPackageName, setScrollOutputPackageName] = useState(
     "geosee-scroll-animation",
@@ -1748,7 +1772,7 @@ export function CaptureDirectorProvider({
     const pathTimeline = resolveCaptureCameraPathV3Timeline(normalizedPath);
     const durationSeconds = Math.max(0.1, pathTimeline.durationSeconds);
     const destination =
-      scrollSaveDestination.trim() || ".tmp/capture-scroll-outputs";
+      scrollSaveDestination.trim() || "media_output/capture-scroll-outputs";
     const packageName = scrollPackageNameSlug(scrollOutputPackageName);
     const quality = captureScrollQualityForPreset(scrollQualityPreset);
     const normalizedTimeline = normalizeCaptureTimelineState(captureTimeline);
@@ -1839,6 +1863,7 @@ export function CaptureDirectorProvider({
     const request = createScrollRecordRequest({
       timeline,
       format: scrollOutputFormat,
+      formats: scrollOutputFormats,
       quality,
       destination,
       packageName,
@@ -1873,6 +1898,7 @@ export function CaptureDirectorProvider({
     currentPage,
     scrollEndFrame,
     scrollOutputFormat,
+    scrollOutputFormats,
     scrollOutputPackageName,
     scrollQualityPreset,
     scrollRangeMode,
@@ -6231,6 +6257,8 @@ export function CaptureDirectorProvider({
       pathRenderSaveMessage,
       scrollOutputFormat,
       setScrollOutputFormat,
+      scrollOutputFormats,
+      toggleScrollOutputFormat,
       scrollQualityPreset,
       setScrollQualityPreset,
       scrollRangeMode,
@@ -6402,6 +6430,8 @@ export function CaptureDirectorProvider({
       pathRenderStatus,
       pathRenderSaveMessage,
       scrollOutputFormat,
+      scrollOutputFormats,
+      toggleScrollOutputFormat,
       scrollQualityPreset,
       scrollRangeMode,
       scrollStartFrame,

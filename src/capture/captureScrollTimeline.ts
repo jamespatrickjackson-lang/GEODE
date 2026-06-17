@@ -2,7 +2,7 @@ import type { CaptureValidationResult } from "./captureTypes";
 import type { CaptureTimelineTransitionEasing } from "./captureTimeline";
 
 export const DEFAULT_CAPTURE_SCROLL_FPS = 60;
-export const CAPTURE_SCROLL_FPS_OPTIONS = [30, 60, 120] as const;
+export const CAPTURE_SCROLL_FPS_OPTIONS = [30, 60] as const;
 export type CaptureScrollFps = (typeof CAPTURE_SCROLL_FPS_OPTIONS)[number];
 
 export const CAPTURE_SCROLL_OUTPUT_FORMATS = [
@@ -62,7 +62,13 @@ export interface CaptureScrollRecordRequestV1 {
   schema: "CaptureScrollRecordRequestV1";
   version: 1;
   timeline: CaptureScrollTimelineV1;
+  /**
+   * Primary output format. Derived from `formats` by render priority and kept
+   * for back-compat with single-format render/encode paths.
+   */
   format: CaptureScrollRecordFormat;
+  /** Every operator-selected output format. The package produces one per entry. */
+  formats: CaptureScrollRecordFormat[];
   quality: CaptureScrollRecordQuality;
   frameRange: CaptureScrollResolvedFrameRange;
   destination: string;
@@ -75,7 +81,8 @@ export interface CaptureScrollRecordRequestV1 {
 
 export interface CreateScrollRecordRequestInput {
   timeline: Partial<CaptureScrollTimelineV1>;
-  format: unknown;
+  format?: unknown;
+  formats?: unknown;
   quality: unknown;
   destination: unknown;
   packageName: unknown;
@@ -179,6 +186,52 @@ function isCaptureScrollFps(value: unknown): value is CaptureScrollFps {
 
 function isCaptureScrollFormat(value: unknown): value is CaptureScrollRecordFormat {
   return CAPTURE_SCROLL_OUTPUT_FORMATS.includes(value as CaptureScrollRecordFormat);
+}
+
+/**
+ * Render priority used to pick the single "primary" format that the
+ * render-once + encode-each pipeline encodes first. Video formats win over the
+ * frames-only PNG sequence so a shared frame render always drives a video out.
+ */
+const CAPTURE_SCROLL_FORMAT_PRIORITY: readonly CaptureScrollRecordFormat[] = [
+  "mp4",
+  "scroll-friendly-video",
+  "webm",
+  "png-sequence",
+];
+
+export function resolvePrimaryScrollFormat(
+  formats: readonly CaptureScrollRecordFormat[],
+): CaptureScrollRecordFormat {
+  for (const candidate of CAPTURE_SCROLL_FORMAT_PRIORITY) {
+    if (formats.includes(candidate)) return candidate;
+  }
+  return "mp4";
+}
+
+/**
+ * Normalize a requested format selection into an ordered, de-duplicated list of
+ * supported formats. Accepts an array (`formats`) and/or a single `format`
+ * fallback so older single-format callers keep working.
+ */
+export function normalizeScrollFormats(
+  formats: unknown,
+  fallbackFormat?: unknown,
+): CaptureScrollRecordFormat[] {
+  const candidates: unknown[] = Array.isArray(formats)
+    ? formats
+    : fallbackFormat !== undefined
+      ? [fallbackFormat]
+      : [];
+  const seen = new Set<CaptureScrollRecordFormat>();
+  const ordered: CaptureScrollRecordFormat[] = [];
+  for (const value of candidates) {
+    if (isCaptureScrollFormat(value) && !seen.has(value)) {
+      seen.add(value);
+      ordered.push(value);
+    }
+  }
+  return ordered;
 }
 
 function isCaptureTimelineTransitionEasing(
@@ -477,13 +530,19 @@ export function createScrollRecordRequest(
   const now = input.now ?? (() => new Date());
   const createdAt =
     typeof input.createdAt === "string" ? input.createdAt : now().toISOString();
+  const formats = normalizeScrollFormats(input.formats, input.format);
+  const primaryFormat =
+    formats.length > 0
+      ? resolvePrimaryScrollFormat(formats)
+      : isCaptureScrollFormat(input.format)
+        ? input.format
+        : (input.format as CaptureScrollRecordFormat);
   return {
     schema: "CaptureScrollRecordRequestV1",
     version: 1,
     timeline,
-    format: isCaptureScrollFormat(input.format)
-      ? input.format
-      : (input.format as CaptureScrollRecordFormat),
+    format: primaryFormat,
+    formats,
     quality: normalizeScrollRecordQuality(input.quality),
     frameRange: requestFrameRange(timeline),
     destination: typeof input.destination === "string" ? input.destination.trim() : "",
@@ -517,6 +576,27 @@ export function validateScrollRecordRequest(
 
   if (!isCaptureScrollFormat(request.format)) {
     errors.push("request.format is not supported.");
+  }
+
+  if (!Array.isArray(request.formats) || request.formats.length === 0) {
+    errors.push("request.formats must list at least one output format.");
+  } else {
+    const seen = new Set<unknown>();
+    for (const candidate of request.formats) {
+      if (!isCaptureScrollFormat(candidate)) {
+        errors.push(`request.formats includes an unsupported format: ${String(candidate)}.`);
+      } else if (seen.has(candidate)) {
+        errors.push(`request.formats has a duplicate format: ${candidate}.`);
+      } else {
+        seen.add(candidate);
+      }
+    }
+    if (
+      isCaptureScrollFormat(request.format) &&
+      !request.formats.includes(request.format)
+    ) {
+      errors.push("request.format must be one of request.formats.");
+    }
   }
 
   if (!isRecord(request.quality)) {
@@ -780,7 +860,7 @@ export function validateCaptureScrollTimeline(
 
   if (timeline.version !== 1) errors.push("timeline.version must be 1.");
   if (!isCaptureScrollFps(timeline.fps)) {
-    errors.push("timeline.fps must be 30, 60, or 120.");
+    errors.push("timeline.fps must be 30 or 60.");
   }
   if (!finiteNumber(timeline.durationSeconds) || timeline.durationSeconds <= 0) {
     errors.push("timeline.durationSeconds must be greater than zero.");

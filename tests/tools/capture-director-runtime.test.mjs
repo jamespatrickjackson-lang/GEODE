@@ -214,7 +214,7 @@ test("scroll animation timeline normalizes FPS, frame ranges, and progress sampl
   } = await importBundled("src/capture/captureScrollTimeline.ts");
 
   assert.equal(DEFAULT_CAPTURE_SCROLL_FPS, 60);
-  assert.deepEqual(CAPTURE_SCROLL_FPS_OPTIONS, [30, 60, 120]);
+  assert.deepEqual(CAPTURE_SCROLL_FPS_OPTIONS, [30, 60]);
   assert.equal(captureScrollFrameForSeconds(1.004), 60);
   assert.equal(captureScrollFrameForSeconds(1.009), 61);
   assert.equal(captureScrollFrameForSeconds(Number.NaN), 0);
@@ -785,6 +785,60 @@ test("scroll handoff pending manifests derive valid partial package contracts fr
   assert.equal(manifest.diagnosticsPath, "diagnostics/valid-4k-scroll.json");
   assert.equal(manifest.sourceContract.request.schema, "CaptureScrollRecordRequestV1");
   assert.equal(validateScrollHandoffManifest(manifest).valid, true);
+});
+
+test("scroll record requests carry every ticked output format and derive a primary", async () => {
+  const {
+    createScrollRecordRequest,
+    validateScrollRecordRequest,
+    resolvePrimaryScrollFormat,
+    normalizeScrollFormats,
+  } = await importBundled("src/capture/captureScrollTimeline.ts");
+  const { createPendingScrollHandoffManifest } = await importBundled(
+    "src/capture/scrollHandoffPackage.ts",
+  );
+
+  assert.equal(resolvePrimaryScrollFormat(["webm", "png-sequence"]), "webm");
+  assert.equal(resolvePrimaryScrollFormat(["png-sequence"]), "png-sequence");
+  assert.equal(
+    resolvePrimaryScrollFormat(["scroll-friendly-video", "mp4"]),
+    "mp4",
+  );
+  assert.deepEqual(
+    normalizeScrollFormats(["mp4", "mp4", "webm", "bogus"]),
+    ["mp4", "webm"],
+  );
+
+  const request = createScrollRecordRequest({
+    timeline: validScrollTimeline({
+      range: { mode: "frame-range", startFrame: 30, endFrame: 89 },
+    }),
+    formats: ["webm", "scroll-friendly-video", "mp4", "png-sequence"],
+    quality: { preset: "4k", width: 3840, height: 2160 },
+    destination: "media_output/capture-scroll-outputs",
+    packageName: "multi-format-scroll",
+    cleanRender: true,
+    renderRouteIntent: "local-external",
+    advancedOptions: {},
+    createdAt: "2026-06-16T00:00:00.000Z",
+  });
+
+  assert.equal(request.format, "mp4");
+  assert.deepEqual(request.formats, [
+    "webm",
+    "scroll-friendly-video",
+    "mp4",
+    "png-sequence",
+  ]);
+  assert.equal(validateScrollRecordRequest(request).valid, true);
+
+  const manifest = createPendingScrollHandoffManifest(request);
+  const roles = manifest.media.map((entry) => entry.role).sort();
+  assert.deepEqual(roles, ["delivery", "primary", "scroll-friendly"]);
+  assert.equal(manifest.media.length, 3);
+
+  const emptyFormats = { ...request, formats: [] };
+  assert.equal(validateScrollRecordRequest(emptyFormats).valid, false);
 });
 
 test("scroll handoff pending manifests support partial PNG sequence outputs", async () => {

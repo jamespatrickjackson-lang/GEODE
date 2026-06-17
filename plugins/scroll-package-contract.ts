@@ -28,7 +28,7 @@ export type CaptureScrollRenderRouteIntent =
 
 export interface CaptureScrollTimelineV1 {
   version: 1;
-  fps: 30 | 60 | 120;
+  fps: 30 | 60;
   durationSeconds: number;
   range:
     | { mode: "full" }
@@ -44,6 +44,7 @@ export interface CaptureScrollRecordRequestV1 {
   version: 1;
   timeline: CaptureScrollTimelineV1;
   format: CaptureScrollRecordFormat;
+  formats: CaptureScrollRecordFormat[];
   quality: {
     preset: CaptureScrollQualityPreset;
     width: number;
@@ -260,7 +261,7 @@ export function selectScrollContactSheetFrames(
 }
 
 function isCaptureScrollFps(value: unknown): value is CaptureScrollTimelineV1["fps"] {
-  return value === 30 || value === 60 || value === 120;
+  return value === 30 || value === 60;
 }
 
 function isCaptureScrollFormat(value: unknown): value is CaptureScrollRecordFormat {
@@ -355,7 +356,7 @@ function validateCaptureScrollTimeline(timeline: unknown): CaptureValidationResu
 
   if (timeline.version !== 1) errors.push("timeline.version must be 1.");
   if (!isCaptureScrollFps(timeline.fps)) {
-    errors.push("timeline.fps must be 30, 60, or 120.");
+    errors.push("timeline.fps must be 30 or 60.");
   }
   if (!finiteNumber(timeline.durationSeconds) || timeline.durationSeconds <= 0) {
     errors.push("timeline.durationSeconds must be greater than zero.");
@@ -480,6 +481,27 @@ export function validateScrollRecordRequest(request: unknown): CaptureValidation
 
   if (!isCaptureScrollFormat(request.format)) {
     errors.push("request.format is not supported.");
+  }
+
+  if (!Array.isArray(request.formats) || request.formats.length === 0) {
+    errors.push("request.formats must list at least one output format.");
+  } else {
+    const seen = new Set<unknown>();
+    for (const candidate of request.formats) {
+      if (!isCaptureScrollFormat(candidate)) {
+        errors.push(`request.formats includes an unsupported format: ${String(candidate)}.`);
+      } else if (seen.has(candidate)) {
+        errors.push(`request.formats has a duplicate format: ${candidate}.`);
+      } else {
+        seen.add(candidate);
+      }
+    }
+    if (
+      isCaptureScrollFormat(request.format) &&
+      !request.formats.includes(request.format)
+    ) {
+      errors.push("request.format must be one of request.formats.");
+    }
   }
 
   if (!isRecord(request.quality)) {
@@ -652,9 +674,56 @@ function mediaForScrollRequest(
       mimeType: "video/mp4",
     },
   };
-  if (request.format === "png-sequence") return [];
-  const spec = mediaByFormat[request.format];
-  return [{ role: spec.role, path: spec.path, mimeType: spec.mimeType }];
+  const formats =
+    Array.isArray(request.formats) && request.formats.length > 0
+      ? request.formats
+      : [request.format];
+  const media: ScrollHandoffPackageV1["media"] = [];
+  const seenRoles = new Set<ScrollHandoffPackageV1["media"][number]["role"]>();
+  for (const format of formats) {
+    if (format === "png-sequence") continue;
+    const spec = mediaByFormat[format];
+    if (!spec || seenRoles.has(spec.role)) continue;
+    seenRoles.add(spec.role);
+    media.push({ role: spec.role, path: spec.path, mimeType: spec.mimeType });
+  }
+  return media;
+}
+
+/**
+ * Package-relative media paths for the selected scroll formats, in render
+ * order. The first entry is the primary encode produced inline by the renderer;
+ * remaining video formats are encoded from the shared frame render.
+ */
+export function scrollMediaTargetsForRequest(
+  request: CaptureScrollRecordRequestV1,
+): Array<{ format: CaptureScrollRecordFormat; path: string; mimeType: string }> {
+  const mediaByFormat: Record<
+    Exclude<CaptureScrollRecordFormat, "png-sequence">,
+    { path: string; mimeType: string }
+  > = {
+    mp4: { path: "media/scroll-master.mp4", mimeType: "video/mp4" },
+    webm: { path: "media/scroll-master.webm", mimeType: "video/webm" },
+    "scroll-friendly-video": { path: "media/scroll-friendly.mp4", mimeType: "video/mp4" },
+  };
+  const formats =
+    Array.isArray(request.formats) && request.formats.length > 0
+      ? request.formats
+      : [request.format];
+  const ordered = [
+    request.format,
+    ...formats.filter((format) => format !== request.format),
+  ];
+  const targets: Array<{ format: CaptureScrollRecordFormat; path: string; mimeType: string }> = [];
+  const seenPaths = new Set<string>();
+  for (const format of ordered) {
+    if (format === "png-sequence") continue;
+    const spec = mediaByFormat[format];
+    if (!spec || seenPaths.has(spec.path)) continue;
+    seenPaths.add(spec.path);
+    targets.push({ format, path: spec.path, mimeType: spec.mimeType });
+  }
+  return targets;
 }
 
 export function createPendingScrollHandoffManifest(

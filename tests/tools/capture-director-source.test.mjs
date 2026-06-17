@@ -423,6 +423,22 @@ test("Capture Director exposes Scroll Animation path-based package controls", ()
     popoutBlock.includes('data-testid="capture-scroll-advanced-toggle"'),
     "Scroll Animation Advanced toggle should live inside the record popout",
   );
+  for (const expected of [
+    'data-testid="capture-scroll-format-checklist"',
+    'data-testid={`capture-scroll-format-${option.id}`}',
+    "toggleScrollOutputFormat(option.id)",
+    'type="checkbox"',
+  ]) {
+    assert.ok(
+      popoutBlock.includes(expected),
+      `scroll record popout should expose multi-format selection: ${expected}`,
+    );
+  }
+  assert.equal(
+    popoutBlock.includes('data-testid="capture-scroll-format-select"'),
+    false,
+    "Scroll record format selection should be a checkbox list, not a single select",
+  );
 });
 
 test("Capture Director scroll animation timeline and handoff package contracts exist", () => {
@@ -449,9 +465,17 @@ test("Capture Director scroll animation timeline and handoff package contracts e
     "sampleCaptureScrollTimeline",
     "CAPTURE_SCROLL_FPS_OPTIONS",
     "DEFAULT_CAPTURE_SCROLL_FPS",
+    "resolvePrimaryScrollFormat",
+    "normalizeScrollFormats",
+    "formats: CaptureScrollRecordFormat[]",
   ]) {
     assert.ok(scrollTimelineSource.includes(expected), `scroll timeline should include ${expected}`);
   }
+  assert.equal(
+    scrollTimelineSource.includes("[30, 60, 120]"),
+    false,
+    "scroll FPS options should no longer offer 120 FPS",
+  );
 
   for (const expected of [
     "sourcePageId",
@@ -477,6 +501,62 @@ test("Capture Director scroll animation timeline and handoff package contracts e
     '"failed"',
   ]) {
     assert.ok(scrollPackageSource.includes(expected), `scroll package should include ${expected}`);
+  }
+});
+
+test("Node-side scroll-package contract stays in parity with the browser scroll contracts", () => {
+  // The dev renderer plugin cannot import the browser src bundle, so
+  // plugins/scroll-package-contract.ts re-declares the scroll contracts. This
+  // guard fails if the two copies drift on the load-bearing shape (audit R1).
+  const nodeContract = readSource("plugins", "scroll-package-contract.ts");
+  const scrollTimelineSource = readSource("src", "capture", "captureScrollTimeline.ts");
+  const scrollPackageSource = readSource("src", "capture", "scrollHandoffPackage.ts");
+
+  // Output formats must match on both sides.
+  for (const format of [
+    '"mp4"',
+    '"webm"',
+    '"scroll-friendly-video"',
+    '"png-sequence"',
+  ]) {
+    assert.ok(
+      nodeContract.includes(format) && scrollTimelineSource.includes(format),
+      `scroll output format ${format} should exist in both contract copies`,
+    );
+  }
+
+  // Quality presets must match on both sides.
+  for (const preset of ['"1080p"', '"1440p"', '"4k"', '"6k"', '"8k"']) {
+    assert.ok(
+      nodeContract.includes(preset) && scrollTimelineSource.includes(preset),
+      `scroll quality preset ${preset} should exist in both contract copies`,
+    );
+  }
+
+  // FPS policy must match: 30/60 only, no 120 on either side.
+  assert.equal(
+    nodeContract.includes("120"),
+    false,
+    "Node scroll contract should not offer 120 FPS",
+  );
+  assert.ok(
+    nodeContract.includes("fps: 30 | 60") && scrollTimelineSource.includes("[30, 60]"),
+    "both scroll contracts should restrict FPS to 30 and 60",
+  );
+
+  // Multi-format request shape must exist on both sides.
+  assert.ok(
+    nodeContract.includes("formats: CaptureScrollRecordFormat[]") &&
+      scrollTimelineSource.includes("formats: CaptureScrollRecordFormat[]"),
+    "both scroll request contracts should carry formats[]",
+  );
+
+  // Manifest media roles must match on both sides.
+  for (const role of ['"primary"', '"delivery"', '"scroll-friendly"']) {
+    assert.ok(
+      nodeContract.includes(role) && scrollPackageSource.includes(role),
+      `scroll media role ${role} should exist in both contract copies`,
+    );
   }
 });
 

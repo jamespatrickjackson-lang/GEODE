@@ -1,8 +1,15 @@
 # Scroll Animation Agent Execution Log
 
+> **Superseded (2026-06-17).** The "stop after Task 1" gate below was the
+> original staged plan. The full feature subsequently shipped to `main` (merge
+> `290cd71`). The Task-2 note that new scroll controls "require editor-control
+> manifest updates" is inaccurate: the editor control manifest governs the
+> `src/editor/` sidebar only, not the Capture Director toolbar (`src/capture/`).
+> Kept as historical context. See DEC-174.
+
 Date: 2026-06-16
 
-Status: approved execution plan before source implementation
+Status: superseded — full feature shipped (was: approved Task-1-only plan)
 
 Worktree: `C:\GeoSee\Claude_WT\GeoSee_Dev\CODEX_ScrollDirector_000`
 
@@ -13,9 +20,9 @@ Branch: `CODEX_ScrollDirector_000`
 This log records the approved execution approach for the Scroll Animation
 Capture Director build. It complements:
 
-- `docs/Capture Director/Scroll Animation Architecture Requirements.md`
-- `docs/Capture Director/Scroll Animation Architecture Current Audit 2026-06-16.md`
-- `docs/Capture Director/Scroll Animation Architecture Implementation Plan.md`
+- `docs/capture-director/Scroll Animation Architecture Requirements.md`
+- `docs/capture-director/Scroll Animation Architecture Current Audit 2026-06-16.md`
+- `docs/capture-director/Scroll Animation Architecture Implementation Plan.md`
 
 ## Approved Direction
 

@@ -846,8 +846,8 @@ export function CaptureDirectorToolbar() {
     pathRenderOutputFilename,
     pathRenderProgress,
     pathRenderSaveMessage,
-    scrollOutputFormat,
-    setScrollOutputFormat,
+    scrollOutputFormats,
+    toggleScrollOutputFormat,
     scrollQualityPreset,
     setScrollQualityPreset,
     scrollRangeMode,
@@ -2891,28 +2891,41 @@ export function CaptureDirectorToolbar() {
                   </button>
                 </div>
                 <div style={popoutGridStyle}>
-                  <label style={popoutFieldStyle}>
-                    <span>Format</span>
-                    <select
-                      data-testid="capture-scroll-format-select"
-                      value={scrollOutputFormat}
-                      onChange={(event) =>
-                        setScrollOutputFormat(
-                          event.currentTarget.value as CaptureScrollOutputFormat,
-                        )
-                      }
-                      style={{ ...fieldStyle, width: "100%" }}
+                  <div
+                    data-testid="capture-scroll-format-checklist"
+                    style={popoutFieldStyle}
+                  >
+                    <span>Formats</span>
+                    <div
+                      role="group"
+                      aria-label="Scroll output formats"
+                      style={{ display: "flex", flexDirection: "column", gap: 3 }}
                     >
                       {scrollFormatOptions.map((option) => (
-                        <option key={option.id} value={option.id}>
-                          {option.label}
-                        </option>
+                        <label
+                          key={option.id}
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 6,
+                            cursor: "pointer",
+                          }}
+                        >
+                          <input
+                            type="checkbox"
+                            data-testid={`capture-scroll-format-${option.id}`}
+                            checked={scrollOutputFormats.includes(option.id)}
+                            onChange={() => toggleScrollOutputFormat(option.id)}
+                          />
+                          <span>{option.label}</span>
+                        </label>
                       ))}
-                    </select>
+                    </div>
                     <span style={fieldHelpStyle}>
-                      Delivery type for the scroll package render.
+                      Tick every delivery type to produce. Each renders from one
+                      shared frame pass into the same package.
                     </span>
-                  </label>
+                  </div>
                   <label style={popoutFieldStyle}>
                     <span>Quality</span>
                     <select
@@ -3040,7 +3053,7 @@ export function CaptureDirectorToolbar() {
                 </div>
                 {scrollAdvancedOpen && (
                   <div data-testid="capture-scroll-advanced-fields" style={sectionStyle}>
-                    {scrollOutputFormat === "mp4" && (
+                    {scrollOutputFormats.includes("mp4") && (
                       <label style={popoutFieldStyle}>
                         <span>MP4 bitrate guide</span>
                         <input
@@ -3054,7 +3067,7 @@ export function CaptureDirectorToolbar() {
                         </span>
                       </label>
                     )}
-                    {scrollOutputFormat === "webm" && (
+                    {scrollOutputFormats.includes("webm") && (
                       <label style={popoutFieldStyle}>
                         <span>WebM codec guide</span>
                         <input
@@ -3068,7 +3081,7 @@ export function CaptureDirectorToolbar() {
                         </span>
                       </label>
                     )}
-                    {scrollOutputFormat === "scroll-friendly-video" && (
+                    {scrollOutputFormats.includes("scroll-friendly-video") && (
                       <label style={popoutFieldStyle}>
                         <span>Scroll seam padding</span>
                         <input
@@ -3082,7 +3095,7 @@ export function CaptureDirectorToolbar() {
                         </span>
                       </label>
                     )}
-                    {scrollOutputFormat === "png-sequence" && (
+                    {scrollOutputFormats.includes("png-sequence") && (
                       <label style={popoutFieldStyle}>
                         <span>PNG filename pattern</span>
                         <input

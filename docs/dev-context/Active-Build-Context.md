@@ -265,6 +265,8 @@ profile.
 - Large code surfaces and extraction guidance: `docs/dev-context/Architecture-Hotspots.md`
 - Data/artifact status maps: `docs/dev-context/Dataset-Map.md`, `docs/dev-context/Computed-Artifact-Pipeline.md`, `docs/dev-context/Layer-Artifact-Classification.md`
 - Runtime/project load classes: `docs/dev-context/Project-Load-Class-Table.md`, `docs/dev-context/Runtime-Loading-Policy.md`
+- Capture Director (marketing capture, camera path, scroll animation output):
+  `docs/capture-director/README.md`; scroll output contract is DEC-174
 - User-facing editor tool inventory: `docs/tool-manifest.md`
 - Utah FORGE project-local data/layer status: `projects/utah-forge/DATA_LAYER_STATUS.md`
 - Source monolith split plan and progress: `docs/dev-context/Source-Monolith-Split-Plan.md`

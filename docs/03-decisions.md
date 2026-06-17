@@ -3212,3 +3212,51 @@ traces, frame outlines, crop boxes, or live section clipping to bleed into
 inactive targets. Do not change MT full-density scalar ownership. Locked by
 `tests/tools/working-area-focus-transition-source.test.mjs` and
 `tests/tools/section-iso-transition-smoothing-source.test.mjs`.
+
+## DEC-174 - Scroll Animation Capture Director output is multi-format, 30/60 FPS, and lands in media_output
+
+This decision records the Scroll Animation feature (shipped to `main` in merge
+`290cd71`) and its 2026-06-17 closeout. It extends DEC-119, DEC-132, DEC-135,
+and DEC-136 for scroll-package output. The planning docs under
+`docs/capture-director/` (Requirements, Implementation Plan, Current Audit,
+Agent Execution Log) are historical evidence; this entry is the durable record.
+
+**Considered:** keep scroll output single-format (one Record per file type),
+offer 120 FPS as a clean multiple of 60, leave package output under `.tmp/`, and
+keep the four scroll planning docs in a separate `docs/Capture Director/`
+directory.
+
+**Chose:** Scroll Animation is a Capture Director production area
+(`CaptureDirectorPanel = "scroll-animation"`) built on `CaptureScrollTimelineV1`
+(deterministic, normalized progress, zero-based inclusive frame range) and a
+`ScrollHandoffPackageV1` output package. The Record popout selects output
+through a checkbox list, so any combination of MP4, WebM, Scroll-Friendly Video,
+and PNG Sequence renders in one package. The request carries every ticked format
+in `CaptureScrollRecordRequestV1.formats` and derives one primary `format` by
+render priority (`mp4 > scroll-friendly-video > webm > png-sequence`). The local
+renderer renders frames once and encodes each ticked video format from that
+shared frame pass (`render-capture-video-job.mjs --reuse-frames`). Scroll FPS is
+30 or 60 only (default 60); 120 is not supported. Capture media output defaults
+under `media_output/` (`media_output/capture-scroll-outputs`,
+`media_output/capture-video-outputs`), gitignored, resolved against the repo
+root.
+
+**Why:** web handoff needs several delivery encodes from one approved render,
+and re-rendering the scene per format wastes the expensive deterministic pass.
+120 FPS added an unverified encode path with no marketing need. A single
+`media_output/` root keeps generated media in one predictable place instead of a
+hidden `.tmp/` lane. Consolidating the planning docs into the canonical
+`docs/capture-director/` directory removes the confusing parallel
+`docs/Capture Director/` folder.
+
+**Guard:** scroll state stays in recipe/session/job/package files only — no
+`projects/*/pages/**`, `projects/*/project.json`, `projects/*/environment.json`,
+or overlay writes, and no page-id/title/index/order coupling. The Node-side
+contract mirror `plugins/scroll-package-contract.ts` must stay in parity with
+the browser `src/capture/` scroll contracts; a parity guard in
+`tests/tools/capture-director-source.test.mjs` enforces formats, quality
+presets, FPS policy, request shape, and media roles. Scroll/Capture Director
+controls live in the Capture Director toolbar (`src/capture/`) and are outside
+the editor control manifest, which governs the `src/editor/` sidebar only.
+Locked by `tests/tools/capture-director-source.test.mjs` and
+`tests/tools/capture-director-runtime.test.mjs`.
