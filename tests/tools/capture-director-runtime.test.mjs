@@ -1573,7 +1573,14 @@ test("Camera Path orbit insertion bakes a linear 360 segment and preserves conti
     ["keyframe", "transition", "transition", "transition", "transition", "keyframe"],
   );
   assert.equal(orbitPath.segments.length, 5);
-  assert.equal(orbitPath.segments.every((segment) => segment.easing === "linear"), true);
+  // Orbit step segments are constant-speed linear; the exit segment keeps the
+  // authored easing. Regression guard: inserting an orbit must NOT relinearize
+  // the rest of the path (see DEC-144 temporal easing authority).
+  assert.deepEqual(
+    orbitPath.segments.slice(0, 4).map((segment) => segment.easing),
+    ["linear", "linear", "linear", "linear"],
+  );
+  assert.equal(orbitPath.segments[4].easing, "ease-in-out");
   assert.deepEqual(orbitPath.nodes[4].position, orbitPath.nodes[0].position);
   assert.deepEqual(orbitPath.nodes[4].target, orbitPath.nodes[0].target);
   assert.equal(orbitPath.segments[4].fromNodeId, orbitPath.nodes[4].id);

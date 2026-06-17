@@ -934,7 +934,7 @@ export function insertCaptureCameraPathV2Orbit360(
     orbitStepCount?: number;
   } = {},
 ): CaptureCameraPathV2 {
-  const path = linearizeCaptureCameraPathV2Transitions(inputPath);
+  const path = normalizeCaptureCameraPathV2(inputPath);
   const sourceIndex = path.nodes.findIndex((node) => node.id === sourceNodeId);
   if (sourceIndex < 0) return path;
   const sourceNode = path.nodes[sourceIndex];
@@ -1002,11 +1002,12 @@ export function insertCaptureCameraPathV2Orbit360(
     fromNodeId = orbitNode.id;
   }
   if (outgoingSegment) {
+    // The exit segment keeps its authored easing; only the orbit steps are
+    // forced to constant-speed linear so the 360 spin reads evenly.
     orbitSegments.push({
       ...outgoingSegment,
       id: captureCameraPathV2SegmentId(fromNodeId, outgoingSegment.toNodeId),
       fromNodeId,
-      easing: "linear",
     });
   }
 
@@ -1017,14 +1018,9 @@ export function insertCaptureCameraPathV2Orbit360(
   ];
   const segments = outgoingSegment
     ? path.segments.flatMap((segment) =>
-        segment.id === outgoingSegment.id
-          ? orbitSegments
-          : [{ ...segment, easing: "linear" as const }],
+        segment.id === outgoingSegment.id ? orbitSegments : [segment],
       )
-    : [...path.segments, ...orbitSegments].map((segment) => ({
-        ...segment,
-        easing: "linear" as const,
-      }));
+    : [...path.segments, ...orbitSegments];
 
   return normalizeCaptureCameraPathV2({
     ...path,

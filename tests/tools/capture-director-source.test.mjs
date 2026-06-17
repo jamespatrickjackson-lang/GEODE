@@ -1093,7 +1093,7 @@ test("Capture Director provider exposes Camera Path v3 state, compatibility mirr
   }
 });
 
-test("Camera Path authoring exposes orbit insertion, kind pickers, junction markers, and linear transitions", () => {
+test("Camera Path authoring exposes orbit insertion, kind pickers, junction markers, and constant-speed orbit segments", () => {
   const pathSource = readSource("src", "capture", "captureCameraPathV2.ts");
   const provider = readSource("src", "capture", "CaptureDirectorProvider.tsx");
   const toolbar = readSource("src", "capture", "CaptureDirectorToolbar.tsx");
@@ -1113,12 +1113,23 @@ test("Camera Path authoring exposes orbit insertion, kind pickers, junction mark
   for (const expected of [
     "addCameraPathOrbit360",
     "addCurrentCameraAsKind",
-    "linearizeCaptureCameraPathV2Transitions",
-    "linearizeCaptureCameraPathV3Transitions",
-    "timeCurve: { mode: \"linear\" }",
-    "easing: \"linear\"",
+    "insertCaptureCameraPathV2Orbit360",
+    "normalizeCaptureCameraPathV3(nextPath)",
+    "normalizeCaptureCameraPathV2(nextPath)",
   ]) {
     assert.ok(provider.includes(expected), `provider should include ${expected}`);
+  }
+  // Regression guard (DEC-144): applying a camera path must NOT relinearize
+  // authored temporal easing. Constant-speed lives only in the orbit inserter.
+  for (const forbidden of [
+    "linearizeCaptureCameraPathV3Transitions",
+    "timeCurve: { mode: \"linear\" }",
+  ]) {
+    assert.equal(
+      provider.includes(forbidden),
+      false,
+      `provider should NOT include ${forbidden} (DEC-144 easing authority)`,
+    );
   }
   const cameraPathAuthoringStart = provider.indexOf("const addCurrentCameraAsKind");
   const cameraPathAuthoringEnd = provider.indexOf("const setCameraPathNodeKind", cameraPathAuthoringStart);
@@ -1127,10 +1138,9 @@ test("Camera Path authoring exposes orbit insertion, kind pickers, junction mark
     "provider camera path authoring block should be locatable",
   );
   const cameraPathAuthoringBlock = provider.slice(cameraPathAuthoringStart, cameraPathAuthoringEnd);
-  assert.equal(
+  assert.ok(
     cameraPathAuthoringBlock.includes('easing: "ease-in-out"'),
-    false,
-    "provider should not author Camera Path transitions with ease-in-out",
+    "provider should author new Camera Path transitions with the ease-in-out default",
   );
 
   for (const expected of [
@@ -1169,12 +1179,22 @@ test("Camera Path authoring exposes orbit insertion, kind pickers, junction mark
     transitionEditor.match(/data-testid="capture-path-transition-easing"[\s\S]*?<\/select>/)?.[0] ?? "";
   const curveBlock =
     transitionEditor.match(/data-testid="capture-path-time-curve"[\s\S]*?<\/select>/)?.[0] ?? "";
+  // Regression guard (DEC-144): the easing and time-curve dropdowns expose the
+  // full authored set, not a linear-only stub.
   assert.ok(easingBlock.includes('<option value="linear">Linear</option>'));
-  assert.equal(easingBlock.includes("ease-in-out"), false);
+  assert.ok(
+    easingBlock.includes('value="ease-in-out"'),
+    "easing dropdown should restore the ease option",
+  );
   assert.ok(curveBlock.includes('<option value="linear">Linear</option>'));
-  assert.equal(curveBlock.includes("ease-in"), false);
-  assert.equal(curveBlock.includes("ease-out"), false);
-  assert.equal(curveBlock.includes("custom-ramp"), false);
+  for (const mode of [
+    'value="ease-in"',
+    'value="ease-out"',
+    'value="ease-in-out"',
+    'value="custom-ramp"',
+  ]) {
+    assert.ok(curveBlock.includes(mode), `curve dropdown should restore ${mode}`);
+  }
 });
 
 test("Capture Director provider guards Play Path and preview recording with playback validation", () => {
