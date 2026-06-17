@@ -12,7 +12,12 @@ on the current baseline; fails only if the consolidation removes them).
 2. **The full-density point cloud (special kitten).** `THREE.PointsMaterial`,
    never clip-owned by the registry. Scene-section soft mask only touches
    `ShaderMaterial` (`material instanceof THREE.ShaderMaterial`), so the cloud is
-   not soft-section-clipped; keep it that way.
+   not soft-section-clipped; keep it that way. Handled SEPARATELY from the
+   consolidation; a user-held saved known-good ("perfect") version is its restore
+   point. Carving it out removes its special cases (PointsMaterial, protected
+   scalar fields, default section-target membership) from the general path — the
+   resolver/applier never branch for it. Protection = this carve-out guard +
+   the saved restore point; no regression baseline captured here.
 3. **Section ISO derived-root ownership (DEC-169/171).**
    `beginSectionIsoOverlayTransition`, `sectionIsoOverlayTransitionRoot`; ISO
    roots follow their host and crossfade/exit per their existing owner.

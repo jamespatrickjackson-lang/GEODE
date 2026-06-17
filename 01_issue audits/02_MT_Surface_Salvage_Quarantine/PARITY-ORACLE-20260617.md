@@ -1,5 +1,14 @@
 # Parity Oracle — validation + protocol (2026-06-17)
 
+> CORRECTION (2026-06-17): the regression baseline deliverable is REMOVED. A
+> regression baseline is only meaningful for an invariant. The only invariant is
+> the MT cloud (full-density points), which is carved out of the system and
+> handled separately; a user-held saved known-good ("perfect") version is its
+> restore point — no capture from here. Everything else is being rebuilt, so it
+> is verified FORWARD (intended behavior + eye on 42911), not diffed against a
+> baseline. The oracle tooling notes below are retained as reference only; they
+> are not a required deliverable.
+
 Phase 2 preflight (C). DECK-STATE / REPRODUCTION EVIDENCE tool — NOT app-health
 proof; kept out of the app-health guard batch (per the tool's own header and the
 contract).
