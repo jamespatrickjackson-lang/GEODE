@@ -5,6 +5,7 @@ import {
   useRef,
   useState,
   type CSSProperties,
+  type MouseEvent as ReactMouseEvent,
   type ReactNode,
 } from "react";
 import {
@@ -43,6 +44,7 @@ import {
   resolveCaptureCameraPathBezierSegment,
   resolveCaptureCameraPathV3Timeline,
 } from "./captureCameraPathV3";
+import type { CaptureCameraPathNodeKindV2 } from "./captureCameraPathV2";
 import { captureJobProgressPercent } from "./captureJobRuntime";
 import {
   TECHNICAL_MONO_FONT,
@@ -280,6 +282,20 @@ const primaryButtonStyle: CSSProperties = {
   ...buttonStyle,
   borderColor: "rgba(120, 218, 196, 0.5)",
   background: "rgba(54, 158, 139, 0.32)",
+};
+
+const cameraAddKindPopoverStyle: CSSProperties = {
+  position: "fixed",
+  zIndex: 80,
+  display: "grid",
+  gap: 6,
+  minWidth: 142,
+  padding: 8,
+  borderRadius: 7,
+  border: "1px solid rgba(255,255,255,0.18)",
+  background: "rgba(14,18,22,0.96)",
+  boxShadow: "0 18px 42px rgba(0,0,0,0.34)",
+  backdropFilter: "blur(16px) saturate(150%)",
 };
 
 const renderButtonStyle: CSSProperties = {
@@ -706,6 +722,11 @@ export function CaptureDirectorToolbar() {
     "scroll-animation": false,
     "camera-path": false,
   });
+  const [cameraAddKindPopover, setCameraAddKindPopover] = useState<{
+    x: number;
+    y: number;
+    source: "panel" | "timeline";
+  } | null>(null);
   const {
     directorPanel,
     setDirectorPanel,
@@ -774,8 +795,9 @@ export function CaptureDirectorToolbar() {
     playCameraPath,
     stopCameraPathPlayback,
     startCameraPathPreviewRecording,
-    addCurrentCameraKeyframe,
+    addCurrentCameraAsKind,
     addCameraPathTransitionNode,
+    addCameraPathOrbit360,
     setCameraPathNodeKind,
     setCameraPathNodeEnabled,
     setCameraPathNodeHidden,
@@ -903,6 +925,30 @@ export function CaptureDirectorToolbar() {
     }
     setScrollRecordPopoutOpen(true);
   }, [setScrollRecordPopoutOpen]);
+
+  const openCameraAddKindPopover = useCallback(
+    (
+      event: ReactMouseEvent<HTMLElement>,
+      source: "panel" | "timeline" = "panel",
+    ) => {
+      event.preventDefault();
+      event.stopPropagation();
+      setCameraAddKindPopover({
+        x: Math.min(window.innerWidth - 168, Math.max(8, event.clientX + 8)),
+        y: Math.min(window.innerHeight - 94, Math.max(8, event.clientY + 8)),
+        source,
+      });
+    },
+    [],
+  );
+
+  const addCameraFromKindPopover = useCallback(
+    (kind: CaptureCameraPathNodeKindV2) => {
+      addCurrentCameraAsKind(kind);
+      setCameraAddKindPopover(null);
+    },
+    [addCurrentCameraAsKind],
+  );
 
   useEffect(() => {
     if (!scrollRecordPopoutOpen) {
@@ -1270,6 +1316,39 @@ export function CaptureDirectorToolbar() {
       >
         <span data-testid="capture-director-launcher-dot" style={dotStyle} />
       </button>
+
+      {cameraAddKindPopover && (
+        <div
+          data-testid={
+            cameraAddKindPopover.source === "timeline"
+              ? "capture-timeline-add-camera-kind-popover"
+              : "capture-camera-add-kind-popover"
+          }
+          style={{
+            ...cameraAddKindPopoverStyle,
+            left: cameraAddKindPopover.x,
+            top: cameraAddKindPopover.y,
+          }}
+          onClick={(event) => event.stopPropagation()}
+        >
+          <button
+            data-testid="capture-camera-add-kind-keyframe"
+            type="button"
+            onClick={() => addCameraFromKindPopover("keyframe")}
+            style={buttonStyle}
+          >
+            Keyframe
+          </button>
+          <button
+            data-testid="capture-camera-add-kind-transition"
+            type="button"
+            onClick={() => addCameraFromKindPopover("transition")}
+            style={buttonStyle}
+          >
+            Transition
+          </button>
+        </div>
+      )}
 
       {open && (
         <div
@@ -1995,11 +2074,23 @@ export function CaptureDirectorToolbar() {
                   />
                   <span>Show Path</span>
                 </label>
-                <button data-testid="capture-keyframe-add" type="button" onClick={addCurrentCameraKeyframe} style={buttonStyle}>
+                <button data-testid="capture-keyframe-add" type="button" onClick={(event) => openCameraAddKindPopover(event, "panel")} style={buttonStyle}>
                   Add Current Camera
                 </button>
                 <button data-testid="capture-path-add-transition" type="button" onClick={() => addCameraPathTransitionNode(selectedCameraPathSegmentId)} style={buttonStyle}>
                   Add Transition Node
+                </button>
+                <button
+                  data-testid="capture-path-orbit-360"
+                  type="button"
+                  disabled={
+                    !selectedCameraPathNodeId ||
+                    captureCameraPathV2.nodes.find((node) => node.id === selectedCameraPathNodeId)?.kind !== "keyframe"
+                  }
+                  onClick={() => addCameraPathOrbit360(selectedCameraPathNodeId)}
+                  style={buttonStyle}
+                >
+                  Orbit 360
                 </button>
                 <button data-testid="capture-keyframe-clear" type="button" onClick={clearCameraKeyframes} style={buttonStyle}>
                   Clear
@@ -3176,7 +3267,7 @@ export function CaptureDirectorToolbar() {
             scrubSeconds={timelineScrubSeconds}
             onScrub={setCameraPathScrubTimeSeconds}
             onSetScrollPlayheadSeconds={setScrollPlayheadSeconds}
-            onAddCurrentCamera={addCurrentCameraKeyframe}
+            onAddCurrentCamera={openCameraAddKindPopover}
             onAddCurrentPageClip={addCurrentPageClip}
             pageOptions={capturePageOptions}
             onAddPageClip={addPageClip}
@@ -3202,6 +3293,7 @@ export function CaptureDirectorToolbar() {
             onSelectPageClip={selectPageClip}
             onSelectTimelineTrack={setSelectedTimelineTrack}
             onSetNodeHoldSeconds={setCameraPathNodeHoldSecondsAfter}
+            onOpenCameraNodeKindPicker={setCameraPathNodeKind}
             onSetSegmentTransitionSeconds={setCameraPathSegmentTransitionSeconds}
             onSetPageClipLocked={setPageClipLocked}
             onResizeTimelineBoundary={resizeTimelineBoundary}

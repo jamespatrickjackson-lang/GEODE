@@ -1465,6 +1465,121 @@ test("CaptureRecipe JSON helpers roundtrip v2 camera paths and mirror legacy key
   });
 });
 
+test("Camera Path orbit insertion bakes a linear 360 segment and preserves continuation", async () => {
+  const {
+    insertCaptureCameraPathV2Orbit360,
+    linearizeCaptureCameraPathV2Transitions,
+    resolveCaptureCameraPathV2Timeline,
+    sampleCaptureCameraPathV2,
+  } = await importBundled("src/capture/captureCameraPathV2.ts");
+
+  const sourcePath = cameraPathV2({
+    nodes: [
+      {
+        id: "a",
+        kind: "keyframe",
+        position: [10, 0, 4],
+        target: [0, 0, 1],
+        up: [0, 0, 1],
+        fov: 45,
+        lookMode: "free-direction",
+        holdSecondsAfter: 0,
+      },
+      {
+        id: "b",
+        kind: "keyframe",
+        position: [20, 0, 4],
+        target: [5, 0, 1],
+        up: [0, 0, 1],
+        fov: 45,
+        lookMode: "free-direction",
+        holdSecondsAfter: 0,
+      },
+    ],
+    segments: [
+      {
+        id: "a:b",
+        fromNodeId: "a",
+        toNodeId: "b",
+        enabled: true,
+        hidden: false,
+        transitionSeconds: 2,
+        easing: "ease-in-out",
+      },
+    ],
+  });
+
+  const orbitPath = insertCaptureCameraPathV2Orbit360(sourcePath, "a", {
+    orbitDurationSeconds: 4,
+    orbitStepCount: 4,
+  });
+
+  assert.deepEqual(
+    orbitPath.nodes.map((node) => node.kind),
+    ["keyframe", "transition", "transition", "transition", "transition", "keyframe"],
+  );
+  assert.equal(orbitPath.segments.length, 5);
+  assert.equal(orbitPath.segments.every((segment) => segment.easing === "linear"), true);
+  assert.deepEqual(orbitPath.nodes[4].position, orbitPath.nodes[0].position);
+  assert.deepEqual(orbitPath.nodes[4].target, orbitPath.nodes[0].target);
+  assert.equal(orbitPath.segments[4].fromNodeId, orbitPath.nodes[4].id);
+  assert.equal(orbitPath.segments[4].toNodeId, "b");
+
+  const timeline = resolveCaptureCameraPathV2Timeline(orbitPath);
+  assert.equal(timeline.durationSeconds, 6);
+  assert.deepEqual(sampleCaptureCameraPathV2(orbitPath, 0).position, [10, 0, 4]);
+  assert.deepEqual(sampleCaptureCameraPathV2(orbitPath, 4).position, [10, 0, 4]);
+  assert.deepEqual(sampleCaptureCameraPathV2(orbitPath, 6).position, [20, 0, 4]);
+
+  const linearized = linearizeCaptureCameraPathV2Transitions(sourcePath);
+  assert.equal(linearized.segments[0].easing, "linear");
+});
+
+test("Camera Path default orbit remains circular after V3 playback upgrade", async () => {
+  const {
+    insertCaptureCameraPathV2Orbit360,
+  } = await importBundled("src/capture/captureCameraPathV2.ts");
+  const {
+    sampleCaptureCameraPathV3,
+    upgradeCaptureCameraPathV2ToV3,
+  } = await importBundled("src/capture/captureCameraPathV3.ts");
+
+  const sourcePath = cameraPathV2({
+    nodes: [
+      {
+        id: "a",
+        kind: "keyframe",
+        position: [10, 0, 4],
+        target: [0, 0, 1],
+        up: [0, 0, 1],
+        fov: 45,
+        lookMode: "free-direction",
+        holdSecondsAfter: 0,
+      },
+    ],
+    segments: [],
+  });
+
+  const orbitPath = insertCaptureCameraPathV2Orbit360(sourcePath, "a", {
+    orbitDurationSeconds: 4,
+  });
+  const upgraded = upgradeCaptureCameraPathV2ToV3(orbitPath);
+
+  assert.ok(
+    orbitPath.nodes.length >= 13,
+    `default orbit should use enough authored samples to play as a circle, got ${orbitPath.nodes.length}`,
+  );
+
+  for (let index = 0; index <= 16; index += 1) {
+    const sample = sampleCaptureCameraPathV3(upgraded, (4 * index) / 16);
+    const radius = Math.hypot(sample.position[0], sample.position[1]);
+    assert.ok(
+      Math.abs(radius - 10) <= 0.35,
+      `orbit sample ${index} should stay near radius 10, got ${radius}`,
+    );
+  }
+});
+
 test("CaptureRecipe normalization drops empty v2 camera paths", async () => {
   const {
     createCaptureRecipeFromCurrentState,

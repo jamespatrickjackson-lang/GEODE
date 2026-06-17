@@ -91,7 +91,7 @@ nodes.
 The Camera Path panel is organized as editor-style bars:
 
 - Path Controls: show path, add current camera, add transition node, Camera
-  Path-only play, pause, record preview, and clear.
+  Path-only play, pause, record preview, Orbit 360, and clear.
 - Camera Views: numbered line items such as `01`, `02`, and `03`.
 - Look And Focus: selected-row look mode and recipe-local focus binding.
 - Options: overlay color, size, ray, label, frustum, and preview-monitor
@@ -102,6 +102,18 @@ Each camera-view row owns its own active state, overlay-hidden state, node kind,
 hold time, look mode, focus binding, jump action, current-camera update action,
 and delete action. Keyframe rows may hold. Transition rows shape the path but
 cannot hold, so their hold time is always zero.
+
+Adding the current camera opens a pointer-anchored kind picker instead of
+silently choosing a type. `Keyframe` creates a hold-capable camera view.
+`Transition` creates a no-hold path-shaping node. The same kind picker is used
+from the lower Camera Path lane.
+
+`Orbit 360` attaches to the selected keyframe. It bakes a horizontal full orbit
+as transition nodes after that keyframe, returns to the same camera pose at the
+end of the orbit, and reconnects any existing next camera so later positions
+continue from the returned pose. The default button path uses 12 authored
+transition samples so V3 playback stays visually circular instead of cutting
+across four broad quarter-turns. The orbit uses linear timing.
 
 Transition containers live between line items. A `Transition 01 -> 02`
 container owns that segment's active state, overlay-hidden state, transition
@@ -123,6 +135,11 @@ the time axis, grid lines, and vertical playhead remain the timing reference.
 Hold and transition block edge handles are draggable duration controls; edits
 update the recipe-owned path state and reflow the timeline without touching
 page camera fields.
+
+Camera Path junction markers sit on the lower Camera Path lane. Keyframes are
+white triangles; transition nodes are white circles. Double-clicking a junction
+opens a compact picker to convert that node between keyframe and transition
+without changing project/page fixtures.
 
 ## V1/V2 Finish Status
 
@@ -169,18 +186,20 @@ can still emit legacy `cameraKeyframes`, but V3 is the runtime surfacing model
 for playback, scrub preview, deterministic Render Out, and Still Capture camera
 sampling.
 
-V3 separates temporal easing from geometric fairing. Temporal easing controls
-speed, acceleration, deceleration, and ramp profile along the path. Geometric
+V3 separates temporal timing from geometric fairing. Capture Director authoring
+forces transition timing to linear for both segment easing and `timeCurve`.
+Geometric
 continuity controls rail shape through nodes using surfacing language such as
 `G0`, `G1`, `G2`, `G3`, and `Gd` influence distance. Focus distance and aim
 geometry are a third independent track.
 
-The authored transition `timeCurve` is the motion authority (DEC-144). The
-runtime adds only a bounded motion guard: identity on calm geometry,
-deceleration into sharp travel corners, and mid-segment compression for large
-look-direction flips and near-focal orbits. Guard warps are monotonic and
-endpoint-exact, and there is no boundary stage that rewrites authored easing.
-Newly authored transitions default to `ease-in-out`.
+The authored transition `timeCurve` remains the motion authority for imported
+path data, but Capture Director normalizes edited and newly authored
+transitions to `linear`. The runtime adds only a bounded motion guard: identity
+on calm geometry, deceleration into sharp travel corners, and mid-segment
+compression for large look-direction flips and near-focal orbits. Guard warps
+are monotonic and endpoint-exact, and there is no boundary stage that rewrites
+the linear authoring rule.
 
 Transition containers expose `Timing`, `Path Shape`, `Aim`, and `Overlay`
 controls. The lower timeline surfaces temporal ramp, continuity, `Gd`, and

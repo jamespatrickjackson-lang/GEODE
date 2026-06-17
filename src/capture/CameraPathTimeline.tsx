@@ -157,9 +157,46 @@ const pagePickerOptionStyle: CSSProperties = {
   cursor: "pointer",
 };
 
+const nodeKindPickerStyle: CSSProperties = {
+  position: "fixed",
+  zIndex: 47,
+  display: "grid",
+  gap: 5,
+  minWidth: 128,
+  padding: 7,
+  borderRadius: 7,
+  border: "1px solid rgba(255,255,255,0.18)",
+  background: "rgba(14,18,22,0.96)",
+  boxShadow: "0 14px 32px rgba(0,0,0,0.3)",
+};
+
+const nodeKindPickerButtonStyle: CSSProperties = {
+  height: 24,
+  borderRadius: 5,
+  border: "1px solid rgba(255,255,255,0.12)",
+  background: "rgba(255,255,255,0.08)",
+  color: "rgba(244,248,250,0.94)",
+  fontSize: 11,
+  fontWeight: 720,
+  cursor: "pointer",
+};
+
 const pageLaneAddButtonStyle: CSSProperties = {
   ...emptyLaneAddButtonStyle,
   width: pageLaneContentOffsetPx,
+};
+
+const nodeKindMarkerButtonStyle: CSSProperties = {
+  position: "absolute",
+  top: -4,
+  width: 18,
+  height: 18,
+  padding: 0,
+  border: 0,
+  background: "transparent",
+  transform: "translateX(-50%)",
+  cursor: "pointer",
+  zIndex: 5,
 };
 
 const pagePickerListStyle: CSSProperties = {
@@ -528,6 +565,7 @@ export function CameraPathTimeline({
   onSelectSegment,
   onSelectTimelineTrack,
   onSetNodeHoldSeconds,
+  onOpenCameraNodeKindPicker,
   onSetPageClipLocked,
   onSetSegmentTransitionSeconds,
   path,
@@ -557,7 +595,10 @@ export function CameraPathTimeline({
   scrubSeconds: number;
   onScrub(seconds: number): void;
   onSetScrollPlayheadSeconds(seconds: number): void;
-  onAddCurrentCamera(): void;
+  onAddCurrentCamera(
+    event: ReactMouseEvent<HTMLElement>,
+    source: "timeline",
+  ): void;
   onAddCurrentPageClip(): void;
   onAddPageClip(pageId: string): void;
   onAddPageRangeClips(): void;
@@ -579,6 +620,10 @@ export function CameraPathTimeline({
   selectedNodeId: string | null;
   selectedSegmentId: string | null;
   onSetNodeHoldSeconds(id: string, seconds: number): void;
+  onOpenCameraNodeKindPicker(
+    id: string,
+    kind: "keyframe" | "transition",
+  ): void;
   onSetSegmentTransitionSeconds(id: string, seconds: number): void;
   onSetPageClipLocked(id: string, locked: boolean): void;
   onResizeTimelineBoundary(boundaryId: string, deltaSeconds: number): void;
@@ -588,6 +633,11 @@ export function CameraPathTimeline({
     mode: "add" | "replace";
     clipId: string | null;
     query: string;
+  } | null>(null);
+  const [nodeKindPicker, setNodeKindPicker] = useState<{
+    nodeId: string;
+    x: number;
+    y: number;
   } | null>(null);
   const [frameEditor, setFrameEditor] = useState<{
     clipId: string;
@@ -656,6 +706,25 @@ export function CameraPathTimeline({
       onAddPageClip(pageId);
     }
     setPagePickerState(null);
+  };
+
+  const openCameraNodeKindPicker = (
+    event: ReactMouseEvent<HTMLElement>,
+    nodeId: string,
+  ) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setNodeKindPicker({
+      nodeId,
+      x: Math.min(window.innerWidth - 152, Math.max(8, event.clientX + 8)),
+      y: Math.min(window.innerHeight - 86, Math.max(8, event.clientY + 8)),
+    });
+  };
+
+  const commitNodeKindPicker = (kind: "keyframe" | "transition") => {
+    if (!nodeKindPicker) return;
+    onOpenCameraNodeKindPicker(nodeKindPicker.nodeId, kind);
+    setNodeKindPicker(null);
   };
 
   const handlePageLaneKeyDown = (event: ReactKeyboardEvent<HTMLDivElement>) => {
@@ -904,6 +973,37 @@ export function CameraPathTimeline({
         )
       : null;
 
+  const nodeKindPickerPopover =
+    nodeKindPicker && typeof document !== "undefined"
+      ? createPortal(
+          <div
+            data-testid="capture-timeline-node-kind-popover"
+            style={{
+              ...nodeKindPickerStyle,
+              left: nodeKindPicker.x,
+              top: nodeKindPicker.y,
+            }}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <button
+              type="button"
+              onClick={() => commitNodeKindPicker("keyframe")}
+              style={nodeKindPickerButtonStyle}
+            >
+              Keyframe
+            </button>
+            <button
+              type="button"
+              onClick={() => commitNodeKindPicker("transition")}
+              style={nodeKindPickerButtonStyle}
+            >
+              Transition
+            </button>
+          </div>,
+          document.body,
+        )
+      : null;
+
   return (
     <div
       data-testid="capture-timeline-bar"
@@ -912,6 +1012,7 @@ export function CameraPathTimeline({
       style={rootStyle}
     >
       {pagePicker}
+      {nodeKindPickerPopover}
       <div data-testid="capture-timeline-keyframe-track" style={trackStyle}>
         <div
           data-testid="capture-timeline-frame-grid"
@@ -1360,7 +1461,7 @@ export function CameraPathTimeline({
             onClick={(event) => {
               event.stopPropagation();
               onSelectTimelineTrack("camera-path");
-              onAddCurrentCamera();
+              onAddCurrentCamera(event, "timeline");
             }}
             style={cameraPathLaneAddButtonStyle}
           >
@@ -1463,6 +1564,73 @@ export function CameraPathTimeline({
                     cursor: "ew-resize",
                     touchAction: "none",
                   }}
+                />
+              </button>
+            );
+          })}
+          {path.nodes.map((node) => {
+            const markerLeft = snapTimelinePercent(
+              timeline.nodeTimeSeconds[node.id] ?? 0,
+              duration,
+            );
+            const selected = node.id === selectedNodeId;
+            const markerShape = node.kind === "keyframe" ? "triangle" : "circle";
+            return (
+              <button
+                key={`kind:${node.id}`}
+                data-testid="capture-timeline-node-kind-marker"
+                data-node-kind={node.kind}
+                data-marker-shape={markerShape}
+                type="button"
+                title={`${node.kind === "keyframe" ? "Keyframe" : "Transition"} node`}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onSelectNode(node.id);
+                  onSelectTimelineTrack("camera-path");
+                }}
+                onDoubleClick={(event) => openCameraNodeKindPicker(event, node.id)}
+                style={{
+                  ...nodeKindMarkerButtonStyle,
+                  left: markerLeft,
+                }}
+              >
+                <span
+                  data-testid={
+                    node.kind === "keyframe"
+                      ? "capture-timeline-node-kind-keyframe"
+                      : "capture-timeline-node-kind-transition"
+                  }
+                  aria-hidden="true"
+                  style={
+                    node.kind === "keyframe"
+                      ? {
+                          display: "block",
+                          width: 0,
+                          height: 0,
+                          margin: "1px auto 0",
+                          borderLeft: "6px solid transparent",
+                          borderRight: "6px solid transparent",
+                          borderBottom: selected
+                            ? "12px solid rgba(255,255,255,1)"
+                            : "12px solid rgba(255,255,255,0.86)",
+                          filter: selected
+                            ? "drop-shadow(0 0 8px rgba(255,255,255,0.5))"
+                            : undefined,
+                        }
+                      : {
+                          display: "block",
+                          width: 11,
+                          height: 11,
+                          margin: "3px auto 0",
+                          borderRadius: "50%",
+                          background: selected
+                            ? "rgba(255,255,255,1)"
+                            : "rgba(255,255,255,0.86)",
+                          boxShadow: selected
+                            ? "0 0 8px rgba(255,255,255,0.48)"
+                            : undefined,
+                        }
+                  }
                 />
               </button>
             );
