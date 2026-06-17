@@ -125,5 +125,25 @@ transition commit and gets truncated/flickers; (2) `30 -> 31` snap is NOT
 late-attach (surfaces ready at setup) -> no change -> the snap lives in
 discrete-commit/derived-root, which is the next slice (F4); (3) counter does not
 climb for the case -> the path is not the one snapping.
-Disposition: keep (commit pending below); revert to 4dab7d7 if the eye-check
-shows a regression with no quick insight.
+Verdict (eye-check 2026-06-17): 30->31 and other pages work fine — no snap there
+for F3 to fix, and no regression. F3 is harmless but its target case did not
+reproduce (late-attach near-end snap was not the visible symptom). The remaining
+visible bug is 20->25: the MT/ISO surface "cloud" appears (exterior reveal) on
+exit from the sectioned page to the full-density page. 25->20 is fine. That is
+the CLIP channel exit-reveal, NOT opacity — confirms the headline bug is
+clip-hold-on-exit. Next owner = F4 (clip channel).
+Disposition: keep (651095b).
+
+## F4 — clip channel exit-hold (the 20->25 reveal) — PLANNED
+Status: PLANNED (headline bug; the per-entity clip ownership this branch exists for)
+Target: 20->25 (and any clipped-source -> absent-target). An entity clipped in
+the source and absent in the target must HOLD its source clip while opacity
+fades; today the active->inactive exit applies the inactive (scene-global)
+section to the live entity, un-clipping it so the exterior shows during the fade.
+Resolver: Phase-1 `resolveEntityClipDecision` already returns `exit-hold` for
+clipped-source + absent-target — the decision exists; F4 is the APPLIER + the
+hold at the active->inactive exit path, flag-gated.
+Risk: clip is scene-global today (`applySceneSectionPlanes(targetSceneSectionStyle)`
+applied to all); per-entity hold is the real architectural step. Interacts with
+the salvage exit snapshot (DEC-173) and the reverted L2 mutual-exclusion. Needs
+its own plan + prompt.
