@@ -80,5 +80,6 @@ export function applyEntityOpacityFade(
     durationMs,
     easing,
   });
+  host.noteEntityBehaviorOpacityOwned();
   return true;
 }

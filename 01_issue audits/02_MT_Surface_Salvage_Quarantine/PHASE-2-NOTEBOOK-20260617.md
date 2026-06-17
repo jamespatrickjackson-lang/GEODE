@@ -68,4 +68,23 @@ generic fade branch) with mutual exclusion, not replace the whole setup. The
 all-or-nothing chokepoints are reserved for a future full cutover; per-owner
 increments hook the owner's exact site. Scope this slice = generic fade branch
 only; the snapshot-path and late-attach opacity sets stay legacy (next slices).
+Disposition: keep (b6ce8fa).
+
+## F1.1 — observability readout (so a parity step is verifiable) — done
+Status: DONE
+Hypothesis: a parity step has no visible signal; a counter the applier bumps when
+it owns a tween makes flag ON vs OFF a hard number (eye cannot prove parity).
+Change:
+- SceneManager: `entityBehaviorOpacityOwned` counter + `noteEntityBehaviorOpacityOwned`
+  / `entityBehaviorStats` / `resetEntityBehaviorStats`.
+- applier: `applyEntityOpacityFade` calls `host.noteEntityBehaviorOpacityOwned()`
+  when it owns a tween.
+- scene.ts DEV hooks: `__geoseeBehaviorStats()`, `__geoseeBehaviorReset()`.
+Measure: tsc -b exit 0; guards green; on 42911 both hooks present, scene mounts,
+`__geoseeBehaviorStats()` -> { opacityTweensOwned: 0 } at rest.
+Result: readout live. A/B sequence: reset -> flag ON -> navigate -> stats shows
+opacityTweensOwned > 0; flag OFF -> reset -> navigate -> stays 0 (legacy path).
+Insight: observability is a foundation feature, not a one-off — every later
+increment (fade floor, clip) gets a verifiable number for its notebook entry
+instead of relying on the eye for parity.
 Disposition: keep (commit pending below).

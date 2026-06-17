@@ -594,10 +594,15 @@ export function mountScene(
 
   const manager = new SceneManager(scene, renderer);
   if (import.meta.env.DEV) {
-    // Phase 2 per-entity behavior pipeline A/B toggle (DEV only). OFF by default.
-    (window as unknown as Record<string, unknown>).__geoseeBehaviorPipeline = (
-      value: boolean,
-    ) => manager.setPerEntityBehaviorActive(value === true);
+    // Phase 2 per-entity behavior pipeline A/B toggle + observability (DEV only).
+    // OFF by default. Stats make a parity step verifiable as a number:
+    //   __geoseeBehaviorReset(); __geoseeBehaviorPipeline(true); <navigate>;
+    //   __geoseeBehaviorStats()  // -> { opacityTweensOwned: > 0 }
+    const devHooks = window as unknown as Record<string, unknown>;
+    devHooks.__geoseeBehaviorPipeline = (value: boolean) =>
+      manager.setPerEntityBehaviorActive(value === true);
+    devHooks.__geoseeBehaviorStats = () => manager.entityBehaviorStats();
+    devHooks.__geoseeBehaviorReset = () => manager.resetEntityBehaviorStats();
   }
   for (const spec of layerSpecs) {
     manager.registerLayer(spec);
