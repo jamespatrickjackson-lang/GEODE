@@ -679,11 +679,17 @@ export function CameraPathTimeline({
       : true,
   );
   const diagnosticsVisible = captureTimeline.diagnosticsVisible;
+  // Non-diagnostics: flexible spacer rows above/below the two lanes so the
+  // Pages + Camera Path bars sit vertically centered, with the time-graph scale
+  // pinned at the bottom and the full-height grid behind them.
+  const pageLaneGridRow = diagnosticsVisible ? 1 : 2;
+  const cameraPathGridRow = diagnosticsVisible ? 2 : 3;
+  const scaleAxisGridRow = diagnosticsVisible ? 3 : 5;
   const trackStyle: CSSProperties = {
     ...trackBaseStyle,
     gridTemplateRows: diagnosticsVisible
       ? "34px 34px 28px 20px 20px 20px 20px 20px"
-      : "34px 34px 28px",
+      : "minmax(12px, 1fr) 34px 34px minmax(12px, 1fr) 28px",
   };
   const blocksLaneRef = useRef<HTMLDivElement | null>(null);
   const pageLaneRef = useRef<HTMLDivElement | null>(null);
@@ -1074,7 +1080,7 @@ export function CameraPathTimeline({
           aria-label="Page Bar timeline lane"
           style={{
             ...laneStyle,
-            gridRow: 1,
+            gridRow: pageLaneGridRow,
             overflow: "visible",
             background: "transparent",
             border: "none",
@@ -1416,7 +1422,7 @@ export function CameraPathTimeline({
           style={{
             ...timelineRailOffsetStyle,
             position: "relative",
-            gridRow: 3,
+            gridRow: scaleAxisGridRow,
             minHeight: 28,
             borderTop: "1px solid rgba(255,255,255,0.12)",
             pointerEvents: "auto",
@@ -1472,7 +1478,7 @@ export function CameraPathTimeline({
           data-testid="capture-timeline-camera-path-lane"
           style={{
             ...laneStyle,
-            gridRow: 2,
+            gridRow: cameraPathGridRow,
             background: "transparent",
             border: "none",
           }}
