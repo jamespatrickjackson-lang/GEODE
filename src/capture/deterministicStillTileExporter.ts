@@ -117,6 +117,7 @@ export async function exportDeterministicStillTile({
       tileId: tile.id,
       mode: "max-detail-render",
     });
+    await sceneHandle.waitForCaptureFidelityReady?.();
     const cameraPose = sampleCaptureRecipeCameraPoseAtFrame(recipe, frameIndex);
     if (cameraPose) {
       applyPose(sceneHandle.camera, sceneHandle.controls, cameraPose);

@@ -20,12 +20,62 @@ Path lane shows camera holds and transitions. The Time Graph lane shows timing
 curves without becoming a separate state owner. Position, G, Gd, Aim, and Focus
 diagnostics are hidden by default and remain marketing-setup-only.
 
+Page Bar editing is frame-primary for Scroll Animation authoring. `Add Page`
+opens an explicit searchable page picker centered above the lower bar, and
+double-clicking a clip page label opens the same picker to replace that clip's page without
+changing its timing. Selected Page clips can be removed with Delete or Backspace
+while the Page lane has focus and no text field is active. Page clips fill the
+available Page lane, show start frame, end frame, and duration as frames plus
+seconds, and double-clicking those frame values opens compact numeric entry. The
+timeline grid spans behind the lanes with 0.1-second snap subdivisions at the
+default 60 FPS editing rate. The grid counts from the 0s line, so each second
+has ten 0.1-second intervals and its major tick lands exactly on the seconds
+axis. The time axis and vertical grid lines remain visible; only the old
+horizontal scrub slider is absent. The playhead is a single vertical line.
+Clicking empty timeline rail space, the time axis, or a Page clip places the
+Scroll Animation playhead at the clicked frame. That manual placement samples
+the Page Bar scene state and Camera Path pose the same way `Play` does; it is
+not just a marker move. Double-click page-name and timing editors keep editor
+behavior and do not scrub.
+The lower footer transport belongs to this Scroll Animation clock: its Play
+and Pause actions preview the Page Bar plus Camera Path contract, and its red
+record action opens the Scroll Record popout. Camera Path-only play and preview
+recording remain in the Camera Path panel controls.
+Timing edits clamp to the local clip boundary: start/end changes may adjust only
+the immediately shared neighbor, while explicit boundary drags tune only that
+two-clip boundary. There is no global ripple edit and no project/page fixture
+write.
+
 Render Out and rendered path video may sample the Page Bar and Camera Path
 together at fixed frame time. Empty Page Bar state falls back to current-page
 capture. The long-term external frame queue uses the same contract: queue
 Page Bar plus Camera Path frame references, render exact-size frames, then
 compile those frames into the chosen media format without mutating project
 fixtures.
+
+Scroll Animation treats Page Bar clips as page-authored scene-state sources.
+They are not labels and they are not camera drivers. At every sampled frame the
+Page Bar applies the selected page's effective visibility, styles, page scene,
+and overlays; Camera Path then applies the camera pose. Page cameras from the
+sampled pages are ignored in this workflow so the path remains the spatial
+authority.
+
+For development tracing, inspect both runtime seams from the browser console:
+
+```js
+window.__captureDirectorScrollPreview?.getState()
+window.__pageController?.getState().capturePageSourcePreview
+```
+
+The first trace reports the current scroll frame, Page Bar sample, Camera Path
+sample time, and preview state. The same JSON is mirrored into the hidden
+DEV-only DOM node `data-testid="capture-scroll-preview-trace"` for browser
+automation when page globals are isolated. The second trace reports the resolved
+source and target page ids, the selected authoring page id, the applied page id,
+transition progress, and whether capture page-source preview is active. These
+page-source fields are also mirrored into hidden DEV-only DOM node
+`data-testid="capture-page-source-preview-trace"`. These handles are DEV-only
+and read-only.
 
 ## Camera Path Workflow
 
@@ -40,8 +90,8 @@ nodes.
 
 The Camera Path panel is organized as editor-style bars:
 
-- Path Controls: show path, add current camera, add transition node, play,
-  pause, record preview, and clear.
+- Path Controls: show path, add current camera, add transition node, Camera
+  Path-only play, pause, record preview, and clear.
 - Camera Views: numbered line items such as `01`, `02`, and `03`.
 - Look And Focus: selected-row look mode and recipe-local focus binding.
 - Options: overlay color, size, ray, label, frustum, and preview-monitor
@@ -66,10 +116,10 @@ do not start playback or recording; the panel shows the missing requirement
 instead. A valid path samples by deterministic timeline time, not request-
 animation-frame deltas.
 
-The lower timeline is a full-width authoring timeline. It shows the ruler,
-playhead, scrubber, hold blocks, transition blocks, position lane, look lane,
-and focus lane. Scrubbing updates the scene overlay sample, look/focus rays,
-and preview monitor using the same sampling path used by Render Out.
+The lower timeline is a full-width authoring timeline. It shows the ruler, a
+single vertical playhead, hold blocks, transition blocks, position lane, look
+lane, and focus lane. The former horizontal scrub slider is intentionally absent;
+the time axis, grid lines, and vertical playhead remain the timing reference.
 Hold and transition block edge handles are draggable duration controls; edits
 update the recipe-owned path state and reflow the timeline without touching
 page camera fields.

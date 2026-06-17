@@ -6,7 +6,8 @@ export type CaptureJobKind =
   | "path-video"
   | "still"
   | "external-still"
-  | "external-video";
+  | "external-video"
+  | "scroll-package";
 
 export type CaptureJobStatus =
   | "idle"

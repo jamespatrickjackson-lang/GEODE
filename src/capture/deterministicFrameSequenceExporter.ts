@@ -374,6 +374,7 @@ export async function exportDeterministicFrameSequence({
         pixelRatio: 1,
       });
     }
+    await sceneHandle.waitForCaptureFidelityReady?.();
 
     for (let frameIndex = 0; frameIndex < totalFrames; frameIndex += 1) {
       throwIfAborted(signal);

@@ -1,6 +1,8 @@
 import { useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import type {
   CSSProperties,
+  KeyboardEvent as ReactKeyboardEvent,
   MouseEvent as ReactMouseEvent,
   PointerEvent as ReactPointerEvent,
 } from "react";
@@ -14,6 +16,8 @@ import type {
 } from "./captureCameraPathV3";
 import { layoutCapturePathTimeline } from "./cameraPathTimelineLayout";
 import {
+  CAPTURE_TIMELINE_DEFAULT_FPS,
+  captureTimelineClipFrameBounds,
   resolveCaptureTimelineLayout,
   type CaptureTimelineState,
   type CaptureTimelineTrack,
@@ -38,53 +42,6 @@ const rootStyle: CSSProperties = {
   zIndex: 36,
 };
 
-const spineShellStyle: CSSProperties = {
-  position: "relative",
-  height: 18,
-  display: "flex",
-  alignItems: "center",
-  minWidth: 0,
-};
-
-const spineTrackStyle: CSSProperties = {
-  position: "relative",
-  width: "100%",
-  height: 10,
-  borderRadius: 999,
-  border: "1px solid rgba(255,255,255,0.28)",
-  background: "rgba(232,235,236,0.72)",
-  boxShadow: "inset 0 1px 1px rgba(255,255,255,0.22)",
-  overflow: "hidden",
-};
-
-const spineProgressStyle: CSSProperties = {
-  position: "absolute",
-  left: 0,
-  top: 0,
-  bottom: 0,
-  background: "rgba(39,42,47,0.22)",
-};
-
-const spineThumbStyle: CSSProperties = {
-  position: "absolute",
-  top: 1,
-  width: 24,
-  height: 8,
-  borderRadius: 3,
-  background: "rgba(80,82,86,0.42)",
-  transform: "translateX(-50%)",
-  pointerEvents: "none",
-};
-
-const spineRangeInputStyle: CSSProperties = {
-  position: "absolute",
-  inset: 0,
-  width: "100%",
-  height: 18,
-  opacity: 0,
-  cursor: "pointer",
-};
-
 const buttonStyle: CSSProperties = {
   height: 30,
   borderRadius: 6,
@@ -105,35 +62,17 @@ const addCameraIconStyle: CSSProperties = {
   transform: "translateY(-1px)",
 };
 
-const timelinePlayIconStyle: CSSProperties = {
-  width: 0,
-  height: 0,
-  borderTop: "6px solid transparent",
-  borderBottom: "6px solid transparent",
-  borderLeft: "9px solid rgba(255,255,255,0.94)",
-  marginLeft: 2,
-};
-
-const timelinePauseIconStyle: CSSProperties = {
-  width: 10,
-  height: 12,
-  borderLeft: "4px solid rgba(255,255,255,0.94)",
-  borderRight: "4px solid rgba(255,255,255,0.94)",
-};
-
 const pageLaneContentOffsetPx = 36;
 
-const pageLaneAddButtonStyle: CSSProperties = {
+const emptyLaneAddButtonStyle: CSSProperties = {
   position: "absolute",
   left: 0,
   top: 0,
   bottom: 0,
-  width: pageLaneContentOffsetPx,
   border: 0,
-  borderRight: "1px solid rgba(255,255,255,0.14)",
+  borderRight: "1px solid rgba(255,255,255,0.1)",
   borderRadius: "6px 0 0 6px",
-  background:
-    "linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.06))",
+  background: "rgba(255,255,255,0.055)",
   color: "rgba(255,255,255,0.94)",
   display: "inline-flex",
   alignItems: "center",
@@ -173,25 +112,121 @@ const pageAddMenuButtonStyle: CSSProperties = {
   fontSize: 11,
 };
 
+const pagePickerStyle: CSSProperties = {
+  position: "fixed",
+  left: "50%",
+  top: "50%",
+  transform: "translate(-50%, -50%)",
+  zIndex: 46,
+  width: 360,
+  maxWidth: "min(360px, calc(100vw - 32px))",
+  maxHeight: "min(460px, calc(100vh - 240px))",
+  display: "grid",
+  gridTemplateRows: "auto minmax(0, 1fr)",
+  gap: 6,
+  padding: 8,
+  overflow: "hidden",
+  borderRadius: 7,
+  border: "1px solid rgba(255,255,255,0.18)",
+  background: "rgba(14,18,22,0.96)",
+  boxShadow: "0 18px 42px rgba(0,0,0,0.34)",
+};
+
+const pagePickerSearchStyle: CSSProperties = {
+  height: 26,
+  borderRadius: 5,
+  border: "1px solid rgba(255,255,255,0.18)",
+  background: "rgba(255,255,255,0.08)",
+  color: "rgba(244,248,250,0.94)",
+  padding: "0 8px",
+  fontSize: 12,
+  outline: "none",
+};
+
+const pagePickerOptionStyle: CSSProperties = {
+  height: 24,
+  borderRadius: 5,
+  border: "1px solid rgba(255,255,255,0.12)",
+  background: "rgba(255,255,255,0.07)",
+  color: "rgba(244,248,250,0.94)",
+  textAlign: "left",
+  padding: "0 8px",
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+  whiteSpace: "nowrap",
+  cursor: "pointer",
+};
+
+const pageLaneAddButtonStyle: CSSProperties = {
+  ...emptyLaneAddButtonStyle,
+  width: pageLaneContentOffsetPx,
+};
+
+const pagePickerListStyle: CSSProperties = {
+  display: "grid",
+  gap: 4,
+  minHeight: 0,
+  maxHeight: "min(340px, calc(100vh - 260px))",
+  overflowY: "auto",
+  paddingRight: 2,
+};
+
+const clipFrameLabelStyle: CSSProperties = {
+  position: "absolute",
+  top: 2,
+  fontSize: 9,
+  lineHeight: "10px",
+  fontWeight: 760,
+  fontVariantNumeric: "tabular-nums",
+  color: "rgba(226,240,246,0.8)",
+  zIndex: 2,
+};
+
+const clipCenterLabelStyle: CSSProperties = {
+  position: "absolute",
+  left: 42,
+  right: 42,
+  top: 3,
+  display: "flex",
+  justifyContent: "center",
+  gap: 6,
+  minWidth: 0,
+  overflow: "hidden",
+  whiteSpace: "nowrap",
+  textOverflow: "ellipsis",
+  zIndex: 2,
+};
+
+const frameEditorInputStyle: CSSProperties = {
+  width: 54,
+  height: 16,
+  borderRadius: 4,
+  border: "1px solid rgba(120,218,196,0.72)",
+  background: "rgba(5,10,12,0.96)",
+  color: "rgba(244,248,250,0.96)",
+  fontSize: 10,
+  fontWeight: 760,
+  padding: "0 4px",
+  outline: "none",
+  fontVariantNumeric: "tabular-nums",
+};
+
+const frameEditorErrorStyle: CSSProperties = {
+  position: "absolute",
+  left: 42,
+  right: 42,
+  bottom: 1,
+  color: "rgba(251,146,60,0.92)",
+  fontSize: 9,
+  textAlign: "center",
+  pointerEvents: "none",
+};
+
 const cameraPathLaneContentOffsetPx = 36;
 
 const cameraPathLaneAddButtonStyle: CSSProperties = {
-  position: "absolute",
-  left: 0,
-  top: 0,
-  bottom: 0,
+  ...emptyLaneAddButtonStyle,
   width: cameraPathLaneContentOffsetPx,
-  border: 0,
-  borderRight: "1px solid rgba(255,255,255,0.14)",
-  borderRadius: "6px 0 0 6px",
-  background:
-    "linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.06))",
-  color: "rgba(255,255,255,0.94)",
-  display: "inline-flex",
-  alignItems: "center",
-  justifyContent: "center",
-  padding: 0,
-  cursor: "pointer",
 };
 
 const cameraPathLaneContentStyle: CSSProperties = {
@@ -203,22 +238,12 @@ const cameraPathLaneContentStyle: CSSProperties = {
   overflow: "hidden",
 };
 
-const timelineSpinePlayButtonStyle: CSSProperties = {
-  ...cameraPathLaneAddButtonStyle,
-  borderRadius: 6,
-};
-
 const trackBaseStyle: CSSProperties = {
+  position: "relative",
   display: "grid",
   gap: 6,
   minWidth: 0,
   pointerEvents: "auto",
-};
-
-const spineLaneStyle: CSSProperties = {
-  position: "relative",
-  minHeight: 20,
-  borderRadius: 6,
 };
 
 const timelineRailOffsetStyle: CSSProperties = {
@@ -267,6 +292,13 @@ const playheadStyle: CSSProperties = {
   pointerEvents: "none",
 };
 
+const globalPlayheadStyle: CSSProperties = {
+  ...playheadStyle,
+  top: 0,
+  bottom: 0,
+  zIndex: 5,
+};
+
 const cameraScrubMarkerStyle: CSSProperties = {
   position: "absolute",
   top: -3,
@@ -311,14 +343,14 @@ function timelineScaleForDuration(duration: number): {
 } {
   if (duration <= 8) {
     return {
-      minorStepSeconds: 0.25,
+      minorStepSeconds: 0.1,
       majorStepSeconds: 1,
       labelStepSeconds: 1,
     };
   }
   if (duration <= 20) {
     return {
-      minorStepSeconds: 0.5,
+      minorStepSeconds: 0.1,
       majorStepSeconds: 2,
       labelStepSeconds: 2,
     };
@@ -382,6 +414,29 @@ function snapTimelineBlockPercent(
   return `${width}%`;
 }
 
+function timelineFrameSeconds(
+  seconds: number,
+  duration: number,
+  fps = CAPTURE_TIMELINE_DEFAULT_FPS,
+): number {
+  const safeFps = Math.max(1, Math.round(fps));
+  const safeSeconds = Number.isFinite(seconds)
+    ? Math.max(0, Math.min(duration, seconds))
+    : 0;
+  return Math.round(safeSeconds * safeFps) / safeFps;
+}
+
+function timelineSecondsFromPointerEvent(
+  event: ReactMouseEvent<HTMLElement>,
+  element: HTMLElement,
+  duration: number,
+): number {
+  const bounds = element.getBoundingClientRect();
+  const localX = bounds.width > 0 ? event.clientX - bounds.left : 0;
+  const progress = Math.max(0, Math.min(1, localX / Math.max(1, bounds.width)));
+  return timelineFrameSeconds(progress * duration, duration);
+}
+
 function formatTimelineScaleLabel(seconds: number): string {
   if (seconds < 60) {
     return seconds % 1 === 0
@@ -391,29 +446,66 @@ function formatTimelineScaleLabel(seconds: number): string {
   return formatElapsed(seconds);
 }
 
-function timelineGraduations(duration: number): Array<{
-  seconds: number;
+function timelineFrameStep(duration: number, fps: number): number {
+  const totalFrames = Math.max(1, Math.ceil(duration * fps));
+  const tenthSecondStep = Math.max(1, Math.round(fps / 10));
+  if (duration <= 20) return tenthSecondStep;
+  for (const step of [15, 30, 60, 120, 300, 600, 1200]) {
+    if (totalFrames / step <= 18) return step;
+  }
+  return 2400;
+}
+
+function formatFrameDurationLabel(frames: number, fps: number): string {
+  const safeFps = Math.max(1, Math.round(fps));
+  return `${frames} (${(frames / safeFps).toFixed(2)} s)`;
+}
+
+function timelineTrackPercentStyle(leftPercent: string): string {
+  const numericPercent = Number.parseFloat(leftPercent);
+  const safePercent = Number.isFinite(numericPercent)
+    ? Math.max(0, Math.min(100, numericPercent))
+    : 0;
+  return `calc(${pageLaneContentOffsetPx}px + (100% - ${pageLaneContentOffsetPx}px) * ${
+    safePercent / 100
+  })`;
+}
+
+function timelineFrameGraduations(duration: number, fps: number): Array<{
+  frame: number;
   leftPercent: string;
   major: boolean;
-  label: string | null;
 }> {
-  const scale = timelineScaleForDuration(duration);
-  const step = scale.minorStepSeconds;
-  const count = Math.max(1, Math.floor(duration / step));
-  return Array.from({ length: count + 1 }, (_, index) => {
-    const seconds = Math.min(duration, index * step);
-    const isEnd = Math.abs(seconds - duration) < 0.001;
-    const major =
-      Math.abs(seconds % scale.majorStepSeconds) < 0.001 || isEnd;
-    const showLabel =
-      Math.abs(seconds % scale.labelStepSeconds) < 0.001 || isEnd;
-    return {
-      seconds,
-      leftPercent: snapTimelinePercent(seconds, duration),
-      major,
-      label: showLabel ? formatTimelineScaleLabel(seconds) : null,
-    };
-  });
+  const safeFps = Math.max(1, Math.round(fps));
+  const totalFrames = Math.max(1, Math.ceil(duration * safeFps));
+  const step = timelineFrameStep(duration, safeFps);
+  const ticks: Array<{
+    frame: number;
+    leftPercent: string;
+    major: boolean;
+  }> = [];
+  for (let frame = 0; frame <= totalFrames; frame += step) {
+    ticks.push({
+      frame,
+      leftPercent: `${timelinePercentValue(frame / safeFps, duration)}%`,
+      major: frame % safeFps === 0 || frame === 0,
+    });
+  }
+  if (ticks[ticks.length - 1]?.frame !== totalFrames) {
+    ticks.push({
+      frame: totalFrames,
+      leftPercent: "100%",
+      major: true,
+    });
+  }
+  return ticks;
+}
+
+function isEditableTimelineTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) return false;
+  if (target.isContentEditable) return true;
+  const tagName = target.tagName.toLowerCase();
+  return tagName === "input" || tagName === "textarea" || tagName === "select";
 }
 
 function aimLabel(mode: string): string {
@@ -430,16 +522,12 @@ function nodeAimMode(
 }
 
 export function CameraPathTimeline({
-  canPlay,
-  isPlaying,
-  onPlay,
-  onPause,
   onScrub,
+  onSetScrollPlayheadSeconds,
   onSelectNode,
   onSelectSegment,
   onSelectTimelineTrack,
   onSetNodeHoldSeconds,
-  onSetPageClipEnabled,
   onSetPageClipLocked,
   onSetSegmentTransitionSeconds,
   path,
@@ -449,29 +537,41 @@ export function CameraPathTimeline({
   onAddPageClip,
   onAddPageRangeClips,
   onClearPageClips,
+  onEditPageClipFrames,
+  onRemovePageClip,
+  onReplacePageClipPage,
   onResizeTimelineBoundary,
   onSelectPageClip,
   selectedNodeId,
   selectedSegmentId,
   selectedTimelineTrack,
+  pageOptions,
   scrubSeconds,
   timeline,
 }: {
   path: CaptureCameraPathV2 | CaptureCameraPathV3;
   timeline: CaptureCameraPathV2Timeline | CaptureCameraPathV3Timeline;
   captureTimeline: CaptureTimelineState;
+  pageOptions: Array<{ id: string; label: string }>;
   selectedTimelineTrack: CaptureTimelineTrack;
   scrubSeconds: number;
-  canPlay: boolean;
-  isPlaying: boolean;
   onScrub(seconds: number): void;
-  onPlay(): void;
-  onPause(): void;
+  onSetScrollPlayheadSeconds(seconds: number): void;
   onAddCurrentCamera(): void;
   onAddCurrentPageClip(): void;
-  onAddPageClip(): void;
+  onAddPageClip(pageId: string): void;
   onAddPageRangeClips(): void;
   onClearPageClips(): void;
+  onReplacePageClipPage(clipId: string, pageId: string): void;
+  onRemovePageClip(clipId: string): void;
+  onEditPageClipFrames(
+    clipId: string,
+    edit: {
+      startFrame?: number | null;
+      endFrame?: number | null;
+      durationFrames?: number | null;
+    },
+  ): void;
   onSelectNode(id: string): void;
   onSelectSegment(id: string, nodeId?: string): void;
   onSelectPageClip(id: string | null): void;
@@ -480,27 +580,46 @@ export function CameraPathTimeline({
   selectedSegmentId: string | null;
   onSetNodeHoldSeconds(id: string, seconds: number): void;
   onSetSegmentTransitionSeconds(id: string, seconds: number): void;
-  onSetPageClipEnabled(id: string, enabled: boolean): void;
   onSetPageClipLocked(id: string, locked: boolean): void;
   onResizeTimelineBoundary(boundaryId: string, deltaSeconds: number): void;
 }) {
   const [pageAddMenuOpen, setPageAddMenuOpen] = useState(false);
+  const [pagePickerState, setPagePickerState] = useState<{
+    mode: "add" | "replace";
+    clipId: string | null;
+    query: string;
+  } | null>(null);
+  const [frameEditor, setFrameEditor] = useState<{
+    clipId: string;
+    field: "startFrame" | "endFrame" | "durationFrames";
+    value: string;
+  } | null>(null);
+  const [frameEditorError, setFrameEditorError] = useState<string | null>(null);
   const pageLayout = resolveCaptureTimelineLayout(captureTimeline);
   const duration = Math.max(0.1, timeline.durationSeconds, pageLayout.durationSeconds);
   const blocks = layoutCapturePathTimeline({ timeline });
-  const scrubPercent = Math.max(
-    0,
-    Math.min(100, (scrubSeconds / duration) * 100),
-  );
   const playheadLeft = snapTimelinePercent(scrubSeconds, duration);
   const timelineScale = timelineScaleForDuration(duration);
-  const graduations = timelineGraduations(duration);
+  const frameStepSeconds =
+    timelineFrameStep(duration, CAPTURE_TIMELINE_DEFAULT_FPS) /
+    CAPTURE_TIMELINE_DEFAULT_FPS;
+  const frameGraduations = timelineFrameGraduations(
+    duration,
+    CAPTURE_TIMELINE_DEFAULT_FPS,
+  );
+  const selectedPageClipId = captureTimeline.selectedPageClipId;
+  const pagePickerQuery = pagePickerState?.query.trim().toLowerCase() ?? "";
+  const filteredPageOptions = pageOptions.filter((page) =>
+    pagePickerQuery
+      ? `${page.label} ${page.id}`.toLowerCase().includes(pagePickerQuery)
+      : true,
+  );
   const diagnosticsVisible = captureTimeline.diagnosticsVisible;
   const trackStyle: CSSProperties = {
     ...trackBaseStyle,
     gridTemplateRows: diagnosticsVisible
-      ? "30px 34px 20px 28px 20px 20px 20px 20px 20px"
-      : "30px 34px 20px 28px",
+      ? "34px 34px 28px 20px 20px 20px 20px 20px"
+      : "34px 34px 28px",
   };
   const blocksLaneRef = useRef<HTMLDivElement | null>(null);
   const pageLaneRef = useRef<HTMLDivElement | null>(null);
@@ -520,6 +639,68 @@ export function CameraPathTimeline({
     laneWidth: number;
     appliedDeltaSeconds: number;
   } | null>(null);
+
+  const onOpenPagePicker = (mode: "add" | "replace", clipId: string | null = null) => {
+    setPageAddMenuOpen(false);
+    setFrameEditor(null);
+    setFrameEditorError(null);
+    setPagePickerState({ mode, clipId, query: "" });
+  };
+
+  const commitPagePicker = (pageId: string) => {
+    const picker = pagePickerState;
+    if (!picker) return;
+    if (picker.mode === "replace" && picker.clipId) {
+      onReplacePageClipPage(picker.clipId, pageId);
+    } else {
+      onAddPageClip(pageId);
+    }
+    setPagePickerState(null);
+  };
+
+  const handlePageLaneKeyDown = (event: ReactKeyboardEvent<HTMLDivElement>) => {
+    if (isEditableTimelineTarget(event.target)) return;
+    if (
+      selectedTimelineTrack === "pages" &&
+      selectedPageClipId &&
+      (event.key === "Delete" || event.key === "Backspace")
+    ) {
+      event.preventDefault();
+      event.stopPropagation();
+      onRemovePageClip(selectedPageClipId);
+      return;
+    }
+    if (event.key === "Escape") {
+      setPagePickerState(null);
+      setFrameEditor(null);
+      setFrameEditorError(null);
+    }
+  };
+
+  const startFrameEdit = (
+    field: "startFrame" | "endFrame" | "durationFrames",
+    clipId: string,
+    value: number,
+  ) => {
+    onSelectPageClip(clipId);
+    setPagePickerState(null);
+    setFrameEditor({ clipId, field, value: `${value}` });
+    setFrameEditorError(null);
+  };
+
+  const commitFrameEditor = () => {
+    if (!frameEditor) return;
+    const parsed = Number.parseInt(frameEditor.value, 10);
+    if (!Number.isFinite(parsed) || parsed < 0) {
+      setFrameEditorError("Enter a whole frame");
+      return;
+    }
+    onEditPageClipFrames(frameEditor.clipId, {
+      [frameEditor.field]: parsed,
+    });
+    setFrameEditor(null);
+    setFrameEditorError(null);
+  };
 
   const updateBlockDurationFromPointer = (
     event: ReactPointerEvent<HTMLElement>,
@@ -649,6 +830,80 @@ export function CameraPathTimeline({
     onSelectSegment(block.segmentId, nodeId);
   };
 
+  const placeScrollPlayheadFromPointer = (
+    event: ReactMouseEvent<HTMLElement>,
+    clip?: (typeof pageLayout.pageClips)[number],
+  ) => {
+    if (isEditableTimelineTarget(event.target)) return;
+    event.preventDefault();
+    event.stopPropagation();
+    const nextSeconds = clip
+      ? (() => {
+          const bounds = event.currentTarget.getBoundingClientRect();
+          const localX = bounds.width > 0 ? event.clientX - bounds.left : 0;
+          const progress = Math.max(
+            0,
+            Math.min(1, localX / Math.max(1, bounds.width)),
+          );
+          return timelineFrameSeconds(
+            clip.startSeconds + progress * clip.durationSeconds,
+            duration,
+          );
+        })()
+      : timelineSecondsFromPointerEvent(event, event.currentTarget, duration);
+    onSetScrollPlayheadSeconds(nextSeconds);
+  };
+
+  const pagePicker =
+    pagePickerState && typeof document !== "undefined"
+      ? createPortal(
+          <div
+            data-testid="capture-timeline-page-picker"
+            data-mode={pagePickerState.mode}
+            style={pagePickerStyle}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <input
+              data-testid="capture-timeline-page-picker-search"
+              aria-label="Search pages"
+              type="search"
+              value={pagePickerState.query}
+              onChange={(event) =>
+                setPagePickerState((previous) =>
+                  previous
+                    ? { ...previous, query: event.currentTarget.value }
+                    : previous,
+                )
+              }
+              onKeyDown={(event) => {
+                event.stopPropagation();
+                if (event.key === "Escape") {
+                  setPagePickerState(null);
+                }
+              }}
+              style={pagePickerSearchStyle}
+              autoFocus
+            />
+            <div style={pagePickerListStyle}>
+              {filteredPageOptions.map((page) => (
+                <button
+                  key={page.id}
+                  data-testid="capture-timeline-page-picker-option"
+                  data-page-id={page.id}
+                  type="button"
+                  onClick={() => commitPagePicker(page.id)}
+                  style={pagePickerOptionStyle}
+                  title={page.label}
+                >
+                  {page.label}
+                </button>
+              ))}
+            </div>
+          </div>,
+          document.body,
+        )
+      : null;
+
   return (
     <div
       data-testid="capture-timeline-bar"
@@ -656,12 +911,58 @@ export function CameraPathTimeline({
       data-selected-track={selectedTimelineTrack}
       style={rootStyle}
     >
+      {pagePicker}
       <div data-testid="capture-timeline-keyframe-track" style={trackStyle}>
+        <div
+          data-testid="capture-timeline-frame-grid"
+          aria-hidden="true"
+          style={{
+            position: "absolute",
+            left: pageLaneContentOffsetPx,
+            right: 0,
+            top: 0,
+            bottom: 0,
+            pointerEvents: "none",
+            zIndex: 0,
+          }}
+        >
+          {frameGraduations.map((graduation) => (
+            <span
+              key={`grid:${graduation.frame}`}
+              data-testid="capture-timeline-frame-grid-tick"
+              data-frame={graduation.frame}
+              style={{
+                position: "absolute",
+                left: graduation.leftPercent,
+                top: 0,
+                bottom: 0,
+                width: 1,
+                background: graduation.major
+                  ? "rgba(255,255,255,0.14)"
+                  : "rgba(255,255,255,0.055)",
+              }}
+            />
+          ))}
+        </div>
+        <span
+          data-testid="capture-timeline-playhead"
+          aria-hidden="true"
+          style={{
+            ...globalPlayheadStyle,
+            left: timelineTrackPercentStyle(playheadLeft),
+          }}
+        />
         <div
           data-testid="capture-timeline-pages-lane"
           ref={pageLaneRef}
-          style={{ ...laneStyle, gridRow: 1 }}
-          onClick={() => onSelectTimelineTrack("pages")}
+          tabIndex={0}
+          aria-label="Page Bar timeline lane"
+          style={{ ...laneStyle, gridRow: 1, overflow: "visible" }}
+          onClick={(event) => {
+            onSelectTimelineTrack("pages");
+            event.currentTarget.focus();
+          }}
+          onKeyDown={handlePageLaneKeyDown}
         >
           <button
             data-testid="capture-timeline-page-add-button"
@@ -701,8 +1002,7 @@ export function CameraPathTimeline({
                 data-testid="capture-timeline-add-page"
                 type="button"
                 onClick={() => {
-                  onAddPageClip();
-                  setPageAddMenuOpen(false);
+                  onOpenPagePicker("add");
                 }}
                 style={pageAddMenuButtonStyle}
               >
@@ -735,28 +1035,118 @@ export function CameraPathTimeline({
           <div
             data-testid="capture-timeline-pages-content"
             style={pageLaneContentStyle}
+            onClick={(event) => {
+              onSelectTimelineTrack("pages");
+              pageLaneRef.current?.focus();
+              placeScrollPlayheadFromPointer(event);
+            }}
           >
           <span style={laneLabelStyle}>Pages</span>
+          <div
+            data-testid="capture-timeline-frame-ruler"
+            aria-hidden="true"
+            style={{
+              position: "absolute",
+              inset: 0,
+              pointerEvents: "none",
+            }}
+          >
+            {frameGraduations.map((graduation) => (
+              <span
+                key={`frame:${graduation.frame}`}
+                data-testid="capture-timeline-frame-ruler-tick"
+                data-frame={graduation.frame}
+                style={{
+                  position: "absolute",
+                  left: graduation.leftPercent,
+                  top: graduation.major ? 0 : 3,
+                  bottom: graduation.major ? 0 : 4,
+                  width: 1,
+                  background: "transparent",
+                }}
+              >
+              </span>
+            ))}
+          </div>
           {pageLayout.pageClips.map((clip, index) => {
             const selected = captureTimeline.selectedPageClipId === clip.id;
             const next = pageLayout.pageClips[index + 1];
             const boundaryId = next
               ? `page:${clip.id}:${next.id}`
               : `page-end:${clip.id}`;
+            const frameBounds = captureTimelineClipFrameBounds(
+              clip,
+              CAPTURE_TIMELINE_DEFAULT_FPS,
+            );
+            const matchingEditor =
+              frameEditor?.clipId === clip.id ? frameEditor : null;
+            const renderFrameValue = (
+              field: "startFrame" | "endFrame" | "durationFrames",
+              value: number,
+              testId: string,
+              style: CSSProperties,
+              displayValue = `${value}`,
+            ) =>
+              matchingEditor?.field === field ? (
+                <input
+                  data-testid="capture-timeline-frame-editor"
+                  aria-label={`Edit ${field}`}
+                  aria-invalid={frameEditorError ? "true" : "false"}
+                  type="number"
+                  min={0}
+                  value={matchingEditor.value}
+                  onChange={(event) => {
+                    setFrameEditor({ ...matchingEditor, value: event.currentTarget.value });
+                    setFrameEditorError(null);
+                  }}
+                  onClick={(event) => event.stopPropagation()}
+                  onDoubleClick={(event) => event.stopPropagation()}
+                  onKeyDown={(event) => {
+                    event.stopPropagation();
+                    if (event.key === "Enter") {
+                      commitFrameEditor();
+                    }
+                    if (event.key === "Escape") {
+                      setFrameEditor(null);
+                      setFrameEditorError(null);
+                    }
+                  }}
+                  onBlur={commitFrameEditor}
+                  style={{ ...frameEditorInputStyle, ...style }}
+                  autoFocus
+                />
+              ) : (
+                <span
+                  data-testid={testId}
+                  onDoubleClick={(event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    startFrameEdit(field, clip.id, value);
+                  }}
+                  style={style}
+                  title={displayValue === `${value}` ? `Frame ${value}` : displayValue}
+                >
+                  {displayValue}
+                </span>
+              );
             return (
-              <button
+              <div
                 key={clip.id}
-                type="button"
+                role="button"
+                tabIndex={0}
                 data-testid="capture-timeline-page-clip"
                 data-page-id={clip.pageId}
                 data-selected={selected ? "true" : "false"}
                 onClick={(event) => {
-                  event.stopPropagation();
+                  pageLaneRef.current?.focus();
                   onSelectPageClip(clip.id);
+                  placeScrollPlayheadFromPointer(event, clip);
                 }}
-                onDoubleClick={(event) => {
-                  event.stopPropagation();
-                  onSetPageClipEnabled(clip.id, !clip.enabled);
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    onSelectPageClip(clip.id);
+                  }
                 }}
                 onContextMenu={(event) => {
                   event.preventDefault();
@@ -766,14 +1156,14 @@ export function CameraPathTimeline({
                 style={{
                   position: "absolute",
                   left: snapTimelinePercent(clip.startSeconds, duration),
-                  top: 5,
+                  top: 1,
+                  bottom: 1,
                   width: snapTimelineBlockPercent(
                     clip.startSeconds,
                     clip.durationSeconds,
                     duration,
                   ),
                   minWidth: 20,
-                  height: 20,
                   borderRadius: 5,
                   border: selected
                     ? "1px solid rgba(120,218,196,0.72)"
@@ -787,13 +1177,74 @@ export function CameraPathTimeline({
                   overflow: "hidden",
                   textOverflow: "ellipsis",
                   whiteSpace: "nowrap",
+                  boxSizing: "border-box",
                   padding: "0 18px 0 7px",
                   cursor: "pointer",
                 }}
-                title={`${clip.label} / ${formatElapsed(clip.transitionSeconds + clip.holdSeconds)}`}
+                title={`${clip.label} / ${formatElapsed(clip.transitionSeconds + clip.holdSeconds)} / frames ${frameBounds.startFrame}-${frameBounds.endFrame}`}
               >
-                {clip.locked ? "Lock " : ""}
-                {clip.label}
+                <span
+                  style={{
+                    position: "absolute",
+                    left: 0,
+                    top: 0,
+                    bottom: 0,
+                    width: `${Math.max(
+                      0,
+                      Math.min(
+                        100,
+                        ((clip.transitionSeconds || 0) /
+                          Math.max(0.1, clip.durationSeconds)) *
+                          100,
+                      ),
+                    )}%`,
+                    background: "rgba(147,197,253,0.22)",
+                    pointerEvents: "none",
+                  }}
+                />
+                {renderFrameValue("startFrame", frameBounds.startFrame, "capture-timeline-page-frame-start", {
+                  ...clipFrameLabelStyle,
+                  left: 6,
+                })}
+                {renderFrameValue("endFrame", frameBounds.endFrame, "capture-timeline-page-frame-end", {
+                  ...clipFrameLabelStyle,
+                  right: 11,
+                })}
+                <span style={clipCenterLabelStyle}>
+                  <span
+                    onDoubleClick={(event) => {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      onOpenPagePicker("replace", clip.id);
+                    }}
+                    title="Change page"
+                    style={{
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                    }}
+                  >
+                    {clip.locked ? "Lock " : ""}
+                    {clip.label}
+                  </span>
+                  {renderFrameValue(
+                    "durationFrames",
+                    frameBounds.durationFrames,
+                    "capture-timeline-page-duration",
+                    {
+                      color: "rgba(226,240,246,0.72)",
+                      fontSize: 10,
+                      fontVariantNumeric: "tabular-nums",
+                      flex: "0 0 auto",
+                    },
+                    formatFrameDurationLabel(
+                      frameBounds.durationFrames,
+                      CAPTURE_TIMELINE_DEFAULT_FPS,
+                    ),
+                  )}
+                </span>
+                {matchingEditor && frameEditorError && (
+                  <span style={frameEditorErrorStyle}>{frameEditorError}</span>
+                )}
                 <span
                   data-testid="capture-timeline-page-boundary"
                   role="slider"
@@ -827,120 +1278,27 @@ export function CameraPathTimeline({
                     cursor: clip.locked ? "not-allowed" : "ew-resize",
                   }}
                 />
-                <span
-                  style={{
-                    position: "absolute",
-                    left: 0,
-                    top: 0,
-                    bottom: 0,
-                    width: `${Math.max(
-                      0,
-                      Math.min(
-                        100,
-                        ((clip.transitionSeconds || 0) /
-                          Math.max(0.1, clip.durationSeconds)) *
-                          100,
-                      ),
-                    )}%`,
-                    background: "rgba(147,197,253,0.22)",
-                    pointerEvents: "none",
-                  }}
-                />
-              </button>
+              </div>
             );
           })}
           </div>
         </div>
         <div
-          data-testid="capture-timeline-spine-bar"
-          data-scale-step={timelineScale.minorStepSeconds}
-          data-scale-major-step={timelineScale.majorStepSeconds}
-          data-scale-label-step={timelineScale.labelStepSeconds}
-          style={{ ...spineLaneStyle, gridRow: 3 }}
-        >
-          <button
-            data-testid="capture-timeline-spine-play"
-            aria-label={isPlaying ? "Pause timeline from spine" : "Play timeline from spine"}
-            title={isPlaying ? "Pause timeline" : "Play timeline"}
-            type="button"
-            disabled={!canPlay}
-            onClick={(event) => {
-              event.stopPropagation();
-              if (isPlaying) {
-                onPause();
-                return;
-              }
-              onPlay();
-            }}
-            style={timelineSpinePlayButtonStyle}
-          >
-            <span
-              data-testid={
-                isPlaying
-                  ? "capture-timeline-spine-icon-pause"
-                  : "capture-timeline-spine-icon-play"
-              }
-              aria-hidden="true"
-              style={isPlaying ? timelinePauseIconStyle : timelinePlayIconStyle}
-            />
-          </button>
-          <div style={{ ...spineShellStyle, ...timelineRailOffsetStyle }}>
-            <div style={spineTrackStyle}>
-              <span
-                aria-hidden="true"
-                style={{ ...spineProgressStyle, width: `${scrubPercent}%` }}
-              />
-              {graduations.map((graduation) => (
-                <span
-                  key={`${graduation.seconds}`}
-                  data-testid="capture-timeline-spine-graduation"
-                  aria-hidden="true"
-                  style={{
-                    position: "absolute",
-                    left: graduation.leftPercent,
-                    top: graduation.major ? 0 : 2,
-                    bottom: graduation.major ? 0 : 2,
-                    width: graduation.major ? 2 : 1,
-                    background: graduation.major
-                      ? "rgba(28,31,35,0.34)"
-                      : "rgba(28,31,35,0.18)",
-                    transform: "translateX(-50%)",
-                    pointerEvents: "none",
-                  }}
-                />
-              ))}
-              <span
-                data-testid="capture-timeline-spine-thumb"
-                aria-hidden="true"
-                style={{ ...spineThumbStyle, left: playheadLeft }}
-              />
-            </div>
-            <input
-              data-testid="capture-timeline-scrubber"
-              data-capture-legacy-id="capture-path-timeline-scrub"
-              aria-label="Capture timeline spine scrubber"
-              type="range"
-              min={0}
-              max={duration}
-              step={timelineSnapSeconds(duration)}
-              value={snapTimelineSeconds(scrubSeconds, duration)}
-              onChange={(event) => onScrub(Number(event.currentTarget.value))}
-              style={spineRangeInputStyle}
-            />
-          </div>
-        </div>
-        <div
           data-testid="capture-timeline-time-axis"
-          data-scale-step={timelineScale.minorStepSeconds}
+          data-scale-step={frameStepSeconds}
           data-scale-major-step={timelineScale.majorStepSeconds}
           data-scale-label-step={timelineScale.labelStepSeconds}
+          onClick={(event) => {
+            onSelectTimelineTrack(selectedTimelineTrack);
+            placeScrollPlayheadFromPointer(event);
+          }}
           style={{
             ...timelineRailOffsetStyle,
             position: "relative",
-            gridRow: 4,
+            gridRow: 3,
             minHeight: 28,
             borderTop: "1px solid rgba(255,255,255,0.12)",
-            pointerEvents: "none",
+            pointerEvents: "auto",
           }}
         >
           <div
@@ -952,9 +1310,9 @@ export function CameraPathTimeline({
               pointerEvents: "none",
             }}
           >
-            {graduations.map((graduation) => (
+            {frameGraduations.map((graduation) => (
               <span
-                key={`axis:${graduation.seconds}`}
+                key={`axis:${graduation.frame}`}
                 data-testid="capture-timeline-time-axis-tick"
                 aria-hidden="true"
                 style={{
@@ -970,18 +1328,20 @@ export function CameraPathTimeline({
                 }}
               />
             ))}
-            {graduations
-              .filter((graduation) => graduation.label)
+            {frameGraduations
+              .filter((graduation) => graduation.major)
               .map((graduation) => (
                 <span
-                  key={`label:${graduation.seconds}`}
+                  key={`label:${graduation.frame}`}
                   data-testid="capture-timeline-time-scale-label"
                   style={{
                     ...scaleLabelStyle,
                     left: graduation.leftPercent,
                   }}
                 >
-                  {graduation.label}
+                  {formatTimelineScaleLabel(
+                    graduation.frame / CAPTURE_TIMELINE_DEFAULT_FPS,
+                  )}
                 </span>
               ))}
           </div>
@@ -1015,6 +1375,10 @@ export function CameraPathTimeline({
           <div
             data-testid="capture-timeline-camera-path-content"
             style={cameraPathLaneContentStyle}
+            onClick={(event) => {
+              onSelectTimelineTrack("camera-path");
+              placeScrollPlayheadFromPointer(event);
+            }}
           >
           <span style={{ ...laneLabelStyle, left: 8 }}>Camera Path</span>
           {blocks.map((block) => {
@@ -1114,7 +1478,6 @@ export function CameraPathTimeline({
               style={cameraScrubMarkerDotStyle}
             />
           </span>
-          <span data-testid="capture-timeline-playhead" style={{ ...playheadStyle, left: playheadLeft }} />
           </div>
         </div>
         {diagnosticsVisible && (

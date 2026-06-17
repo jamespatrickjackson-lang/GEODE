@@ -213,6 +213,7 @@ export interface CaptureFidelitySnapshot {
   height: number;
   pixelRatio: number;
   cameraAspect: number;
+  fullResolutionAssetsActive: boolean;
   diagnostics: CaptureFidelityDiagnostics;
 }
 
@@ -419,6 +420,9 @@ export interface SceneHandle {
     tileId?: string;
     mode: "max-detail-render";
   }): CaptureFidelitySnapshot;
+  beginCaptureFullResolutionAssets(): void;
+  waitForCaptureFidelityReady(): Promise<void>;
+  endCaptureFullResolutionAssets(): void;
   endCaptureFidelityLock(snapshot: CaptureFidelitySnapshot): void;
   setCaptureCameraPathOverlay(options: CaptureCameraPathOverlayState): void;
   clearCaptureCameraPathOverlay(): void;
@@ -430,6 +434,9 @@ export interface SceneHandle {
     pose: CaptureCameraPathSample;
     width: number;
     height: number;
+    mimeType?: "image/jpeg" | "image/png";
+    imageQuality?: number;
+    maxDimension?: number | null;
   }): string | null;
   getCaptureCapabilities(): {
     maxTextureSize: number;
@@ -828,13 +835,27 @@ export function mountScene(
     pose,
     width,
     height,
+    mimeType = "image/jpeg",
+    imageQuality = 0.76,
+    maxDimension = null,
   }: {
     pose: CaptureCameraPathSample;
     width: number;
     height: number;
+    mimeType?: "image/jpeg" | "image/png";
+    imageQuality?: number;
+    maxDimension?: number | null;
   }): string | null => {
-    const safeWidth = Math.max(1, Math.min(640, Math.round(width)));
-    const safeHeight = Math.max(1, Math.min(360, Math.round(height)));
+    const requestedWidth = Math.max(1, Math.round(width));
+    const requestedHeight = Math.max(1, Math.round(height));
+    const requestedMaxDimension = Math.max(requestedWidth, requestedHeight);
+    const safeMaxDimension =
+      maxDimension === null
+        ? requestedMaxDimension
+        : Math.max(1, Math.round(maxDimension));
+    const scale = Math.min(1, safeMaxDimension / requestedMaxDimension);
+    const safeWidth = Math.max(1, Math.round(requestedWidth * scale));
+    const safeHeight = Math.max(1, Math.round(requestedHeight * scale));
     const previewCamera = camera.clone() as THREE.PerspectiveCamera;
     previewCamera.position.set(pose.position[0], pose.position[1], pose.position[2]);
     previewCamera.up.set(pose.up[0], pose.up[1], pose.up[2]);
@@ -877,7 +898,7 @@ export function mountScene(
         );
       }
       context.putImageData(imageData, 0, 0);
-      return canvas.toDataURL("image/jpeg", 0.76);
+      return canvas.toDataURL(mimeType, imageQuality);
     } catch (error) {
       debugLog("capture", "camera path preview render failed", error);
       return null;
@@ -905,6 +926,22 @@ export function mountScene(
       : 4096,
     };
   };
+  let captureFullResolutionAssetDepth = 0;
+  const beginCaptureFullResolutionAssets = () => {
+    captureFullResolutionAssetDepth += 1;
+    if (captureFullResolutionAssetDepth === 1) {
+      manager.setCaptureFullResolution(true);
+    }
+  };
+  const waitForCaptureFidelityReady = () =>
+    manager.waitForCaptureFullResolution();
+  const endCaptureFullResolutionAssets = () => {
+    if (captureFullResolutionAssetDepth <= 0) return;
+    captureFullResolutionAssetDepth -= 1;
+    if (captureFullResolutionAssetDepth === 0) {
+      manager.setCaptureFullResolution(false);
+    }
+  };
   const beginCaptureFidelityLock = (options: {
     reason: "render-out" | "still-capture" | "external-still";
     width: number;
@@ -918,12 +955,14 @@ export function mountScene(
   }): CaptureFidelitySnapshot => {
     const currentSize = renderer.getSize(new THREE.Vector2());
     const capabilities = getCaptureCapabilities();
+    beginCaptureFullResolutionAssets();
     const snapshot: CaptureFidelitySnapshot = {
       reason: options.reason,
       width: currentSize.x,
       height: currentSize.y,
       pixelRatio: renderer.getPixelRatio(),
       cameraAspect: camera.aspect,
+      fullResolutionAssetsActive: true,
       diagnostics: {
         requestedWidth: options.width,
         requestedHeight: options.height,
@@ -954,6 +993,9 @@ export function mountScene(
   const endCaptureFidelityLock = (_snapshot: CaptureFidelitySnapshot) => {
     delete renderer.domElement.dataset.captureFidelity;
     delete renderer.domElement.dataset.captureDownsampling;
+    if (_snapshot.fullResolutionAssetsActive) {
+      endCaptureFullResolutionAssets();
+    }
     endCaptureSize();
   };
   const drillFocusListeners = new Set<(focus: DrillFocus | null) => void>();
@@ -3652,6 +3694,9 @@ export function mountScene(
     getCameraPose,
     setCameraPose,
     beginCaptureFidelityLock,
+    beginCaptureFullResolutionAssets,
+    waitForCaptureFidelityReady,
+    endCaptureFullResolutionAssets,
     endCaptureFidelityLock,
     setCaptureCameraPathOverlay,
     clearCaptureCameraPathOverlay,

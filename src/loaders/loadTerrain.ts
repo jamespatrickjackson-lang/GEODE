@@ -47,10 +47,12 @@ interface TerrainLodDebugState {
   activeVertexEstimate: number;
   lodTierCounts: Record<TerrainLodTierName, number>;
   lastUpdateReason: string;
+  terrainLodCaptureLocked: boolean;
 }
 
 interface TerrainLodHandle {
   updateCameraLod(camera: THREE.Camera): void;
+  setCaptureDetailLock(locked: boolean): void;
   debugState: TerrainLodDebugState;
 }
 
@@ -549,10 +551,11 @@ export async function loadTerrain(
     tier: "coarse",
   };
   const tiles: TerrainTileRecord[] = [];
-  const rebuildTerrain = (tier: TerrainLodTierName) => {
+  const rebuildTerrain = (tier: TerrainLodTierName, stepOverride?: number) => {
+    const step = stepOverride ?? lodSteps[tier];
     const nextGeometry = buildTerrainTileGeometry({
       tile: fullTerrainTile,
-      step: lodSteps[tier],
+      step,
       width,
       height,
       bbox,
@@ -567,6 +570,8 @@ export async function loadTerrain(
       tile.tier = tier;
     }
     terrainMesh.userData.terrainLodTier = tier;
+    terrainMesh.userData.terrainLodStep = step;
+    terrainMesh.userData.terrainLodFullRaster = step === 1;
     terrainMesh.userData.terrainVertexEstimate =
       nextGeometry.getAttribute("position").count;
   };
@@ -610,7 +615,9 @@ export async function loadTerrain(
       terrainMesh.geometry.getAttribute("position")?.count ?? 0,
     lodTierCounts: { coarse: tiles.length, standard: 0, source: 0 },
     lastUpdateReason: "initial-coarse",
+    terrainLodCaptureLocked: false,
   };
+  let captureDetailLocked = false;
   const updateDebugState = (reason: string) => {
     terrainLodDebugState.activeTileCount = tiles.length;
     terrainLodDebugState.activeVertexEstimate = 0;
@@ -621,12 +628,40 @@ export async function loadTerrain(
     terrainLodDebugState.activeVertexEstimate =
       terrainMesh.geometry.getAttribute("position")?.count ?? 0;
     terrainLodDebugState.lastUpdateReason = reason;
+    terrainLodDebugState.terrainLodCaptureLocked = captureDetailLocked;
     root.userData.terrainLodDebugState = { ...terrainLodDebugState };
+  };
+  const forceSourceTerrainLod = () => {
+    if (
+      fullTerrainTile.tier !== "source" ||
+      terrainMesh.userData.terrainLodFullRaster !== true
+    ) {
+      rebuildTerrain("source", 1);
+    }
+    updateDebugState("capture-source-lod-lock");
   };
   let lastCameraPosition: THREE.Vector3 | null = null;
   const terrainLodHandle: TerrainLodHandle = {
     debugState: terrainLodDebugState,
+    setCaptureDetailLock(locked: boolean) {
+      if (captureDetailLocked === locked) {
+        if (locked) forceSourceTerrainLod();
+        return;
+      }
+      captureDetailLocked = locked;
+      root.userData.terrainLodCaptureLocked = locked;
+      lastCameraPosition = null;
+      if (locked) {
+        forceSourceTerrainLod();
+      } else {
+        updateDebugState("capture-source-lod-unlocked");
+      }
+    },
     updateCameraLod(camera: THREE.Camera) {
+      if (captureDetailLocked) {
+        forceSourceTerrainLod();
+        return;
+      }
       if (
         lastCameraPosition &&
         lastCameraPosition.distanceTo(camera.position) < TERRAIN_LOD_CAMERA_EPSILON_M

@@ -94,6 +94,7 @@ export type CaptureTimelineCameraPath =
 
 const MIN_PAGE_HOLD_SECONDS = 0;
 const MIN_PAGE_TRANSITION_SECONDS = 0.1;
+export const CAPTURE_TIMELINE_DEFAULT_FPS = 60;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return !!value && typeof value === "object" && !Array.isArray(value);
@@ -138,6 +139,55 @@ function pageTransitionSeconds(
 
 function clipDuration(clip: CaptureTimelinePageClip): number {
   return Math.max(0, clip.transitionSeconds) + Math.max(0, clip.holdSeconds);
+}
+
+function normalizeTimelineFps(fps: number | null | undefined): number {
+  return typeof fps === "number" && Number.isFinite(fps) && fps > 0
+    ? fps
+    : CAPTURE_TIMELINE_DEFAULT_FPS;
+}
+
+function secondsToFrame(seconds: number, fps: number): number {
+  return Math.max(0, Math.round(Math.max(0, seconds) * fps));
+}
+
+function frameToSeconds(frame: number, fps: number): number {
+  return Math.max(0, frame) / fps;
+}
+
+function normalizeFrame(value: number | null | undefined): number | null {
+  if (typeof value !== "number" || !Number.isFinite(value)) return null;
+  return Math.max(0, Math.round(value));
+}
+
+function clipMinimumFrames(clip: CaptureTimelinePageClip, fps: number): number {
+  return Math.max(1, Math.ceil(Math.max(0, clip.transitionSeconds) * fps));
+}
+
+function setClipDurationFrames(
+  clip: CaptureTimelinePageClip,
+  durationFrames: number,
+  fps: number,
+): void {
+  const totalSeconds = frameToSeconds(
+    Math.max(clipMinimumFrames(clip, fps), Math.round(durationFrames)),
+    fps,
+  );
+  clip.holdSeconds = Math.max(0, totalSeconds - Math.max(0, clip.transitionSeconds));
+}
+
+export function captureTimelineClipFrameBounds(
+  clip: CaptureTimelinePageClip,
+  fps = CAPTURE_TIMELINE_DEFAULT_FPS,
+): { startFrame: number; endFrame: number; durationFrames: number } {
+  const normalizedFps = normalizeTimelineFps(fps);
+  const startFrame = secondsToFrame(clip.startSeconds, normalizedFps);
+  const durationFrames = Math.max(0, secondsToFrame(clipDuration(clip), normalizedFps));
+  return {
+    startFrame,
+    endFrame: Math.max(startFrame, startFrame + Math.max(1, durationFrames) - 1),
+    durationFrames,
+  };
 }
 
 function visiblePages(
@@ -256,6 +306,153 @@ export function normalizeCaptureTimelineState(
     selectedPageClipId,
     diagnosticsVisible: record.diagnosticsVisible === true,
   };
+}
+
+export function removeCaptureTimelinePageClip({
+  state,
+  clipId,
+}: {
+  state: CaptureTimelineState;
+  clipId: string;
+}): CaptureTimelineState {
+  const normalized = normalizeCaptureTimelineState(state);
+  return normalizeCaptureTimelineState({
+    ...normalized,
+    pageClips: normalized.pageClips.filter((clip) => clip.id !== clipId),
+    selectedPageClipId:
+      normalized.selectedPageClipId === clipId
+        ? null
+        : normalized.selectedPageClipId,
+  });
+}
+
+export function replaceCaptureTimelinePageClipPage({
+  state,
+  clipId,
+  page,
+}: {
+  state: CaptureTimelineState;
+  clipId: string;
+  page: CaptureTimelinePageSource;
+}): CaptureTimelineState {
+  const normalized = normalizeCaptureTimelineState(state);
+  if (!page || page.hidden === true) return normalized;
+  return normalizeCaptureTimelineState({
+    ...normalized,
+    pageClips: normalized.pageClips.map((clip) =>
+      clip.id === clipId
+        ? {
+            ...clip,
+            pageId: page.id,
+            label: pageLabel(page),
+          }
+        : clip,
+    ),
+  });
+}
+
+function editPageClipStartFrame(
+  state: CaptureTimelineState,
+  clipId: string,
+  startFrame: number,
+  fps: number,
+): CaptureTimelineState {
+  const normalized = normalizeCaptureTimelineState(state);
+  const clips = normalized.pageClips.map((clip) => ({ ...clip }));
+  const index = clips.findIndex((clip) => clip.id === clipId);
+  if (index <= 0 || clips[index].locked || clips[index - 1].locked) {
+    return normalized;
+  }
+  const previous = clips[index - 1];
+  const clip = clips[index];
+  const previousBounds = captureTimelineClipFrameBounds(previous, fps);
+  const clipBounds = captureTimelineClipFrameBounds(clip, fps);
+  const boundaryFrame = clamp(
+    startFrame,
+    previousBounds.startFrame + clipMinimumFrames(previous, fps),
+    clipBounds.endFrame + 1 - clipMinimumFrames(clip, fps),
+  );
+  setClipDurationFrames(previous, boundaryFrame - previousBounds.startFrame, fps);
+  setClipDurationFrames(clip, clipBounds.endFrame + 1 - boundaryFrame, fps);
+  return normalizeCaptureTimelineState({ ...normalized, pageClips: clips });
+}
+
+function editPageClipEndExclusiveFrame(
+  state: CaptureTimelineState,
+  clipId: string,
+  endExclusiveFrame: number,
+  fps: number,
+): CaptureTimelineState {
+  const normalized = normalizeCaptureTimelineState(state);
+  const clips = normalized.pageClips.map((clip) => ({ ...clip }));
+  const index = clips.findIndex((clip) => clip.id === clipId);
+  if (index < 0 || clips[index].locked) return normalized;
+  const clip = clips[index];
+  const clipBounds = captureTimelineClipFrameBounds(clip, fps);
+  const next = clips[index + 1] ?? null;
+  if (!next) {
+    setClipDurationFrames(
+      clip,
+      Math.max(clipMinimumFrames(clip, fps), endExclusiveFrame - clipBounds.startFrame),
+      fps,
+    );
+    return normalizeCaptureTimelineState({ ...normalized, pageClips: clips });
+  }
+  if (next.locked) return normalized;
+  const nextBounds = captureTimelineClipFrameBounds(next, fps);
+  const boundaryFrame = clamp(
+    endExclusiveFrame,
+    clipBounds.startFrame + clipMinimumFrames(clip, fps),
+    nextBounds.endFrame + 1 - clipMinimumFrames(next, fps),
+  );
+  setClipDurationFrames(clip, boundaryFrame - clipBounds.startFrame, fps);
+  setClipDurationFrames(next, nextBounds.endFrame + 1 - boundaryFrame, fps);
+  return normalizeCaptureTimelineState({ ...normalized, pageClips: clips });
+}
+
+export function editCaptureTimelinePageClipFrames({
+  state,
+  clipId,
+  fps = CAPTURE_TIMELINE_DEFAULT_FPS,
+  startFrame,
+  endFrame,
+  durationFrames,
+}: {
+  state: CaptureTimelineState;
+  clipId: string;
+  fps?: number;
+  startFrame?: number | null;
+  endFrame?: number | null;
+  durationFrames?: number | null;
+}): CaptureTimelineState {
+  const normalizedFps = normalizeTimelineFps(fps);
+  let next = normalizeCaptureTimelineState(state);
+  const normalizedStartFrame = normalizeFrame(startFrame);
+  if (normalizedStartFrame !== null) {
+    next = editPageClipStartFrame(next, clipId, normalizedStartFrame, normalizedFps);
+  }
+  const normalizedDurationFrames = normalizeFrame(durationFrames);
+  if (normalizedDurationFrames !== null) {
+    const clip = next.pageClips.find((entry) => entry.id === clipId);
+    if (!clip) return next;
+    const bounds = captureTimelineClipFrameBounds(clip, normalizedFps);
+    return editPageClipEndExclusiveFrame(
+      next,
+      clipId,
+      bounds.startFrame + Math.max(1, normalizedDurationFrames),
+      normalizedFps,
+    );
+  }
+  const normalizedEndFrame = normalizeFrame(endFrame);
+  if (normalizedEndFrame !== null) {
+    return editPageClipEndExclusiveFrame(
+      next,
+      clipId,
+      normalizedEndFrame + 1,
+      normalizedFps,
+    );
+  }
+  return next;
 }
 
 export function validateCaptureTimelineState(

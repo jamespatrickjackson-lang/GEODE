@@ -26,6 +26,9 @@ export interface CaptureVideoRenderJobV1 {
     durationSeconds: number;
     totalFrames: number;
     filename: string;
+    sourceFrameStart?: number;
+    sourceFrameEnd?: number;
+    encodingProfile?: "scroll-friendly-video";
   };
   fidelity: "max-detail-render";
   createdAt: string;
@@ -193,6 +196,27 @@ export function validateExternalVideoRenderJob(
     const height = positiveInteger(candidate.video.height, "video.height", errors);
     positiveInteger(candidate.video.fps, "video.fps", errors);
     positiveInteger(candidate.video.totalFrames, "video.totalFrames", errors);
+    const sourceFrameStart = candidate.video.sourceFrameStart;
+    const sourceFrameEnd = candidate.video.sourceFrameEnd;
+    if (
+      sourceFrameStart !== undefined &&
+      (!Number.isInteger(sourceFrameStart) || sourceFrameStart < 0)
+    ) {
+      errors.push("video.sourceFrameStart must be a zero-based integer.");
+    }
+    if (
+      sourceFrameEnd !== undefined &&
+      (!Number.isInteger(sourceFrameEnd) || sourceFrameEnd < 0)
+    ) {
+      errors.push("video.sourceFrameEnd must be a zero-based integer.");
+    }
+    if (
+      Number.isInteger(sourceFrameStart) &&
+      Number.isInteger(sourceFrameEnd) &&
+      (sourceFrameStart as number) > (sourceFrameEnd as number)
+    ) {
+      errors.push("video.sourceFrameStart must be before or equal to sourceFrameEnd.");
+    }
     if (
       typeof candidate.video.durationSeconds !== "number" ||
       !Number.isFinite(candidate.video.durationSeconds) ||

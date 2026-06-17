@@ -44,7 +44,7 @@ function usageDiagnostics() {
     schema: DIAGNOSTICS_SCHEMA,
     status: "error",
     error:
-      "Usage: node tools/render-capture-video-job.mjs --job <job.json> --out <output.mp4|output.webm> [--synthetic] [--app-url <url>] [--diagnostics <path>] [--superscale <1-4>] [--no-gpu] [--allow-software] [--master prores4444|none] [--no-keep-frames]",
+      "Usage: node tools/render-capture-video-job.mjs --job <job.json> --out <output.mp4|output.webm> [--synthetic] [--app-url <url>] [--diagnostics <path>] [--frame-dir <dir>] [--frames-only] [--superscale <1-4>] [--no-gpu] [--allow-software] [--master prores4444|none] [--no-keep-frames]",
     modes: ["--job <job.json> --out <output>"],
   };
 }
@@ -86,6 +86,14 @@ function normalizeJob(rawJob, outputPath = "") {
   const height = positiveInteger(video.height, "video.height");
   const fps = positiveInteger(video.fps, "video.fps");
   const totalFrames = positiveInteger(video.totalFrames, "video.totalFrames");
+  const sourceFrameStart =
+    Number.isInteger(video.sourceFrameStart) && video.sourceFrameStart >= 0
+      ? video.sourceFrameStart
+      : 0;
+  const sourceFrameEnd =
+    Number.isInteger(video.sourceFrameEnd) && video.sourceFrameEnd >= sourceFrameStart
+      ? video.sourceFrameEnd
+      : sourceFrameStart + totalFrames - 1;
   if (
     !Number.isFinite(video.durationSeconds) ||
     Number(video.durationSeconds) <= 0
@@ -131,6 +139,12 @@ function normalizeJob(rawJob, outputPath = "") {
       fps,
       durationSeconds: Number(video.durationSeconds),
       totalFrames,
+      sourceFrameStart,
+      sourceFrameEnd,
+      encodingProfile:
+        video.encodingProfile === "scroll-friendly-video"
+          ? "scroll-friendly-video"
+          : undefined,
       filename:
         typeof video.filename === "string" && video.filename.length > 0
           ? video.filename
@@ -209,6 +223,12 @@ function checksum(buffer) {
 
 function framePath(frameDir, frameIndex) {
   return join(frameDir, `frame-${String(frameIndex).padStart(6, "0")}.png`);
+}
+
+function frameInputStartNumber(job) {
+  return Number.isInteger(job.video.sourceFrameStart) && job.video.sourceFrameStart >= 0
+    ? job.video.sourceFrameStart
+    : 0;
 }
 
 function stillJobForFrame(job, plan) {
@@ -390,7 +410,7 @@ function frameInputArgs({ job, frameDir }) {
     "-framerate",
     String(job.video.fps),
     "-start_number",
-    "0",
+    String(frameInputStartNumber(job)),
     "-i",
     join(frameDir, "frame-%06d.png"),
     "-an",
@@ -419,6 +439,12 @@ function playableVideoArgs({ job, frameDir, outputPath }) {
     "-c:v", "libx264",
     "-preset", "slow",
     "-crf", "12",
+    ...(job.video.encodingProfile === "scroll-friendly-video"
+      ? ["-g", "5", "-keyint_min", "5", "-sc_threshold", "0"]
+      : []),
+    ...(job.video.encodingProfile === "scroll-friendly-video"
+      ? ["-metadata", "geosee_profile=dense-keyframes"]
+      : []),
     "-pix_fmt", "yuv420p",
     "-movflags", "+faststart",
     outputPath,
@@ -515,6 +541,8 @@ async function runRenderJob({
   appUrlOverride,
   diagnosticsPath,
   keepFrames = true,
+  frameDirOverride = null,
+  framesOnly = false,
   superscale = DEFAULT_SUPERSCALE,
   gpu = true,
   allowSoftware = false,
@@ -525,8 +553,10 @@ async function runRenderJob({
   const plan = computeTilePlan(job, superscale, tilePx);
   const appUrl = appUrlOverride || job.app.url;
   const startedAt = new Date().toISOString();
-  const frameRoot = resolve(".tmp", `capture-video-${job.jobId}-${Date.now()}`);
-  const frameDir = join(frameRoot, "frames");
+  const frameRoot = frameDirOverride
+    ? resolve(dirname(frameDirOverride))
+    : resolve(".tmp", `capture-video-${job.jobId}-${Date.now()}`);
+  const frameDir = frameDirOverride ? resolve(frameDirOverride) : join(frameRoot, "frames");
   await mkdir(frameDir, { recursive: true });
   const frameDiagnostics = [];
   let browser = null;
@@ -571,15 +601,21 @@ async function runRenderJob({
       );
     }
 
-    for (let frameIndex = 0; frameIndex < job.video.totalFrames; frameIndex += 1) {
-      const outputFramePath = framePath(frameDir, frameIndex);
+    for (let frameOffset = 0; frameOffset < job.video.totalFrames; frameOffset += 1) {
+      const actualFrameIndex = frameInputStartNumber(job) + frameOffset;
+      const outputFramePath = framePath(frameDir, actualFrameIndex);
       const renderedTiles = synthetic
-        ? await renderSyntheticFrame({ job, plan, frameIndex, outputPath: outputFramePath })
+        ? await renderSyntheticFrame({
+            job,
+            plan,
+            frameIndex: actualFrameIndex,
+            outputPath: outputFramePath,
+          })
         : await renderAppFrame({
             page,
             job,
             plan,
-            frameIndex,
+            frameIndex: actualFrameIndex,
             outputPath: outputFramePath,
           });
       const info = await stat(outputFramePath);
@@ -587,18 +623,49 @@ async function runRenderJob({
         throw new Error(`frame ${frameIndex} produced zero bytes`);
       }
       frameDiagnostics.push({
-        frameIndex,
-        timeSeconds: frameIndex / job.video.fps,
+        frameIndex: actualFrameIndex,
+        frameOffset,
+        timeSeconds: actualFrameIndex / job.video.fps,
         path: outputFramePath,
         byteLength: info.size,
         tileCount: renderedTiles.length,
       });
       emitProgress({
         phase: "render",
-        frameIndex,
-        renderedFrames: frameIndex + 1,
+        frameIndex: actualFrameIndex,
+        frameOffset,
+        renderedFrames: frameOffset + 1,
         totalFrames: job.video.totalFrames,
       });
+    }
+
+    if (framesOnly) {
+      const diagnostics = {
+        schema: DIAGNOSTICS_SCHEMA,
+        status: "pass",
+        mode: synthetic ? "synthetic-job" : "headless-app-job",
+        outputMode: "frames-only",
+        startedAt,
+        completedAt: new Date().toISOString(),
+        job,
+        appUrl,
+        tilePlan: plan,
+        supersample: plan.render.superscale,
+        gpu: gpuInfo,
+        browserCapabilities: capabilities,
+        frameCount: frameDiagnostics.length,
+        outputs: [],
+        playableOutput: null,
+        masterOutput: null,
+        frameSequenceDir: frameDir,
+        finalOutput: null,
+      };
+      await writeDiagnostics(
+        diagnosticsPath ?? join(frameRoot, "capture-diagnostics.json"),
+        diagnostics,
+      );
+      emitProgress({ phase: "complete", totalFrames: job.video.totalFrames });
+      return diagnostics;
     }
 
     emitProgress({ phase: "encode", totalFrames: job.video.totalFrames });
@@ -667,6 +734,8 @@ function parseArgs(argv) {
     appUrlOverride: null,
     diagnosticsPath: null,
     keepFrames: true,
+    frameDirOverride: null,
+    framesOnly: false,
     superscale: DEFAULT_SUPERSCALE,
     gpu: true,
     allowSoftware: false,
@@ -685,6 +754,10 @@ function parseArgs(argv) {
       args.appUrlOverride = argv[++index];
     } else if (arg === "--diagnostics") {
       args.diagnosticsPath = argv[++index];
+    } else if (arg === "--frame-dir") {
+      args.frameDirOverride = argv[++index];
+    } else if (arg === "--frames-only") {
+      args.framesOnly = true;
     } else if (arg === "--keep-frames") {
       args.keepFrames = true;
     } else if (arg === "--no-keep-frames") {
@@ -707,7 +780,7 @@ function parseArgs(argv) {
       return { mode: "usage" };
     }
   }
-  if (args.jobPath && args.outputPath) {
+  if (args.jobPath && (args.outputPath || args.framesOnly)) {
     args.mode = "job";
   }
   return args;

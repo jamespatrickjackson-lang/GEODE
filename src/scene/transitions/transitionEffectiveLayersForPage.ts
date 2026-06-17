@@ -717,6 +717,7 @@ export function transitionEffectiveLayersForPage(
   scalarStyleEasing: EasingName = easing,
   reason: NavigationReason = "programmatic",
   transitionId: string = `transition-${Date.now()}`,
+  startMs: number = performance.now(),
 ): void {
   // Per-entity behavior pipeline (Phase 2) setup chokepoint. When the runtime
   // flag is on and the applier fully owns setup for migrated owners, skip the
@@ -773,7 +774,7 @@ export function transitionEffectiveLayersForPage(
       sourceVisibleLayerIds.add(id);
     }
   }
-  const now = performance.now();
+  const now = startMs;
   const duration = Math.max(0, durationMs);
   const terrainOverrides = new Map<string, number>();
   const layerKinds: Record<string, LayerTransitionKind> = {};
