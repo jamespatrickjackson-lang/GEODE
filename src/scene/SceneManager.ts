@@ -334,6 +334,9 @@ export type {
 // detached-fade default (A7) so this and SCENE_OVERLAY_FADE_MS tune together.
 const DEFAULT_LAYER_FADE_MS = DEFAULT_DETACHED_FADE_MS;
 const READINESS_ENTER_MIN_REMAINING_MS = 150;
+// F3 fade floor: minimum fade duration for a near-end late arrival so the
+// pipeline fades it in instead of snapping to full opacity (flag ON only).
+const ENTITY_BEHAVIOR_FADE_FLOOR_MS = 250;
 // Editor/legend visibility toggles fade rather than snap (7.3), matching the
 // slider-style standard. Page loads and transitions stay instant.
 const VISIBILITY_TOGGLE_FADE_MS = 360;
@@ -3549,19 +3552,25 @@ export class SceneManager {
       }
       const targetOpacity = this.targetOpacityForLayer(environment, page, layerId);
       this.applyStyle(layerId, effectiveStyle(environment, page, layerId));
-      if (
-        targetOpacity <= 0.001 ||
-        remainingMs <= READINESS_ENTER_MIN_REMAINING_MS
-      ) {
-        this.applyLayerTransitionRenderOpacity(
-          layerId,
-          targetOpacity,
-          targetOpacity > 0.001 ? 1 : 0,
-        );
+      if (targetOpacity <= 0.001) {
+        // Hidden target: apply instantly (no fade needed).
+        this.applyLayerTransitionRenderOpacity(layerId, targetOpacity, 0);
+        continue;
+      }
+      const nearEnd = remainingMs <= READINESS_ENTER_MIN_REMAINING_MS;
+      // F3 fade floor: with the flag ON a near-end visible late arrival fades
+      // over a floor instead of snapping to full opacity; flag OFF keeps the
+      // legacy snap-on. This is the v1 idea done through the pipeline.
+      if (nearEnd && !this.perEntityBehaviorActive) {
+        this.applyLayerTransitionRenderOpacity(layerId, targetOpacity, 1);
         continue;
       }
       this.applyLayerTransitionRenderOpacity(layerId, 0, 0);
-      // F2: late-attach fade branch opacity owner through the pipeline (parity).
+      const lateFadeMs = nearEnd
+        ? Math.max(remainingMs, ENTITY_BEHAVIOR_FADE_FLOOR_MS)
+        : remainingMs;
+      // Opacity owner via the pipeline (F2 parity for the normal fade; F3 floor
+      // for the near-end case). Else legacy assignment.
       if (
         this.perEntityBehaviorActive &&
         applyEntityOpacityFade(
@@ -3570,7 +3579,7 @@ export class SceneManager {
           0,
           targetOpacity,
           nowMs,
-          remainingMs,
+          lateFadeMs,
           transition.easing,
         )
       ) {
@@ -3580,7 +3589,7 @@ export class SceneManager {
         from: 0,
         to: targetOpacity,
         startMs: nowMs,
-        durationMs: remainingMs,
+        durationMs: lateFadeMs,
         easing: transition.easing,
       });
     }

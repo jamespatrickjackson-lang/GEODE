@@ -104,4 +104,26 @@ late-attach fade now all owned by the pipeline when the flag is on.
 Insight: each opacity site is its own narrow interleave at the owner's exact
 location; "the opacity owner" is several sites, not one — confirms the
 per-owner-interleave model over the all-or-nothing chokepoint.
-Disposition: keep (commit pending below).
+Disposition: keep (4dab7d7).
+
+## F3 — fade floor at late-attach (first behavior change, flag-gated) — ready for eye-check
+Status: DONE (code); VISUAL eye-check PENDING
+Hypothesis: with the flag ON, a near-end late arrival (remainingMs <= 150,
+targetOpacity > 0.001) that legacy snaps to full opacity instead fades over a
+floor (max(remainingMs, 250ms)) through the pipeline. Flag OFF keeps the legacy
+snap-on. This is the v1 fade-floor idea done through the pipeline, observable via
+the counter.
+Change: SceneManager late-attach tail rewritten — hidden target instant; near-end
++ flag OFF = legacy snap; otherwise fade via applyEntityOpacityFade with
+`lateFadeMs` (floor for near-end). New const ENTITY_BEHAVIOR_FADE_FLOOR_MS=250.
+Measure: tsc -b exit 0; full guard batch green (incl. transition-high-fixes 3/0 —
+READINESS_ENTER_MIN_REMAINING_MS=150 + readiness prune intact).
+Result (code): flag OFF == legacy (parity); flag ON near-end fades. VISUAL/eye on
+42911 is the gate: A/B `30 -> 31` (and other late-attach enters) flag ON vs OFF.
+Failure modes to watch (failure = data): (1) the floor fade tail extends past
+transition commit and gets truncated/flickers; (2) `30 -> 31` snap is NOT
+late-attach (surfaces ready at setup) -> no change -> the snap lives in
+discrete-commit/derived-root, which is the next slice (F4); (3) counter does not
+climb for the case -> the path is not the one snapping.
+Disposition: keep (commit pending below); revert to 4dab7d7 if the eye-check
+shows a regression with no quick insight.
