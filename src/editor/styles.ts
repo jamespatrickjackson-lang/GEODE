@@ -15,6 +15,12 @@ export const editorFieldText = vibrancyLabel;
 export const editorFieldBorder = "1px solid transparent";
 export const EDITOR_FULL_RADIUS = 999;
 export const EDITOR_SECTION_MARGIN_X = 12;
+export const EDITOR_INNER_BAR_RADIUS_PX = 22;
+// Canonical outer radius of the floating editor panel (inner bar radius + the
+// section side margin). Shared so other floating panels (Capture Director,
+// lower timeline, popouts) round their corners identically.
+export const EDITOR_PANEL_OUTER_RADIUS_PX =
+  EDITOR_INNER_BAR_RADIUS_PX + EDITOR_SECTION_MARGIN_X;
 export const EDITOR_SECTION_GAP_Y = 10;
 export const EDITOR_SCROLL_END_PADDING_Y = 4;
 export const EDITOR_PAGE_LIST_INDENT_X = 18;

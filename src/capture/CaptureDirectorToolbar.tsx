@@ -47,6 +47,11 @@ import {
 import type { CaptureCameraPathNodeKindV2 } from "./captureCameraPathV2";
 import { captureJobProgressPercent } from "./captureJobRuntime";
 import {
+  EDITOR_HEADING_BAR_BACKGROUND,
+  EDITOR_NESTED_BAR_BACKGROUND,
+  EDITOR_PANEL_OUTER_RADIUS_PX,
+  FROSTED_PANEL_OUTLINE,
+  FROSTED_PANEL_SHADOW,
   TECHNICAL_MONO_FONT,
   vibrancyLabel,
   vibrancySecondaryLabel,
@@ -107,14 +112,15 @@ const dockStyle: CSSProperties = {
   flexDirection: "column",
   gap: 8,
   padding: 10,
-  borderRadius: 14,
-  border: "1px solid rgba(255, 255, 255, 0.2)",
-  background: "rgba(18, 21, 24, 0.66)",
-  boxShadow: "0 24px 80px rgba(0, 0, 0, 0.34)",
+  borderRadius: EDITOR_PANEL_OUTER_RADIUS_PX,
+  border: FROSTED_PANEL_OUTLINE,
+  background: EDITOR_HEADING_BAR_BACKGROUND,
+  boxShadow: "none",
   backdropFilter: "blur(20px) saturate(145%)",
   WebkitBackdropFilter: "blur(20px) saturate(145%)",
   pointerEvents: "auto",
   color: vibrancyLabel,
+  fontFamily: TECHNICAL_MONO_FONT,
 };
 
 const headerStyle: CSSProperties = {
@@ -137,7 +143,7 @@ const barStyle: CSSProperties = {
   flexDirection: "column",
   borderRadius: 12,
   border: "1px solid rgba(255, 255, 255, 0.1)",
-  background: "rgba(18, 21, 24, 0.45)",
+  background: EDITOR_NESTED_BAR_BACKGROUND,
   overflow: "hidden",
 };
 
@@ -382,12 +388,14 @@ const recordPopoutStyle: CSSProperties = {
   flexDirection: "column",
   gap: 12,
   padding: 14,
-  borderRadius: 12,
-  border: "1px solid rgba(255,255,255,0.2)",
-  background: "rgba(18, 21, 24, 0.9)",
-  boxShadow: "0 28px 90px rgba(0,0,0,0.42)",
+  borderRadius: EDITOR_PANEL_OUTER_RADIUS_PX,
+  border: FROSTED_PANEL_OUTLINE,
+  background: EDITOR_HEADING_BAR_BACKGROUND,
+  boxShadow: FROSTED_PANEL_SHADOW,
   backdropFilter: "blur(20px) saturate(145%)",
   WebkitBackdropFilter: "blur(20px) saturate(145%)",
+  color: vibrancyLabel,
+  fontFamily: TECHNICAL_MONO_FONT,
 };
 
 const popoutGridStyle: CSSProperties = {

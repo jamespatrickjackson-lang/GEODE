@@ -22,6 +22,14 @@ import {
   type CaptureTimelineState,
   type CaptureTimelineTrack,
 } from "./captureTimeline";
+import {
+  EDITOR_HEADING_BAR_BACKGROUND,
+  EDITOR_PANEL_OUTER_RADIUS_PX,
+  FROSTED_PANEL_OUTLINE,
+  FROSTED_PANEL_SHADOW,
+  TECHNICAL_MONO_FONT,
+  vibrancyLabel,
+} from "../editor/styles";
 
 const rootStyle: CSSProperties = {
   position: "absolute",
@@ -33,11 +41,14 @@ const rootStyle: CSSProperties = {
   gridTemplateColumns: "minmax(0, 1fr)",
   gap: 10,
   padding: 10,
-  borderRadius: 8,
-  border: "1px solid rgba(255,255,255,0.18)",
-  background: "rgba(12, 15, 19, 0.68)",
-  boxShadow: "0 18px 54px rgba(0,0,0,0.34)",
-  backdropFilter: "blur(18px) saturate(150%)",
+  borderRadius: EDITOR_PANEL_OUTER_RADIUS_PX,
+  border: FROSTED_PANEL_OUTLINE,
+  background: EDITOR_HEADING_BAR_BACKGROUND,
+  boxShadow: FROSTED_PANEL_SHADOW,
+  backdropFilter: "blur(20px) saturate(145%)",
+  WebkitBackdropFilter: "blur(20px) saturate(145%)",
+  color: vibrancyLabel,
+  fontFamily: TECHNICAL_MONO_FONT,
   pointerEvents: "none",
   zIndex: 36,
 };
