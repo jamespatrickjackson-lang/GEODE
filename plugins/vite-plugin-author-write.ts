@@ -25,6 +25,7 @@ import {
   validateScrollRecordRequest,
   type CaptureScrollRecordRequestV1,
   type ScrollHandoffPackageV1,
+  type ScrollRenderJobV1,
 } from "./scroll-package-contract";
 
 // Dev-only authoring write endpoint. Decision #022.
@@ -1008,7 +1009,7 @@ async function encodeScrollFormatFromFrames({
 }: {
   run: CaptureScrollPackageRunRecord;
   projectRoot: string;
-  baseRenderJob: any;
+  baseRenderJob: ScrollRenderJobV1;
   frameDir: string;
   format: "mp4" | "webm" | "scroll-friendly-video";
   outputPath: string;
@@ -1080,8 +1081,8 @@ async function startCaptureScrollPackageRun({
     body.manifest && validateScrollHandoffManifest(body.manifest).valid
       ? (body.manifest as ScrollHandoffPackageV1)
       : createPendingScrollHandoffManifest(request);
-  const renderJob = body.renderJob as any;
-  const renderFormat = request.format === "webm" ? "webm" : "mp4";
+  const renderJob = body.renderJob as ScrollRenderJobV1;
+  const renderFormat: "mp4" | "webm" = request.format === "webm" ? "webm" : "mp4";
   // Advanced encoder overrides from the scroll Record popout. Absent values keep
   // the default CRF / scene-cut keyframe behavior.
   const advanced = (request.advancedOptions ?? {}) as Record<string, unknown>;

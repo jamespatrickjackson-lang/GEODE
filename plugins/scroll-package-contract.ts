@@ -59,6 +59,24 @@ export interface CaptureScrollRecordRequestV1 {
   createdAt: string;
 }
 
+export interface ScrollRenderJobVideoV1 {
+  format?: "mp4" | "webm";
+  fps?: number;
+  totalFrames?: number;
+  durationSeconds?: number;
+  sourceFrameStart?: number;
+  sourceFrameEnd?: number;
+  encodingProfile?: string;
+  videoBitrateMbps?: number;
+  keyframeInterval?: number;
+  allKeyframe?: boolean;
+}
+
+export interface ScrollRenderJobV1 {
+  video?: ScrollRenderJobVideoV1;
+  app?: { url?: string };
+}
+
 export type ScrollHandoffPackageStatus =
   | "complete"
   | "partial"

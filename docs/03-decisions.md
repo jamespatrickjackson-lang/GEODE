@@ -3252,10 +3252,17 @@ hidden `.tmp/` lane. Consolidating the planning docs into the canonical
 **Guard:** scroll state stays in recipe/session/job/package files only — no
 `projects/*/pages/**`, `projects/*/project.json`, `projects/*/environment.json`,
 or overlay writes, and no page-id/title/index/order coupling. The Node-side
-contract mirror `plugins/scroll-package-contract.ts` must stay in parity with
-the browser `src/capture/` scroll contracts; a parity guard in
-`tests/tools/capture-director-source.test.mjs` enforces formats, quality
-presets, FPS policy, request shape, and media roles. Scroll/Capture Director
+contract `plugins/scroll-package-contract.ts` is a deliberate self-contained
+copy of the browser `src/capture/` scroll contracts: a literal shared import is
+blocked by the TS composite-project boundary (the `tsconfig.node` plugin project
+is no-DOM and cannot import `src/capture/*` without dragging the
+`captureTypes -> ../scene` DOM/three type graph and violating the "one file, one
+project" rule). Instead of forcing a workspace/package extraction, the copies
+are kept honest by a behavioral parity guard in
+`tests/tools/capture-director-runtime.test.mjs` that runs both implementations
+over identical fixtures and asserts identical validation errors, media roles,
+frames, status, and clean-render groups, plus a string-shape guard in
+`tests/tools/capture-director-source.test.mjs`. Scroll/Capture Director
 controls live in the Capture Director toolbar (`src/capture/`) and are outside
 the editor control manifest, which governs the `src/editor/` sidebar only.
 Locked by `tests/tools/capture-director-source.test.mjs` and

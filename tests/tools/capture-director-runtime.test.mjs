@@ -841,6 +841,51 @@ test("scroll record requests carry every ticked output format and derive a prima
   assert.equal(validateScrollRecordRequest(emptyFormats).valid, false);
 });
 
+test("Node and browser scroll contracts stay in behavioral parity", async () => {
+  // The Vite plugin contract (plugins/scroll-package-contract.ts) is a deliberate
+  // self-contained copy of the browser scroll contracts because TS composite
+  // project boundaries (tsconfig.node vs the app project, no-DOM lib) forbid a
+  // shared import. This guard runs BOTH implementations over identical inputs so
+  // any validation/manifest logic drift fails CI (supersedes the string check).
+  const browserTimeline = await importBundled("src/capture/captureScrollTimeline.ts");
+  const browserPackage = await importBundled("src/capture/scrollHandoffPackage.ts");
+  const nodeContract = await importBundled("plugins/scroll-package-contract.ts");
+
+  const request = browserTimeline.createScrollRecordRequest({
+    timeline: validScrollTimeline({ range: { mode: "full" } }),
+    formats: ["mp4", "webm"],
+    quality: { preset: "4k", width: 3840, height: 2160 },
+    destination: "media_output/capture-scroll-outputs",
+    packageName: "parity-scroll",
+    cleanRender: true,
+    renderRouteIntent: "local-external",
+    advancedOptions: {},
+    createdAt: "2026-06-17T00:00:00.000Z",
+  });
+
+  // Validation parity: both accept a valid request.
+  assert.equal(browserTimeline.validateScrollRecordRequest(request).valid, true);
+  assert.equal(nodeContract.validateScrollRecordRequest(request).valid, true);
+
+  // Validation parity: both reject an invalid request with identical errors.
+  const invalid = { ...request, quality: { preset: "2k", width: 1, height: 1 } };
+  const browserErrors = browserTimeline.validateScrollRecordRequest(invalid).errors.slice().sort();
+  const nodeErrors = nodeContract.validateScrollRecordRequest(invalid).errors.slice().sort();
+  assert.ok(browserErrors.length > 0);
+  assert.deepEqual(nodeErrors, browserErrors);
+
+  // Manifest parity: same media roles, frames, status, and clean-render groups.
+  const browserManifest = browserPackage.createPendingScrollHandoffManifest(request);
+  const nodeManifest = nodeContract.createPendingScrollHandoffManifest(request);
+  assert.deepEqual(nodeManifest.media, browserManifest.media);
+  assert.deepEqual(nodeManifest.frames, browserManifest.frames);
+  assert.equal(nodeManifest.status, browserManifest.status);
+  assert.deepEqual(
+    nodeManifest.cleanRender.hiddenGroups.slice().sort(),
+    browserManifest.cleanRender.hiddenGroups.slice().sort(),
+  );
+});
+
 test("scroll handoff pending manifests support partial PNG sequence outputs", async () => {
   const {
     createScrollRecordRequest,
