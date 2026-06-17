@@ -439,6 +439,25 @@ test("Capture Director exposes Scroll Animation path-based package controls", ()
     false,
     "Scroll record format selection should be a checkbox list, not a single select",
   );
+  // Advanced encoder controls are real inputs, not read-only placeholders.
+  for (const expected of [
+    'data-testid="capture-scroll-advanced-bitrate"',
+    'data-testid="capture-scroll-advanced-keyframe-interval"',
+    'data-testid="capture-scroll-advanced-all-keyframe"',
+    "setScrollAdvancedBitrateMbps",
+    "setScrollAdvancedKeyframeInterval",
+    "setScrollAdvancedAllKeyframe",
+  ]) {
+    assert.ok(
+      popoutBlock.includes(expected),
+      `scroll record popout should expose real advanced control: ${expected}`,
+    );
+  }
+  assert.equal(
+    popoutBlock.includes('value="High profile placeholder"'),
+    false,
+    "Advanced encoder fields should be functional, not placeholders",
+  );
 });
 
 test("Capture Director scroll animation timeline and handoff package contracts exist", () => {

@@ -471,6 +471,12 @@ interface CaptureDirectorContextValue {
   setScrollOutputPackageName(name: string): void;
   scrollAdvancedOpen: boolean;
   setScrollAdvancedOpen(open: boolean): void;
+  scrollAdvancedBitrateMbps: number;
+  setScrollAdvancedBitrateMbps(mbps: number): void;
+  scrollAdvancedKeyframeInterval: number;
+  setScrollAdvancedKeyframeInterval(frames: number): void;
+  scrollAdvancedAllKeyframe: boolean;
+  setScrollAdvancedAllKeyframe(all: boolean): void;
   scrollPreviewState: CaptureScrollPreviewState;
   scrollPreviewTrace: CaptureDirectorScrollPreviewTraceState;
   playScrollPreview(): void;
@@ -1053,6 +1059,10 @@ export function CaptureDirectorProvider({
     "geosee-scroll-animation",
   );
   const [scrollAdvancedOpen, setScrollAdvancedOpen] = useState(false);
+  // Advanced encoder overrides. 0 keeps the renderer default (CRF / scene-cut).
+  const [scrollAdvancedBitrateMbps, setScrollAdvancedBitrateMbps] = useState(0);
+  const [scrollAdvancedKeyframeInterval, setScrollAdvancedKeyframeInterval] = useState(0);
+  const [scrollAdvancedAllKeyframe, setScrollAdvancedAllKeyframe] = useState(false);
   const [scrollPreviewState, setScrollPreviewState] =
     useState<CaptureScrollPreviewState>("idle");
   const [scrollPreviewTrace, setScrollPreviewTrace] =
@@ -1878,6 +1888,11 @@ export function CaptureDirectorProvider({
         pageClipCount: enabledPageClips.length,
         cameraPathNodeCount: normalizedPath.nodes.length,
         pathDurationSeconds: durationSeconds,
+        videoBitrateMbps:
+          scrollAdvancedBitrateMbps > 0 ? scrollAdvancedBitrateMbps : undefined,
+        keyframeInterval:
+          scrollAdvancedKeyframeInterval > 0 ? scrollAdvancedKeyframeInterval : undefined,
+        allKeyframe: scrollAdvancedAllKeyframe === true ? true : undefined,
       },
     });
     const validation = validateScrollRecordRequest(request);
@@ -1899,6 +1914,9 @@ export function CaptureDirectorProvider({
     captureCameraPathV3,
     captureTimeline,
     currentPage,
+    scrollAdvancedAllKeyframe,
+    scrollAdvancedBitrateMbps,
+    scrollAdvancedKeyframeInterval,
     scrollEndFrame,
     scrollOutputFormat,
     scrollOutputFormats,
@@ -6310,6 +6328,12 @@ export function CaptureDirectorProvider({
       setScrollOutputPackageName,
       scrollAdvancedOpen,
       setScrollAdvancedOpen,
+      scrollAdvancedBitrateMbps,
+      setScrollAdvancedBitrateMbps,
+      scrollAdvancedKeyframeInterval,
+      setScrollAdvancedKeyframeInterval,
+      scrollAdvancedAllKeyframe,
+      setScrollAdvancedAllKeyframe,
       scrollPreviewState,
       scrollPreviewTrace,
       playScrollPreview,
@@ -6478,6 +6502,9 @@ export function CaptureDirectorProvider({
       scrollSaveDestination,
       scrollOutputPackageName,
       scrollAdvancedOpen,
+      scrollAdvancedBitrateMbps,
+      scrollAdvancedKeyframeInterval,
+      scrollAdvancedAllKeyframe,
       scrollPreviewState,
       scrollPreviewTrace,
       playScrollPreview,

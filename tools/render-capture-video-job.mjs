@@ -422,14 +422,31 @@ function frameInputArgs({ job, frameDir }) {
 // preview defaults.
 function playableVideoArgs({ job, frameDir, outputPath }) {
   const base = frameInputArgs({ job, frameDir });
-  if (job.video.format === "webm") {
+  const video = job.video ?? {};
+  // Optional Advanced encoder overrides threaded from the scroll Record popout.
+  const bitrateMbps =
+    Number.isFinite(video.videoBitrateMbps) && video.videoBitrateMbps > 0
+      ? video.videoBitrateMbps
+      : 0;
+  const keyframeInterval = video.allKeyframe
+    ? 1
+    : Number.isFinite(video.keyframeInterval) && video.keyframeInterval > 0
+      ? Math.round(video.keyframeInterval)
+      : video.encodingProfile === "scroll-friendly-video"
+        ? 5
+        : 0;
+  const gopArgs =
+    keyframeInterval > 0
+      ? ["-g", String(keyframeInterval), "-keyint_min", String(keyframeInterval), "-sc_threshold", "0"]
+      : [];
+  if (video.format === "webm") {
     return [
       ...base,
       "-c:v", "libvpx-vp9",
-      "-b:v", "0",
-      "-crf", "18",
+      ...(bitrateMbps > 0 ? ["-b:v", `${bitrateMbps}M`] : ["-b:v", "0", "-crf", "18"]),
       "-deadline", "best",
       "-row-mt", "1",
+      ...gopArgs,
       "-pix_fmt", "yuv420p",
       outputPath,
     ];
@@ -438,12 +455,12 @@ function playableVideoArgs({ job, frameDir, outputPath }) {
     ...base,
     "-c:v", "libx264",
     "-preset", "slow",
-    "-crf", "12",
-    ...(job.video.encodingProfile === "scroll-friendly-video"
-      ? ["-g", "5", "-keyint_min", "5", "-sc_threshold", "0"]
-      : []),
-    ...(job.video.encodingProfile === "scroll-friendly-video"
-      ? ["-metadata", "geosee_profile=dense-keyframes"]
+    ...(bitrateMbps > 0
+      ? ["-b:v", `${bitrateMbps}M`, "-maxrate", `${bitrateMbps}M`, "-bufsize", `${bitrateMbps * 2}M`]
+      : ["-crf", "12"]),
+    ...gopArgs,
+    ...(video.encodingProfile === "scroll-friendly-video" || video.allKeyframe
+      ? ["-metadata", `geosee_profile=${video.allKeyframe ? "all-keyframe" : "dense-keyframes"}`]
       : []),
     "-pix_fmt", "yuv420p",
     "-movflags", "+faststart",

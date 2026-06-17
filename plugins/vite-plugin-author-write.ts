@@ -1082,6 +1082,20 @@ async function startCaptureScrollPackageRun({
       : createPendingScrollHandoffManifest(request);
   const renderJob = body.renderJob as any;
   const renderFormat = request.format === "webm" ? "webm" : "mp4";
+  // Advanced encoder overrides from the scroll Record popout. Absent values keep
+  // the default CRF / scene-cut keyframe behavior.
+  const advanced = (request.advancedOptions ?? {}) as Record<string, unknown>;
+  const advancedVideo = {
+    videoBitrateMbps:
+      typeof advanced.videoBitrateMbps === "number" && advanced.videoBitrateMbps > 0
+        ? advanced.videoBitrateMbps
+        : undefined,
+    keyframeInterval:
+      typeof advanced.keyframeInterval === "number" && advanced.keyframeInterval > 0
+        ? Math.round(advanced.keyframeInterval)
+        : undefined,
+    allKeyframe: advanced.allKeyframe === true ? true : undefined,
+  };
   const scrollRenderJob = {
     ...renderJob,
     video: {
@@ -1096,6 +1110,7 @@ async function startCaptureScrollPackageRun({
         request.format === "scroll-friendly-video"
           ? "scroll-friendly-video"
           : undefined,
+      ...advancedVideo,
     },
   };
   const renderErrors = validateLocalCaptureVideoJob(scrollRenderJob);

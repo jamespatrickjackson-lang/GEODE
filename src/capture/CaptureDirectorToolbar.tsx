@@ -885,6 +885,12 @@ export function CaptureDirectorToolbar() {
     setScrollOutputPackageName,
     scrollAdvancedOpen,
     setScrollAdvancedOpen,
+    scrollAdvancedBitrateMbps,
+    setScrollAdvancedBitrateMbps,
+    scrollAdvancedKeyframeInterval,
+    setScrollAdvancedKeyframeInterval,
+    scrollAdvancedAllKeyframe,
+    setScrollAdvancedAllKeyframe,
     scrollPreviewState,
     scrollPreviewTrace,
     playScrollPreview,
@@ -3144,59 +3150,80 @@ export function CaptureDirectorToolbar() {
                 </div>
                 {scrollAdvancedOpen && (
                   <div data-testid="capture-scroll-advanced-fields" style={sectionStyle}>
-                    {scrollOutputFormats.includes("mp4") && (
-                      <label style={popoutFieldStyle}>
-                        <span>MP4 bitrate guide</span>
-                        <input
-                          type="text"
-                          value="High profile placeholder"
-                          readOnly
-                          style={{ ...fieldStyle, width: "100%", paddingRight: 9 }}
-                        />
-                        <span style={fieldHelpStyle}>
-                          MP4-specific delivery notes only.
-                        </span>
-                      </label>
-                    )}
-                    {scrollOutputFormats.includes("webm") && (
-                      <label style={popoutFieldStyle}>
-                        <span>WebM codec guide</span>
-                        <input
-                          type="text"
-                          value="VP9 placeholder"
-                          readOnly
-                          style={{ ...fieldStyle, width: "100%", paddingRight: 9 }}
-                        />
-                        <span style={fieldHelpStyle}>
-                          WebM-specific delivery notes only.
-                        </span>
-                      </label>
+                    {(scrollOutputFormats.includes("mp4") ||
+                      scrollOutputFormats.includes("webm") ||
+                      scrollOutputFormats.includes("scroll-friendly-video")) && (
+                      <>
+                        <label style={popoutFieldStyle}>
+                          <span>Video bitrate (Mbps)</span>
+                          <input
+                            data-testid="capture-scroll-advanced-bitrate"
+                            type="number"
+                            min={0}
+                            step={1}
+                            value={scrollAdvancedBitrateMbps}
+                            onChange={(event) =>
+                              setScrollAdvancedBitrateMbps(
+                                Math.max(0, Number(event.currentTarget.value) || 0),
+                              )
+                            }
+                            style={{ ...fieldStyle, width: "100%", paddingRight: 9 }}
+                          />
+                          <span style={fieldHelpStyle}>
+                            0 keeps the high-quality CRF default; a positive value targets
+                            that bitrate for every selected video format.
+                          </span>
+                        </label>
+                        <label style={popoutFieldStyle}>
+                          <span>Keyframe interval (frames)</span>
+                          <input
+                            data-testid="capture-scroll-advanced-keyframe-interval"
+                            type="number"
+                            min={0}
+                            step={1}
+                            value={scrollAdvancedKeyframeInterval}
+                            onChange={(event) =>
+                              setScrollAdvancedKeyframeInterval(
+                                Math.max(0, Number(event.currentTarget.value) || 0),
+                              )
+                            }
+                            style={{ ...fieldStyle, width: "100%", paddingRight: 9 }}
+                          />
+                          <span style={fieldHelpStyle}>
+                            0 uses scene-cut keyframes (5 for Scroll-Friendly). Lower values
+                            seek more smoothly under scroll control.
+                          </span>
+                        </label>
+                      </>
                     )}
                     {scrollOutputFormats.includes("scroll-friendly-video") && (
                       <label style={popoutFieldStyle}>
-                        <span>Scroll seam padding</span>
+                        <span>All keyframes</span>
                         <input
-                          type="text"
-                          value="Loop-safe placeholder"
-                          readOnly
-                          style={{ ...fieldStyle, width: "100%", paddingRight: 9 }}
+                          data-testid="capture-scroll-advanced-all-keyframe"
+                          type="checkbox"
+                          checked={scrollAdvancedAllKeyframe}
+                          onChange={(event) =>
+                            setScrollAdvancedAllKeyframe(event.currentTarget.checked)
+                          }
                         />
                         <span style={fieldHelpStyle}>
-                          Scroll-friendly-video fields stay format-scoped.
+                          Encode every frame as a keyframe for frame-exact scroll seeking
+                          (larger files).
                         </span>
                       </label>
                     )}
                     {scrollOutputFormats.includes("png-sequence") && (
                       <label style={popoutFieldStyle}>
-                        <span>PNG filename pattern</span>
+                        <span>PNG sequence</span>
                         <input
                           type="text"
-                          value="frame-####.png"
+                          value="lossless · frame-%06d.png"
                           readOnly
                           style={{ ...fieldStyle, width: "100%", paddingRight: 9 }}
                         />
                         <span style={fieldHelpStyle}>
-                          PNG Sequence fields stay format-scoped.
+                          One lossless PNG per frame, six-digit zero-padded names.
                         </span>
                       </label>
                     )}
