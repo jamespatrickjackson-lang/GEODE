@@ -18,17 +18,27 @@ Disposition: keep <commit> | revert to <commit>
 
 ---
 
-## F0 — Scaffolding + flag (resolver decision type, applier interface, runtime flag)
-Status: PENDING
-Hypothesis: a resolver decision type + applier interface + runtime parity flag
-can be added with the flag OFF and produce zero behavior change (parity trivially
-holds), establishing the single chokepoints (tickLayerTweens setup +
-transitionEffectiveLayersForPage) without touching any owner.
-Change: (to fill)
-Measure: (to fill)
-Result: (to fill)
-Insight: (to fill)
-Disposition: (to fill)
+## F0 — Scaffolding + flag (applier skeleton, runtime flag, chokepoint wiring) — done
+Status: DONE
+Hypothesis: an applier skeleton + runtime parity flag can be added with the flag
+OFF and produce zero behavior change, establishing the two chokepoints
+(tickLayerTweens per-frame, transitionEffectiveLayersForPage setup) without
+touching any owner.
+Change:
+- new `src/scene/transitions/entityBehaviorApplier.ts` (both entries return false).
+- SceneManager: `perEntityBehaviorActive=false` + `setPerEntityBehaviorActive` /
+  `isPerEntityBehaviorActive`; `tickLayerTweens` consults the applier first when
+  the flag is on, else legacy.
+- transitionEffectiveLayersForPage: same consult-first guard at setup entry.
+- scene.ts: DEV-only `window.__geoseeBehaviorPipeline(v)` A/B hook.
+Measure: tsc -b exit 0; carve-out + protected batch green (5/8/3/3/13/2/11/17/3);
+flag OFF, applier returns false -> legacy runs; no console errors on 42911.
+Result: zero behavior change. Inert by construction (flag default OFF; applier
+returns false even when ON, since no owner migrated yet).
+Insight: the consult-first/fall-through shape composes cleanly at both
+chokepoints with the existing Impl-delegation pattern; the setup chokepoint is
+`void`-returning so the early-return guard is type-safe.
+Disposition: keep (commit pending below).
 
 ## F1 — First migration: opacity -> fade (layerTweens through the pipeline)
 Status: PENDING

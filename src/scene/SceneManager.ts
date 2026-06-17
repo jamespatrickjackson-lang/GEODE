@@ -259,6 +259,7 @@ import {
   updateSiteSurfaceGuideImpl,
 } from "./terrain/terrainStyleController";
 import { transitionEffectiveLayersForPage as transitionEffectiveLayersForPageImpl } from "./transitions/transitionEffectiveLayersForPage";
+import { applyEntityBehaviorFrame } from "./transitions/entityBehaviorApplier";
 import {
   blendCinematicSceneForTransition,
   cinematicSceneTransitionDebugState,
@@ -5164,7 +5165,24 @@ export class SceneManager {
     return enforceTransitionVisibilityEnvelopeImpl.call(this);
   }
 
+  // Per-entity behavior pipeline (Phase 2) runtime flag. Default OFF so the
+  // legacy scattered owners run unchanged; A/B-toggleable in DEV via
+  // window.__geoseeBehaviorPipeline. ON routes migrated owners through the
+  // single applier; non-migrated owners still fall through.
+  private perEntityBehaviorActive = false;
+
+  setPerEntityBehaviorActive(value: boolean): void {
+    this.perEntityBehaviorActive = value;
+  }
+
+  isPerEntityBehaviorActive(): boolean {
+    return this.perEntityBehaviorActive;
+  }
+
   tickLayerTweens(nowMs: number): void {
+    if (this.perEntityBehaviorActive && applyEntityBehaviorFrame(this, nowMs)) {
+      return;
+    }
     return tickLayerTweensImpl.call(this, nowMs);
   }
 

@@ -36,6 +36,7 @@ import {
   type LayerTransitionKind,
   type NavigationReason,
 } from "./transitionStyles";
+import { setupEntityBehaviorTransition } from "./entityBehaviorApplier";
 
 const DEFAULT_LAYER_FADE_MS = DEFAULT_DETACHED_FADE_MS;
 type EffectiveLayerStyle = ReturnType<typeof effectiveStyle>;
@@ -714,6 +715,15 @@ export function transitionEffectiveLayersForPage(
   reason: NavigationReason = "programmatic",
   transitionId: string = `transition-${Date.now()}`,
 ): void {
+  // Per-entity behavior pipeline (Phase 2) setup chokepoint. When the runtime
+  // flag is on and the applier fully owns setup for migrated owners, skip the
+  // legacy setup; otherwise fall through unchanged. F0: applier returns false.
+  if (
+    (this as any).perEntityBehaviorActive === true &&
+    setupEntityBehaviorTransition(this as never)
+  ) {
+    return;
+  }
   const layerIds = new Set<string>([
     ...this.layers.keys(),
     ...Object.keys(CASE_STUDY_B_DEMO_LAYER_ALIASES),

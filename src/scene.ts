@@ -593,6 +593,12 @@ export function mountScene(
   // in presenter mode. The terrain shader carries spatial reference now.
 
   const manager = new SceneManager(scene, renderer);
+  if (import.meta.env.DEV) {
+    // Phase 2 per-entity behavior pipeline A/B toggle (DEV only). OFF by default.
+    (window as unknown as Record<string, unknown>).__geoseeBehaviorPipeline = (
+      value: boolean,
+    ) => manager.setPerEntityBehaviorActive(value === true);
+  }
   for (const spec of layerSpecs) {
     manager.registerLayer(spec);
   }
