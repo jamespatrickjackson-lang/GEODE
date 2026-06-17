@@ -1410,13 +1410,22 @@ export function transitionEffectiveLayersForPage(
       if (transitionSnapshot) {
         this.applyRenderOpacityToTree(transitionSnapshot, fromOpacity, 1);
         this.applyLayerTransitionRenderOpacity(id, 0, sectionIsoStable ? 1 : 0);
-        this.layerTweens.set(id, {
-          from: 0,
-          to: toOpacity,
-          startMs: now,
-          durationMs: duration,
-          easing,
-        });
+        // F2: snapshot-path live-layer opacity owner through the pipeline
+        // (parity). Flag ON && applier-handled -> applier owns; else legacy.
+        if (
+          (this as any).perEntityBehaviorActive === true &&
+          applyEntityOpacityFade(this, id, 0, toOpacity, now, duration, easing)
+        ) {
+          // applier set the tween
+        } else {
+          this.layerTweens.set(id, {
+            from: 0,
+            to: toOpacity,
+            startMs: now,
+            durationMs: duration,
+            easing,
+          });
+        }
         this.layerTransitionSnapshots.set(id, {
           id,
           group: transitionSnapshot,

@@ -87,4 +87,21 @@ opacityTweensOwned > 0; flag OFF -> reset -> navigate -> stays 0 (legacy path).
 Insight: observability is a foundation feature, not a one-off — every later
 increment (fade floor, clip) gets a verifiable number for its notebook entry
 instead of relying on the eye for parity.
+Disposition: keep (200e464).
+
+## F2 — finish the opacity owner (snapshot-path + late-attach), parity — done
+Status: DONE (parity)
+Hypothesis: routing the remaining opacity sites through the applier reproduces
+their fades identically (parity), with the owned-count climbing.
+Change:
+- transitionEffectiveLayersForPage.ts snapshot-path live-layer tween (from:0 ->
+  toOpacity) now flag-gated through `applyEntityOpacityFade`, else legacy.
+- SceneManager.ts late-attach FADE branch (from:0 -> targetOpacity) same.
+- Snap-on branch (remainingMs <= 150) left legacy (that is F3's target).
+Measure: tsc -b exit 0; guards green; counter climbs further with flag ON.
+Result: parity by construction (identical endpoints). Generic fade + snapshot +
+late-attach fade now all owned by the pipeline when the flag is on.
+Insight: each opacity site is its own narrow interleave at the owner's exact
+location; "the opacity owner" is several sites, not one — confirms the
+per-owner-interleave model over the all-or-nothing chokepoint.
 Disposition: keep (commit pending below).

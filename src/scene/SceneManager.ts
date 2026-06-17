@@ -259,7 +259,10 @@ import {
   updateSiteSurfaceGuideImpl,
 } from "./terrain/terrainStyleController";
 import { transitionEffectiveLayersForPage as transitionEffectiveLayersForPageImpl } from "./transitions/transitionEffectiveLayersForPage";
-import { applyEntityBehaviorFrame } from "./transitions/entityBehaviorApplier";
+import {
+  applyEntityBehaviorFrame,
+  applyEntityOpacityFade,
+} from "./transitions/entityBehaviorApplier";
 import {
   blendCinematicSceneForTransition,
   cinematicSceneTransitionDebugState,
@@ -3558,6 +3561,21 @@ export class SceneManager {
         continue;
       }
       this.applyLayerTransitionRenderOpacity(layerId, 0, 0);
+      // F2: late-attach fade branch opacity owner through the pipeline (parity).
+      if (
+        this.perEntityBehaviorActive &&
+        applyEntityOpacityFade(
+          this,
+          layerId,
+          0,
+          targetOpacity,
+          nowMs,
+          remainingMs,
+          transition.easing,
+        )
+      ) {
+        continue;
+      }
       this.layerTweens.set(layerId, {
         from: 0,
         to: targetOpacity,
