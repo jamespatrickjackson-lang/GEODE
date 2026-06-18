@@ -30,17 +30,18 @@ import {
   TECHNICAL_MONO_FONT,
   vibrancyLabel,
 } from "../editor/styles";
+import { CaptureSectionIcon } from "./CaptureSectionIcons";
 
 const rootStyle: CSSProperties = {
   position: "absolute",
   left: 24,
-  right: 86,
-  bottom: 18,
+  right: 24,
+  bottom: 74,
   minHeight: 0,
   display: "grid",
   gridTemplateColumns: "minmax(0, 1fr)",
-  gap: 10,
-  padding: 10,
+  gap: 6,
+  padding: "8px 10px 6px",
   borderRadius: EDITOR_PANEL_OUTER_RADIUS_PX,
   border: FROSTED_PANEL_OUTLINE,
   background: EDITOR_HEADING_BAR_BACKGROUND,
@@ -63,14 +64,6 @@ const buttonStyle: CSSProperties = {
   fontWeight: 680,
   fontSize: 12,
   cursor: "pointer",
-};
-
-const addCameraIconStyle: CSSProperties = {
-  color: "rgba(255,255,255,0.94)",
-  fontSize: 18,
-  fontWeight: 760,
-  lineHeight: 1,
-  transform: "translateY(-1px)",
 };
 
 const pageLaneContentOffsetPx = 36;
@@ -292,7 +285,7 @@ const cameraPathLaneContentStyle: CSSProperties = {
 const trackBaseStyle: CSSProperties = {
   position: "relative",
   display: "grid",
-  gap: 6,
+  gap: 3,
   minWidth: 0,
   pointerEvents: "auto",
 };
@@ -682,14 +675,14 @@ export function CameraPathTimeline({
   // Non-diagnostics: flexible spacer rows above/below the two lanes so the
   // Pages + Camera Path bars sit vertically centered, with the time-graph scale
   // pinned at the bottom and the full-height grid behind them.
-  const pageLaneGridRow = diagnosticsVisible ? 1 : 2;
-  const cameraPathGridRow = diagnosticsVisible ? 2 : 3;
-  const scaleAxisGridRow = diagnosticsVisible ? 3 : 5;
+  const pageLaneGridRow = 1;
+  const cameraPathGridRow = 2;
+  const scaleAxisGridRow = 3;
   const trackStyle: CSSProperties = {
     ...trackBaseStyle,
     gridTemplateRows: diagnosticsVisible
-      ? "34px 34px 28px 20px 20px 20px 20px 20px"
-      : "minmax(12px, 1fr) 34px 34px minmax(12px, 1fr) 28px",
+      ? "34px 34px 22px 20px 20px 20px 20px 20px"
+      : "34px 34px 22px",
   };
   const blocksLaneRef = useRef<HTMLDivElement | null>(null);
   const pageLaneRef = useRef<HTMLDivElement | null>(null);
@@ -1047,23 +1040,23 @@ export function CameraPathTimeline({
             zIndex: 0,
           }}
         >
-          {frameGraduations.map((graduation) => (
-            <span
-              key={`grid:${graduation.frame}`}
-              data-testid="capture-timeline-frame-grid-tick"
-              data-frame={graduation.frame}
-              style={{
-                position: "absolute",
-                left: graduation.leftPercent,
-                top: 0,
-                bottom: 0,
-                width: 1,
-                background: graduation.major
-                  ? "rgba(255,255,255,0.14)"
-                  : "rgba(255,255,255,0.055)",
-              }}
-            />
-          ))}
+          {frameGraduations
+            .filter((graduation) => graduation.major)
+            .map((graduation) => (
+              <span
+                key={`grid:${graduation.frame}`}
+                data-testid="capture-timeline-frame-grid-tick"
+                data-frame={graduation.frame}
+                style={{
+                  position: "absolute",
+                  left: graduation.leftPercent,
+                  top: 0,
+                  bottom: 0,
+                  width: 1,
+                  background: "rgba(255,255,255,0.16)",
+                }}
+              />
+            ))}
         </div>
         <span
           data-testid="capture-timeline-playhead"
@@ -1071,8 +1064,29 @@ export function CameraPathTimeline({
           style={{
             ...globalPlayheadStyle,
             left: timelineTrackPercentStyle(playheadLeft),
+            top: 0,
+            bottom: 25,
+            background: "transparent",
+            backgroundImage:
+              "repeating-linear-gradient(to bottom, rgba(248,250,252,0.92) 0 4px, transparent 4px 8px)",
+            boxShadow: "none",
           }}
-        />
+        >
+          <span
+            aria-hidden="true"
+            style={{
+              position: "absolute",
+              left: "50%",
+              bottom: -4,
+              width: 8,
+              height: 8,
+              borderRadius: 999,
+              background: "rgba(248,250,252,0.96)",
+              boxShadow: "0 0 0 1px rgba(0,0,0,0.28)",
+              transform: "translateX(-50%)",
+            }}
+          />
+        </span>
         <div
           data-testid="capture-timeline-pages-lane"
           ref={pageLaneRef}
@@ -1083,7 +1097,6 @@ export function CameraPathTimeline({
             gridRow: pageLaneGridRow,
             overflow: "visible",
             background: "transparent",
-            border: "none",
           }}
           onClick={(event) => {
             onSelectTimelineTrack("pages");
@@ -1103,9 +1116,7 @@ export function CameraPathTimeline({
             }}
             style={pageLaneAddButtonStyle}
           >
-            <span aria-hidden="true" style={addCameraIconStyle}>
-              +
-            </span>
+            <CaptureSectionIcon name="pages" size={14} />
           </button>
           {pageAddMenuOpen && (
             <div
@@ -1480,7 +1491,6 @@ export function CameraPathTimeline({
             ...laneStyle,
             gridRow: cameraPathGridRow,
             background: "transparent",
-            border: "none",
           }}
           onClick={() => onSelectTimelineTrack("camera-path")}
         >
@@ -1496,12 +1506,8 @@ export function CameraPathTimeline({
             }}
             style={cameraPathLaneAddButtonStyle}
           >
-            <span
-              data-testid="capture-timeline-icon-add-camera"
-              aria-hidden="true"
-              style={addCameraIconStyle}
-            >
-              +
+            <span data-testid="capture-timeline-icon-add-camera" aria-hidden="true">
+              <CaptureSectionIcon name="camera" size={14} />
             </span>
           </button>
           <div

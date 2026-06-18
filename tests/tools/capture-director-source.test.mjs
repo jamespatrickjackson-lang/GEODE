@@ -1665,11 +1665,9 @@ test("Capture Camera Path v2 UI exposes row editors, transition editors, and tim
     "frame grid should use 0-based 0.1s snap subdivisions at 60 FPS and extend through the full lower timeline",
   );
   assert.ok(
-    lowerTimelineSource.includes('? "34px 34px 28px 20px 20px 20px 20px 20px"') &&
-      lowerTimelineSource.includes(
-        ': "minmax(12px, 1fr) 34px 34px minmax(12px, 1fr) 28px"',
-      ),
-    "Pages and Camera Path lanes keep matching 34px heights, centered with spacer rows",
+    lowerTimelineSource.includes('? "34px 34px 22px 20px 20px 20px 20px 20px"') &&
+      lowerTimelineSource.includes(': "34px 34px 22px"'),
+    "Pages and Camera Path lanes keep matching 34px heights stacked tight above the scale",
   );
   const frameRulerBlock = lowerTimelineSource.slice(
     lowerTimelineSource.indexOf('data-testid="capture-timeline-frame-ruler"'),

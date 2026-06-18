@@ -10,6 +10,8 @@ export type CaptureIconName =
   | "still"
   | "camera-path"
   | "timeline"
+  | "pages"
+  | "camera"
   | "gpu"
   | "download"
   | "master"
@@ -59,6 +61,20 @@ const GLYPHS: Record<CaptureIconName, ReactNode> = {
       <path d="M8 6v4M14 14v4" />
       <circle cx="8" cy="8" r="1.5" />
       <circle cx="14" cy="16" r="1.5" />
+    </>
+  ),
+  pages: (
+    <>
+      <path d="M12 5.5C10 4 6.5 4 4.5 4.8v13C6.5 17 10 17 12 18.5" />
+      <path d="M12 5.5C14 4 17.5 4 19.5 4.8v13C17.5 17 14 17 12 18.5" />
+      <path d="M12 5.5v13" />
+    </>
+  ),
+  camera: (
+    <>
+      <rect x="3" y="7" width="18" height="12" rx="2" />
+      <path d="M8 7l1.5-2.5h5L16 7" />
+      <circle cx="12" cy="13" r="3.1" />
     </>
   ),
   gpu: (
