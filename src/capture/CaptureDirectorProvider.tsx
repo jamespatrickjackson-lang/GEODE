@@ -155,13 +155,16 @@ import {
   DEFAULT_CAPTURE_SCROLL_FPS,
   captureScrollFrameForSeconds,
   captureScrollQualityForPreset,
+  clampCaptureScrollAnchorProgress,
   clampCaptureScrollFrameToRange,
+  createCaptureScrollCustomAnchor,
   createScrollRecordRequest,
   resolveCaptureScrollPlayStartFrame,
   resolvePrimaryScrollFormat,
   resolveScrollPageRenderPlan,
   sampleCaptureScrollTimeline,
   validateScrollRecordRequest,
+  type CaptureScrollCustomAnchor,
   type CaptureScrollFps,
   type CaptureScrollRenderRouteIntent,
   type CaptureScrollRecordQuality,
@@ -485,6 +488,13 @@ interface CaptureDirectorContextValue {
   setScrollIncludePosters(value: boolean): void;
   scrollCaptureMode: ActiveCaptureMode;
   setScrollCaptureMode(mode: ActiveCaptureMode): void;
+  scrollCustomAnchors: CaptureScrollCustomAnchor[];
+  addScrollCustomAnchor(): void;
+  updateScrollCustomAnchor(
+    id: string,
+    patch: Partial<Omit<CaptureScrollCustomAnchor, "id">>,
+  ): void;
+  removeScrollCustomAnchor(id: string): void;
   scrollPreviewState: CaptureScrollPreviewState;
   scrollPreviewTrace: CaptureDirectorScrollPreviewTraceState;
   playScrollPreview(): void;
@@ -1077,6 +1087,40 @@ export function CaptureDirectorProvider({
   const [scrollIncludePosters, setScrollIncludePosters] = useState(true);
   const [scrollCaptureMode, setScrollCaptureMode] =
     useState<ActiveCaptureMode>("scene-only");
+  // User-defined poster anchors merged with page-derived anchors at render time.
+  const [scrollCustomAnchors, setScrollCustomAnchors] = useState<
+    CaptureScrollCustomAnchor[]
+  >([]);
+  const addScrollCustomAnchor = useCallback(() => {
+    setScrollCustomAnchors((previous) => [
+      ...previous,
+      createCaptureScrollCustomAnchor(0.5),
+    ]);
+  }, []);
+  const updateScrollCustomAnchor = useCallback(
+    (id: string, patch: Partial<Omit<CaptureScrollCustomAnchor, "id">>) => {
+      setScrollCustomAnchors((previous) =>
+        previous.map((anchor) =>
+          anchor.id === id
+            ? {
+                ...anchor,
+                ...patch,
+                progress:
+                  patch.progress === undefined
+                    ? anchor.progress
+                    : clampCaptureScrollAnchorProgress(patch.progress),
+              }
+            : anchor,
+        ),
+      );
+    },
+    [],
+  );
+  const removeScrollCustomAnchor = useCallback((id: string) => {
+    setScrollCustomAnchors((previous) =>
+      previous.filter((anchor) => anchor.id !== id),
+    );
+  }, []);
   const [scrollPreviewState, setScrollPreviewState] =
     useState<CaptureScrollPreviewState>("idle");
   const [scrollPreviewTrace, setScrollPreviewTrace] =
@@ -1838,7 +1882,7 @@ export function CaptureDirectorProvider({
       1,
       Math.ceil(durationSeconds * scrollFps),
     );
-    const anchors =
+    const derivedAnchors =
       enabledPageClips.length > 0
         ? enabledPageClips.map((clip) => ({
             id: clip.id,
@@ -1862,6 +1906,23 @@ export function CaptureDirectorProvider({
               },
             ]
           : [];
+    // Append user-defined poster anchors, then order by scroll progress so the
+    // poster/contact-sheet selectors walk the timeline front to back.
+    const customAnchorEntries = scrollCustomAnchors.map((anchor, index) => {
+      const progress = clampCaptureScrollAnchorProgress(anchor.progress);
+      return {
+        id: anchor.id,
+        label: anchor.label.trim() || `Anchor ${index + 1}`,
+        progress,
+        posterFrame: Math.min(
+          durationFrames - 1,
+          Math.max(0, Math.round(progress * durationSeconds * scrollFps)),
+        ),
+      };
+    });
+    const anchors = [...derivedAnchors, ...customAnchorEntries].sort(
+      (a, b) => a.progress - b.progress,
+    );
     const pageSource =
       enabledPageClips.length > 0
         ? {
@@ -1944,6 +2005,7 @@ export function CaptureDirectorProvider({
     scrollAdvancedBitrateMbps,
     scrollAdvancedKeyframeInterval,
     scrollCaptureMode,
+    scrollCustomAnchors,
     scrollEndFrame,
     scrollFps,
     scrollIncludePosters,
@@ -6370,6 +6432,10 @@ export function CaptureDirectorProvider({
       setScrollIncludePosters,
       scrollCaptureMode,
       setScrollCaptureMode,
+      scrollCustomAnchors,
+      addScrollCustomAnchor,
+      updateScrollCustomAnchor,
+      removeScrollCustomAnchor,
       scrollPreviewState,
       scrollPreviewTrace,
       playScrollPreview,
@@ -6544,6 +6610,10 @@ export function CaptureDirectorProvider({
       scrollAdvancedAllKeyframe,
       scrollIncludePosters,
       scrollCaptureMode,
+      scrollCustomAnchors,
+      addScrollCustomAnchor,
+      updateScrollCustomAnchor,
+      removeScrollCustomAnchor,
       scrollPreviewState,
       scrollPreviewTrace,
       playScrollPreview,

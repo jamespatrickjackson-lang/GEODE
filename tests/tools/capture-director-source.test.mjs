@@ -883,6 +883,48 @@ test("Capture Director toolbar renders scroll record validation errors without s
   );
 });
 
+test("Capture Director scroll popout exposes a custom poster anchor editor", () => {
+  const toolbar = readSource("src", "capture", "CaptureDirectorToolbar.tsx");
+  for (const expected of [
+    "capture-scroll-anchors-toggle",
+    "capture-scroll-anchor-add",
+    "capture-scroll-anchor-row",
+    "capture-scroll-anchor-label",
+    "capture-scroll-anchor-progress",
+    "capture-scroll-anchor-remove",
+    "addScrollCustomAnchor",
+    "updateScrollCustomAnchor",
+    "removeScrollCustomAnchor",
+  ]) {
+    assert.ok(
+      toolbar.includes(expected),
+      `scroll popout anchor editor should include ${expected}`,
+    );
+  }
+
+  const provider = readSource("src", "capture", "CaptureDirectorProvider.tsx");
+  assert.ok(
+    provider.includes("customAnchorEntries"),
+    "provider should merge custom poster anchors into the render timeline",
+  );
+  assert.ok(
+    provider.includes("createCaptureScrollCustomAnchor"),
+    "provider should seed custom anchors through the contract factory",
+  );
+
+  const contract = readSource("src", "capture", "captureScrollTimeline.ts");
+  for (const expected of [
+    "CaptureScrollCustomAnchor",
+    "createCaptureScrollCustomAnchor",
+    "clampCaptureScrollAnchorProgress",
+  ]) {
+    assert.ok(
+      contract.includes(expected),
+      `scroll timeline contract should export ${expected}`,
+    );
+  }
+});
+
 test("Capture camera path module defines recipe-owned spline helpers", () => {
   const source = readSource("src", "capture", "captureCameraPath.ts");
   for (const expected of [

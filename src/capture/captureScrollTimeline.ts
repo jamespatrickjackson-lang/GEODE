@@ -104,6 +104,33 @@ export interface CaptureScrollTimelineV1 {
   outputProfileId: string;
 }
 
+// Authoring-side poster anchor. Custom anchors are user-defined poster points
+// merged into timeline.anchors alongside the page-derived anchors at render
+// time; progress is a 0..1 fraction of the scroll duration.
+export interface CaptureScrollCustomAnchor {
+  id: string;
+  label: string;
+  progress: number;
+}
+
+export function clampCaptureScrollAnchorProgress(progress: number): number {
+  if (!Number.isFinite(progress)) return 0;
+  return Math.max(0, Math.min(1, progress));
+}
+
+let scrollCustomAnchorSequence = 0;
+
+export function createCaptureScrollCustomAnchor(
+  progress = 0.5,
+): CaptureScrollCustomAnchor {
+  scrollCustomAnchorSequence += 1;
+  return {
+    id: `custom-anchor-${scrollCustomAnchorSequence}`,
+    label: "",
+    progress: clampCaptureScrollAnchorProgress(progress),
+  };
+}
+
 export interface CaptureScrollResolvedFrameRange {
   startFrame: number;
   endFrame: number;

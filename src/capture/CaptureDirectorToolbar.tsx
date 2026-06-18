@@ -795,6 +795,7 @@ export function CaptureDirectorToolbar() {
   const [videoRecordPopoutOpen, setVideoRecordPopoutOpen] = useState(false);
   const [realtimeRecordPopoutOpen, setRealtimeRecordPopoutOpen] = useState(false);
   const [stillRecordPopoutOpen, setStillRecordPopoutOpen] = useState(false);
+  const [scrollAnchorsOpen, setScrollAnchorsOpen] = useState(false);
   const [expandedSections, setExpandedSections] = useState<
     Record<CaptureDirectorSectionId, boolean>
   >({
@@ -978,6 +979,10 @@ export function CaptureDirectorToolbar() {
     setScrollIncludePosters,
     scrollCaptureMode,
     setScrollCaptureMode,
+    scrollCustomAnchors,
+    addScrollCustomAnchor,
+    updateScrollCustomAnchor,
+    removeScrollCustomAnchor,
     scrollPreviewTrace,
     playScrollPreview,
     pauseScrollPreview,
@@ -3288,7 +3293,90 @@ export function CaptureDirectorToolbar() {
                   >
                     Advanced
                   </button>
+                  <button
+                    data-testid="capture-scroll-anchors-toggle"
+                    type="button"
+                    aria-expanded={scrollAnchorsOpen}
+                    onClick={() => setScrollAnchorsOpen(!scrollAnchorsOpen)}
+                    style={buttonStyle}
+                  >
+                    {scrollCustomAnchors.length > 0
+                      ? `Poster anchors (${scrollCustomAnchors.length})`
+                      : "Poster anchors"}
+                  </button>
                 </div>
+                {scrollAnchorsOpen && (
+                  <div
+                    data-testid="capture-scroll-anchors-fields"
+                    style={sectionStyle}
+                  >
+                    <span style={fieldHelpStyle}>
+                      Page anchors are added automatically. Add custom poster
+                      points below; each becomes a still poster and a
+                      contact-sheet cell at its scroll position.
+                    </span>
+                    {scrollCustomAnchors.length === 0 && (
+                      <span
+                        data-testid="capture-scroll-anchors-empty"
+                        style={statusStyle}
+                      >
+                        No custom anchors.
+                      </span>
+                    )}
+                    {scrollCustomAnchors.map((anchor, index) => (
+                      <div
+                        key={anchor.id}
+                        data-testid="capture-scroll-anchor-row"
+                        style={{ display: "flex", gap: 6, alignItems: "center" }}
+                      >
+                        <input
+                          data-testid="capture-scroll-anchor-label"
+                          type="text"
+                          value={anchor.label}
+                          placeholder={`Anchor ${index + 1}`}
+                          onChange={(event) =>
+                            updateScrollCustomAnchor(anchor.id, {
+                              label: event.currentTarget.value,
+                            })
+                          }
+                          style={{ ...fieldStyle, flex: 1, paddingRight: 9 }}
+                        />
+                        <input
+                          data-testid="capture-scroll-anchor-progress"
+                          type="number"
+                          min={0}
+                          max={100}
+                          step={1}
+                          value={Math.round(anchor.progress * 100)}
+                          onChange={(event) =>
+                            updateScrollCustomAnchor(anchor.id, {
+                              progress: Number(event.currentTarget.value) / 100,
+                            })
+                          }
+                          style={{ ...fieldStyle, width: 72, paddingRight: 9 }}
+                        />
+                        <span style={fieldHelpStyle}>%</span>
+                        <button
+                          data-testid="capture-scroll-anchor-remove"
+                          type="button"
+                          aria-label="Remove anchor"
+                          onClick={() => removeScrollCustomAnchor(anchor.id)}
+                          style={buttonStyle}
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ))}
+                    <button
+                      data-testid="capture-scroll-anchor-add"
+                      type="button"
+                      onClick={addScrollCustomAnchor}
+                      style={buttonStyle}
+                    >
+                      Add anchor
+                    </button>
+                  </div>
+                )}
                 {scrollAdvancedOpen && (
                   <div data-testid="capture-scroll-advanced-fields" style={sectionStyle}>
                     {(scrollOutputFormats.includes("mp4") ||
