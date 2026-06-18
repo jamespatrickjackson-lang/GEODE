@@ -731,6 +731,40 @@ function CollapsibleCaptureSection({
   );
 }
 
+// Reusable centered Record popout shell. Render settings for each container
+// live inside one of these, opened from that container's Record button.
+function CaptureRecordPopout({
+  title,
+  testId,
+  onClose,
+  children,
+}: {
+  title: string;
+  testId: string;
+  onClose: () => void;
+  children: ReactNode;
+}) {
+  return (
+    <div data-testid={`${testId}-shell`} style={popoutBackdropStyle}>
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={`${title} record options`}
+        tabIndex={-1}
+        style={recordPopoutStyle}
+      >
+        <div style={headingStyle}>
+          <span>{title}</span>
+          <button type="button" onClick={onClose} style={buttonStyle}>
+            Close
+          </button>
+        </div>
+        {children}
+      </div>
+    </div>
+  );
+}
+
 function getScrollDialogFocusableElements(dialog: HTMLElement | null) {
   if (!dialog) {
     return [];
@@ -755,6 +789,7 @@ export function CaptureDirectorToolbar() {
   const pathFileInputRef = useRef<HTMLInputElement | null>(null);
   const scrollPopoutDialogRef = useRef<HTMLDivElement | null>(null);
   const scrollPopoutRestoreFocusRef = useRef<HTMLElement | null>(null);
+  const [videoRecordPopoutOpen, setVideoRecordPopoutOpen] = useState(false);
   const [expandedSections, setExpandedSections] = useState<
     Record<CaptureDirectorSectionId, boolean>
   >({
@@ -1526,6 +1561,20 @@ export function CaptureDirectorToolbar() {
                   </span>
                 }
               >
+              <button
+                data-testid="capture-render-record"
+                type="button"
+                onClick={() => setVideoRecordPopoutOpen(true)}
+                style={primaryButtonStyle}
+              >
+                Record
+              </button>
+              {videoRecordPopoutOpen && (
+                <CaptureRecordPopout
+                  title="Video Capture"
+                  testId="capture-render-record-popout"
+                  onClose={() => setVideoRecordPopoutOpen(false)}
+                >
               <div style={rowStyle}>
                 <label style={labelStyle}>
                   <span>Mode</span>
@@ -1873,6 +1922,8 @@ export function CaptureDirectorToolbar() {
                   </details>
                 </section>
               </div>
+                </CaptureRecordPopout>
+              )}
               </CollapsibleCaptureSection>
 
               <CollapsibleCaptureSection
