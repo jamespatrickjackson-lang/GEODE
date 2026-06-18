@@ -1778,6 +1778,100 @@ export function CaptureDirectorToolbar() {
                     {externalVideoJobCommand}
                   </code>
                 )}
+                <section style={sectionStyle}>
+                  <span style={sectionLabelStyle}>Render Path Video</span>
+                  <span style={statusStyle}>
+                    Camera Path duration, {renderResolution.label},{" "}
+                    {deterministicExportFormat === "webm" ? "WebM" : "MP4"}
+                  </span>
+                  <button
+                    data-testid="capture-path-render-start"
+                    type="button"
+                    disabled={
+                      !cameraPathPlaybackValidation.valid ||
+                      isRecording ||
+                      isDeterministicExporting ||
+                      pathRenderStatus === "rendering" ||
+                      pathRenderStatus === "encoding" ||
+                      armedMode === "full-ui"
+                    }
+                    onClick={() => void startPathDeterministicRender()}
+                    style={primaryButtonStyle}
+                  >
+                    Render Path Video
+                  </button>
+                  <button
+                    data-testid="capture-path-render-cancel"
+                    type="button"
+                    disabled={
+                      pathRenderStatus !== "rendering" &&
+                      pathRenderStatus !== "encoding"
+                    }
+                    onClick={cancelPathDeterministicRender}
+                    style={buttonStyle}
+                  >
+                    Cancel Path Render
+                  </button>
+                  <span data-testid="capture-path-render-status" style={statusStyle}>
+                    {pathRenderStatus === "rendering"
+                      ? pathRenderProgress.message ??
+                        `Rendering ${pathRenderProgress.renderedFrames ?? 0}/${pathRenderProgress.totalFrames ?? 0}`
+                      : pathRenderStatus === "encoding"
+                        ? pathRenderProgress.message ?? "Encoding path video. No file has been saved yet."
+                        : pathRenderStatus === "complete"
+                          ? externalVideoJobUrl && !pathRenderOutputUrl
+                            ? "External path video job ready"
+                            : "Rendered path video ready"
+                          : pathRenderStatus === "failed"
+                            ? "Path render failed"
+                            : pathRenderStatus === "cancelled"
+                              ? "Path render cancelled"
+                              : "Path render idle"}
+                  </span>
+                  {(pathRenderStatus === "rendering" ||
+                    pathRenderStatus === "encoding") && (
+                    <span data-testid="capture-path-render-save-pending" style={statusStyle}>
+                      No file has been saved yet. Save and download controls appear after encoding completes.
+                    </span>
+                  )}
+                  {pathRenderOutputUrl && (
+                    <button
+                      data-testid="capture-path-render-save"
+                      type="button"
+                      onClick={() => void savePathRenderVideo()}
+                      style={buttonStyle}
+                    >
+                      Save Rendered Video
+                    </button>
+                  )}
+                  {pathRenderOutputUrl && (
+                    <a
+                      data-testid="capture-path-render-download"
+                      href={pathRenderOutputUrl}
+                      download={
+                        pathRenderOutputFilename ??
+                        `geosee-rendered-path.${deterministicExportFormat}`
+                      }
+                      style={outputLinkStyle}
+                    >
+                      Download Rendered Path Video
+                    </a>
+                  )}
+                  {pathRenderSaveMessage && (
+                    <span data-testid="capture-path-render-save-status" style={statusStyle}>
+                      {pathRenderSaveMessage}
+                    </span>
+                  )}
+                  <details data-testid="capture-path-render-details" style={statusStyle}>
+                    <summary>Details</summary>
+                    <span>
+                      {deterministicExportFormat === "webm"
+                        ? "Rendered WebM"
+                        : "Rendered MP4"}{" "}
+                      uses fixed frame time from the current Camera Path. Browser output is not written to disk during rendering or encoding; for 4K final video, run the external job command to write the file outside the browser.
+                    </span>
+                  </details>
+                </section>
               </div>
               </CollapsibleCaptureSection>
 
@@ -2254,122 +2348,6 @@ export function CaptureDirectorToolbar() {
                     {cameraPathPlaybackValidation.errors[0]}
                   </span>
                 )}
-                <span style={sectionLabelStyle}>Render Path Video</span>
-                <span style={statusStyle}>
-                  Final deterministic render, {renderResolution.label},{" "}
-                  {deterministicExportFormat === "webm" ? "WebM" : "MP4"}
-                </span>
-                <button
-                  data-testid="capture-path-render-start"
-                  type="button"
-                  disabled={
-                    !cameraPathPlaybackValidation.valid ||
-                    isRecording ||
-                    isDeterministicExporting ||
-                    pathRenderStatus === "rendering" ||
-                    pathRenderStatus === "encoding" ||
-                    armedMode === "full-ui"
-                  }
-                  onClick={() => void startPathDeterministicRender()}
-                  style={primaryButtonStyle}
-                >
-                  Render Path Video
-                </button>
-                <button
-                  data-testid="capture-path-render-cancel"
-                  type="button"
-                  disabled={
-                    pathRenderStatus !== "rendering" &&
-                    pathRenderStatus !== "encoding"
-                  }
-                  onClick={cancelPathDeterministicRender}
-                  style={buttonStyle}
-                >
-                  Cancel Path Render
-                </button>
-                <span data-testid="capture-path-render-status" style={statusStyle}>
-                  {pathRenderStatus === "rendering"
-                    ? pathRenderProgress.message ??
-                      `Rendering ${pathRenderProgress.renderedFrames ?? 0}/${pathRenderProgress.totalFrames ?? 0}`
-                    : pathRenderStatus === "encoding"
-                      ? pathRenderProgress.message ?? "Encoding path video. No file has been saved yet."
-                      : pathRenderStatus === "complete"
-                        ? externalVideoJobUrl && !pathRenderOutputUrl
-                          ? "External path video job ready"
-                          : "Rendered path video ready"
-                        : pathRenderStatus === "failed"
-                          ? "Path render failed"
-                          : pathRenderStatus === "cancelled"
-                            ? "Path render cancelled"
-                            : "Path render idle"}
-                </span>
-                {(pathRenderStatus === "rendering" ||
-                  pathRenderStatus === "encoding") && (
-                  <span data-testid="capture-path-render-save-pending" style={statusStyle}>
-                    No file has been saved yet. Save and download controls appear after encoding completes.
-                  </span>
-                )}
-                {pathRenderOutputUrl && (
-                  <button
-                    data-testid="capture-path-render-save"
-                    type="button"
-                    onClick={() => void savePathRenderVideo()}
-                    style={buttonStyle}
-                  >
-                    Save Rendered Video
-                  </button>
-                )}
-                {pathRenderOutputUrl && (
-                  <a
-                    data-testid="capture-path-render-download"
-                    href={pathRenderOutputUrl}
-                    download={
-                      pathRenderOutputFilename ??
-                      `geosee-rendered-path.${deterministicExportFormat}`
-                    }
-                    style={outputLinkStyle}
-                  >
-                    Download Rendered Path Video
-                  </a>
-                )}
-                {externalVideoJobUrl && (
-                  <a
-                    data-testid="capture-path-render-external-job-download"
-                    href={externalVideoJobUrl}
-                    download={externalVideoJobFilename ?? "geosee-external-video-job.json"}
-                    style={outputLinkStyle}
-                  >
-                    External Path Video Job
-                  </a>
-                )}
-                {externalVideoJobCommand && (
-                  <code
-                    data-testid="capture-path-render-external-job-command"
-                    style={{
-                      maxWidth: 390,
-                      overflowWrap: "anywhere",
-                      color: "rgba(226, 232, 240, 0.82)",
-                      fontSize: 11,
-                      lineHeight: 1.45,
-                    }}
-                  >
-                    {externalVideoJobCommand}
-                  </code>
-                )}
-                {pathRenderSaveMessage && (
-                  <span data-testid="capture-path-render-save-status" style={statusStyle}>
-                    {pathRenderSaveMessage}
-                  </span>
-                )}
-                <details data-testid="capture-path-render-details" style={statusStyle}>
-                  <summary>Details</summary>
-                  <span>
-                    {deterministicExportFormat === "webm"
-                      ? "Rendered WebM"
-                      : "Rendered MP4"}{" "}
-                    uses fixed frame time from the current Camera Path. Browser output is not written to disk during rendering or encoding; for 4K final video, run the external job command to write the file outside the browser.
-                  </span>
-                </details>
               </section>
               <section data-testid="capture-keyframe-list" style={{ ...sectionStyle, alignItems: "stretch" }}>
                 <span style={sectionLabelStyle}>Camera Views</span>
