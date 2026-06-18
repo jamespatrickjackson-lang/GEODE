@@ -1901,18 +1901,28 @@ export function CaptureDirectorProvider({
       durationSeconds,
     );
 
-    const range =
-      scrollRangeMode === "frame-range"
-        ? {
-            mode: "frame-range" as const,
-            startFrame: scrollFrameNumber(scrollStartFrame),
-            endFrame: scrollFrameNumber(scrollEndFrame),
-          }
-        : { mode: "full" as const };
     const durationFrames = Math.max(
       1,
       Math.ceil(durationSeconds * scrollFps),
     );
+    // Clamp any operator frame-range to the resolved clock so a stale range
+    // (e.g. set against a longer path that was since shortened/removed) cannot
+    // produce an out-of-duration, invalid timeline that silently no-ops.
+    const maxClockFrame = Math.max(0, durationFrames - 1);
+    const range =
+      scrollRangeMode === "frame-range"
+        ? (() => {
+            const endFrame = Math.min(
+              scrollFrameNumber(scrollEndFrame),
+              maxClockFrame,
+            );
+            const startFrame = Math.min(
+              scrollFrameNumber(scrollStartFrame),
+              endFrame,
+            );
+            return { mode: "frame-range" as const, startFrame, endFrame };
+          })()
+        : { mode: "full" as const };
     const derivedAnchors =
       enabledPageClips.length > 0
         ? enabledPageClips.map((clip) => ({
@@ -2066,6 +2076,14 @@ export function CaptureDirectorProvider({
         setScrollCurrentFrame(scrollPreviewResetFrame);
         clearCapturePageSourcePreview("capture-scroll-preview");
         sceneHandle.clearCaptureCameraPathOverlay();
+      } else if (panel !== "scroll-animation") {
+        // Leaving the Scroll Animation workflow for another open panel releases
+        // the Page Bar runtime override so Realtime/Render/Still/Camera Path show
+        // the operator's current page (DEC-175). The scrub position is preserved
+        // for return to Scroll Animation.
+        stopScrollPreviewPlayback();
+        setScrollPreviewState("idle");
+        clearCapturePageSourcePreview("capture-scroll-preview");
       }
     },
     [
@@ -2163,11 +2181,12 @@ export function CaptureDirectorProvider({
   }, [scrollCurrentFrame, scrollPreviewState]);
 
   useEffect(() => {
-    // Runtime page drive reflects the playhead on ANY lane while the dock is
-    // open and not actively playing (DEC-175); the prior Pages-lane-only gate is
-    // removed.
+    // Runtime page drive reflects the playhead on ANY lane (DEC-175), but only
+    // while the Scroll Animation panel is the active workflow — Realtime/Render/
+    // Still/Camera Path keep the operator's selected current page rather than
+    // being overridden by an authored Page Bar.
     if (
-      directorPanel === "closed" ||
+      directorPanel !== "scroll-animation" ||
       scrollPreviewState === "playing"
     ) {
       scrollPageSourcePreviewSignatureRef.current = null;
@@ -2268,7 +2287,6 @@ export function CaptureDirectorProvider({
   }, [
     applyScrollPreviewFrame,
     buildScrollRecordPlan,
-    cameraPathPlaybackValidation,
     clearCapturePageSourcePreview,
     sceneHandle,
     scrollCurrentFrame,
@@ -2345,7 +2363,6 @@ export function CaptureDirectorProvider({
     [
       applyScrollPreviewFrame,
       buildScrollRecordPlan,
-      cameraPathPlaybackValidation,
       clearCapturePageSourcePreview,
       stopCameraPathPlayback,
       stopScrollPreviewPlayback,

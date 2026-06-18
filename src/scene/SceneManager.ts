@@ -4898,6 +4898,23 @@ export class SceneManager {
   }
 
   /**
+   * Release the capture page-source freeze pins.
+   * `freezeCapturePageSourceTransitionPreview` pins the environment-scene and
+   * cinematic-scene transitions to hold a mid-transition frame (DEC-175). When
+   * the capture preview settles, stops, or the dock closes, those pins MUST be
+   * nulled — otherwise `frameUpdate` keeps re-applying the stale mid-transition
+   * background/fog/cinematic over the restored page. Called by the capture
+   * page-source teardown paths in PageController.
+   */
+  clearCapturePageSourceFreeze(): void {
+    this.environmentSceneTransition = null;
+    this.cinematicSceneTransition = null;
+    this.currentEnvironmentSceneTransitionFrame = null;
+    this.lastCinematicSceneTransitionDebug =
+      inactiveCinematicSceneTransitionDebugState();
+  }
+
+  /**
    * Special-case hook: hydrography-lakes, VRI forest cover, and the two target glow-fills
    * are rendered by the TERRAIN shader (rasterized polygon masks
    * recolor terrain pixels where the layer exists) rather than by

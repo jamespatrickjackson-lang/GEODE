@@ -2421,6 +2421,9 @@ export function PageControllerProvider({
       activeSceneTransitionRef.current = null;
       transitionDynamicRef.current = null;
       pageTransitionRef.current = null;
+      // Release any capture freeze pins from a prior mid-transition frame so the
+      // settled page's environment is not overridden by a held transition.
+      sceneHandle.manager.clearCapturePageSourceFreeze();
       sceneHandle.manager.applyEnvironment(resolved.environment);
       sceneHandle.manager.applyEffectiveVisibilityForPage(
         resolved.environment,
@@ -2593,6 +2596,9 @@ export function PageControllerProvider({
       setTargetIndex(null);
       sceneHandle.setTransitionActive(false);
       sceneHandle.setRaycastEnabled(true);
+      // Release capture freeze pins before reapplying the current page, so the
+      // held mid-transition env/cinematic frame does not override the restore.
+      sceneHandle.manager.clearCapturePageSourceFreeze();
       reapplyCurrentPageState("state-reapply");
     },
     [reapplyCurrentPageState, sceneHandle],

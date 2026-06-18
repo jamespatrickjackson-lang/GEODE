@@ -142,4 +142,36 @@ Note (preview env): rAF playback only advanced once the page was active; the
 first Play attempts were blocked by the disabled button (above), not a code bug.
 
 ---
+
+## Post-review fixes (code review `1f98a03..9ec7c1e`, 2026-06-18)
+
+Four findings fixed:
+
+1. (HIGH, regression) The Phase 4 freeze pinned `environmentSceneTransition`/
+   `cinematicSceneTransition` but no capture-preview teardown nulled them, so
+   `frameUpdate` kept re-applying the stale mid-transition background/fog/cinematic
+   over the restored page. Fix: new `SceneManager.clearCapturePageSourceFreeze()`
+   (nulls both transitions + `currentEnvironmentSceneTransitionFrame` + cinematic
+   debug), called from `PageController.applyCapturePageSourceNow` (settle) and
+   `clearCapturePageSourcePreview` (stop/close). LIVE PROVEN: mid-transition pins
+   both (background `#d2d2d2`); settle → both `false`, background `#383838`
+   (target); stop → both `false`, page restored to `156_page`.
+2. (MEDIUM) The idle drive ran for any non-closed `directorPanel`, overriding the
+   current page during Realtime/Render/Still workflows. Fix: scope the idle effect
+   to `directorPanel === "scroll-animation"`, and `setDirectorPanel` now releases
+   the preview when leaving Scroll Animation for another open panel (scrub
+   position preserved). Operator chose "Scroll Animation panel only". LIVE PROVEN:
+   reopened to Realtime with clips present → runtime stays on `156_page`
+   (active=false); entering Scroll Animation → drives to `158_page`.
+3. (LOW/MED) Preview reused the operator record frame-range against the new clock;
+   a stale endFrame beyond the duration produced an invalid timeline that
+   silently no-ops. Fix: clamp the frame-range to `[0, durationFrames-1]` in
+   `buildScrollRecordPlan` (compute `durationFrames` before `range`).
+4. (CLEANUP) Removed the now-unused `cameraPathPlaybackValidation` dep from
+   `playScrollPreview` and `setScrollPlayheadSeconds`.
+
+Gates after fixes: tsc -b clean; capture-runtime 80/80; capture-source 59/59;
+opacity 6/6; page-agnostic 3/3.
+
+---
 (phases appended below as they complete)
