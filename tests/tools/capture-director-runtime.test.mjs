@@ -4642,3 +4642,178 @@ test("local scroll package runner starts, polls, downloads, and cancels package 
   assert.equal(calls[1].body.renderJob.schema, "CaptureVideoRenderJobV1");
   assert.equal(calls[1].body.renderJob.video.sourceFrameStart, 30);
 });
+
+// ---------------------------------------------------------------------------
+// Page Bar runtime-drive decouple — characterization locks.
+//
+// These tests pin the CURRENT behavior of the pure substrate the planned
+// Page-Bar-drives-runtime decouple depends on (see
+// 01_issue audits/02_Capture Director Page Bar/). They must stay green BEFORE
+// any decouple work so the refactor cannot silently change these guarantees:
+//   1. Camera Path sampling already clamps past the path end (the decoupled
+//      clock can run longer than the path without a new clamp).
+//   2. Page-source sampling never depends on the camera source (so dropping the
+//      camera-path requirement cannot change which page renders).
+//   3. A page-bar page source paired with a current-camera source is already a
+//      schema-legal scroll timeline (the decoupled, path-free clock shape).
+// ---------------------------------------------------------------------------
+
+function decoupleCameraPathV3() {
+  return {
+    version: 3,
+    id: "decouple-spine",
+    name: "Decouple Spine",
+    loop: false,
+    timeline: { durationSeconds: 4 },
+    nodes: [
+      {
+        id: "cam-a",
+        kind: "keyframe",
+        enabled: true,
+        hidden: false,
+        timeSeconds: 0,
+        position: [0, 0, 20],
+        target: [0, 0, 0],
+        up: [0, 1, 0],
+        fov: 50,
+        holdSecondsAfter: 0,
+        aimGeometry: { mode: "free-direction", lensMode: "fixed-fov" },
+      },
+      {
+        id: "cam-b",
+        kind: "keyframe",
+        enabled: true,
+        hidden: false,
+        timeSeconds: 4,
+        position: [8, 0, 20],
+        target: [8, 0, 0],
+        up: [0, 1, 0],
+        fov: 50,
+        holdSecondsAfter: 0,
+        aimGeometry: { mode: "free-direction", lensMode: "fixed-fov" },
+      },
+    ],
+    segments: [
+      {
+        id: "cam-a:cam-b",
+        fromNodeId: "cam-a",
+        toNodeId: "cam-b",
+        enabled: true,
+        hidden: false,
+        transitionSeconds: 4,
+        timeCurve: { mode: "linear" },
+        pathFairing: {
+          continuity: "G1",
+          tension: 0.35,
+          bias: 0,
+          fromInfluenceOut: "auto",
+          toInfluenceIn: "auto",
+          autoHandles: true,
+        },
+      },
+    ],
+  };
+}
+
+function decouplePageClips() {
+  return [
+    {
+      id: "clip-a",
+      pageId: "page-a",
+      label: "Page A",
+      enabled: true,
+      locked: false,
+      startSeconds: 0,
+      transitionSeconds: 1,
+      holdSeconds: 1,
+      transitionEasing: "linear",
+    },
+    {
+      id: "clip-b",
+      pageId: "page-b",
+      label: "Page B",
+      enabled: true,
+      locked: false,
+      startSeconds: 2,
+      transitionSeconds: 1,
+      holdSeconds: 1,
+      transitionEasing: "ease-in-out",
+    },
+  ];
+}
+
+test("camera path sampling clamps past the path end and holds the final pose", async () => {
+  const { normalizeCaptureCameraPathV3, sampleCaptureCameraPathV3 } =
+    await importBundled("src/capture/captureCameraPathV3.ts");
+
+  const path = normalizeCaptureCameraPathV3(decoupleCameraPathV3());
+  const atEnd = sampleCaptureCameraPathV3(path, 4);
+  const beyond = sampleCaptureCameraPathV3(path, 1000);
+
+  // Past-end time is clamped, not extrapolated: the sample time and pose hold at
+  // the path end. This is why a Page-Bar clock longer than the path needs no new
+  // clamp in the decoupled plan.
+  assert.equal(beyond.timeSeconds, 4);
+  assert.deepEqual(beyond.position, atEnd.position);
+  assert.deepEqual(beyond.position, [8, 0, 20]);
+  assert.deepEqual(beyond.target, atEnd.target);
+});
+
+test("page-source sampling is identical under camera-path and current-camera sources", async () => {
+  const { normalizeCaptureScrollTimeline, sampleCaptureScrollTimeline } =
+    await importBundled("src/capture/captureScrollTimeline.ts");
+
+  const base = {
+    version: 1,
+    fps: 60,
+    durationSeconds: 4,
+    range: { mode: "full" },
+    pageSource: {
+      mode: "page-bar",
+      fallback: "current-page",
+      clips: decouplePageClips(),
+    },
+    anchors: [],
+    outputProfileId: "mp4-review",
+  };
+  const withPath = normalizeCaptureScrollTimeline({
+    ...base,
+    cameraSource: { mode: "camera-path", pathId: "decouple-spine" },
+  });
+  const withoutPath = normalizeCaptureScrollTimeline({
+    ...base,
+    cameraSource: { mode: "current-camera", pathId: null },
+  });
+
+  for (const frameIndex of [0, 30, 90, 150, 210, 239]) {
+    assert.deepEqual(
+      sampleCaptureScrollTimeline(withoutPath, frameIndex).page,
+      sampleCaptureScrollTimeline(withPath, frameIndex).page,
+      `page sample must not depend on camera source at frame ${frameIndex}`,
+    );
+  }
+});
+
+test("page-bar page source with a current-camera source is a valid scroll timeline", async () => {
+  const { normalizeCaptureScrollTimeline, validateCaptureScrollTimeline } =
+    await importBundled("src/capture/captureScrollTimeline.ts");
+
+  const timeline = normalizeCaptureScrollTimeline({
+    version: 1,
+    fps: 60,
+    durationSeconds: 4,
+    range: { mode: "full" },
+    pageSource: {
+      mode: "page-bar",
+      fallback: "current-page",
+      clips: decouplePageClips(),
+    },
+    cameraSource: { mode: "current-camera", pathId: null },
+    anchors: [],
+    outputProfileId: "mp4-review",
+  });
+
+  // The path-free clock shape the decouple produces is already schema-legal:
+  // a page-bar source does not require a camera-path source or a pathId.
+  assert.equal(validateCaptureScrollTimeline(timeline).valid, true);
+});

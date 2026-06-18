@@ -3267,3 +3267,60 @@ controls live in the Capture Director toolbar (`src/capture/`) and are outside
 the editor control manifest, which governs the `src/editor/` sidebar only.
 Locked by `tests/tools/capture-director-source.test.mjs` and
 `tests/tools/capture-director-runtime.test.mjs`.
+
+## DEC-175 - Capture Director Page Bar drives the runtime page independent of the Camera Path
+
+Extends DEC-135 and DEC-174. Status: decided 2026-06-17; implementation tracked
+in `01_issue audits/02_Capture Director Page Bar/`.
+
+**Considered:** keep Page Bar runtime drive gated behind a valid renderable
+Camera Path (current behavior — page application requires a >=2-node path and the
+Page Bar is clamped to the path duration); fold page cameras into the Camera
+Path; or make the Page Bar an independent scene-state track that drives the
+runtime page on its own clock with the Camera Path as an optional spatial spine.
+
+**Chose:** the Page Bar drives the runtime page and its scene transition
+independent of Camera Path validity. The Page Bar is a scene-state track only: it
+never drives the camera, and page-authored cameras are always ignored in this
+workflow. Camera authority is the Camera Path when a valid path exists; with no
+valid path the current/live camera is held and a page change performs no
+automatic camera move. Preview/drive clock: the Camera Path duration when a valid
+path exists, otherwise the Page Bar duration, so a path-free Page Bar drives the
+full page sequence. Record/export duration is bound to the Camera Path; a Page
+Bar authored longer than the path is clipped to the path end (tail pages are not
+rendered) rather than rejected. Outside Play, runtime page drive responds to
+timeline interaction on any lane while the dock is open, not only the Pages lane.
+The captured page transition has full page-navigation scene parity — layer,
+environment-scene (background/fog), cinematic-scene, and section channels all
+animate; the capture page-source preview freeze pins those channels at the
+sampled progress instead of dropping the environment-scene and cinematic-scene
+transitions.
+
+**Why:** DEC-135 already defines the Page Bar as the scene datum and the Camera
+Path as a separate spatial spine, but the implementation coupled page
+application to a renderable path, so sequencing pages before authoring a path
+left the runtime inert (confirmed live 2026-06-17: no drive without a >=2-node
+path; "Page Bar clip timing extends beyond the authored Camera Path duration"
+with a short path). Dropping the env/cinematic scene transitions in the preview
+freeze also made captured page transitions diverge from real page navigation
+(background/fog snap instead of crossfade).
+
+**Trade-off accepted:** a page-bar-only capture has no camera motion until a
+Camera Path is authored (the camera holds its current pose). Per-frame full page
+re-apply during preview/play is heavier than a single live transition. A Page Bar
+authored longer than the Camera Path loses its tail pages in export.
+
+**Supersedes:** the DEC-135 implication that a renderable Camera Path is required
+for Page Bar scene state to reach the runtime. DEC-135's track-separation model
+is otherwise unchanged.
+
+**Guard:** no page-id/title/index/order coupling; fixes target reusable behavior
+families (scroll-clock resolution, page-source sampling, effective-state
+resolution, visibility/style composition, camera policy). Page-bar/camera-path
+state stays recipe/session/job state with no `projects/**` writes.
+Characterization locks in `tests/tools/capture-director-runtime.test.mjs`
+(camera-path clamp past end; camera-source-independent page sampling; page-bar +
+current-camera validity). The transition opacity executor
+(`tests/tools/transition-entity-opacity-executor.test.mjs`) and the page-agnostic
+source guard (`tests/tools/transition-page-agnostic-source.test.mjs`) gate the
+freeze-parity change.
