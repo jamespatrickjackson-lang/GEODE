@@ -4870,3 +4870,50 @@ test("clipScrollClipsToClock drops, trims, and keeps Page Bar clips at the clock
   assert.deepEqual(wide.map((c) => c.id), ["a", "b", "c"]);
   assert.deepEqual([wide[1].transitionSeconds, wide[1].holdSeconds], [1, 3]);
 });
+
+test("export clock clips an overlong Page Bar to the Camera Path and stays valid", async () => {
+  const { resolveScrollPlanClock, clipScrollClipsToClock } = await importBundled(
+    "src/capture/captureScrollPlan.ts",
+  );
+  const {
+    normalizeCaptureScrollTimeline,
+    validateCaptureScrollTimeline,
+    resolveScrollPageRenderPlan,
+  } = await importBundled("src/capture/captureScrollTimeline.ts");
+
+  const pageClips = [
+    { id: "a", pageId: "page-a", label: "A", enabled: true, locked: false, startSeconds: 0, transitionSeconds: 1, holdSeconds: 1, transitionEasing: "linear" }, // ends 2
+    { id: "b", pageId: "page-b", label: "B", enabled: true, locked: false, startSeconds: 2, transitionSeconds: 1, holdSeconds: 3, transitionEasing: "linear" }, // ends 6 (past path 4)
+    { id: "c", pageId: "page-c", label: "C", enabled: true, locked: false, startSeconds: 6, transitionSeconds: 1, holdSeconds: 1, transitionEasing: "linear" }, // past path -> dropped
+  ];
+
+  // Export binds the clock to the Camera Path duration (4s) and clips the
+  // overlong Page Bar (8s) instead of rejecting it.
+  const clock = resolveScrollPlanClock({
+    intent: "export",
+    hasValidPath: true,
+    pathDurationSeconds: 4,
+    pageBarDurationSeconds: 8,
+  });
+  assert.equal(clock.durationSeconds, 4);
+  const clipped = clipScrollClipsToClock(pageClips, clock.durationSeconds);
+  assert.deepEqual(clipped.map((c) => c.pageId), ["page-a", "page-b"]);
+
+  const timeline = normalizeCaptureScrollTimeline({
+    version: 1,
+    fps: 60,
+    durationSeconds: clock.durationSeconds,
+    range: { mode: "full" },
+    pageSource: { mode: "page-bar", fallback: "current-page", clips: clipped },
+    cameraSource: { mode: "camera-path", pathId: "spine" },
+    anchors: [],
+    outputProfileId: "mp4",
+  });
+  // No "extends beyond" rejection: the clipped timeline is valid ...
+  assert.equal(validateCaptureScrollTimeline(timeline).valid, true);
+  // ... and only the in-path pages render.
+  assert.deepEqual(
+    resolveScrollPageRenderPlan(timeline).map((segment) => segment.pageId),
+    ["page-a", "page-b"],
+  );
+});

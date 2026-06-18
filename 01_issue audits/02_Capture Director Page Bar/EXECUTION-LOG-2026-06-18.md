@@ -79,4 +79,23 @@ deferred to the Final live recheck — READY FOR VISUAL CHECK, not visually
 confirmed by this run.
 
 ---
+
+## Phase 5 — Export bound to Camera Path (clip-not-reject)
+
+No new source: the export contract was delivered by Phase 1 — `buildScrollRecordPlan`
+default intent `"export"` keeps requiring a valid Camera Path
+(`cameraPathPlaybackValidation` gate + `renderCameraPath` narrowing guard), sets
+the clock to the path duration via `resolveScrollPlanClock`, and trims overlong
+Page Bar clips via `clipScrollClipsToClock` (which keeps
+`validateCaptureScrollTimeline` satisfied — the timeline validator otherwise
+rejects clips past the duration). `resolveScrollPageRenderPlan` then drops
+out-of-range segments, so a longer Page Bar renders only its in-path portion.
+
+Added an end-to-end pure test ("export clock clips an overlong Page Bar to the
+Camera Path and stays valid") composing resolveScrollPlanClock +
+clipScrollClipsToClock + validateCaptureScrollTimeline + resolveScrollPageRenderPlan.
+
+Gates: capture-runtime 80/80. GREEN.
+
+---
 (phases appended below as they complete)
