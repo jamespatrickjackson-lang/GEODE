@@ -16,6 +16,11 @@ acceptance A1/A2/A4/A5 passed (A5 crossfade visually confirmed by operator
   (background/fog/cinematic crossfade parity).
 - `54366d2` Phase 5 — export clip-not-reject end-to-end test.
 - `c7f96f2` footer Play enable for page-bar-only preview + final logs.
+- `50f13f2` / `9ec7c1e` DEC-175 landed docs + A5 confirmed.
+- `c83d55d` post-review fixes: freeze teardown (HIGH regression — settle/stop now
+  null the env/cinematic pins so the restored page's background isn't overridden),
+  idle-drive scoped to the Scroll Animation panel (+ release on leave),
+  frame-range clamp, stale dep removed. Live-proven.
 
 ## Test gates (final)
 
