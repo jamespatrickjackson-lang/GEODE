@@ -2,7 +2,8 @@
 
 Date: 2026-06-18
 Outcome: implemented across all phases on `main`; tests + build green; live
-acceptance A1/A2/A4 passed, A3 by test, A5 ready-for-visual-check.
+acceptance A1/A2/A4/A5 passed (A5 crossfade visually confirmed by operator
+2026-06-18), A3 by test. COMPLETE.
 
 ## Commits (on `main`, focused staging; parallel work untouched)
 
@@ -41,10 +42,9 @@ Two Page Bar clips (158_page, 168_page), ZERO camera nodes. Traced via
 - A3 PASS (unit) — export clips an overlong Page Bar to the Camera Path, stays
   valid, renders only in-path pages; no "extends beyond" error. Not run as a live
   render.
-- A5 READY FOR VISUAL CHECK — Phase 4 freeze pin landed and gates pass; a
-  mid-transition screenshot was captured. The two test pages share similar
-  backgrounds, so the fog/background crossfade delta is subtle. A human should
-  visually confirm on a high-contrast page pair (clearly different background/fog).
+- A5 PASS — background/fog crossfade visually confirmed by the operator
+  (2026-06-18): the Phase 4 freeze pin crossfades the environment-scene channels
+  through a captured Page Bar transition instead of snapping.
 
 ## Pre/post symptom
 
@@ -55,12 +55,11 @@ short path → export clips to the path; Play drives the sequence.
 
 ## Caveats / follow-ups
 
-- Visual correctness of the Phase 4 scene-transition pin (A5) is not auto-verified
-  — ready for visual check.
+- A5 visual crossfade confirmed by the operator (2026-06-18).
 - Other active worktrees (`CODEX_ScrollDirector_000`, `claude/*`) may touch
   `CaptureDirectorProvider.tsx` / scroll timeline; a future merge could conflict.
 - Rollback path if review rejects: tag `safepoint-capture-pagebar-prep-2026-06-18`
   @ `1f98a03` + bundle in `C:\GeoSee\GeoSee_Dev_safety_backups`.
 
 Verification language: source/runtime/build are proven; final visual correctness
-(A5) is "ready for visual check" pending a human pass.
+(A5) was confirmed by the operator on 2026-06-18.

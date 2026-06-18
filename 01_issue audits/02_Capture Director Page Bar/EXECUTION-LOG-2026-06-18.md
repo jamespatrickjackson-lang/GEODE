@@ -134,10 +134,9 @@ Two clips (158_page, 168_page), ZERO camera nodes:
 - A3 PASS (by unit test): export clips an overlong Page Bar to the Camera Path,
   stays valid, renders only in-path pages (no "extends beyond" error). Not run as
   a live render.
-- A5 READY FOR VISUAL CHECK: Phase 4 pin landed + gates green; mid-transition
-  screenshot captured for review. The two test pages have similar backgrounds, so
-  the fog/background delta is subtle — needs a human visual pass on a high-contrast
-  page pair.
+- A5 PASS: background/fog crossfade visually confirmed by the operator
+  (2026-06-18); the Phase 4 freeze pin crossfades the environment-scene channels
+  through a captured Page Bar transition instead of snapping.
 
 Note (preview env): rAF playback only advanced once the page was active; the
 first Play attempts were blocked by the disabled button (above), not a code bug.

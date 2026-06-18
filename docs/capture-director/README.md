@@ -69,8 +69,8 @@ authority.
 > bound to the Camera Path (a longer Page Bar is clipped, not an error). The
 > Page-Bar scroll-plan math lives in `src/capture/captureScrollPlan.ts`
 > (`resolveScrollPlanClock`, `clipScrollClipsToClock`). Implementation +
-> verification: `01_issue audits/02_Capture Director Page Bar/` (A5 background/fog
-> crossfade parity remains ready-for-visual-check).
+> verification: `01_issue audits/02_Capture Director Page Bar/` (live A1–A5 passed;
+> background/fog crossfade parity visually confirmed 2026-06-18).
 
 For development tracing, inspect both runtime seams from the browser console:
 
