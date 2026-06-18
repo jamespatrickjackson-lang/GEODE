@@ -60,16 +60,17 @@ and overlays; Camera Path then applies the camera pose. Page cameras from the
 sampled pages are ignored in this workflow so the path remains the spatial
 authority.
 
-> Note (DEC-175, implementation in progress): the Page Bar drives the runtime
-> page and its scene transition independent of Camera Path validity, but it is a
-> scene-state track only — page-authored cameras are always ignored here. Camera
-> authority is the Camera Path when authored; with no valid path the current/live
-> camera is held (no automatic move on a page change). Preview drives on the
-> Camera Path duration when a path exists, else the Page Bar duration; record and
-> export stay bound to the Camera Path (a longer Page Bar is clipped, not an
-> error). Current builds still gate Page Bar runtime drive behind a renderable
-> Camera Path until that change lands; see
-> `01_issue audits/02_Capture Director Page Bar/`.
+> Note (DEC-175, landed 2026-06-18): the Page Bar drives the runtime page and its
+> scene transition independent of Camera Path validity, but it is a scene-state
+> track only — page-authored cameras are always ignored here. Camera authority is
+> the Camera Path when authored; with no valid path the current/live camera is
+> held (no automatic move on a page change). Preview drives on the Camera Path
+> duration when a path exists, else the Page Bar duration; record and export stay
+> bound to the Camera Path (a longer Page Bar is clipped, not an error). The
+> Page-Bar scroll-plan math lives in `src/capture/captureScrollPlan.ts`
+> (`resolveScrollPlanClock`, `clipScrollClipsToClock`). Implementation +
+> verification: `01_issue audits/02_Capture Director Page Bar/` (A5 background/fog
+> crossfade parity remains ready-for-visual-check).
 
 For development tracing, inspect both runtime seams from the browser console:
 
