@@ -117,6 +117,12 @@ File: `src/capture/CaptureDirectorProvider.tsx`
    nudges the camera via the scene transition, re-assert the pre-change pose or
    pass a no-camera flag into the scene transition so only scene state animates.
 
+DEVIATION (2026-06-18): Phase 2 also had to ungate the footer transport Play
+button in `CaptureDirectorToolbar.tsx` — it was `disabled={!cameraPathPlaybackValidation.valid}`,
+so Play could not be clicked without a Camera Path even though the handler now
+supports it. Added `canPreviewScroll = path-valid || enabled-clips` and gated the
+footer Play on it (Record stays path-gated). Found during live A4.
+
 ### Phase 3 — REMOVED (page cameras are always ignored)
 
 The earlier page-camera fallback is dropped per the operator clarification. No

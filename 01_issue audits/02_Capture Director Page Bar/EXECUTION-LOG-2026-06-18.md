@@ -98,4 +98,49 @@ clipScrollClipsToClock + validateCaptureScrollTimeline + resolveScrollPageRender
 Gates: capture-runtime 80/80. GREEN.
 
 ---
+
+## Phase 2 DEVIATION — footer Play button gating (found during live A4)
+
+Live A4 surfaced that the footer transport Play button was still
+`disabled={!cameraPathPlaybackValidation.valid}` in
+`src/capture/CaptureDirectorToolbar.tsx`, so Play could not be clicked without a
+Camera Path even though the handler now supports it. The plan scoped Phase 2 to
+the provider handlers and missed the button's disabled gate.
+
+Fix: added `canPreviewScroll = cameraPathPlaybackValidation.valid ||
+scrollPageClips.length > 0` and set the footer Play `disabled={!canPreviewScroll}`.
+Record stays path-gated (export is camera-spine-led). The scroll-panel transport
+buttons were already ungated.
+
+Gates: tsc -b clean; capture-source 59/59; capture-runtime 80/80.
+
+## Final — Live acceptance (Utah FORGE, dev port 5273, preview MCP)
+
+Build gate: `npm run build` (tsc -b && vite build) succeeded (exit 0).
+
+Traced via `window.__pageController.getState().capturePageSourcePreview`,
+`window.__captureDirectorScrollPreview.getState()`, and `window.__scene.camera`.
+Two clips (158_page, 168_page), ZERO camera nodes:
+
+- A1 PASS: adding clips drove the runtime to 158_page (active=true,
+  appliedPageSource=true) with no path; clicking into clip 2 (any lane) →
+  appliedPageId 168_page; camera position identical before/after
+  (-45834.6, -108608.151, 6999.15) — camera held, page cameras ignored.
+- A2 PASS: mid-transition click → transitionActive=true, progress 0.18,
+  resolvedSource 158_page → resolvedTarget 168_page.
+- A4 PASS: footer Play (now enabled) → previewState "playing", frame advanced
+  210 → 519 → 839 through the sequence, completed to "paused", page 168_page;
+  camera held throughout.
+- A3 PASS (by unit test): export clips an overlong Page Bar to the Camera Path,
+  stays valid, renders only in-path pages (no "extends beyond" error). Not run as
+  a live render.
+- A5 READY FOR VISUAL CHECK: Phase 4 pin landed + gates green; mid-transition
+  screenshot captured for review. The two test pages have similar backgrounds, so
+  the fog/background delta is subtle — needs a human visual pass on a high-contrast
+  page pair.
+
+Note (preview env): rAF playback only advanced once the page was active; the
+first Play attempts were blocked by the disabled button (above), not a code bug.
+
+---
 (phases appended below as they complete)

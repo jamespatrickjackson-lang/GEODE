@@ -1139,6 +1139,11 @@ export function CaptureDirectorToolbar() {
   const scrollFrameStart = Math.max(0, Math.floor(scrollStartFrame));
   const scrollFrameEnd = Math.max(scrollFrameStart, Math.floor(scrollEndFrame));
   const scrollPageClips = captureTimeline.pageClips.filter((clip) => clip.enabled);
+  // Scroll preview drives the Page Bar with or without a Camera Path (DEC-175):
+  // Play is enabled when there is a valid path OR enabled page clips. Record stays
+  // camera-spine-led (path required), so it keeps the path-validity gate.
+  const canPreviewScroll =
+    cameraPathPlaybackValidation.valid || scrollPageClips.length > 0;
   const scrollPageBarDurationSeconds = scrollPageClips.reduce(
     (duration, clip) =>
       Math.max(
@@ -1359,7 +1364,7 @@ export function CaptureDirectorToolbar() {
         aria-label="Play scroll timeline"
         title="Play scroll timeline"
         type="button"
-        disabled={!cameraPathPlaybackValidation.valid}
+        disabled={!canPreviewScroll}
         onClick={playScrollPreview}
         style={transportButtonStyle}
       >
