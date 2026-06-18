@@ -28,7 +28,7 @@ test("Capture Director launcher opens the docked panels", async ({ page }) => {
     "Realtime Capture",
   );
   await expect(page.getByTestId("capture-render-panel")).toContainText(
-    "Render Out",
+    "Video Capture",
   );
   for (const testId of [
     "capture-realtime-header",
