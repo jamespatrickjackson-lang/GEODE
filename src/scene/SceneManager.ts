@@ -4866,14 +4866,35 @@ export class SceneManager {
       this.sectionIsoOverlayTransition.easing = "linear";
       this.sectionIsoOverlayTransition.targetOpacity = opacity;
     }
+    // Pin the environment-scene (background/fog) and cinematic-scene transitions
+    // at the sampled progress instead of dropping them, so captured Page Bar page
+    // transitions crossfade those channels with full page-navigation parity
+    // (DEC-175). Mirrors the section-ISO pin above. These transitions share the
+    // {startMs, durationMs, easing} timing shape and the same eased-progress
+    // formula; only progress < 1 reaches here (settled transitions are already
+    // nulled before the freeze).
+    if (this.environmentSceneTransition) {
+      const t = this.environmentSceneTransition;
+      const raw = t.durationMs <= 0 ? 1 : (nowMs - t.startMs) / t.durationMs;
+      const progress = raw >= 1 ? 1 : easeProgress(clamp01(raw), t.easing);
+      t.startMs = nowMs - progress * pinDurationMs;
+      t.durationMs = pinDurationMs;
+      t.easing = "linear";
+    }
+    if (this.cinematicSceneTransition) {
+      const t = this.cinematicSceneTransition;
+      const raw = t.durationMs <= 0 ? 1 : (nowMs - t.startMs) / t.durationMs;
+      const progress = raw >= 1 ? 1 : easeProgress(clamp01(raw), t.easing);
+      t.startMs = nowMs - progress * pinDurationMs;
+      t.durationMs = pinDurationMs;
+      t.easing = "linear";
+    }
     this.scalarStyleTweens.clear();
     this.visibilityToggleFades.clear();
     this.workingAreaFocusTween = null;
     this.sceneSectionStyleTween = null;
     this.sceneSectionHelperTransitionOpacity = 1;
     this.activeSceneTransitionContext = null;
-    this.environmentSceneTransition = null;
-    this.cinematicSceneTransition = null;
   }
 
   /**

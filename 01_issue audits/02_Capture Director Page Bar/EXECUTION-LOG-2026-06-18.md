@@ -56,4 +56,27 @@ Gates: tsc -b clean; capture-runtime 79/79; capture-source 59/59;
 page-agnostic 3/3; opacity 6/6. GREEN.
 
 ---
+
+## Phase 4 — Full page-nav scene parity in the freeze (HIGH RISK)
+
+Page-agnostic guard run before editing (3/3 green).
+
+Change: `src/scene/SceneManager.ts`
+`freezeCapturePageSourceTransitionPreview` — replaced the nulling of
+`environmentSceneTransition` and `cinematicSceneTransition` (background/fog +
+cinematic-scene channels) with a PIN at the current eased progress (linear
+easing, pin duration), mirroring the existing section-ISO pin. Both runtimes
+share the `{startMs, durationMs, easing}` shape and eased-progress formula; only
+progress < 1 reaches the freeze (settled transitions are already nulled), so the
+pin only holds genuine mid-transition frames. Blast radius is capture-preview
+only (the freeze is called solely by `previewCapturePageSource`).
+
+Gates: tsc -b clean; opacity-executor 6/6 (Phase 4 gate); page-agnostic 3/3;
+capture-runtime 79/79; capture-source 59/59. GREEN.
+
+Visual acceptance (A5: differing background/fog crossfades, not snaps) is
+deferred to the Final live recheck — READY FOR VISUAL CHECK, not visually
+confirmed by this run.
+
+---
 (phases appended below as they complete)
