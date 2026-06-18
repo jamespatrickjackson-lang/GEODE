@@ -790,6 +790,8 @@ export function CaptureDirectorToolbar() {
   const scrollPopoutDialogRef = useRef<HTMLDivElement | null>(null);
   const scrollPopoutRestoreFocusRef = useRef<HTMLElement | null>(null);
   const [videoRecordPopoutOpen, setVideoRecordPopoutOpen] = useState(false);
+  const [realtimeRecordPopoutOpen, setRealtimeRecordPopoutOpen] = useState(false);
+  const [stillRecordPopoutOpen, setStillRecordPopoutOpen] = useState(false);
   const [expandedSections, setExpandedSections] = useState<
     Record<CaptureDirectorSectionId, boolean>
   >({
@@ -1448,6 +1450,20 @@ export function CaptureDirectorToolbar() {
                   </span>
                 }
               >
+              <button
+                data-testid="capture-realtime-record"
+                type="button"
+                onClick={() => setRealtimeRecordPopoutOpen(true)}
+                style={primaryButtonStyle}
+              >
+                Record
+              </button>
+              {realtimeRecordPopoutOpen && (
+                <CaptureRecordPopout
+                  title="Realtime Capture"
+                  testId="capture-realtime-record-popout"
+                  onClose={() => setRealtimeRecordPopoutOpen(false)}
+                >
               <div style={rowStyle}>
                 <label style={labelStyle}>
                   <span>Mode</span>
@@ -1540,6 +1556,8 @@ export function CaptureDirectorToolbar() {
                   </a>
                 )}
               </div>
+                </CaptureRecordPopout>
+              )}
               </CollapsibleCaptureSection>
 
               <CollapsibleCaptureSection
@@ -1942,6 +1960,20 @@ export function CaptureDirectorToolbar() {
                   </span>
                 }
               >
+              <button
+                data-testid="capture-still-record"
+                type="button"
+                onClick={() => setStillRecordPopoutOpen(true)}
+                style={primaryButtonStyle}
+              >
+                Record
+              </button>
+              {stillRecordPopoutOpen && (
+                <CaptureRecordPopout
+                  title="Still Capture"
+                  testId="capture-still-record-popout"
+                  onClose={() => setStillRecordPopoutOpen(false)}
+                >
               <div style={rowStyle}>
                 <label style={labelStyle}>
                   <span>Still</span>
@@ -2077,6 +2109,8 @@ export function CaptureDirectorToolbar() {
                   </span>
                 )}
               </div>
+                </CaptureRecordPopout>
+              )}
               </CollapsibleCaptureSection>
 
               <section data-testid="capture-scroll-panel" style={barStyle}>
