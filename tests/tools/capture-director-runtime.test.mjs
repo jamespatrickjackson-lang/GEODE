@@ -4817,3 +4817,56 @@ test("page-bar page source with a current-camera source is a valid scroll timeli
   // a page-bar source does not require a camera-path source or a pathId.
   assert.equal(validateCaptureScrollTimeline(timeline).valid, true);
 });
+
+test("resolveScrollPlanClock binds export to the path and preview to path-or-page-bar", async () => {
+  const { resolveScrollPlanClock, MIN_SCROLL_PLAN_DURATION_SECONDS } =
+    await importBundled("src/capture/captureScrollPlan.ts");
+
+  // Export: always the Camera Path duration + camera-path mode.
+  assert.deepEqual(
+    resolveScrollPlanClock({ intent: "export", hasValidPath: true, pathDurationSeconds: 6, pageBarDurationSeconds: 20 }),
+    { durationSeconds: 6, cameraMode: "camera-path" },
+  );
+  // Preview with a valid path: bound to the path duration (tail clips clipped).
+  assert.deepEqual(
+    resolveScrollPlanClock({ intent: "preview", hasValidPath: true, pathDurationSeconds: 6, pageBarDurationSeconds: 20 }),
+    { durationSeconds: 6, cameraMode: "camera-path" },
+  );
+  // Preview with NO path: Page Bar duration + current-camera (camera never follows pages).
+  assert.deepEqual(
+    resolveScrollPlanClock({ intent: "preview", hasValidPath: false, pathDurationSeconds: 0, pageBarDurationSeconds: 20 }),
+    { durationSeconds: 20, cameraMode: "current-camera" },
+  );
+  // Clamp to the minimum plan duration.
+  assert.equal(
+    resolveScrollPlanClock({ intent: "preview", hasValidPath: false, pathDurationSeconds: 0, pageBarDurationSeconds: 0 }).durationSeconds,
+    MIN_SCROLL_PLAN_DURATION_SECONDS,
+  );
+});
+
+test("scrollPlanHasContent: preview needs clips or a path, export needs a path", async () => {
+  const { scrollPlanHasContent } = await importBundled("src/capture/captureScrollPlan.ts");
+  assert.equal(scrollPlanHasContent({ intent: "preview", hasEnabledClips: true, hasValidPath: false }), true);
+  assert.equal(scrollPlanHasContent({ intent: "preview", hasEnabledClips: false, hasValidPath: true }), true);
+  assert.equal(scrollPlanHasContent({ intent: "preview", hasEnabledClips: false, hasValidPath: false }), false);
+  assert.equal(scrollPlanHasContent({ intent: "export", hasEnabledClips: true, hasValidPath: false }), false);
+  assert.equal(scrollPlanHasContent({ intent: "export", hasEnabledClips: false, hasValidPath: true }), true);
+});
+
+test("clipScrollClipsToClock drops, trims, and keeps Page Bar clips at the clock", async () => {
+  const { clipScrollClipsToClock } = await importBundled("src/capture/captureScrollPlan.ts");
+  const clips = [
+    { id: "a", startSeconds: 0, transitionSeconds: 1, holdSeconds: 1 }, // ends 2, inside
+    { id: "b", startSeconds: 2, transitionSeconds: 1, holdSeconds: 3 }, // ends 6, straddles clock 4
+    { id: "c", startSeconds: 5, transitionSeconds: 1, holdSeconds: 1 }, // starts after clock 4 -> dropped
+  ];
+  const clipped = clipScrollClipsToClock(clips, 4);
+  assert.deepEqual(clipped.map((c) => c.id), ["a", "b"]);
+  assert.deepEqual([clipped[0].transitionSeconds, clipped[0].holdSeconds], [1, 1]);
+  // b trimmed to end exactly at the clock: start 2 + transition 1 + hold 1 = 4.
+  assert.deepEqual([clipped[1].transitionSeconds, clipped[1].holdSeconds], [1, 1]);
+  // A generous clock leaves every clip untouched.
+  const wide = clipScrollClipsToClock(clips, 100);
+  assert.deepEqual(wide.map((c) => c.id), ["a", "b", "c"]);
+  assert.deepEqual([wide[1].transitionSeconds, wide[1].holdSeconds], [1, 3]);
+});

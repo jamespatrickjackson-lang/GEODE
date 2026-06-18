@@ -797,7 +797,7 @@ test("Capture Director scroll preview and accept logic use path package renderin
     "pollLocalScrollPackageRenderJob",
     "cancelLocalScrollPackageRenderJob",
     "DEFAULT_CAPTURE_SCROLL_FPS",
-    "pageTimelineDurationSeconds",
+    "pageBarDurationSeconds",
     "durationFrames - 1",
     "pageSource",
     "clips: enabledPageClips",

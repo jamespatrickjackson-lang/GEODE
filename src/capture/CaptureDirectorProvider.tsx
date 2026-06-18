@@ -171,6 +171,12 @@ import {
   type CaptureScrollTimelineSample,
   type CaptureScrollTimelineV1,
 } from "./captureScrollTimeline";
+import {
+  type CaptureScrollPlanIntent,
+  clipScrollClipsToClock,
+  resolveScrollPlanClock,
+  scrollPlanHasContent,
+} from "./captureScrollPlan";
 import { createPendingScrollHandoffManifest } from "./scrollHandoffPackage";
 import {
   captureStillFilename,
@@ -1833,24 +1839,31 @@ export function CaptureDirectorProvider({
     scrollPreviewPlaybackStartMsRef.current = null;
   }, []);
 
-  const buildScrollRecordPlan = useCallback(() => {
+  const buildScrollRecordPlan = useCallback(
+    (intent: CaptureScrollPlanIntent = "export") => {
     const pathValidation = validateCaptureCameraPathV3Playback(captureCameraPathV3);
-    if (!pathValidation.valid) {
+    const hasValidPath = pathValidation.valid;
+    // Export stays camera-spine-led and still requires a valid Camera Path;
+    // preview drives the Page Bar with or without one (DEC-175).
+    if (intent === "export" && !hasValidPath) {
       return { plan: null, errors: pathValidation.errors };
     }
 
-    const normalizedPath = normalizeCaptureCameraPathV3(captureCameraPathV3);
-    const pathTimeline = resolveCaptureCameraPathV3Timeline(normalizedPath);
-    const durationSeconds = Math.max(0.1, pathTimeline.durationSeconds);
+    const normalizedPath = hasValidPath
+      ? normalizeCaptureCameraPathV3(captureCameraPathV3)
+      : null;
+    const pathDurationSeconds = normalizedPath
+      ? resolveCaptureCameraPathV3Timeline(normalizedPath).durationSeconds
+      : 0;
     const destination =
       scrollSaveDestination.trim() || "media_output/capture-scroll-outputs";
     const packageName = scrollPackageNameSlug(scrollOutputPackageName);
     const quality = captureScrollQualityForPreset(scrollQualityPreset);
     const normalizedTimeline = normalizeCaptureTimelineState(captureTimeline);
-    const enabledPageClips = normalizedTimeline.pageClips.filter(
+    const allEnabledPageClips = normalizedTimeline.pageClips.filter(
       (clip) => clip.enabled,
     );
-    const pageTimelineDurationSeconds = enabledPageClips.reduce(
+    const pageBarDurationSeconds = allEnabledPageClips.reduce(
       (duration, clip) =>
         Math.max(
           duration,
@@ -1859,16 +1872,34 @@ export function CaptureDirectorProvider({
       0,
     );
     if (
-      enabledPageClips.length > 0 &&
-      pageTimelineDurationSeconds > durationSeconds + 0.000_001
+      !scrollPlanHasContent({
+        intent,
+        hasEnabledClips: allEnabledPageClips.length > 0,
+        hasValidPath,
+      })
     ) {
       return {
         plan: null,
         errors: [
-          "Page Bar clip timing extends beyond the authored Camera Path duration.",
+          intent === "export"
+            ? "Author a Camera Path before rendering."
+            : "Add Page Bar clips or a Camera Path to preview.",
         ],
       };
     }
+    // Clock + camera authority (DEC-175): export binds to the Camera Path;
+    // preview uses the path clock when valid, else the Page Bar clock. Overlong
+    // Page Bar clips are clipped to the clock instead of rejected.
+    const { durationSeconds, cameraMode } = resolveScrollPlanClock({
+      intent,
+      hasValidPath,
+      pathDurationSeconds,
+      pageBarDurationSeconds,
+    });
+    const enabledPageClips = clipScrollClipsToClock(
+      allEnabledPageClips,
+      durationSeconds,
+    );
 
     const range =
       scrollRangeMode === "frame-range"
@@ -1942,8 +1973,11 @@ export function CaptureDirectorProvider({
       range,
       pageSource,
       cameraSource: {
-        mode: "camera-path",
-        pathId: normalizedPath.id,
+        mode: cameraMode,
+        pathId:
+          cameraMode === "camera-path" && normalizedPath
+            ? normalizedPath.id
+            : null,
       },
       anchors,
       outputProfileId: `scroll-${scrollOutputFormat}`,
@@ -1971,7 +2005,7 @@ export function CaptureDirectorProvider({
         scrollPageRenderPlan,
         manualFallbackAccepted: false,
         pageClipCount: enabledPageClips.length,
-        cameraPathNodeCount: normalizedPath.nodes.length,
+        cameraPathNodeCount: normalizedPath ? normalizedPath.nodes.length : 0,
         pathDurationSeconds: durationSeconds,
         videoBitrateMbps:
           scrollAdvancedBitrateMbps > 0 ? scrollAdvancedBitrateMbps : undefined,
@@ -2083,7 +2117,7 @@ export function CaptureDirectorProvider({
   const applyScrollPreviewFrame = useCallback(
     (
       timeline: CaptureScrollTimelineV1,
-      path: CaptureCameraPathV3,
+      path: CaptureCameraPathV3 | null,
       frameIndex: number,
       options: {
         applyPageSource?: boolean;
@@ -2095,11 +2129,16 @@ export function CaptureDirectorProvider({
         frameIndex,
         options,
       );
-      const cameraSample = sampleCaptureCameraPathV3(
-        path,
-        timelineSample.timeSeconds,
-      );
-      sceneHandle.setCameraPose(cameraSample);
+      // Camera authority is the Camera Path only; with no valid path the
+      // current/live camera is held (the Page Bar never drives the camera, and
+      // page cameras are ignored — DEC-175).
+      if (path && timeline.cameraSource.mode === "camera-path") {
+        const cameraSample = sampleCaptureCameraPathV3(
+          path,
+          timelineSample.timeSeconds,
+        );
+        sceneHandle.setCameraPose(cameraSample);
+      }
       setCameraPathScrubTimeSecondsState(timelineSample.timeSeconds);
       return timelineSample;
     },
@@ -2124,9 +2163,11 @@ export function CaptureDirectorProvider({
   }, [scrollCurrentFrame, scrollPreviewState]);
 
   useEffect(() => {
+    // Runtime page drive reflects the playhead on ANY lane while the dock is
+    // open and not actively playing (DEC-175); the prior Pages-lane-only gate is
+    // removed.
     if (
       directorPanel === "closed" ||
-      selectedTimelineTrack !== "pages" ||
       scrollPreviewState === "playing"
     ) {
       scrollPageSourcePreviewSignatureRef.current = null;
@@ -2157,7 +2198,7 @@ export function CaptureDirectorProvider({
     ].join("::");
     if (scrollPageSourcePreviewSignatureRef.current === signature) return;
     scrollPageSourcePreviewSignatureRef.current = signature;
-    const { plan } = buildScrollRecordPlan();
+    const { plan } = buildScrollRecordPlan("preview");
     if (!plan) return;
     const frameRange = plan.request.frameRange;
     const frameIndex = Math.max(
@@ -2179,13 +2220,9 @@ export function CaptureDirectorProvider({
   ]);
 
   const playScrollPreview = useCallback(() => {
-    if (!cameraPathPlaybackValidation.valid) {
-      clearCapturePageSourcePreview("capture-scroll-preview");
-      setScrollRecordValidationErrors(cameraPathPlaybackValidation.errors);
-      setError(cameraPathPlaybackValidation.errors.join(" "));
-      return;
-    }
-    const { plan, errors } = buildScrollRecordPlan();
+    // Preview drives the Page Bar with or without a Camera Path (DEC-175); only
+    // an empty plan (no clips and no path) clears the preview.
+    const { plan, errors } = buildScrollRecordPlan("preview");
     if (!plan) {
       clearCapturePageSourcePreview("capture-scroll-preview");
       setScrollRecordValidationErrors(errors);
@@ -2248,7 +2285,7 @@ export function CaptureDirectorProvider({
   const stopScrollPreview = useCallback(() => {
     stopScrollPreviewPlayback();
     clearCapturePageSourcePreview("capture-scroll-preview");
-    const { plan } = buildScrollRecordPlan();
+    const { plan } = buildScrollRecordPlan("preview");
     const scrollPreviewResetFrame =
       plan?.request.frameRange.startFrame ??
       (scrollRangeMode === "frame-range" ? Math.max(0, scrollStartFrame) : 0);
@@ -2278,17 +2315,9 @@ export function CaptureDirectorProvider({
         seconds,
         DEFAULT_CAPTURE_SCROLL_FPS,
       );
-      if (!cameraPathPlaybackValidation.valid) {
-        stopScrollPreviewPlayback();
-        clearCapturePageSourcePreview("capture-scroll-preview");
-        setScrollCurrentFrame(frameFromSeconds);
-        setCameraPathScrubTimeSecondsState(Math.max(0, seconds));
-        setScrollPreviewState("idle");
-        setScrollRecordValidationErrors(cameraPathPlaybackValidation.errors);
-        setError(cameraPathPlaybackValidation.errors.join(" "));
-        return;
-      }
-      const { plan, errors } = buildScrollRecordPlan();
+      // Preview drives the Page Bar with or without a Camera Path (DEC-175);
+      // only an empty plan (no clips and no path) clears the preview.
+      const { plan, errors } = buildScrollRecordPlan("preview");
       if (!plan) {
         stopScrollPreviewPlayback();
         clearCapturePageSourcePreview("capture-scroll-preview");
@@ -2344,10 +2373,23 @@ export function CaptureDirectorProvider({
         return;
       }
 
-      const { plan, errors } = buildScrollRecordPlan();
+      const { plan, errors } = buildScrollRecordPlan("export");
       if (!plan) {
         clearCapturePageSourcePreview("capture-scroll-record");
         setScrollRecordValidationErrors(errors);
+        setLastScrollPackagePath(null);
+        setLastScrollManifestPath(null);
+        setError(null);
+        setScrollRecordPopoutOpen(true);
+        return;
+      }
+      // Export is camera-spine-led: a render plan always carries a Camera Path.
+      const renderCameraPath = plan.normalizedPath;
+      if (!renderCameraPath) {
+        clearCapturePageSourcePreview("capture-scroll-record");
+        setScrollRecordValidationErrors([
+          "Author a Camera Path before rendering.",
+        ]);
         setLastScrollPackagePath(null);
         setLastScrollManifestPath(null);
         setError(null);
@@ -2425,10 +2467,10 @@ export function CaptureDirectorProvider({
         durationSeconds: plan.request.timeline.durationSeconds,
         camera: capturePose(sceneHandle.camera, sceneHandle.controls),
         cameraKeyframes: cameraPathV3ToRecipeKeyframes(
-          plan.normalizedPath,
+          renderCameraPath,
           plan.request.timeline.fps,
         ),
-        cameraPath: plan.normalizedPath,
+        cameraPath: renderCameraPath,
         layerVisibility: recipeLayerState.layerVisibility,
         layerStyles: recipeLayerState.layerStyles,
         environmentState: state.environment,
