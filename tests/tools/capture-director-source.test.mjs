@@ -870,8 +870,12 @@ test("Capture Director toolbar renders scroll record validation errors without s
     "toolbar should keep displaying accepted scroll output paths",
   );
   assert.ok(
-    toolbar.includes("DEFAULT_CAPTURE_SCROLL_FPS"),
-    "toolbar scroll frame estimates should use the deterministic scroll FPS",
+    toolbar.includes("capture-scroll-fps-select"),
+    "toolbar should expose the selectable scroll FPS control",
+  );
+  assert.ok(
+    toolbar.includes("scrollFps"),
+    "toolbar scroll frame estimates should use the selected scroll FPS",
   );
   assert.ok(
     toolbar.includes("scrollPageBarDurationSeconds"),
@@ -3515,13 +3519,12 @@ test("Scroll package handoff writes clean-render README, posters, contact sheet,
   assert.ok(scrollAcceptStart >= 0 && scrollAcceptEnd > scrollAcceptStart);
   const scrollRecipeBlock = provider.slice(scrollAcceptStart, scrollAcceptEnd);
   assert.ok(
-    scrollRecipeBlock.includes('mode: "scene-only"'),
-    "scroll Record should force scene-only clean render mode",
+    scrollRecipeBlock.includes("advancedOptions.captureMode"),
+    "scroll Record should drive recipe mode from the selected capture mode",
   );
-  assert.equal(
-    scrollRecipeBlock.includes('mode: "full-ui"') || scrollRecipeBlock.includes('mode: "off"'),
-    false,
-    "scroll Record must not use full UI/off output modes",
+  assert.ok(
+    provider.includes('useState<ActiveCaptureMode>("scene-only")'),
+    "scroll capture mode should default to the scene-only clean render",
   );
 
   const authorWritePlugin = readSource("plugins", "vite-plugin-author-write.ts");

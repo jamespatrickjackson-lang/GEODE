@@ -1371,8 +1371,15 @@ async function startCaptureScrollPackageRun({
         return;
       }
       run.warnings = [...(run.warnings ?? []), ...encodeWarnings];
-      const posters = await createScrollPosters(packageDir, request);
-      const contactSheetPath = await createScrollContactSheet(packageDir, request);
+      const includePosters =
+        (request.advancedOptions as Record<string, unknown> | undefined)
+          ?.includePosters !== false;
+      const posters = includePosters
+        ? await createScrollPosters(packageDir, request)
+        : [];
+      const contactSheetPath = includePosters
+        ? await createScrollContactSheet(packageDir, request)
+        : null;
       run.status = "complete";
       run.phase = "complete";
       run.error = null;

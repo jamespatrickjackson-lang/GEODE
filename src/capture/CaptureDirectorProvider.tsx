@@ -162,6 +162,7 @@ import {
   resolveScrollPageRenderPlan,
   sampleCaptureScrollTimeline,
   validateScrollRecordRequest,
+  type CaptureScrollFps,
   type CaptureScrollRenderRouteIntent,
   type CaptureScrollRecordQuality,
   type CaptureScrollTimelineSample,
@@ -459,6 +460,8 @@ interface CaptureDirectorContextValue {
   toggleScrollOutputFormat(format: CaptureScrollOutputFormat): void;
   scrollQualityPreset: CaptureScrollQualityPreset;
   setScrollQualityPreset(preset: CaptureScrollQualityPreset): void;
+  scrollFps: CaptureScrollFps;
+  setScrollFps(fps: CaptureScrollFps): void;
   scrollRangeMode: CaptureScrollRangeMode;
   setScrollRangeMode(mode: CaptureScrollRangeMode): void;
   scrollStartFrame: number;
@@ -478,6 +481,10 @@ interface CaptureDirectorContextValue {
   setScrollAdvancedKeyframeInterval(frames: number): void;
   scrollAdvancedAllKeyframe: boolean;
   setScrollAdvancedAllKeyframe(all: boolean): void;
+  scrollIncludePosters: boolean;
+  setScrollIncludePosters(value: boolean): void;
+  scrollCaptureMode: ActiveCaptureMode;
+  setScrollCaptureMode(mode: ActiveCaptureMode): void;
   scrollPreviewState: CaptureScrollPreviewState;
   scrollPreviewTrace: CaptureDirectorScrollPreviewTraceState;
   playScrollPreview(): void;
@@ -1048,6 +1055,9 @@ export function CaptureDirectorProvider({
   );
   const [scrollQualityPreset, setScrollQualityPreset] =
     useState<CaptureScrollQualityPreset>("4k");
+  const [scrollFps, setScrollFps] = useState<CaptureScrollFps>(
+    DEFAULT_CAPTURE_SCROLL_FPS,
+  );
   const [scrollRangeMode, setScrollRangeMode] =
     useState<CaptureScrollRangeMode>("full-video");
   const [scrollStartFrame, setScrollStartFrame] = useState(0);
@@ -1064,6 +1074,9 @@ export function CaptureDirectorProvider({
   const [scrollAdvancedBitrateMbps, setScrollAdvancedBitrateMbps] = useState(0);
   const [scrollAdvancedKeyframeInterval, setScrollAdvancedKeyframeInterval] = useState(0);
   const [scrollAdvancedAllKeyframe, setScrollAdvancedAllKeyframe] = useState(false);
+  const [scrollIncludePosters, setScrollIncludePosters] = useState(true);
+  const [scrollCaptureMode, setScrollCaptureMode] =
+    useState<ActiveCaptureMode>("scene-only");
   const [scrollPreviewState, setScrollPreviewState] =
     useState<CaptureScrollPreviewState>("idle");
   const [scrollPreviewTrace, setScrollPreviewTrace] =
@@ -1823,7 +1836,7 @@ export function CaptureDirectorProvider({
         : { mode: "full" as const };
     const durationFrames = Math.max(
       1,
-      Math.ceil(durationSeconds * DEFAULT_CAPTURE_SCROLL_FPS),
+      Math.ceil(durationSeconds * scrollFps),
     );
     const anchors =
       enabledPageClips.length > 0
@@ -1835,7 +1848,7 @@ export function CaptureDirectorProvider({
               durationFrames - 1,
               Math.max(
                 0,
-                Math.round(clip.startSeconds * DEFAULT_CAPTURE_SCROLL_FPS),
+                Math.round(clip.startSeconds * scrollFps),
               ),
             ),
           }))
@@ -1863,7 +1876,7 @@ export function CaptureDirectorProvider({
           };
     const timeline: CaptureScrollTimelineV1 = {
       version: 1,
-      fps: DEFAULT_CAPTURE_SCROLL_FPS,
+      fps: scrollFps,
       durationSeconds,
       range,
       pageSource,
@@ -1904,6 +1917,8 @@ export function CaptureDirectorProvider({
         keyframeInterval:
           scrollAdvancedKeyframeInterval > 0 ? scrollAdvancedKeyframeInterval : undefined,
         allKeyframe: scrollAdvancedAllKeyframe === true ? true : undefined,
+        includePosters: scrollIncludePosters,
+        captureMode: scrollCaptureMode,
       },
     });
     const validation = validateScrollRecordRequest(request);
@@ -1928,7 +1943,10 @@ export function CaptureDirectorProvider({
     scrollAdvancedAllKeyframe,
     scrollAdvancedBitrateMbps,
     scrollAdvancedKeyframeInterval,
+    scrollCaptureMode,
     scrollEndFrame,
+    scrollFps,
+    scrollIncludePosters,
     scrollOutputFormat,
     scrollOutputFormats,
     scrollOutputPackageName,
@@ -2333,7 +2351,7 @@ export function CaptureDirectorProvider({
       const recipe = createCaptureRecipeFromCurrentState({
         projectSlug: state.projectSlug ?? state.manifest.id,
         pageId: currentPage?.id ?? null,
-        mode: "scene-only",
+        mode: plan.request.advancedOptions.captureMode as ActiveCaptureMode,
         resolution: {
           width: plan.quality.width,
           height: plan.quality.height,
@@ -2341,12 +2359,12 @@ export function CaptureDirectorProvider({
           qualityPreset: scrollRecipeQualityPreset(plan.quality),
         },
         previewResolution,
-        fps: DEFAULT_CAPTURE_SCROLL_FPS,
+        fps: plan.request.timeline.fps,
         durationSeconds: plan.request.timeline.durationSeconds,
         camera: capturePose(sceneHandle.camera, sceneHandle.controls),
         cameraKeyframes: cameraPathV3ToRecipeKeyframes(
           plan.normalizedPath,
-          DEFAULT_CAPTURE_SCROLL_FPS,
+          plan.request.timeline.fps,
         ),
         cameraPath: plan.normalizedPath,
         layerVisibility: recipeLayerState.layerVisibility,
@@ -6327,6 +6345,8 @@ export function CaptureDirectorProvider({
       toggleScrollOutputFormat,
       scrollQualityPreset,
       setScrollQualityPreset,
+      scrollFps,
+      setScrollFps,
       scrollRangeMode,
       setScrollRangeMode,
       scrollStartFrame,
@@ -6346,6 +6366,10 @@ export function CaptureDirectorProvider({
       setScrollAdvancedKeyframeInterval,
       scrollAdvancedAllKeyframe,
       setScrollAdvancedAllKeyframe,
+      scrollIncludePosters,
+      setScrollIncludePosters,
+      scrollCaptureMode,
+      setScrollCaptureMode,
       scrollPreviewState,
       scrollPreviewTrace,
       playScrollPreview,
@@ -6507,6 +6531,7 @@ export function CaptureDirectorProvider({
       scrollOutputFormats,
       toggleScrollOutputFormat,
       scrollQualityPreset,
+      scrollFps,
       scrollRangeMode,
       scrollStartFrame,
       scrollEndFrame,
@@ -6517,6 +6542,8 @@ export function CaptureDirectorProvider({
       scrollAdvancedBitrateMbps,
       scrollAdvancedKeyframeInterval,
       scrollAdvancedAllKeyframe,
+      scrollIncludePosters,
+      scrollCaptureMode,
       scrollPreviewState,
       scrollPreviewTrace,
       playScrollPreview,

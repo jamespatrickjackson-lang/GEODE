@@ -32,7 +32,10 @@ import {
   type CapturePageRangeTiming,
   type CaptureScope,
 } from "./capturePageRange";
-import { DEFAULT_CAPTURE_SCROLL_FPS } from "./captureScrollTimeline";
+import {
+  CAPTURE_SCROLL_FPS_OPTIONS,
+  type CaptureScrollFps,
+} from "./captureScrollTimeline";
 import { scrollPackageOutputUrl } from "./localScrollPackageRunner";
 import type { CaptureStillImageType } from "./screenCaptureSaveOptions";
 import { useEditor } from "../editor/EditorContext";
@@ -951,6 +954,8 @@ export function CaptureDirectorToolbar() {
     toggleScrollOutputFormat,
     scrollQualityPreset,
     setScrollQualityPreset,
+    scrollFps,
+    setScrollFps,
     scrollRangeMode,
     setScrollRangeMode,
     scrollStartFrame,
@@ -969,6 +974,10 @@ export function CaptureDirectorToolbar() {
     setScrollAdvancedKeyframeInterval,
     scrollAdvancedAllKeyframe,
     setScrollAdvancedAllKeyframe,
+    scrollIncludePosters,
+    setScrollIncludePosters,
+    scrollCaptureMode,
+    setScrollCaptureMode,
     scrollPreviewTrace,
     playScrollPreview,
     pauseScrollPreview,
@@ -1139,13 +1148,25 @@ export function CaptureDirectorToolbar() {
       : deterministicDurationSeconds;
   const scrollFullFrameCount = Math.max(
     1,
-    Math.ceil(scrollTimelineDurationSeconds * DEFAULT_CAPTURE_SCROLL_FPS),
+    Math.ceil(scrollTimelineDurationSeconds * scrollFps),
   );
   const scrollEstimatedFrameCount =
     scrollRangeMode === "frame-range"
       ? scrollFrameEnd - scrollFrameStart + 1
       : scrollFullFrameCount;
   const scrollRenderSizeLabel = `${scrollQuality.width} x ${scrollQuality.height}`;
+  const scrollEstimatedDurationSeconds = scrollEstimatedFrameCount / scrollFps;
+  const scrollEstimatedBitsPerSecond =
+    scrollAdvancedBitrateMbps > 0
+      ? scrollAdvancedBitrateMbps * 1_000_000
+      : scrollQuality.width * scrollQuality.height * scrollFps * 0.08;
+  const scrollEstimatedSizeMb =
+    (scrollEstimatedBitsPerSecond * scrollEstimatedDurationSeconds) / 8 / 1_000_000;
+  const scrollEstimatedSizeLabel =
+    scrollEstimatedSizeMb >= 1000
+      ? `~${(scrollEstimatedSizeMb / 1000).toFixed(1)} GB`
+      : `~${Math.max(1, Math.round(scrollEstimatedSizeMb))} MB`;
+  const scrollEstimatedDurationLabel = `${scrollEstimatedDurationSeconds.toFixed(2)} s`;
   const scrollOutputReady = Boolean(lastScrollPackagePath || lastScrollManifestPath);
   const scrollPackageJob = [...captureJobs]
     .reverse()
@@ -3113,6 +3134,51 @@ export function CaptureDirectorToolbar() {
                     </span>
                   </label>
                   <label style={popoutFieldStyle}>
+                    <span>Frame rate</span>
+                    <select
+                      data-testid="capture-scroll-fps-select"
+                      value={scrollFps}
+                      onChange={(event) =>
+                        setScrollFps(
+                          Number(event.currentTarget.value) as CaptureScrollFps,
+                        )
+                      }
+                      style={{ ...fieldStyle, width: "100%" }}
+                    >
+                      {CAPTURE_SCROLL_FPS_OPTIONS.map((fps) => (
+                        <option key={fps} value={fps}>
+                          {fps} FPS
+                        </option>
+                      ))}
+                    </select>
+                    <span style={fieldHelpStyle}>
+                      Rendered frame rate. 30 is lighter for scroll seeking; 60 is
+                      smoother.
+                    </span>
+                  </label>
+                  <label style={popoutFieldStyle}>
+                    <span>Capture mode</span>
+                    <select
+                      data-testid="capture-scroll-mode-select"
+                      value={scrollCaptureMode}
+                      onChange={(event) =>
+                        setScrollCaptureMode(
+                          event.currentTarget.value as ActiveCaptureMode,
+                        )
+                      }
+                      style={{ ...fieldStyle, width: "100%" }}
+                    >
+                      {modeOptions.map((mode) => (
+                        <option key={mode} value={mode}>
+                          {CAPTURE_MODE_LABELS[mode]}
+                        </option>
+                      ))}
+                    </select>
+                    <span style={fieldHelpStyle}>
+                      Layers composited into each rendered scroll frame.
+                    </span>
+                  </label>
+                  <label style={popoutFieldStyle}>
                     <span>Range</span>
                     <select
                       data-testid="capture-scroll-range-select"
@@ -3203,8 +3269,16 @@ export function CaptureDirectorToolbar() {
                 <div style={sectionStyle}>
                   <span style={sectionLabelStyle}>Estimated frame count</span>
                   <span style={statusStyle}>{scrollEstimatedFrameCount}</span>
+                  <span style={sectionLabelStyle}>Duration</span>
+                  <span data-testid="capture-scroll-estimated-duration" style={statusStyle}>
+                    {scrollEstimatedDurationLabel}
+                  </span>
                   <span style={sectionLabelStyle}>Render size</span>
                   <span style={statusStyle}>{scrollRenderSizeLabel}</span>
+                  <span style={sectionLabelStyle}>Estimated file size</span>
+                  <span data-testid="capture-scroll-estimated-size" style={statusStyle}>
+                    {scrollEstimatedSizeLabel}
+                  </span>
                   <button
                     data-testid="capture-scroll-advanced-toggle"
                     type="button"
@@ -3294,6 +3368,21 @@ export function CaptureDirectorToolbar() {
                         </span>
                       </label>
                     )}
+                    <label style={popoutFieldStyle}>
+                      <span>Posters and contact sheet</span>
+                      <input
+                        data-testid="capture-scroll-include-posters"
+                        type="checkbox"
+                        checked={scrollIncludePosters}
+                        onChange={(event) =>
+                          setScrollIncludePosters(event.currentTarget.checked)
+                        }
+                      />
+                      <span style={fieldHelpStyle}>
+                        Write the still poster frames and the contact-sheet preview
+                        alongside the rendered video.
+                      </span>
+                    </label>
                   </div>
                 )}
                 <div style={rowStyle}>
