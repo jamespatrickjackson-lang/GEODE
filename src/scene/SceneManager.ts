@@ -1280,6 +1280,26 @@ export class SceneManager {
         hideOnDone: !willVisible,
       });
     }
+    // Case Study B alias ids are logical layers mapped onto the demo shell, not
+    // real groups in `this.layers`, so the loop above never enqueues their fade
+    // and they would snap on editor visibility toggles (Codex audit F1). Enqueue
+    // the changed alias ids here; the shared tick + start-opacity machinery
+    // already routes alias ids through applyCaseStudyBDemoLayerAlias via
+    // applyLayerTransitionRenderOpacity, so they fade with everything else.
+    for (const id of Object.keys(CASE_STUDY_B_DEMO_LAYER_ALIASES)) {
+      const wasVisible = prev.has(id);
+      const willVisible = nextVisible.has(id);
+      if (wasVisible === willVisible) continue;
+      const authored = this.authoredLayerOpacity(id);
+      const current = this.currentVisibilityFadeOpacity(id);
+      this.visibilityToggleFades.set(id, {
+        from: current ?? (willVisible ? 0 : authored),
+        to: willVisible ? authored : 0,
+        startMs: now,
+        durationMs: VISIBILITY_TOGGLE_FADE_MS,
+        hideOnDone: !willVisible,
+      });
+    }
     this.currentVisibleLayerIds = nextVisible;
     // Same post-visibility bookkeeping as setVisible so aliases, graticules,
     // topo-aligned overlays, sections, and working-area stay correct.
