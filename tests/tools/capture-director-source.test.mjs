@@ -1666,8 +1666,10 @@ test("Capture Camera Path v2 UI exposes row editors, transition editors, and tim
   );
   assert.ok(
     lowerTimelineSource.includes('? "34px 34px 28px 20px 20px 20px 20px 20px"') &&
-      lowerTimelineSource.includes(': "34px 34px 28px"'),
-    "Pages and Camera Path lane containers should use matching 34px row heights",
+      lowerTimelineSource.includes(
+        ': "minmax(12px, 1fr) 34px 34px minmax(12px, 1fr) 28px"',
+      ),
+    "Pages and Camera Path lanes keep matching 34px heights, centered with spacer rows",
   );
   const frameRulerBlock = lowerTimelineSource.slice(
     lowerTimelineSource.indexOf('data-testid="capture-timeline-frame-ruler"'),
@@ -1697,7 +1699,7 @@ test("Capture Camera Path v2 UI exposes row editors, transition editors, and tim
       lowerTimelineSource.includes('top: 0') &&
       lowerTimelineSource.includes('bottom: 0') &&
       lowerTimelineSource.includes('zIndex: 0') &&
-      lowerTimelineSource.includes('gridRow: 3') &&
+      lowerTimelineSource.includes('gridRow: scaleAxisGridRow') &&
       !lowerTimelineSource.includes('data-testid="capture-timeline-scrubber"') &&
       !lowerTimelineSource.includes('data-testid="capture-timeline-spine-bar"'),
     "timeline should keep the frame grid, time axis, labels, and vertical playhead while removing only the horizontal scrub slider",

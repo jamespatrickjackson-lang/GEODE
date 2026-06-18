@@ -87,20 +87,6 @@ const buttonStyle: CSSProperties = {
   cursor: "pointer",
 };
 
-const summaryStyle: CSSProperties = {
-  display: "flex",
-  gap: 8,
-  flexWrap: "wrap",
-  color: "rgba(220,228,232,0.62)",
-  fontSize: 11,
-  fontVariantNumeric: "tabular-nums",
-};
-
-function compactVec(value: [number, number, number] | undefined): string {
-  if (!value) return "unset";
-  return value.map((part) => part.toFixed(1)).join(", ");
-}
-
 export function CameraPathLineItemEditor({
   index,
   node,
@@ -357,11 +343,6 @@ export function CameraPathLineItemEditor({
           <button data-testid="capture-path-row-delete" type="button" onClick={() => onDelete(node.id)} style={buttonStyle}>
             Delete
           </button>
-        </div>
-        <div style={summaryStyle}>
-          <span>pos {compactVec(node.position)}</span>
-          <span>target {compactVec(node.target)}</span>
-          {node.focusPointId ? <span data-testid="capture-path-focus-point">focus {node.focusPointId}</span> : null}
         </div>
       </div>
     </div>

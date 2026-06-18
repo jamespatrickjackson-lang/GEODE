@@ -1770,6 +1770,9 @@ export function mountScene(
 
     const pathColor = new THREE.Color(options.colors?.path ?? "#ff6b4a");
     const selectedColor = new THREE.Color(options.colors?.selected ?? "#f8fafc");
+    // Selection feedback is always blue so the picked camera view / transition
+    // is obvious on screen regardless of the configured track/selected colors.
+    const selectionBlue = new THREE.Color("#4aa3ff");
     const keyframeColor = new THREE.Color(options.colors?.keyframe ?? "#d7dde2");
     const targetColor = new THREE.Color(options.colors?.target ?? "#7dd3fc");
     const focusColor = new THREE.Color(options.colors?.hover ?? "#facc15");
@@ -1830,6 +1833,42 @@ export function mountScene(
         userData: { captureCameraPathSegmentId: segmentMeta.id },
       });
       captureCameraPathOverlay.add(segment);
+      if (selectedSegment && points.length >= 2) {
+        // Visible blue highlight following the sampled curve for this segment.
+        const startThree = captureVecToThree(start.position);
+        const endThree = captureVecToThree(end.position);
+        let startIdx = 0;
+        let endIdx = points.length - 1;
+        let startDist = Infinity;
+        let endDist = Infinity;
+        points.forEach((point, index) => {
+          const ds = point.distanceToSquared(startThree);
+          if (ds < startDist) {
+            startDist = ds;
+            startIdx = index;
+          }
+          const de = point.distanceToSquared(endThree);
+          if (de < endDist) {
+            endDist = de;
+            endIdx = index;
+          }
+        });
+        const subPoints = points.slice(
+          Math.min(startIdx, endIdx),
+          Math.max(startIdx, endIdx) + 1,
+        );
+        if (subPoints.length >= 2) {
+          const highlight = createCaptureCameraPathLine({
+            points: subPoints,
+            color: selectionBlue,
+            linewidth: lineSize + 6,
+            opacity: 0.95,
+            renderOrder: 9_520,
+            resolution: lineResolution,
+          });
+          captureCameraPathOverlay.add(highlight);
+        }
+      }
     }
 
     for (const keyframe of options.keyframes) {
@@ -1844,7 +1883,7 @@ export function mountScene(
           : CAPTURE_CAMERA_PATH_NODE_MARKER_SCALE);
       const markerGeometry = new THREE.SphereGeometry(markerSize, 18, 12);
       const markerMaterial = new THREE.MeshBasicMaterial({
-        color: selected ? selectedColor : keyframeColor,
+        color: selected ? selectionBlue : keyframeColor,
         depthTest: false,
         depthWrite: false,
         transparent: true,

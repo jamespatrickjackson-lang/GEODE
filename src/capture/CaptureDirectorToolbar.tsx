@@ -48,7 +48,6 @@ import type { CaptureCameraPathNodeKindV2 } from "./captureCameraPathV2";
 import { captureJobProgressPercent } from "./captureJobRuntime";
 import {
   EDITOR_HEADING_BAR_BACKGROUND,
-  EDITOR_NESTED_BAR_BACKGROUND,
   EDITOR_PANEL_OUTER_RADIUS_PX,
   FROSTED_PANEL_OUTLINE,
   FROSTED_PANEL_SHADOW,
@@ -134,24 +133,22 @@ const barStyle: CSSProperties = {
   minWidth: 0,
   display: "flex",
   flexDirection: "column",
-  borderRadius: 12,
-  border: "1px solid rgba(255, 255, 255, 0.1)",
-  background: EDITOR_NESTED_BAR_BACKGROUND,
-  overflow: "hidden",
 };
 
+// Editor-style pill header: rounded ends, editor heading material, title + icon
+// on the left, disclosure chevron at the right end, no trailing status text.
 const barHeaderButtonStyle: CSSProperties = {
   width: "100%",
-  minHeight: 34,
-  border: 0,
-  borderRadius: 0,
-  background: "rgba(255,255,255,0.05)",
+  minHeight: 38,
+  border: "1px solid transparent",
+  borderRadius: 999,
+  background: EDITOR_HEADING_BAR_BACKGROUND,
   color: vibrancyLabel,
   display: "flex",
   alignItems: "center",
   justifyContent: "space-between",
   gap: 8,
-  padding: "0 10px",
+  padding: "0 18px",
   fontSize: 12,
   fontWeight: 600,
   letterSpacing: 0,
@@ -160,16 +157,16 @@ const barHeaderButtonStyle: CSSProperties = {
 
 const barHeaderRowStyle: CSSProperties = {
   width: "100%",
-  minHeight: 34,
-  border: 0,
-  borderRadius: 0,
-  background: "rgba(255,255,255,0.05)",
+  minHeight: 38,
+  border: "1px solid transparent",
+  borderRadius: 999,
+  background: EDITOR_HEADING_BAR_BACKGROUND,
   color: vibrancyLabel,
   display: "flex",
   alignItems: "center",
   justifyContent: "space-between",
   gap: 8,
-  padding: "0 8px 0 10px",
+  padding: "0 14px 0 18px",
   boxSizing: "border-box",
 };
 
@@ -660,25 +657,24 @@ const barChevronStyle: CSSProperties = {
   flex: "none",
 };
 
-function CaptureBarHeading({
-  title,
-  expanded,
-}: {
-  title: string;
-  expanded: boolean;
-}) {
+function CaptureBarHeading({ title }: { title: string }) {
   return (
     <span style={barHeadingStyle}>
-      <span
-        aria-hidden="true"
-        style={{
-          ...barChevronStyle,
-          transform: expanded ? "rotate(45deg)" : "rotate(-45deg)",
-        }}
-      />
       <CaptureSectionIcon name={captureSectionIconName(title)} />
       {title}
     </span>
+  );
+}
+
+function CaptureBarChevron({ expanded }: { expanded: boolean }) {
+  return (
+    <span
+      aria-hidden="true"
+      style={{
+        ...barChevronStyle,
+        transform: expanded ? "rotate(45deg)" : "rotate(-45deg)",
+      }}
+    />
   );
 }
 
@@ -689,7 +685,6 @@ function CollapsibleCaptureSection({
   headerTestId,
   onToggle,
   panelTestId,
-  status,
   title,
 }: {
   children: ReactNode;
@@ -698,7 +693,7 @@ function CollapsibleCaptureSection({
   headerTestId: string;
   onToggle(): void;
   panelTestId: string;
-  status: ReactNode;
+  status?: ReactNode;
   title: string;
 }) {
   return (
@@ -713,9 +708,9 @@ function CollapsibleCaptureSection({
             style={barHeaderToggleButtonStyle}
           >
             <span style={barHeaderTitleStyle}>
-              <CaptureBarHeading title={title} expanded={expanded} />
+              <CaptureBarHeading title={title} />
             </span>
-            <span style={statusStyle}>{status}</span>
+            <CaptureBarChevron expanded={expanded} />
           </button>
           <div style={barHeaderActionsStyle}>{headerActions}</div>
         </div>
@@ -727,8 +722,8 @@ function CollapsibleCaptureSection({
           onClick={onToggle}
           style={barHeaderButtonStyle}
         >
-          <CaptureBarHeading title={title} expanded={expanded} />
-          <span style={statusStyle}>{status}</span>
+          <CaptureBarHeading title={title} />
+          <CaptureBarChevron expanded={expanded} />
         </button>
       )}
       {expanded && <div style={barContentStyle}>{children}</div>}
@@ -925,7 +920,6 @@ export function CaptureDirectorToolbar() {
     setScrollStartFrame,
     scrollEndFrame,
     setScrollEndFrame,
-    scrollCurrentFrame,
     scrollSaveDestination,
     setScrollSaveDestination,
     scrollOutputPackageName,
@@ -938,7 +932,6 @@ export function CaptureDirectorToolbar() {
     setScrollAdvancedKeyframeInterval,
     scrollAdvancedAllKeyframe,
     setScrollAdvancedAllKeyframe,
-    scrollPreviewState,
     scrollPreviewTrace,
     playScrollPreview,
     pauseScrollPreview,
@@ -1179,18 +1172,6 @@ export function CaptureDirectorToolbar() {
   ].filter((link): link is { label: string; url: string } => Boolean(link.url));
   const scrollRenderProgressLabel =
     scrollPackageProgressLabel ?? `Ready 0/${scrollEstimatedFrameCount} frames`;
-  const scrollPackageIsRunning =
-    scrollPackageJob?.status === "queued" ||
-    scrollPackageJob?.status === "preparing" ||
-    scrollPackageJob?.status === "rendering" ||
-    scrollPackageJob?.status === "encoding";
-  const scrollPanelStatusLabel = scrollPackageIsRunning
-    ? scrollPackageProgressLabel ?? scrollPackageStatusLabel
-    : scrollPreviewState === "playing"
-      ? `Playing frame ${scrollCurrentFrame}`
-      : scrollPreviewState === "paused"
-        ? `Paused frame ${scrollCurrentFrame}`
-        : "Idle";
   const stillQualityDisabled = screenCaptureType === "png";
   const cameraPathTimeline = useMemo(
     () => resolveCaptureCameraPathV3Timeline(captureCameraPathV3),
@@ -1964,11 +1945,10 @@ export function CaptureDirectorToolbar() {
                   }}
                   style={barHeaderButtonStyle}
                 >
-                  <CaptureBarHeading
-                    title="Scroll Animation"
+                  <CaptureBarHeading title="Scroll Animation" />
+                  <CaptureBarChevron
                     expanded={expandedSections["scroll-animation"]}
                   />
-                  <span style={statusStyle}>{scrollPanelStatusLabel}</span>
                 </button>
                 {expandedSections["scroll-animation"] && (
                   <div style={barContentStyle}>
