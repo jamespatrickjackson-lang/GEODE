@@ -5146,3 +5146,27 @@ test("captureVideoRunPublicStatus shapes status + diagnosticsMissing (Patch C3)"
   assert.equal(enriched.diagnosticsMissing, false);
   assert.equal(enriched.renderer, "ANGLE");
 });
+
+test("page clip start-frame edit holds on the first clip (leading offset)", async () => {
+  const { editCaptureTimelinePageClipFrames, normalizeCaptureTimelineState } =
+    await importBundled("src/capture/captureTimeline.ts");
+  let state = normalizeCaptureTimelineState({
+    pageClips: [
+      { id: "c1", pageId: "p1", holdSeconds: 2, transitionSeconds: 0 },
+      { id: "c2", pageId: "p2", holdSeconds: 2, transitionSeconds: 0 },
+    ],
+  });
+  // First clip starts pinned at 0.
+  assert.equal(state.pageClips[0].startSeconds, 0);
+  // Editing the FIRST clip's start frame now holds as a leading offset
+  // (regression: this used to be a silent no-op at index 0).
+  state = editCaptureTimelinePageClipFrames({
+    state,
+    clipId: "c1",
+    fps: 30,
+    startFrame: 30,
+  });
+  assert.equal(state.pageClips[0].startSeconds, 1);
+  // The second clip stays sequential after the offset (2s clip1 + 1s offset = 3).
+  assert.equal(state.pageClips[1].startSeconds, 3);
+});

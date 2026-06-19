@@ -199,7 +199,10 @@ function visiblePages(
 function normalizePageClips(
   clips: readonly Partial<CaptureTimelinePageClip>[],
 ): CaptureTimelinePageClip[] {
-  let cursor = 0;
+  // Honor a leading offset on the first clip (empty/base time before the first
+  // page); every later clip stays sequential from there. Existing timelines have
+  // a first-clip start of 0, so this is a no-op for them.
+  let cursor = Math.max(0, finiteNumber(clips[0]?.startSeconds, 0));
   return clips.map((clip, index) => {
     const pageId =
       typeof clip.pageId === "string" && clip.pageId.trim()
@@ -360,7 +363,20 @@ function editPageClipStartFrame(
   const normalized = normalizeCaptureTimelineState(state);
   const clips = normalized.pageClips.map((clip) => ({ ...clip }));
   const index = clips.findIndex((clip) => clip.id === clipId);
-  if (index <= 0 || clips[index].locked || clips[index - 1].locked) {
+  if (index < 0 || clips[index].locked) {
+    return normalized;
+  }
+  if (index === 0) {
+    // First clip: the start is the timeline's leading offset (base/empty time
+    // before the first page). Set it directly so the edit holds.
+    const normalizedFps = normalizeTimelineFps(fps);
+    clips[0] = {
+      ...clips[0],
+      startSeconds: Math.max(0, startFrame / normalizedFps),
+    };
+    return normalizeCaptureTimelineState({ ...normalized, pageClips: clips });
+  }
+  if (clips[index - 1].locked) {
     return normalized;
   }
   const previous = clips[index - 1];
