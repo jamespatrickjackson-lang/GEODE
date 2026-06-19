@@ -8554,7 +8554,37 @@
     }
   ],
   "pageOrder": [
-    "156_page",
+    "156_page"
+  ],
+  "presentationDefaults": {
+    "transitionDuration": 1400,
+    "transitionEasing": "easeInOutCubic",
+    "holdDuration": 5000,
+    "cameraUp": [
+      0,
+      0,
+      1
+    ]
+  },
+  "watermark": "GeoSee Utah FORGE - Phase 3 seismic + MT",
+  "modified": "2026-06-19T11:16:25.272Z",
+  "registrationFrame": {
+    "horizontalCrs": "EPSG:26912",
+    "verticalDatum": "layer-specific; terrain/wells use source elevation metres, seismic products record per-product datum, time-domain seismic uses display-derived vertical scale",
+    "units": "m",
+    "coordinateBasis": "utm",
+    "origin": {
+      "easting_m": 341467.35,
+      "northing_m": 4273374.5,
+      "elevation_m": 0
+    },
+    "rotationDeg": 0,
+    "registrationStatus": "unverified",
+    "controlPointStatus": "pending",
+    "notes": "Canonical Utah FORGE GeoSee project frame. Source coordinates must be transformed into this frame before subtracting the GeoSee scene origin. Horizontal and vertical registration remain separately review-gated until control-point checks pass."
+  },
+  "archivedPageOrder": [
+    "165_page",
     "157_page",
     "158_page",
     "168_page",
@@ -8667,35 +8697,5 @@
     "47_seismic_footprint_velocity_support",
     "180_page",
     "181_page"
-  ],
-  "presentationDefaults": {
-    "transitionDuration": 1400,
-    "transitionEasing": "easeInOutCubic",
-    "holdDuration": 5000,
-    "cameraUp": [
-      0,
-      0,
-      1
-    ]
-  },
-  "watermark": "GeoSee Utah FORGE - Phase 3 seismic + MT",
-  "modified": "2026-06-16T18:13:56.878Z",
-  "registrationFrame": {
-    "horizontalCrs": "EPSG:26912",
-    "verticalDatum": "layer-specific; terrain/wells use source elevation metres, seismic products record per-product datum, time-domain seismic uses display-derived vertical scale",
-    "units": "m",
-    "coordinateBasis": "utm",
-    "origin": {
-      "easting_m": 341467.35,
-      "northing_m": 4273374.5,
-      "elevation_m": 0
-    },
-    "rotationDeg": 0,
-    "registrationStatus": "unverified",
-    "controlPointStatus": "pending",
-    "notes": "Canonical Utah FORGE GeoSee project frame. Source coordinates must be transformed into this frame before subtracting the GeoSee scene origin. Horizontal and vertical registration remain separately review-gated until control-point checks pass."
-  },
-  "archivedPageOrder": [
-    "165_page"
   ]
 }
