@@ -14,12 +14,14 @@ import {
   CAPTURE_RENDER_FPS_OPTIONS,
   CAPTURE_RENDER_RESOLUTION_PRESET_ORDER,
   CAPTURE_RESOLUTION_PRESETS,
+  clampCaptureSupersampleScale,
 } from "./captureResolution";
 import {
   CAPTURE_MODE_LABELS,
   type ActiveCaptureMode,
   type CaptureDeterministicExportFormat,
   type CaptureFps,
+  type CaptureGradeMode,
   type CapturePreviewResolutionPresetId,
   type CaptureRenderResolutionPresetId,
   type CaptureScrollOutputFormat,
@@ -688,6 +690,7 @@ function CollapsibleCaptureSection({
   headerTestId,
   onToggle,
   panelTestId,
+  status,
   title,
 }: {
   children: ReactNode;
@@ -701,7 +704,7 @@ function CollapsibleCaptureSection({
 }) {
   return (
     <section data-testid={panelTestId} style={barStyle}>
-      {headerActions ? (
+      {headerActions || status ? (
         <div style={barHeaderRowStyle}>
           <button
             data-testid={headerTestId}
@@ -715,7 +718,10 @@ function CollapsibleCaptureSection({
             </span>
             <CaptureBarChevron expanded={expanded} />
           </button>
-          <div style={barHeaderActionsStyle}>{headerActions}</div>
+          {status ? <div style={barHeaderActionsStyle}>{status}</div> : null}
+          {headerActions ? (
+            <div style={barHeaderActionsStyle}>{headerActions}</div>
+          ) : null}
         </div>
       ) : (
         <button
@@ -820,6 +826,10 @@ export function CaptureDirectorToolbar() {
     renderResolutionPresetId,
     setRenderResolutionPresetId,
     renderResolution,
+    supersampleScale,
+    setSupersampleScale,
+    captureGradeMode,
+    setCaptureGradeMode,
     fps,
     setFps,
     deterministicDurationSeconds,
@@ -849,6 +859,7 @@ export function CaptureDirectorToolbar() {
     setPageClipLocked,
     selectPageClip,
     resizeTimelineBoundary,
+    setTimelineDiagnosticsVisible,
     captureCameraPathV2,
     captureCameraPathV3,
     cameraPathEquationOverlayOptions,
@@ -1699,11 +1710,52 @@ export function CaptureDirectorToolbar() {
                     <option value="webm">WebM</option>
                   </select>
                 </label>
+                <label style={labelStyle}>
+                  <span>Supersample</span>
+                  <select
+                    data-testid="capture-render-supersample-select"
+                    value={supersampleScale}
+                    disabled={isRecording || isDeterministicExporting}
+                    onChange={(event) =>
+                      setSupersampleScale(Number(event.currentTarget.value))
+                    }
+                    style={fieldStyle}
+                  >
+                    <option value={1}>Off (1x)</option>
+                    <option value={2}>2x</option>
+                  </select>
+                </label>
+                <label style={labelStyle}>
+                  <span>Grade</span>
+                  <select
+                    data-testid="capture-render-grade-mode-select"
+                    value={captureGradeMode}
+                    disabled={isRecording || isDeterministicExporting}
+                    onChange={(event) =>
+                      setCaptureGradeMode(
+                        event.currentTarget.value as CaptureGradeMode,
+                      )
+                    }
+                    style={fieldStyle}
+                  >
+                    <option value="clean">Clean Master</option>
+                    <option value="baked">Baked Look</option>
+                  </select>
+                </label>
               </div>
               <div style={sectionStyle}>
                 <strong>Max Detail</strong>
                 <span data-testid="capture-render-warning" style={statusStyle}>
-                  No downsampling, exact {renderResolution.width}x{renderResolution.height}
+                  {(() => {
+                    const eff = clampCaptureSupersampleScale(
+                      supersampleScale,
+                      renderResolution.width,
+                      renderResolution.height,
+                    );
+                    return eff > 1
+                      ? `Render ${renderResolution.width * eff}x${renderResolution.height * eff} -> ${renderResolution.width}x${renderResolution.height} (${eff}x supersampled)`
+                      : `No downsampling, exact ${renderResolution.width}x${renderResolution.height}`;
+                  })()}
                 </span>
               </div>
               <div style={sectionStyle}>
@@ -2026,8 +2078,49 @@ export function CaptureDirectorToolbar() {
                     ))}
                   </select>
                 </label>
+                <label style={labelStyle}>
+                  <span>Supersample</span>
+                  <select
+                    data-testid="capture-still-supersample-select"
+                    value={supersampleScale}
+                    disabled={screenCaptureStatus === "rendering"}
+                    onChange={(event) =>
+                      setSupersampleScale(Number(event.currentTarget.value))
+                    }
+                    style={fieldStyle}
+                  >
+                    <option value={1}>Off (1x)</option>
+                    <option value={2}>2x</option>
+                  </select>
+                </label>
+                <label style={labelStyle}>
+                  <span>Grade</span>
+                  <select
+                    data-testid="capture-still-grade-mode-select"
+                    value={captureGradeMode}
+                    disabled={screenCaptureStatus === "rendering"}
+                    onChange={(event) =>
+                      setCaptureGradeMode(
+                        event.currentTarget.value as CaptureGradeMode,
+                      )
+                    }
+                    style={fieldStyle}
+                  >
+                    <option value="clean">Clean Master</option>
+                    <option value="baked">Baked Look</option>
+                  </select>
+                </label>
                 <span style={statusStyle}>
-                  Max Detail: On. No downsampling.
+                  {(() => {
+                    const eff = clampCaptureSupersampleScale(
+                      supersampleScale,
+                      renderResolution.width,
+                      renderResolution.height,
+                    );
+                    return eff > 1
+                      ? `Max Detail: On. ${eff}x supersampled -> exact output.`
+                      : "Max Detail: On. No downsampling.";
+                  })()}
                 </span>
                 <button
                   data-testid="capture-screen-capture"
@@ -2802,6 +2895,17 @@ export function CaptureDirectorToolbar() {
                     }
                   />
                   <span>Ghost</span>
+                </label>
+                <label style={labelStyle}>
+                  <input
+                    data-testid="capture-path-show-diagnostics"
+                    type="checkbox"
+                    checked={captureTimeline.diagnosticsVisible}
+                    onChange={(event) =>
+                      setTimelineDiagnosticsVisible(event.currentTarget.checked)
+                    }
+                  />
+                  <span>Diagnostics</span>
                 </label>
                 <label style={labelStyle}>
                   <input

@@ -37,6 +37,7 @@ export interface LocalVideoRenderRunStatus {
   masterUrl?: string | null;
   masterPath?: string | null;
   frameSequenceDir?: string | null;
+  diagnosticsMissing?: boolean;
 }
 
 export interface StartLocalVideoRenderJobOptions {

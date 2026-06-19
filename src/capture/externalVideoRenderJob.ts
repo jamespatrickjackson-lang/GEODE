@@ -3,6 +3,7 @@ import {
   validateCaptureRecipe,
   type CaptureRecipeV1,
 } from "./captureRecipe";
+import { resolveCaptureEffectiveSupersample } from "./captureResolution";
 import type { CaptureDeterministicExportFormat } from "./captureTypes";
 
 export const CAPTURE_VIDEO_RENDER_JOB_SCHEMA = "CaptureVideoRenderJobV1";
@@ -30,6 +31,11 @@ export interface CaptureVideoRenderJobV1 {
     sourceFrameEnd?: number;
     encodingProfile?: "scroll-friendly-video";
   };
+  // Headless render supersample (the tiled renderer's own `--superscale`). The
+  // embedded recipe always carries `supersampleScale: 1`; this is the effective
+  // output-budget-validated scale the local renderer should use. Optional v1
+  // extension: absent => 1 (older jobs render exact size).
+  superscale?: number;
   fidelity: "max-detail-render";
   createdAt: string;
 }
@@ -118,6 +124,18 @@ export function createExternalVideoRenderJob({
 }: CreateExternalVideoRenderJobInput): CaptureVideoRenderJobV1 {
   const normalizedRecipe = normalizeCaptureRecipe(recipe);
   const projectSlug = normalizedRecipe.projectSlug || "geosee";
+  // The headless renderer does its own supersampling via `--superscale`, so the
+  // embedded recipe must carry `supersampleScale: 1` (the job validators require
+  // it). The UI-requested scale becomes the output-budget-validated `superscale`.
+  const { effective: superscale } = resolveCaptureEffectiveSupersample({
+    requested: normalizedRecipe.supersampleScale,
+    width: normalizedRecipe.resolution.width,
+    height: normalizedRecipe.resolution.height,
+  });
+  const headlessRecipe: CaptureRecipeV1 = {
+    ...normalizedRecipe,
+    supersampleScale: 1,
+  };
   return {
     schema: CAPTURE_VIDEO_RENDER_JOB_SCHEMA,
     version: 1,
@@ -128,7 +146,8 @@ export function createExternalVideoRenderJob({
       url: appUrl || currentAppUrl(projectSlug),
       projectSlug,
     },
-    recipe: normalizedRecipe,
+    recipe: headlessRecipe,
+    superscale,
     video: {
       width: normalizedRecipe.resolution.width,
       height: normalizedRecipe.resolution.height,
@@ -237,6 +256,29 @@ export function validateExternalVideoRenderJob(
     ) {
       errors.push("video dimensions must match recipe resolution.");
     }
+    // Optional headless superscale (v1 extension; absent => 1). An explicit value
+    // must be in [1,4] AND within the per-dimension render budget — reject an
+    // over-budget value (e.g. 8K + superscale 2) rather than silently render 1x.
+    if (candidate.superscale !== undefined) {
+      if (
+        !Number.isInteger(candidate.superscale) ||
+        candidate.superscale < 1 ||
+        candidate.superscale > 4
+      ) {
+        errors.push("superscale must be an integer between 1 and 4.");
+      } else if (width > 0 && height > 0) {
+        const { effective } = resolveCaptureEffectiveSupersample({
+          requested: candidate.superscale,
+          width,
+          height,
+        });
+        if (candidate.superscale !== effective) {
+          errors.push(
+            `superscale ${candidate.superscale} exceeds the ${width}x${height} render budget (max ${effective}).`,
+          );
+        }
+      }
+    }
   }
   return { valid: errors.length === 0, errors };
 }
@@ -280,5 +322,6 @@ export function externalVideoRenderCommand(
   job: CaptureVideoRenderJobV1,
 ): string {
   const output = job.video.filename || `geosee-external-video.${job.video.format}`;
-  return `node tools\\render-capture-video-job.mjs --job ${jobFilename} --out ${output}`;
+  const superscale = job.superscale ?? 1;
+  return `node tools\\render-capture-video-job.mjs --job ${jobFilename} --out ${output} --superscale ${superscale}`;
 }

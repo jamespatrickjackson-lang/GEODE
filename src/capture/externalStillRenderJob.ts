@@ -176,6 +176,14 @@ export function createExternalStillRenderJob({
   const quality = normalizeCaptureStillQuality(type, stillOptions.quality);
   const filename = normalizeStillFilename(normalizedRecipe, type, createdAt);
   const projectSlug = normalizedRecipe.projectSlug || "geosee";
+  // The external tiled still renderer renders exact size (no still superscale in
+  // scope), and the job validator requires `supersampleScale === 1`. Normalize
+  // here so a fallback published from a recipe whose effective in-browser
+  // supersample is 2 (e.g. 4K that exceeded a single GPU surface) is still valid.
+  const headlessRecipe: CaptureRecipeV1 = {
+    ...normalizedRecipe,
+    supersampleScale: 1,
+  };
   return {
     schema: CAPTURE_STILL_RENDER_JOB_SCHEMA,
     version: 1,
@@ -186,7 +194,7 @@ export function createExternalStillRenderJob({
       url: appUrl || currentAppUrl(projectSlug),
       projectSlug,
     },
-    recipe: normalizedRecipe,
+    recipe: headlessRecipe,
     still: {
       width: normalizedRecipe.resolution.width,
       height: normalizedRecipe.resolution.height,

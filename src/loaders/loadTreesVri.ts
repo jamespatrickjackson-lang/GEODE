@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { PROJECT_BOUNDS, utmToScene } from "../constants";
 import { getHeightSampler, setOverlayMask } from "../scene/heightSampler";
+import { registerDrapedCaptureFidelity } from "./drapedCaptureFidelity";
 import { debugLog } from "../utils/debugLog";
 
 // BC VRI forest cover. This layer is intentionally rendered as a map
@@ -278,5 +279,6 @@ export async function loadTreesVri(url: string): Promise<THREE.Group> {
   debugLog(
     `[loadTreesVri] ${res.features.length} dissolved forest feature(s) -> ${polygonCount} polygon body part(s) rasterized`,
   );
+  registerDrapedCaptureFidelity(group, tex);
   return group;
 }

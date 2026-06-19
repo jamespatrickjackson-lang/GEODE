@@ -29,9 +29,16 @@ interface ScalarVolumeProduct {
   files: {
     volume: string;
     mask: string;
+    // Optional high-precision (Float32 normalized 0..1 over the same source log10
+    // range) capture-tier volume. Loaded only under the capture fidelity lock to
+    // remove the 8-bit (256-level) banding of the live uint8 volume; absent =>
+    // capture renders the uint8 volume (with max sample steps). See
+    // build_utah_forge_mt_volume_products.mjs and the capture quality audit.
+    volumeHigh?: string;
     stats?: string;
     provenance?: string;
   };
+  volumeHighEncoding?: string;
   displayRecipe?: {
     opacity?: number;
     density?: number;
@@ -349,6 +356,26 @@ function texture3d(
   return texture;
 }
 
+// Capture-tier high-precision volume: Float32 normalized 0..1 (same range as the
+// uint8 volume, just full precision). The raymarch shader reads `texture(...).r`
+// as 0..1 and maps to source range, so no shader change is needed.
+function float32Texture3d(
+  bytes: Uint8Array<ArrayBuffer>,
+  dimensions: Vec3,
+): THREE.Data3DTexture {
+  const [nx, ny, nz] = dimensions;
+  const count = nx * ny * nz;
+  const floats = new Float32Array(bytes.buffer, bytes.byteOffset, count);
+  const texture = new THREE.Data3DTexture(floats, nx, ny, nz);
+  texture.format = THREE.RedFormat;
+  texture.type = THREE.FloatType;
+  texture.minFilter = THREE.LinearFilter;
+  texture.magFilter = THREE.LinearFilter;
+  texture.unpackAlignment = 1;
+  texture.needsUpdate = true;
+  return texture;
+}
+
 function transferModeCode(mode: string | undefined): number {
   if (mode === "soft") return 0;
   if (mode === "dense") return 2;
@@ -503,6 +530,9 @@ async function buildVolumeMesh(
   mesh.userData = {
     displayName: mesh.name,
     scalarVolume: true,
+    scalarVolumeHighPath: product.files.volumeHigh
+      ? resolveAsset(product.files.volumeHigh)
+      : null,
     scalarVolumeProductId: product.id,
     scalarVolumeProductLabel: product.label,
     scalarVolumeClassification: product.classification,
@@ -546,5 +576,62 @@ export async function loadScalarVolume(manifestUrl: string): Promise<THREE.Group
     manifest.products.map((product) => buildVolumeMesh(product, resolveAsset, manifest)),
   );
   group.add(...meshes);
+
+  // Capture fidelity: under the capture lock, swap each raymarch volume's uint8
+  // texture for the Float32 capture-tier volume (no banding). Restored to uint8
+  // and the high texture disposed on lock release, so the live VRAM profile is
+  // unchanged. No-op for products without a `volumeHigh` asset.
+  group.userData.captureFidelityUpgrade = async (
+    enabled: boolean,
+  ): Promise<void> => {
+    const tasks: Promise<void>[] = [];
+    group.traverse((obj) => {
+      const mesh = obj as THREE.Mesh;
+      if (mesh.userData?.scalarVolume !== true) return;
+      const material = mesh.material as THREE.ShaderMaterial | undefined;
+      const uVolume = material?.uniforms?.uVolume;
+      if (!uVolume) return;
+      if (enabled) {
+        const highPath = mesh.userData.scalarVolumeHighPath as string | null;
+        if (!highPath) return;
+        if (!mesh.userData.captureBaseVolumeTexture) {
+          mesh.userData.captureBaseVolumeTexture = uVolume.value;
+        }
+        if (mesh.userData.captureHighVolumeTexture) {
+          uVolume.value = mesh.userData.captureHighVolumeTexture;
+          return;
+        }
+        const dims = mesh.userData.scalarVolumeDimensions as Vec3;
+        tasks.push(
+          fetchBytes(highPath)
+            .then((bytes) => {
+              const tex = float32Texture3d(bytes, dims);
+              mesh.userData.captureHighVolumeTexture = tex;
+              uVolume.value = tex;
+            })
+            .catch((error: unknown) => {
+              console.warn(
+                "[scalarVolume] capture high-precision volume load failed",
+                error,
+              );
+            }),
+        );
+      } else {
+        const base = mesh.userData.captureBaseVolumeTexture as
+          | THREE.Data3DTexture
+          | undefined;
+        if (base) uVolume.value = base;
+        const high = mesh.userData.captureHighVolumeTexture as
+          | THREE.Data3DTexture
+          | undefined;
+        if (high) {
+          high.dispose();
+          mesh.userData.captureHighVolumeTexture = null;
+        }
+      }
+    });
+    await Promise.allSettled(tasks);
+  };
+
   return group;
 }

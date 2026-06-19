@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { PROJECT_BOUNDS, utmToScene } from "../constants";
 import { setOverlayMask } from "../scene/heightSampler";
+import { registerDrapedCaptureFidelity } from "./drapedCaptureFidelity";
 import { debugLog } from "../utils/debugLog";
 
 // Bedrock geology layer. The fetch script (prep/fetch_geology.py)
@@ -213,5 +214,6 @@ export async function loadGeology(
       paint(overrides);
     },
   };
+  registerDrapedCaptureFidelity(group, tex);
   return group;
 }

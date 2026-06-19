@@ -3777,7 +3777,11 @@ test("deterministic still exporter preflights oversized render requests before s
     const { exportDeterministicStill } = await importBundled(
       "src/capture/deterministicStillExporter.ts",
     );
-    const sceneHandle = fakeSceneHandle({ maxTextureSize: 8192 });
+    // Supersample is now clamped to the safe render budget (8K -> 1x) rather than
+    // rejected (DEC-176). The preflight-rejection safety is still asserted via a
+    // genuinely oversized case: an 8K output on a GPU whose texture limit is
+    // smaller than the output must reject before any scene mutation.
+    const sceneHandle = fakeSceneHandle({ maxTextureSize: 4096 });
 
     await assert.rejects(
       () =>
@@ -3785,7 +3789,7 @@ test("deterministic still exporter preflights oversized render requests before s
           sceneHandle,
           recipe: validRecipe({
             resolution: { width: 7680, height: 4320, label: "8K" },
-            supersampleScale: 2,
+            supersampleScale: 1,
           }),
         }),
       /exceeds/,
@@ -4916,4 +4920,229 @@ test("export clock clips an overlong Page Bar to the Camera Path and stays valid
     resolveScrollPageRenderPlan(timeline).map((segment) => segment.pageId),
     ["page-a", "page-b"],
   );
+});
+
+test("effective supersample resolver stays within the per-dimension render budget", async () => {
+  const { resolveCaptureEffectiveSupersample, clampCaptureSupersampleScale } =
+    await importBundled("src/capture/captureResolution.ts");
+  const cases = [
+    { w: 1920, h: 1080, req: 2, eff: 2 }, // 1080p
+    { w: 3840, h: 2160, req: 2, eff: 2 }, // 4K
+    { w: 7680, h: 4320, req: 2, eff: 1 }, // 8K clamps
+    { w: 2160, h: 3840, req: 2, eff: 1 }, // portrait: long/short clamp would wrongly allow 2
+    { w: 7680, h: 1080, req: 4, eff: 1 }, // ultrawide: width is the binding edge
+  ];
+  for (const { w, h, req, eff } of cases) {
+    const r = resolveCaptureEffectiveSupersample({ requested: req, width: w, height: h });
+    assert.equal(r.effective, eff, `effective for ${w}x${h} req ${req}`);
+    assert.equal(clampCaptureSupersampleScale(req, w, h), eff);
+    // The render must never exceed the 7680x4320 budget, per dimension.
+    assert.ok(r.renderWidth <= 7680, `renderWidth ${r.renderWidth} <= 7680`);
+    assert.ok(r.renderHeight <= 4320, `renderHeight ${r.renderHeight} <= 4320`);
+  }
+});
+
+test("external video job carries budget-validated superscale and a 1x recipe", async () => {
+  const {
+    createExternalVideoRenderJob,
+    validateExternalVideoRenderJob,
+    externalVideoRenderCommand,
+  } = await importBundled("src/capture/externalVideoRenderJob.ts");
+
+  const job4k = createExternalVideoRenderJob({
+    recipe: validRecipe({
+      resolution: { width: 3840, height: 2160, label: "4K" },
+      supersampleScale: 2,
+    }),
+    format: "mp4",
+    appUrl: "http://127.0.0.1/?project=runtime-test",
+  });
+  assert.equal(job4k.recipe.supersampleScale, 1, "embedded recipe normalized to 1x");
+  assert.equal(job4k.superscale, 2, "4K carries effective superscale 2");
+  assert.equal(validateExternalVideoRenderJob(job4k).valid, true);
+  assert.match(externalVideoRenderCommand("job.json", job4k), /--superscale 2/);
+
+  const job8k = createExternalVideoRenderJob({
+    recipe: validRecipe({
+      resolution: { width: 7680, height: 4320, label: "8K" },
+      supersampleScale: 2,
+    }),
+    format: "mp4",
+    appUrl: "http://127.0.0.1/?project=runtime-test",
+  });
+  assert.equal(job8k.superscale, 1, "8K clamps effective superscale to 1");
+  assert.equal(validateExternalVideoRenderJob(job8k).valid, true);
+
+  // Hand-authored over-budget job is rejected (not silently downscaled).
+  const overBudget = { ...job8k, superscale: 2 };
+  const overResult = validateExternalVideoRenderJob(overBudget);
+  assert.equal(overResult.valid, false);
+  assert.ok(overResult.errors.some((e) => /superscale/.test(e)));
+
+  // Backward compatibility: a v1 job omitting superscale validates (renders 1x).
+  const { superscale: _omit, ...legacyJob } = job4k;
+  assert.equal(validateExternalVideoRenderJob(legacyJob).valid, true);
+});
+
+test("external still fallback job normalizes recipe supersample to 1", async () => {
+  const { createExternalStillRenderJob, validateExternalStillRenderJob } =
+    await importBundled("src/capture/externalStillRenderJob.ts");
+  const job = createExternalStillRenderJob({
+    recipe: validRecipe({
+      resolution: { width: 7680, height: 4320, label: "8K" },
+      supersampleScale: 2,
+    }),
+    stillOptions: { type: "png" },
+    failureReason: "render output is not available",
+  });
+  assert.equal(job.recipe.supersampleScale, 1);
+  assert.equal(validateExternalStillRenderJob(job).valid, true);
+});
+
+test("local endpoint job validator rejects over-budget superscale (F-CD-003)", async () => {
+  const { createExternalVideoRenderJob } = await importBundled(
+    "src/capture/externalVideoRenderJob.ts",
+  );
+  const { validateLocalCaptureVideoJob } = await importBundled(
+    "plugins/capture-video-job-validation.ts",
+  );
+  const make = (resolution, supersampleScale) =>
+    createExternalVideoRenderJob({
+      recipe: validRecipe({ resolution, supersampleScale }),
+      format: "mp4",
+      appUrl: "http://127.0.0.1/?project=runtime-test",
+    });
+
+  // A normal 4K job (effective superscale 2) is accepted by the endpoint.
+  const ok4k = make({ width: 3840, height: 2160, label: "4K" }, 2);
+  assert.deepEqual(validateLocalCaptureVideoJob(ok4k), []);
+
+  // A hand-authored 8K job carrying superscale 2 is rejected at the endpoint,
+  // not only by the browser-side TS validator (would plan 15360x8640).
+  const bad8k = { ...make({ width: 7680, height: 4320, label: "8K" }, 1), superscale: 2 };
+  const errs = validateLocalCaptureVideoJob(bad8k);
+  assert.ok(
+    errs.some((e) => /superscale/.test(e)),
+    "endpoint rejects 8K + superscale 2",
+  );
+
+  // Backward compatibility: a job omitting superscale validates (renders 1x).
+  const { superscale: _omit, ...legacy } = ok4k;
+  assert.deepEqual(validateLocalCaptureVideoJob(legacy), []);
+});
+
+test("video run artifact paths include the master and drop empties (F-CD-005)", async () => {
+  const { captureVideoRunArtifactPaths } = await importBundled(
+    "plugins/capture-video-run-cleanup.ts",
+  );
+  assert.deepEqual(
+    captureVideoRunArtifactPaths({
+      outputPath: "/out/video.mp4",
+      diagnosticsPath: "/out/video.diag.json",
+      masterPath: "/out/video.master.mov",
+    }),
+    ["/out/video.mp4", "/out/video.diag.json", "/out/video.master.mov"],
+  );
+  // No master encoded => master omitted, others still cleaned.
+  assert.deepEqual(
+    captureVideoRunArtifactPaths({
+      outputPath: "/out/video.mp4",
+      diagnosticsPath: "/out/video.diag.json",
+      masterPath: null,
+    }),
+    ["/out/video.mp4", "/out/video.diag.json"],
+  );
+  assert.deepEqual(
+    captureVideoRunArtifactPaths({ outputPath: "", diagnosticsPath: undefined }),
+    [],
+  );
+});
+
+test("evaluateRenderGpu decides software-fallback rejection (Patch C1)", async () => {
+  const { evaluateRenderGpu } = await importBundled(
+    "tools/render-capture-runtime.mjs",
+  );
+  // Hardware renderer: never rejects.
+  const hardware = evaluateRenderGpu(
+    { renderer: "ANGLE (NVIDIA, D3D11)" },
+    { gpu: true, allowSoftware: false },
+  );
+  assert.equal(hardware.software, false);
+  assert.equal(hardware.reject, false);
+  assert.equal(hardware.reason, null);
+  // SwiftShader without --allow-software: reject.
+  const swReject = evaluateRenderGpu(
+    { renderer: "Google SwiftShader" },
+    { gpu: true, allowSoftware: false },
+  );
+  assert.equal(swReject.software, true);
+  assert.equal(swReject.reject, true);
+  assert.match(swReject.reason, /software rasterization/);
+  // SwiftShader WITH --allow-software: no reject.
+  const swAllow = evaluateRenderGpu(
+    { renderer: "llvmpipe (LLVM 15)" },
+    { gpu: true, allowSoftware: true },
+  );
+  assert.equal(swAllow.software, true);
+  assert.equal(swAllow.reject, false);
+  // gpu disabled (--no-gpu): software is expected, never reject.
+  const noGpu = evaluateRenderGpu(
+    { renderer: "SwiftShader" },
+    { gpu: false, allowSoftware: false },
+  );
+  assert.equal(noGpu.reject, false);
+});
+
+test("chooseFfmpegPath honors env > static > PATH precedence (Patch C2)", async () => {
+  const { chooseFfmpegPath } = await importBundled(
+    "tools/render-capture-runtime.mjs",
+  );
+  assert.equal(
+    chooseFfmpegPath({
+      envPath: "/env/ffmpeg",
+      staticPath: "/static/ffmpeg",
+      pathFallback: "ffmpeg",
+    }),
+    "/env/ffmpeg",
+  );
+  assert.equal(
+    chooseFfmpegPath({ envPath: "", staticPath: "/static/ffmpeg" }),
+    "/static/ffmpeg",
+  );
+  assert.equal(
+    chooseFfmpegPath({ envPath: null, staticPath: null }),
+    "ffmpeg",
+  );
+});
+
+test("captureVideoRunPublicStatus shapes status + diagnosticsMissing (Patch C3)", async () => {
+  const { captureVideoRunPublicStatus } = await importBundled(
+    "plugins/capture-video-run-status.ts",
+  );
+  const base = {
+    runId: "run-1",
+    status: "complete",
+    phase: "complete",
+    startedAt: "2026-06-19T00:00:00.000Z",
+    completedAt: "2026-06-19T00:00:05.000Z",
+    outputFilename: "out.mp4",
+    outputPath: "/runs/out.mp4",
+    outputUrl: "/api/capture/video-output/run-1",
+    diagnosticsPath: "/runs/diag.json",
+  };
+  // Playable-without-master: status complete, masterUrl null when no master.
+  const noMaster = captureVideoRunPublicStatus({ ...base, masterPath: null });
+  assert.equal(noMaster.status, "complete");
+  assert.equal(noMaster.masterUrl, null);
+  assert.equal(noMaster.elapsedSeconds, 5);
+  // diagnosticsMissing true when diagnostics were never enriched.
+  assert.equal(noMaster.diagnosticsMissing, true);
+  // diagnosticsMissing false once enriched.
+  const enriched = captureVideoRunPublicStatus({
+    ...base,
+    diagnosticsEnriched: true,
+    renderer: "ANGLE",
+  });
+  assert.equal(enriched.diagnosticsMissing, false);
+  assert.equal(enriched.renderer, "ANGLE");
 });

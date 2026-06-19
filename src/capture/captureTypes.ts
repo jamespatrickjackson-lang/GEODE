@@ -40,6 +40,13 @@ export type CaptureRenderFidelityMode =
   | "live-preview"
   | "max-detail-render";
 
+// Capture grade mode. "clean" strips post-recoverable lens/film FX (vignette,
+// grain, chromatic aberration, distortion, tilt-shift, gate-weave, frame/guides,
+// halation/streak) and detail-destroying FX (bloom, depth-of-field, afterimage)
+// to produce a seam-free maximum-fidelity master; the look is applied in post.
+// "baked" keeps the authored on-screen look (WYSIWYG). See DEC-176.
+export type CaptureGradeMode = "clean" | "baked";
+
 export type CaptureSaveDestination =
   | "browser-picker"
   | "download-link"

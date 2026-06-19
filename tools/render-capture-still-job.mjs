@@ -57,8 +57,12 @@ function normalizeJob(rawJob, outputPath = "") {
   if (recipe.mode === "full-ui" || recipe.mode === "off") {
     throw new Error(`recipe.mode ${recipe.mode} is not supported by external still jobs`);
   }
+  // The external tiled still renderer does its own supersampling via
+  // --superscale, so the in-app recipe supersample (a knob for the in-browser
+  // exporters only) is normalized to 1 here to avoid double-supersampling and to
+  // keep every routed job valid.
   if (recipe.supersampleScale !== 1) {
-    throw new Error("recipe.supersampleScale must be 1");
+    recipe.supersampleScale = 1;
   }
   if (tile.overlapPixels !== 0) {
     throw new Error("tile.overlapPixels must be 0");
@@ -338,13 +342,34 @@ async function renderAppTiles({ job, plan, appUrl }) {
     const capabilities = await page.evaluate(() =>
       window.__geoseeCaptureStillRenderer.capabilities(),
     );
-    for (const tile of plan.tiles) {
-      const result = await page.evaluate(
-        async ({ currentJob, currentTile }) =>
-          window.__geoseeCaptureStillRenderer.renderTile(currentJob, currentTile),
-        { currentJob: job, currentTile: tile },
+    // Hold one capture session around all tiles so the heavy capture fidelity
+    // (seismic source tier, MT high-precision volume, draped re-bake) is applied
+    // once, not per tile.
+    const sessionAvailable = await page.evaluate(
+      () =>
+        typeof window.__geoseeCaptureStillRenderer?.beginCaptureSession ===
+        "function",
+    );
+    if (sessionAvailable) {
+      await page.evaluate(() =>
+        window.__geoseeCaptureStillRenderer.beginCaptureSession(),
       );
-      rendered.push(validateTileResult(result, tile));
+    }
+    try {
+      for (const tile of plan.tiles) {
+        const result = await page.evaluate(
+          async ({ currentJob, currentTile }) =>
+            window.__geoseeCaptureStillRenderer.renderTile(currentJob, currentTile),
+          { currentJob: job, currentTile: tile },
+        );
+        rendered.push(validateTileResult(result, tile));
+      }
+    } finally {
+      if (sessionAvailable) {
+        await page.evaluate(() =>
+          window.__geoseeCaptureStillRenderer.endCaptureSession(),
+        );
+      }
     }
     return { tiles: rendered, capabilities };
   } finally {

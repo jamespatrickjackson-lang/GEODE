@@ -5,6 +5,10 @@ import { dirname, extname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import sharp from "sharp";
 import { chromium } from "@playwright/test";
+import {
+  chooseFfmpegPath,
+  evaluateRenderGpu,
+} from "./render-capture-runtime.mjs";
 
 const JOB_SCHEMA = "CaptureVideoRenderJobV1";
 const STILL_JOB_SCHEMA = "CaptureStillRenderJobV1";
@@ -13,7 +17,10 @@ const DIAGNOSTICS_SCHEMA = "CaptureVideoRenderJobDiagnosticsV1";
 const DEFAULT_TILE_WIDTH = 1920;
 const DEFAULT_TILE_HEIGHT = 1080;
 const RGBA_BYTES_PER_PIXEL = 4;
-const DEFAULT_SUPERSCALE = 2;
+// Default superscale is 1 (exact size). The dev endpoint passes an explicit
+// `--superscale` derived from the output budget; manual runs opt into 2x. A
+// default of 2 silently planned a 15360x8640 render for 8K (audit F-CD-002).
+const DEFAULT_SUPERSCALE = 1;
 const MAX_SUPERSCALE = 4;
 // Tile cap. A 16384 max-texture GPU can take 4096-8192 tiles, which cuts the
 // number of slow base64 bridge transfers at 8K + supersampling. Opt in with
@@ -31,12 +38,20 @@ const GPU_LAUNCH_ARGS = [
   "--enable-gpu-rasterization",
   "--enable-zero-copy",
 ];
-const SOFTWARE_RENDERER_PATTERN = /swiftshader|software|llvmpipe|basic render/i;
 
 function clampSuperscale(value) {
   const n = Math.round(Number(value));
   if (!Number.isFinite(n) || n < 1) return 1;
   return Math.min(MAX_SUPERSCALE, n);
+}
+
+// Max superscale that keeps the internal render within the 7680x4320 budget,
+// per-dimension (width*scale <= 7680 AND height*scale <= 4320).
+function maxSuperscaleForOutput(width, height) {
+  const w = Number(width);
+  const h = Number(height);
+  if (!Number.isInteger(w) || !Number.isInteger(h) || w <= 0 || h <= 0) return 1;
+  return Math.max(1, Math.min(Math.floor(7680 / w), Math.floor(4320 / h)));
 }
 
 function usageDiagnostics() {
@@ -78,8 +93,12 @@ function normalizeJob(rawJob, outputPath = "") {
   if (recipe.mode === "full-ui" || recipe.mode === "off") {
     throw new Error(`recipe.mode ${recipe.mode} is not supported by external video jobs`);
   }
+  // The headless renderer does its own supersampling via --superscale (tiled
+  // render-at-Nx then Lanczos downscale), so the in-app recipe supersample (a
+  // knob for the in-browser exporters only) is normalized to 1 here to avoid
+  // double-supersampling and to keep every routed job valid.
   if (recipe.supersampleScale !== 1) {
-    throw new Error("recipe.supersampleScale must be 1");
+    recipe.supersampleScale = 1;
   }
   const format = normalizeFormat(video.format, outputPath);
   const width = positiveInteger(video.width, "video.width");
@@ -132,6 +151,7 @@ function normalizeJob(rawJob, outputPath = "") {
           : recipe.projectSlug ?? "geosee",
     },
     recipe,
+    superscale: Number.isInteger(rawJob.superscale) ? rawJob.superscale : undefined,
     video: {
       width,
       height,
@@ -391,16 +411,20 @@ async function renderAppFrame({ page, job, plan, frameIndex, outputPath }) {
 }
 
 async function resolveFfmpegPath() {
-  if (process.env.FFMPEG_PATH) return process.env.FFMPEG_PATH;
+  let staticPath = null;
   try {
     const module = await import("ffmpeg-static");
-    if (typeof module.default === "string" && module.default.length > 0) {
-      return module.default;
+    if (typeof module.default === "string") {
+      staticPath = module.default;
     }
   } catch {
     // Fall through to PATH.
   }
-  return "ffmpeg";
+  return chooseFfmpegPath({
+    envPath: process.env.FFMPEG_PATH,
+    staticPath,
+    pathFallback: "ffmpeg",
+  });
 }
 
 function frameInputArgs({ job, frameDir }) {
@@ -561,14 +585,47 @@ async function runRenderJob({
   frameDirOverride = null,
   framesOnly = false,
   reuseFrames = false,
-  superscale = DEFAULT_SUPERSCALE,
+  superscale = null,
   gpu = true,
   allowSoftware = false,
   master = "prores4444",
   tilePx = 0,
 }) {
   const job = normalizeJob(JSON.parse(readFileSync(jobPath, "utf8")), outputPath);
-  const plan = computeTilePlan(job, superscale, tilePx);
+  // Resolve effective superscale: explicit `--superscale` flag, else the job's
+  // `superscale` field, else 1. An EXPLICIT over-budget value (flag or job field)
+  // is rejected (a manual 8K + superscale 2 fails clearly, never silently 1x);
+  // the absent/default path is the safe exact-size render.
+  const flagSuperscale = typeof superscale === "number" ? superscale : null;
+  const jobSuperscale =
+    job.superscale === undefined || job.superscale === null
+      ? null
+      : job.superscale;
+  const explicitSuperscale = flagSuperscale ?? jobSuperscale;
+  // Reject an out-of-range explicit value (e.g. `--superscale 99` or a bad job
+  // field) rather than clamping it to MAX_SUPERSCALE before the budget check.
+  if (
+    explicitSuperscale !== null &&
+    (!Number.isInteger(explicitSuperscale) ||
+      explicitSuperscale < 1 ||
+      explicitSuperscale > MAX_SUPERSCALE)
+  ) {
+    throw new Error(
+      `superscale must be an integer between 1 and ${MAX_SUPERSCALE} (got ${explicitSuperscale}).`,
+    );
+  }
+  const maxSuperscale = maxSuperscaleForOutput(job.video.width, job.video.height);
+  if (explicitSuperscale !== null && explicitSuperscale > maxSuperscale) {
+    throw new Error(
+      `superscale ${explicitSuperscale} exceeds the 7680x4320 render budget for ` +
+        `${job.video.width}x${job.video.height} (max ${maxSuperscale}).`,
+    );
+  }
+  const effectiveSuperscale = Math.max(
+    1,
+    Math.min(explicitSuperscale ?? DEFAULT_SUPERSCALE, maxSuperscale),
+  );
+  const plan = computeTilePlan(job, effectiveSuperscale, tilePx);
   const appUrl = appUrlOverride || job.app.url;
   const startedAt = new Date().toISOString();
   const frameRoot = frameDirOverride
@@ -581,6 +638,7 @@ async function runRenderJob({
   let page = null;
   let capabilities = synthetic ? { synthetic: true } : null;
   let gpuInfo = null;
+  let captureSessionHeld = false;
 
   emitProgress({
     phase: "prepare",
@@ -617,12 +675,12 @@ async function runRenderJob({
         viewport: { width: plan.tileSize.width, height: plan.tileSize.height },
       });
       gpuInfo = await readGpuInfo(page);
-      const software = SOFTWARE_RENDERER_PATTERN.test(gpuInfo?.renderer || "");
-      if (gpu && software && !allowSoftware) {
-        throw new Error(
-          `GPU did not engage (renderer: "${gpuInfo?.renderer}"). The render would fall back to ` +
-            `software rasterization. Pass --allow-software to proceed anyway.`,
-        );
+      const { software, reject, reason } = evaluateRenderGpu(gpuInfo, {
+        gpu,
+        allowSoftware,
+      });
+      if (reject) {
+        throw new Error(reason);
       }
       emitProgress({ phase: "gpu", renderer: gpuInfo?.renderer, software });
       await page.goto(appUrl, { waitUntil: "domcontentloaded" });
@@ -634,6 +692,20 @@ async function runRenderJob({
       capabilities = await page.evaluate(() =>
         window.__geoseeCaptureStillRenderer.capabilities(),
       );
+      // Hold one capture session around the whole frame/tile render so the heavy
+      // capture fidelity (seismic source tier, MT high-precision volume, draped
+      // re-bake) is applied once, not per tile per frame. Released in finally.
+      const sessionAvailable = await page.evaluate(
+        () =>
+          typeof window.__geoseeCaptureStillRenderer?.beginCaptureSession ===
+          "function",
+      );
+      if (sessionAvailable) {
+        await page.evaluate(() =>
+          window.__geoseeCaptureStillRenderer.beginCaptureSession(),
+        );
+        captureSessionHeld = true;
+      }
     }
 
     if (!reuseFrames)
@@ -656,7 +728,7 @@ async function runRenderJob({
           });
       const info = await stat(outputFramePath);
       if (info.size <= 0) {
-        throw new Error(`frame ${frameIndex} produced zero bytes`);
+        throw new Error(`frame ${actualFrameIndex} produced zero bytes`);
       }
       frameDiagnostics.push({
         frameIndex: actualFrameIndex,
@@ -754,6 +826,15 @@ async function runRenderJob({
     emitProgress({ phase: "complete", totalFrames: job.video.totalFrames });
     return diagnostics;
   } finally {
+    if (captureSessionHeld && page) {
+      try {
+        await page.evaluate(() =>
+          window.__geoseeCaptureStillRenderer?.endCaptureSession?.(),
+        );
+      } catch {
+        // Page may already be tearing down; the session releases with the page.
+      }
+    }
     if (browser) await browser.close();
     if (!keepFrames && !reuseFrames) {
       await rm(frameRoot, { recursive: true, force: true });
@@ -773,7 +854,7 @@ function parseArgs(argv) {
     frameDirOverride: null,
     framesOnly: false,
     reuseFrames: false,
-    superscale: DEFAULT_SUPERSCALE,
+    superscale: null,
     gpu: true,
     allowSoftware: false,
     master: "prores4444",
@@ -802,7 +883,9 @@ function parseArgs(argv) {
     } else if (arg === "--no-keep-frames") {
       args.keepFrames = false;
     } else if (arg === "--superscale") {
-      args.superscale = clampSuperscale(argv[++index]);
+      // Keep the raw value (not clamped) so an out-of-range explicit flag like
+      // `--superscale 99` is rejected, not silently clamped to 4.
+      args.superscale = Number(argv[++index]);
     } else if (arg === "--tile") {
       args.tilePx = Math.round(Number(argv[++index])) || 0;
     } else if (arg === "--gpu") {

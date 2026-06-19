@@ -394,9 +394,31 @@ export interface PostHandle {
   smaaPass: SMAAPass;
   setSize(w: number, h: number): void;
   setPixelRatio(pixelRatio: number): void;
+  setCaptureMultisample(samples: number): void;
+  applyCaptureCleanGrade(tiled: boolean): void;
+  clearCaptureGrade(): void;
   baseBloomStrength: number;
   setBloomStrength(s: number): void;
 }
+
+// Post-recoverable lens/film FX (all lensGrade uniforms). Stripped to 0 for the
+// Clean Master capture grade so the master is sharp/seam-free and the look is
+// applied in post. The color-grade uniforms (contrast/saturation/temperature/
+// lift/gamma/gain/split-tone/filter) are intentionally NOT in this list.
+const CLEAN_GRADE_ZERO_UNIFORMS = [
+  "vignetteStrength",
+  "grainAmount",
+  "chromaticAberration",
+  "distortion",
+  "frameEnabled",
+  "cornerFade",
+  "guideEnabled",
+  "halation",
+  "anamorphicStreak",
+  "gateWeave",
+  "diffusion",
+  "sharpen",
+] as const;
 
 export function buildPostprocessing(
   renderer: THREE.WebGLRenderer,
@@ -461,6 +483,16 @@ export function buildPostprocessing(
   composer.addPass(outputPass);
 
   let baseBloomStrength = bloomPass.strength;
+  let captureGradeSnapshot:
+    | {
+        lens: Record<string, number>;
+        bloom: boolean;
+        bokeh: boolean;
+        tilt: boolean;
+        afterimage: boolean;
+        smaa: boolean;
+      }
+    | null = null;
 
   const handle: PostHandle = {
     composer,
@@ -488,6 +520,74 @@ export function buildPostprocessing(
       pixelRatio = nextPixelRatio;
       composer.setPixelRatio(pixelRatio);
       smaaPass.setSize(currentWidth * pixelRatio, currentHeight * pixelRatio);
+    },
+    setCaptureMultisample(samples) {
+      // WebGL2 MSAA on the composer's ping-pong render targets. The renderer
+      // built with `antialias: true` only multisamples the default framebuffer,
+      // which the composer bypasses (RenderPass draws into its own RT), so
+      // geometry edges in composed output otherwise rely on SMAA alone. Raising
+      // RT samples gives true multisampled geometry edges under the capture
+      // lock; 0 restores the live (non-MSAA) profile.
+      const safe =
+        Number.isFinite(samples) && samples > 0 ? Math.floor(samples) : 0;
+      if (
+        composer.renderTarget1.samples === safe &&
+        composer.renderTarget2.samples === safe
+      ) {
+        return;
+      }
+      composer.renderTarget1.samples = safe;
+      composer.renderTarget2.samples = safe;
+      // Drop the cached GPU framebuffers so the renderer rebuilds them with the
+      // new sample count on the next render (the texture objects stay valid).
+      composer.renderTarget1.dispose();
+      composer.renderTarget2.dispose();
+    },
+    applyCaptureCleanGrade(tiled) {
+      // Clean Master: strip post-recoverable lens/film FX + detail-destroying
+      // FX so the captured master is sharp and seam-free (removes the per-tile
+      // vignette grid / seams). Snapshot the authored values once so the live
+      // profile restores exactly on clearCaptureGrade. Idempotent: safe to call
+      // every captured frame to override any per-frame applyEnvironment re-enable.
+      if (!captureGradeSnapshot) {
+        const lens: Record<string, number> = {};
+        for (const key of CLEAN_GRADE_ZERO_UNIFORMS) {
+          lens[key] = lensGradePass.uniforms[key]?.value as number;
+        }
+        captureGradeSnapshot = {
+          lens,
+          bloom: bloomPass.enabled,
+          bokeh: bokehPass.enabled,
+          tilt: tiltShiftPass.enabled,
+          afterimage: afterimagePass.enabled,
+          smaa: smaaPass.enabled,
+        };
+      }
+      for (const key of CLEAN_GRADE_ZERO_UNIFORMS) {
+        if (lensGradePass.uniforms[key]) lensGradePass.uniforms[key].value = 0;
+      }
+      bloomPass.enabled = false;
+      bokehPass.enabled = false;
+      tiltShiftPass.enabled = false;
+      afterimagePass.enabled = false;
+      // On the tiled route MSAA + the headless 2x superscale already cover edge
+      // AA, and per-tile SMAA seams; drop it for tiled clean capture only.
+      if (tiled) smaaPass.enabled = false;
+    },
+    clearCaptureGrade() {
+      const snap = captureGradeSnapshot;
+      if (!snap) return;
+      for (const key of CLEAN_GRADE_ZERO_UNIFORMS) {
+        if (lensGradePass.uniforms[key]) {
+          lensGradePass.uniforms[key].value = snap.lens[key];
+        }
+      }
+      bloomPass.enabled = snap.bloom;
+      bokehPass.enabled = snap.bokeh;
+      tiltShiftPass.enabled = snap.tilt;
+      afterimagePass.enabled = snap.afterimage;
+      smaaPass.enabled = snap.smaa;
+      captureGradeSnapshot = null;
     },
     baseBloomStrength,
     setBloomStrength(s) {

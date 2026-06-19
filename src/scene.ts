@@ -29,6 +29,7 @@ import type {
   CaptureCameraPathSample,
   CaptureVec3,
 } from "./capture/captureCameraPath";
+import type { CaptureGradeMode } from "./capture/captureTypes";
 
 // Z-up convention for the whole scene.
 THREE.Object3D.DEFAULT_UP.set(0, 0, 1);
@@ -418,6 +419,7 @@ export interface SceneHandle {
     tileX?: number;
     tileY?: number;
     tileId?: string;
+    gradeMode?: CaptureGradeMode;
     mode: "max-detail-render";
   }): CaptureFidelitySnapshot;
   beginCaptureFullResolutionAssets(): void;
@@ -670,6 +672,11 @@ export function mountScene(
     cameraAspect: number;
     cameraPathOverlayVisible: boolean;
   } | null = null;
+  // Active capture grade state (Clean Master strips post-recoverable lens/film
+  // FX; re-asserted each captured frame so per-frame applyEnvironment cannot
+  // re-enable them). Null when not capturing.
+  let captureGradeMode: CaptureGradeMode | null = null;
+  let captureGradeTiled = false;
   let lastFrameLoopDebug: SceneRenderLoopDebugState | null = null;
   let frameLoopIndex = 0;
   let lastRafTimeMs: number | null = null;
@@ -823,6 +830,11 @@ export function mountScene(
       syncCaptureNativeAnnotationVisibility();
       controls.update();
       manager.frameUpdate(camera, timeMs);
+      // Re-assert Clean Master after frameUpdate: applyEnvironment may re-enable
+      // bloom/DOF/vignette per page during multi-page video/scroll capture.
+      if (captureGradeMode === "clean") {
+        post.applyCaptureCleanGrade(captureGradeTiled);
+      }
       post.composer.render();
       notifyAfterRenderCallbacks();
     } finally {
@@ -951,6 +963,7 @@ export function mountScene(
     tileX?: number;
     tileY?: number;
     tileId?: string;
+    gradeMode?: CaptureGradeMode;
     mode: "max-detail-render";
   }): CaptureFidelitySnapshot => {
     const currentSize = renderer.getSize(new THREE.Vector2());
@@ -986,13 +999,49 @@ export function mountScene(
       height: options.height,
       pixelRatio: 1,
     });
+    // Enable WebGL2 MSAA on the composer render targets for the capture render
+    // only. `antialias: true` on the renderer multisamples the default
+    // framebuffer, but composed output is rendered through the EffectComposer's
+    // own targets, so geometry edges otherwise depend on SMAA alone. Restored
+    // to 0 (live profile) on lock exit.
+    //
+    // MSAA memory scales with samples x render pixels x 2 ping-pong HalfFloat
+    // targets, so it must be budgeted by the actual render size (which includes
+    // supersampling). Above ~4K render pixels an 8-sample multisample buffer
+    // exceeds GPU memory and the framebuffer fails to allocate -> black frame.
+    // There the high resolution / supersampling already suppresses aliasing, so
+    // MSAA is dropped and SMAA carries edge AA.
+    const maxSamples = Math.max(0, renderer.capabilities.maxSamples ?? 0);
+    const renderPixels = options.width * options.height;
+    const captureSamples =
+      renderPixels <= 4_000_000
+        ? Math.min(8, maxSamples)
+        : renderPixels <= 9_000_000
+          ? Math.min(4, maxSamples)
+          : 0;
+    post.setCaptureMultisample(captureSamples);
+    // Capture grade mode. Clean Master strips post-recoverable lens/film FX (and
+    // the per-tile seam offenders); Baked Look leaves the authored look intact.
+    captureGradeMode = options.gradeMode ?? "clean";
+    captureGradeTiled = typeof options.tileId === "string" && options.tileId.length > 0;
+    if (captureGradeMode === "clean") {
+      post.applyCaptureCleanGrade(captureGradeTiled);
+    }
     renderer.domElement.dataset.captureFidelity = options.mode;
     renderer.domElement.dataset.captureDownsampling = "disabled";
+    renderer.domElement.dataset.captureMsaaSamples = String(captureSamples);
+    renderer.domElement.dataset.captureGradeMode = captureGradeMode;
     return snapshot;
   };
   const endCaptureFidelityLock = (_snapshot: CaptureFidelitySnapshot) => {
     delete renderer.domElement.dataset.captureFidelity;
     delete renderer.domElement.dataset.captureDownsampling;
+    delete renderer.domElement.dataset.captureMsaaSamples;
+    delete renderer.domElement.dataset.captureGradeMode;
+    post.clearCaptureGrade();
+    captureGradeMode = null;
+    captureGradeTiled = false;
+    post.setCaptureMultisample(0);
     if (_snapshot.fullResolutionAssetsActive) {
       endCaptureFullResolutionAssets();
     }

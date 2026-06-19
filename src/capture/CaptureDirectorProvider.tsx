@@ -97,6 +97,7 @@ import {
   capturePreviewResolutionPresetById,
   captureRenderResolutionPresetById,
   captureResolutionPresetIdForResolution,
+  resolveCaptureEffectiveSupersample,
   validateRenderResolutionRequest,
 } from "./captureResolution";
 import { exportDeterministicFrameSequence } from "./deterministicFrameSequenceExporter";
@@ -118,6 +119,7 @@ import type {
   CaptureDirectorPanel,
   CaptureFeatureAvailability,
   CaptureFps,
+  CaptureGradeMode,
   CaptureMode,
   CaptureQualityPreset,
   CaptureRecorderController,
@@ -179,11 +181,13 @@ import {
 } from "./captureScrollPlan";
 import { createPendingScrollHandoffManifest } from "./scrollHandoffPackage";
 import {
+  acquireCaptureStillSaveHandle,
   captureStillFilename,
   captureStillMimeType,
   normalizeCaptureStillQuality,
   saveCaptureStillBlobWithPicker,
   validateCaptureStillSaveOptions,
+  writeCaptureStillHandle,
   type CaptureStillImageType,
 } from "./screenCaptureSaveOptions";
 import {
@@ -261,6 +265,8 @@ interface CaptureDirectorContextValue {
   setDeterministicDurationSeconds(seconds: number): void;
   supersampleScale: number;
   setSupersampleScale(scale: number): void;
+  captureGradeMode: CaptureGradeMode;
+  setCaptureGradeMode(mode: CaptureGradeMode): void;
   captureScope: CaptureScope;
   setCaptureScope(scope: CaptureScope): void;
   pageRangeStartId: string | null;
@@ -563,6 +569,21 @@ function formatCaptureError(error: unknown): string {
   return "Capture recording failed.";
 }
 
+// Fallback save when no file-system handle is available (showSaveFilePicker
+// unsupported or its transient activation was lost): write the still via an
+// automatic anchor download so it always lands on disk.
+function triggerCaptureStillDownload(url: string, filename: string): void {
+  if (typeof document === "undefined") return;
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = filename;
+  anchor.rel = "noopener";
+  anchor.style.display = "none";
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+}
+
 // Reduce a verbose ANGLE renderer string to the GPU name, e.g.
 // "ANGLE (NVIDIA, NVIDIA GeForce RTX 4070 Ti SUPER ... D3D11)" -> "RTX 4070 Ti SUPER".
 function shortGpuName(renderer: string): string {
@@ -686,6 +707,8 @@ declare global {
       capabilities(): ReturnType<SceneHandle["getCaptureCapabilities"]> & {
         supportsViewOffsetTiles: true;
       };
+      beginCaptureSession(): Promise<void>;
+      endCaptureSession(): void;
     };
     __captureDirectorScrollPreview?: {
       getState(): CaptureDirectorScrollPreviewTraceState;
@@ -905,6 +928,15 @@ export function CaptureDirectorProvider({
   const [deterministicDurationSeconds, setDeterministicDurationSecondsState] =
     useState(() => deterministicExportDurationSeconds());
   const [supersampleScale, setSupersampleScaleState] = useState(1);
+  // Mirror of the supersample state for use inside recipe builders without
+  // adding it to every closure dependency list.
+  const supersampleScaleRef = useRef(supersampleScale);
+  supersampleScaleRef.current = supersampleScale;
+  // Capture grade mode: "clean" (default, max-fidelity master) or "baked" (WYSIWYG).
+  const [captureGradeMode, setCaptureGradeModeState] =
+    useState<CaptureGradeMode>("clean");
+  const captureGradeModeRef = useRef(captureGradeMode);
+  captureGradeModeRef.current = captureGradeMode;
   const [captureScope, setCaptureScope] = useState<CaptureScope>("current-page");
   const [pageRangeStartId, setPageRangeStartId] = useState<string | null>(null);
   const [pageRangeEndId, setPageRangeEndId] = useState<string | null>(null);
@@ -2492,7 +2524,12 @@ export function CaptureDirectorProvider({
         layerStyles: recipeLayerState.layerStyles,
         environmentState: state.environment,
         visualPreset: null,
-        supersampleScale: 1,
+        supersampleScale: resolveCaptureEffectiveSupersample({
+          requested: supersampleScaleRef.current,
+          width: plan.quality.width,
+          height: plan.quality.height,
+        }).effective,
+        captureGradeMode: captureGradeModeRef.current,
         qualityPreset: scrollRecipeQualityPreset(plan.quality),
         renderFidelity: "max-detail-render",
         captureScope: "current-page",
@@ -3213,8 +3250,14 @@ export function CaptureDirectorProvider({
   }, []);
 
   const setSupersampleScale = useCallback((scale: number) => {
-    void scale;
-    setSupersampleScaleState(1);
+    const safe = Number.isFinite(scale)
+      ? Math.min(4, Math.max(1, Math.round(scale)))
+      : 1;
+    setSupersampleScaleState(safe);
+  }, []);
+
+  const setCaptureGradeMode = useCallback((mode: CaptureGradeMode) => {
+    setCaptureGradeModeState(mode === "baked" ? "baked" : "clean");
   }, []);
 
   const setEqualHoldSeconds = useCallback((seconds: number) => {
@@ -4506,6 +4549,18 @@ export function CaptureDirectorProvider({
         ...sceneHandle.getCaptureCapabilities(),
         supportsViewOffsetTiles: true as const,
       }),
+      // Capture-session hold: the headless renderer wraps the whole tile/frame
+      // loop in one session so the heavy capture fidelity (seismic source tier,
+      // MT high-precision volume swap, draped re-bake, sample steps) is applied
+      // once via the ref-counted asset hold instead of per tile. Per-tile
+      // beginCaptureFidelityLock then only sets the tile size/viewOffset.
+      beginCaptureSession: async () => {
+        sceneHandle.beginCaptureFullResolutionAssets?.();
+        await sceneHandle.waitForCaptureFidelityReady?.();
+      },
+      endCaptureSession: () => {
+        sceneHandle.endCaptureFullResolutionAssets?.();
+      },
     };
     window.__geoseeCaptureStillRenderer = bridge;
     return () => {
@@ -4782,7 +4837,12 @@ export function CaptureDirectorProvider({
       layerVisibility: recipeLayerState.layerVisibility,
       layerStyles: recipeLayerState.layerStyles,
       visualPreset: loadedRecipe?.visualPreset ?? null,
-      supersampleScale: 1,
+      supersampleScale: resolveCaptureEffectiveSupersample({
+        requested: supersampleScaleRef.current,
+        width: renderResolution.width,
+        height: renderResolution.height,
+      }).effective,
+      captureGradeMode: captureGradeModeRef.current,
       qualityPreset: renderResolution.qualityPreset,
       renderFidelity: "max-detail-render",
       captureScope: recipeCaptureScope,
@@ -5030,6 +5090,7 @@ export function CaptureDirectorProvider({
       setFps(recipe.fps);
       setDeterministicDurationSeconds(recipe.durationSeconds);
       setSupersampleScale(recipe.supersampleScale);
+      setCaptureGradeMode(recipe.captureGradeMode ?? "clean");
       setCaptureScope(recipe.captureScope ?? "current-page");
       setPageRangeStartId(recipe.pageRangeStartId ?? null);
       setPageRangeEndId(recipe.pageRangeEndId ?? null);
@@ -5084,6 +5145,7 @@ export function CaptureDirectorProvider({
       setDeterministicDurationSeconds,
       setEqualHoldSeconds,
       setSupersampleScale,
+      setCaptureGradeMode,
     ],
   );
 
@@ -6127,6 +6189,28 @@ export function CaptureDirectorProvider({
       if (!stillRenderValidation.valid) {
         throw new Error(stillRenderValidation.errors.join(" "));
       }
+      // Acquire the save-file handle WHILE the click gesture is still active,
+      // i.e. before the slow capture-fidelity render. showSaveFilePicker requires
+      // transient user activation; calling it after an awaited render (seconds)
+      // throws SecurityError and no save dialog ever appears. The filename is
+      // computed up front so it matches the rendered still's filename.
+      const stillSaveFilename = captureStillFilename(
+        `geosee-${recipe.projectSlug}-${recipe.resolution.label}-screen-capture`,
+        screenCaptureType,
+      );
+      const saveTarget = await acquireCaptureStillSaveHandle({
+        filename: stillSaveFilename,
+        type: screenCaptureType,
+      });
+      if (saveTarget.status === "cancelled") {
+        setScreenCaptureStatus("idle");
+        setError("Screen Capture save was cancelled.");
+        setCaptureMode("off");
+        finishCaptureJob(activeStillJobId, (job) =>
+          cancelCaptureJob(job, { reason: "Screen Capture save was cancelled." }),
+        );
+        return;
+      }
       const still = await exportDeterministicStill({
         sceneHandle,
         recipe,
@@ -6142,29 +6226,37 @@ export function CaptureDirectorProvider({
         overlayContext: () => overlayContext(),
       });
       const saveFilename = captureStillFilename(still.filename, screenCaptureType);
-      const saveResult = await saveCaptureStillBlobWithPicker({
-        blob: still.blob,
-        filename: saveFilename,
-        type: screenCaptureType,
-      });
-      if (saveResult.status === "cancelled") {
-        still.cleanup();
-        setScreenCaptureStatus("idle");
-        setError("Screen Capture save was cancelled.");
-        setCaptureMode("off");
-        finishCaptureJob(activeStillJobId, (job) =>
-          cancelCaptureJob(job, { reason: "Screen Capture save was cancelled." }),
+      let saveDestination: "saved" | "download" = "download";
+      if (saveTarget.status === "handle") {
+        const writeResult = await writeCaptureStillHandle(
+          saveTarget.handle,
+          still.blob,
         );
-        return;
+        if (writeResult.status === "cancelled") {
+          still.cleanup();
+          setScreenCaptureStatus("idle");
+          setError("Screen Capture save was cancelled.");
+          setCaptureMode("off");
+          finishCaptureJob(activeStillJobId, (job) =>
+            cancelCaptureJob(job, { reason: "Screen Capture save was cancelled." }),
+          );
+          return;
+        }
+        saveDestination = writeResult.status === "saved" ? "saved" : "download";
       }
       screenCaptureOutputCleanupRef.current = still.cleanup;
       setScreenCaptureOutputBlob(still.blob);
       setScreenCaptureOutputUrl(still.url);
       setScreenCaptureOutputFilename(saveFilename);
+      if (saveDestination !== "saved") {
+        // No file-system handle (picker unavailable or activation lost): write the
+        // still via an automatic download so it always lands on disk.
+        triggerCaptureStillDownload(still.url, saveFilename);
+      }
       setScreenCaptureSaveMessage(
-        saveResult.status === "saved"
+        saveDestination === "saved"
           ? "Screen Capture saved. Download link ready."
-          : "Save picker unavailable. Download link ready.",
+          : "Screen Capture downloaded. Download link ready.",
       );
       setScreenCaptureStatus("complete");
       setCaptureMode("off");
@@ -6180,7 +6272,7 @@ export function CaptureDirectorProvider({
           },
           diagnostics: {
             outputByteLength: still.blob.size,
-            saveDestination: saveResult.status,
+            saveDestination,
           },
         }),
       );
@@ -6308,6 +6400,8 @@ export function CaptureDirectorProvider({
       setDeterministicDurationSeconds,
       supersampleScale,
       setSupersampleScale,
+      captureGradeMode,
+      setCaptureGradeMode,
       captureScope,
       setCaptureScope,
       pageRangeStartId,
@@ -6715,6 +6809,7 @@ export function CaptureDirectorProvider({
       setScreenCaptureQuality,
       setSelectedTimelineTrack,
       setSupersampleScale,
+      setCaptureGradeMode,
       setTimelineDiagnosticsVisible,
       startRecording,
       startPathPreviewMp4Transcode,
@@ -6723,6 +6818,7 @@ export function CaptureDirectorProvider({
       savePathPreviewMp4,
       stopRecording,
       supersampleScale,
+      captureGradeMode,
       savePathRenderVideo,
     ],
   );

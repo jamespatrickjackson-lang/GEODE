@@ -11,7 +11,10 @@ import {
 import { poseFromCaptureCameraPathKeyframe, sampleCaptureCameraPath } from "./captureCameraPath";
 import { sampleCaptureCameraPathV2 } from "./captureCameraPathV2";
 import { sampleCaptureCameraPathV3 } from "./captureCameraPathV3";
-import { validateRenderResolutionRequest } from "./captureResolution";
+import {
+  clampCaptureSupersampleScale,
+  validateRenderResolutionRequest,
+} from "./captureResolution";
 import { renderCaptureOverlay } from "./captureOverlayRenderer";
 import { captureVisibilityProfileForMode } from "./captureProfiles";
 import type { CaptureOverlayFrameContext } from "./captureTypes";
@@ -320,12 +323,15 @@ export async function exportDeterministicFrameSequence({
 
   const width = recipe.resolution.width;
   const height = recipe.resolution.height;
-  if (recipe.supersampleScale !== 1) {
-    throw new Error("Deterministic render-out supersampling exceeds the max-detail no-downsampling policy; render at exact output size.");
-  }
-  const supersampleScale = 1;
-  const renderWidth = width;
-  const renderHeight = height;
+  // Optional supersampling: render at width*scale x height*scale, then
+  // high-quality downscale to the exact output size per frame. The scale is
+  // clamped so the internal render stays within the safe budget (e.g. 8K is
+  // forced to 1x), avoiding the black-frame GPU-memory blowup.
+  const supersampleScale = clampCaptureSupersampleScale(
+    typeof recipe.supersampleScale === "number" ? recipe.supersampleScale : 1,
+    width,
+    height,
+  );
   const capabilityValidation = validateRenderResolutionRequest({
     resolution: recipe.resolution,
     supersampleScale,
@@ -336,6 +342,8 @@ export async function exportDeterministicFrameSequence({
       `Render output is not available: ${capabilityValidation.errors.join(" ")}`,
     );
   }
+  const renderWidth = capabilityValidation.renderWidth;
+  const renderHeight = capabilityValidation.renderHeight;
   const outputCanvas = document.createElement("canvas");
   outputCanvas.width = width;
   outputCanvas.height = height;
@@ -343,6 +351,10 @@ export async function exportDeterministicFrameSequence({
   if (!outputContext) {
     throw new Error("Frame-sequence output canvas could not be created.");
   }
+  // High-quality downscale for the supersample path (renderWidth/Height may
+  // exceed the output size). No-op when rendering at exact size (scale 1).
+  outputContext.imageSmoothingEnabled = true;
+  outputContext.imageSmoothingQuality = "high";
 
   const originalPose = capturePose(sceneHandle.camera, sceneHandle.controls);
   let snapshot: RecipeLayerStateSnapshot | null = null;
@@ -364,6 +376,7 @@ export async function exportDeterministicFrameSequence({
             reason: "render-out",
             width: renderWidth,
             height: renderHeight,
+            gradeMode: recipe.captureGradeMode,
             mode: "max-detail-render",
           })
         : null;

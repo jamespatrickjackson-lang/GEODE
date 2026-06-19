@@ -4,6 +4,7 @@ import {
   expectNoCaptureDirectorPageErrors,
   loadCaptureDirector,
   openCaptureDirector,
+  openRealtimeRecordPopout,
   resetCaptureDirectorEvents,
   startAndAutoStopRecording,
 } from "./capture-director-helpers";
@@ -19,12 +20,15 @@ test("Capture Director realtime recording uses the expected capture routes", asy
 }) => {
   const diagnostics = await loadCaptureDirector(page);
   await openCaptureDirector(page);
+  await openRealtimeRecordPopout(page);
 
   const runCapture = async (
     mode: CaptureMode,
     expectedPath: "scene-canvas" | "composited-canvas" | "display-capture",
   ) => {
     await resetCaptureDirectorEvents(page);
+    // Recording can collapse/close the realtime popout, so re-open it each run.
+    await openRealtimeRecordPopout(page);
     await page.getByTestId("capture-mode-select").selectOption(mode, {
       force: true,
     });
@@ -68,6 +72,7 @@ test("Capture Director realtime recording reports empty recorder output", async 
 }) => {
   const diagnostics = await loadCaptureDirector(page);
   await openCaptureDirector(page);
+  await openRealtimeRecordPopout(page);
 
   await resetCaptureDirectorEvents(page, {
     __captureDirectorForceEmptyRecorder: true,
@@ -78,6 +83,9 @@ test("Capture Director realtime recording reports empty recorder output", async 
   await page
     .getByTestId("capture-preview-resolution-select")
     .selectOption("marketing-4k");
+  // Preview resolution does not drive FPS (it is an independent control); set the
+  // 60 FPS the empty-recorder assertion below expects explicitly.
+  await page.getByTestId("capture-fps-select").selectOption("60");
   await expect(page.getByTestId("capture-fps-select")).toHaveValue("60");
   await startAndAutoStopRecording(page);
 

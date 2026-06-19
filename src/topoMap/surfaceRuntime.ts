@@ -90,21 +90,29 @@ type TopoImageDetailOverlay = NonNullable<
 function configureTopoTexture(
   texture: THREE.Texture,
   maxAnisotropy: number,
+  captureFullResolution: boolean,
 ): void {
   const image = texture.image as { width?: number; height?: number } | undefined;
   const width = image?.width ?? 0;
   const height = image?.height ?? 0;
   const powerOfTwo =
     THREE.MathUtils.isPowerOfTwo(width) && THREE.MathUtils.isPowerOfTwo(height);
+  // three 0.169 is WebGL2-only, where non-power-of-two textures fully support
+  // mipmaps and anisotropic filtering. The POT gate is a legacy WebGL1
+  // restriction kept for the live profile (it leaves the NPOT regional ortho
+  // unmipped, which makes anisotropy inert -> soft drape). Under the capture
+  // fidelity lock, enable mipmaps + anisotropy unconditionally so draped
+  // imagery is sharp and non-aliased at oblique angles in outputs.
+  const mipmapped = captureFullResolution || powerOfTwo;
   texture.colorSpace = THREE.SRGBColorSpace;
   texture.anisotropy = maxAnisotropy;
-  texture.minFilter = powerOfTwo
+  texture.minFilter = mipmapped
     ? THREE.LinearMipmapLinearFilter
     : THREE.LinearFilter;
   texture.magFilter = THREE.LinearFilter;
   texture.wrapS = THREE.ClampToEdgeWrapping;
   texture.wrapT = THREE.ClampToEdgeWrapping;
-  texture.generateMipmaps = powerOfTwo;
+  texture.generateMipmaps = mipmapped;
   texture.needsUpdate = true;
 }
 
@@ -140,6 +148,24 @@ export class TopoSurfaceRuntime {
     }
     this.captureFullResolution = enabled;
     this.captureFullResolutionTextureLoads = [];
+    // Reconfigure the already-loaded textures for the new fidelity mode. The
+    // apply* paths early-return when the texture path is unchanged (Utah uses
+    // the same 8192 asset for live and capture), so the mipmap/filter mode must
+    // be re-applied to the existing texture objects here or it would be skipped.
+    if (this.orthoPhotoTexture) {
+      configureTopoTexture(
+        this.orthoPhotoTexture,
+        this.options.maxAnisotropy(),
+        enabled,
+      );
+    }
+    if (this.topoImageDetailTexture) {
+      configureTopoTexture(
+        this.topoImageDetailTexture,
+        this.options.maxAnisotropy(),
+        enabled,
+      );
+    }
     terrainGroup?.traverse((obj) => {
       const lodHandle = (obj as THREE.Object3D).userData?.terrainLodHandle as
         | TerrainLodHandle
@@ -620,7 +646,11 @@ export class TopoSurfaceRuntime {
           texture.dispose();
           return;
         }
-        configureTopoTexture(texture, this.options.maxAnisotropy());
+        configureTopoTexture(
+          texture,
+          this.options.maxAnisotropy(),
+          this.captureFullResolution,
+        );
         this.topoImageDetailTexture = texture;
         this.applyTopoImageDetailBounds(terrainGroup, overlay, texture, opacity);
       })
@@ -682,7 +712,11 @@ export class TopoSurfaceRuntime {
           texture.dispose();
           return;
         }
-        configureTopoTexture(texture, this.options.maxAnisotropy());
+        configureTopoTexture(
+          texture,
+          this.options.maxAnisotropy(),
+          this.captureFullResolution,
+        );
         this.orthoPhotoTexture = texture;
         this.setOrthoPhotoTexture(terrainGroup, texture);
       })

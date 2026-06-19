@@ -716,6 +716,12 @@ function transitionDebugMs(value: number): number {
 export class SceneManager {
   private layers = new Map<string, THREE.Group>();
   private layerSpecs = new Map<string, ProjectLayerSpec>();
+  // Capture fidelity lock state. While active, the scene renders for output:
+  // seismic holds the source LOD tier (no transient downgrade), raymarch volumes
+  // use max sample steps, and per-layer upgraders (e.g. draped vector re-bake)
+  // run. Restored to the live profile on lock release.
+  private captureFidelityActive = false;
+  private captureFidelityLoadPromises: Promise<void>[] = [];
   envHemiLight: THREE.HemisphereLight | null = null;
   private envKeyLight: THREE.DirectionalLight | null = null;
   envFillLight: THREE.DirectionalLight | null = null;
@@ -4531,14 +4537,22 @@ export class SceneManager {
 
     const seismicTransitionActive = this.activeSceneTransitionContext !== null;
     const seismicCameraMoving = nowMs < this.seismicCameraMovingUntilMs;
-    const requestedTier = seismicTransitionActive || seismicCameraMoving
-      ? "coarse"
-      : "standard";
-    const seismicTransientLodReason = seismicTransitionActive
-      ? "page-transition"
-      : seismicCameraMoving
-        ? "camera-moving"
-        : "settled";
+    // While the capture fidelity lock is active, hold the source tier (incl.
+    // volume) and ignore the transient coarse/standard downgrade so outputs are
+    // never rendered from a browser/coarse seismic tier.
+    const requestedTier: "coarse" | "standard" | "source" = this
+      .captureFidelityActive
+      ? "source"
+      : seismicTransitionActive || seismicCameraMoving
+        ? "coarse"
+        : "standard";
+    const seismicTransientLodReason = this.captureFidelityActive
+      ? "capture-source"
+      : seismicTransitionActive
+        ? "page-transition"
+        : seismicCameraMoving
+          ? "camera-moving"
+          : "settled";
 
     for (const group of this.layers.values()) {
       const root = this.seismicBrowserRoot(group);
@@ -4553,26 +4567,7 @@ export class SceneManager {
         continue;
       }
 
-      const hasVisibleProductIdsState = Array.isArray(
-        root.userData.seismicVisibleProductIds,
-      );
-      const visibleProductIds = hasVisibleProductIdsState
-        ? (root.userData.seismicVisibleProductIds as unknown[]).filter(
-            (value): value is string => typeof value === "string" && value.length > 0,
-          )
-        : [];
-      const selectedProductId =
-        typeof root.userData.seismicSelectedProductId === "string"
-          ? root.userData.seismicSelectedProductId
-          : typeof root.userData.seismicDefaultProductId === "string"
-            ? root.userData.seismicDefaultProductId
-            : "";
-      const productIds =
-        visibleProductIds.length > 0
-          ? visibleProductIds
-          : !hasVisibleProductIdsState && selectedProductId
-            ? [selectedProductId]
-            : [];
+      const productIds = this.seismicVisibleProductIdsForRoot(root);
       if (productIds.length === 0) continue;
       const productKey = productIds.slice().sort().join("\0");
       if (
@@ -4584,9 +4579,17 @@ export class SceneManager {
       root.userData.seismicFrameRequestedLodTier = requestedTier;
       root.userData.seismicFrameRequestedProductKey = productKey;
       const ensureProductsLoaded = root.userData.seismicEnsureProductsLoaded as
-        | ((productIds: string[], tier: "coarse" | "standard" | "source") => Promise<void>)
+        | ((
+            productIds: string[],
+            tier: "coarse" | "standard" | "source",
+            options?: { includeVolume?: boolean },
+          ) => Promise<void>)
         | undefined;
-      ensureProductsLoaded?.(productIds, requestedTier).catch((error: unknown) => {
+      ensureProductsLoaded?.(
+        productIds,
+        requestedTier,
+        this.captureFidelityActive ? { includeVolume: true } : undefined,
+      ).catch((error: unknown) => {
         console.warn("[seismic] transient LOD request failed", error);
       });
     }
@@ -5817,11 +5820,137 @@ export class SceneManager {
   }
 
   setCaptureFullResolution(enabled: boolean): void {
+    this.captureFidelityActive = enabled;
+    this.captureFidelityLoadPromises = [];
     this.topoRuntime.setCaptureFullResolution(enabled);
+    // Per-layer capture-fidelity upgraders (draped vector re-bake, etc.). A
+    // loader opts in by setting `userData.captureFidelityUpgrade` on its group.
+    for (const group of this.layers.values()) {
+      const upgrade = group.userData?.captureFidelityUpgrade as
+        | ((enabled: boolean) => void | Promise<void>)
+        | undefined;
+      if (typeof upgrade !== "function") continue;
+      const result = upgrade(enabled);
+      if (
+        enabled &&
+        result &&
+        typeof (result as Promise<void>).then === "function"
+      ) {
+        this.captureFidelityLoadPromises.push(
+          (result as Promise<void>).catch(() => undefined),
+        );
+      }
+    }
+    // Raymarch volumes (MT + seismic): max sample steps for capture.
+    this.applyCaptureRaymarchSampleSteps(enabled);
+    // Seismic: eagerly load the source LOD tier (incl. volume) for visible
+    // products so the render does not fall back to a browser/coarse tier.
+    if (enabled) {
+      this.requestSeismicSourceTierForCapture();
+    }
   }
 
   waitForCaptureFullResolution(): Promise<void> {
-    return this.topoRuntime.waitForCaptureFullResolution();
+    return Promise.allSettled([
+      this.topoRuntime.waitForCaptureFullResolution(),
+      ...this.captureFidelityLoadPromises,
+    ]).then(() => undefined);
+  }
+
+  private seismicVisibleProductIdsForRoot(root: THREE.Object3D): string[] {
+    const hasVisibleProductIdsState = Array.isArray(
+      root.userData.seismicVisibleProductIds,
+    );
+    const visibleProductIds = hasVisibleProductIdsState
+      ? (root.userData.seismicVisibleProductIds as unknown[]).filter(
+          (value): value is string =>
+            typeof value === "string" && value.length > 0,
+        )
+      : [];
+    const selectedProductId =
+      typeof root.userData.seismicSelectedProductId === "string"
+        ? root.userData.seismicSelectedProductId
+        : typeof root.userData.seismicDefaultProductId === "string"
+          ? root.userData.seismicDefaultProductId
+          : "";
+    return visibleProductIds.length > 0
+      ? visibleProductIds
+      : !hasVisibleProductIdsState && selectedProductId
+        ? [selectedProductId]
+        : [];
+  }
+
+  private requestSeismicSourceTierForCapture(): void {
+    for (const group of this.layers.values()) {
+      if (group.visible !== true) continue;
+      const root = this.seismicBrowserRoot(group);
+      if (!root) continue;
+      const productIds = this.seismicVisibleProductIdsForRoot(root);
+      if (productIds.length === 0) continue;
+      const ensureProductsLoaded = root.userData.seismicEnsureProductsLoaded as
+        | ((
+            productIds: string[],
+            tier: "coarse" | "standard" | "source",
+            options?: { includeVolume?: boolean },
+          ) => Promise<void>)
+        | undefined;
+      if (!ensureProductsLoaded) continue;
+      // Pre-mark the frame-requested tier so the per-frame driver treats source
+      // as already issued (it forces source while capture is active anyway).
+      root.userData.seismicFrameRequestedLodTier = "source";
+      root.userData.seismicFrameRequestedProductKey = productIds
+        .slice()
+        .sort()
+        .join("\0");
+      const promise = ensureProductsLoaded(productIds, "source", {
+        includeVolume: true,
+      }).catch((error: unknown) => {
+        console.warn("[seismic] capture source-tier request failed", error);
+      });
+      this.captureFidelityLoadPromises.push(promise);
+    }
+  }
+
+  private applyCaptureRaymarchSampleSteps(enabled: boolean): void {
+    const CAPTURE_MAX_SAMPLE_STEPS = 384;
+    const applyToMaterial = (
+      material: THREE.Material | null | undefined,
+      isRaymarch: boolean,
+    ): void => {
+      const shader = material as THREE.ShaderMaterial | null | undefined;
+      const uniforms = shader?.uniforms;
+      if (!uniforms || !uniforms.uSampleSteps) return;
+      if (
+        !isRaymarch &&
+        shader?.userData?.scalarVolumeRaymarchMaterial !== true
+      ) {
+        return;
+      }
+      if (enabled) {
+        if (typeof shader!.userData.captureOrigSampleSteps !== "number") {
+          shader!.userData.captureOrigSampleSteps = uniforms.uSampleSteps.value;
+        }
+        uniforms.uSampleSteps.value = CAPTURE_MAX_SAMPLE_STEPS;
+      } else if (typeof shader!.userData.captureOrigSampleSteps === "number") {
+        uniforms.uSampleSteps.value = shader!.userData.captureOrigSampleSteps;
+        delete shader!.userData.captureOrigSampleSteps;
+      }
+    };
+    for (const group of this.layers.values()) {
+      group.traverse((obj) => {
+        const mesh = obj as THREE.Mesh;
+        const material = (mesh as { material?: unknown }).material;
+        if (!material) return;
+        const isRaymarch =
+          mesh.userData?.seismicRaymarchVolume === true ||
+          mesh.userData?.scalarVolume === true;
+        if (Array.isArray(material)) {
+          for (const entry of material) applyToMaterial(entry, isRaymarch);
+        } else {
+          applyToMaterial(material as THREE.Material, isRaymarch);
+        }
+      });
+    }
   }
 
   /**

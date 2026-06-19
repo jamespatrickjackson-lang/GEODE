@@ -3324,3 +3324,168 @@ current-camera validity). The transition opacity executor
 (`tests/tools/transition-entity-opacity-executor.test.mjs`) and the page-agnostic
 source guard (`tests/tools/transition-page-agnostic-source.test.mjs`) gate the
 freeze-parity change.
+
+## DEC-176 - Capture outputs use scene-wide max fidelity (MSAA, optional supersample, source LOD)
+
+Status: decided 2026-06-18; audit set in
+`01_issue audits/04_Capture Output Texture Quality/`.
+
+**Considered:** keep the prior capture policy (exact output size, no
+downsampling, supersampling forbidden) with the fidelity lock upgrading only the
+topo ortho + terrain geometry; or extend the lock scene-wide and allow
+supersampling.
+
+**Chose:** the capture fidelity lock
+(`beginCaptureFidelityLock`/`waitForCaptureFidelityReady`/`endCaptureFidelityLock`,
+shared by every deterministic capture type — still, external/tiled still, Render
+Out, Render Path Video, Scroll Animation) now drives scene-wide output fidelity,
+restored on lock release so the live view and its VRAM are unchanged:
+- Topo ortho/detail textures get mipmaps + max anisotropy under the lock even when
+  non-power-of-two (the WebGL1-era POT gate is obsolete in the WebGL2-only build).
+- The EffectComposer render targets become WebGL2 MSAA under the lock, so
+  composed geometry edges are multisampled instead of relying on SMAA alone. The
+  sample count is budgeted by the actual render-pixel count (8 up to ~1440p, 4 up
+  to 4K, 0 above ~4K) because MSAA memory scales with samples x pixels x two
+  HalfFloat ping-pong targets; an unbudgeted 8-sample buffer at 7680x4320 exceeds
+  GPU memory and renders a black frame.
+- Optional supersampling is allowed: render at `output x supersampleScale` then
+  high-quality downscale to the exact output size. The output is never upscaled.
+  The effective scale is clamped so the internal render never exceeds the
+  memory-safe 7680x4320 budget (4K -> 2x; 8K -> 1x; 1080p -> up to 4x). At those
+  large render sizes the supersample/resolution already suppresses aliasing and
+  MSAA is off. A Capture Director selector exposes Off (1x) / 2x.
+- Seismic holds the `source` LOD tier (incl. volume) during capture instead of
+  the transient coarse/standard downgrade; raymarch volumes (MT + seismic) use
+  max sample steps.
+- Draped vector overlays (geology, claim, trees) enable mipmaps + anisotropy
+  under the lock.
+- Data-tier (regen-gated, no runtime effect until assets are rebuilt): the MT
+  volume gains an optional Float32 capture-tier asset (`files.volumeHigh`) that
+  replaces the uint8 volume only under the lock to remove 8-bit banding; the NAIP
+  ortho prep resamples with Lanczos instead of bilinear.
+
+**Why:** capture outputs read softer/more aliased than the live view. The live
+view is implicitly supersampled by `devicePixelRatio` <=2 while capture rendered
+at pixelRatio 1 with SMAA-only edge AA, and the fidelity lock previously upgraded
+only the topo ortho, so seismic/MT/draped layers rendered at browser budgets.
+
+**Trade-off accepted:** MSAA and supersampling raise capture-time GPU memory and
+render cost (restored after capture), so MSAA is budgeted off and supersample is
+clamped at large render sizes (the internal render is capped to 7680x4320, the
+proven single-surface budget) rather than rendering larger and failing to a black
+frame. The per-tile screen-space post artifact on the external/tiled still route (audit
+T1: vignette grid + seams) is out of scope and remains a known limitation; MSAA
+and supersample reduce how often tiling triggers but do not fix it. Seismic
+amplitude and MT volume 8-bit/percentile-clip are data-tier ceilings only
+partially addressed (MT via the optional Float32 asset).
+
+**Supersedes:** the strict "no-downsampling = fidelity, supersampling forbidden"
+stance and the topo-only scope of the capture fidelity lock.
+
+**Guard:** all render-time upgrades are capture-lock-scoped and restored on exit
+(live profile unchanged); no page-id/title/index/order coupling. Capture UI is
+not in the editor control manifest. Source contract:
+`tests/tools/capture-director-source.test.mjs`.
+
+## DEC-177 - Capture grade modes (Clean Master default) + per-tile seam removal + session hold
+
+Extends DEC-176. Status: decided 2026-06-18; audit/receipt in
+`01_issue audits/04_Capture Output Texture Quality/`.
+
+**Considered:** keep baking the authored on-screen look into capture (WYSIWYG,
+which on the tiled/headless route applies screen-space post per tile and produces
+a vignette grid + seams); or make per-tile post tile-aware via a full-frame UV
+remap; or strip the post-recoverable look FX from capture entirely.
+
+**Chose:** capture has two selectable grade modes, default **Clean Master**:
+- **Clean Master** strips the post-recoverable lens/film FX (vignette, film grain,
+  chromatic aberration, lens distortion, frame, guides, halation, anamorphic
+  streak, gate-weave, diffusion, sharpen — all `lensGrade` uniforms) and disables
+  the detail-destroying / neighborhood FX (bloom, depth-of-field, afterimage, and
+  SMAA on the tiled route). It keeps the non-recoverable fidelity (resolution,
+  MSAA/supersample, mipmaps/anisotropy, scene+data fidelity), SSAO, tone mapping,
+  and the color grade (contrast/saturation/temperature/lift/gamma/gain/split-tone/
+  filter). The look is re-applied in post.
+- **Baked Look** keeps the current WYSIWYG bake. Best for single-surface stills;
+  headless/tiled video may show faint per-tile seams (documented).
+- The clean strip is re-asserted each captured frame so per-frame applyEnvironment
+  cannot re-enable FX during multi-page video/scroll capture; all values are
+  snapshotted and restored on lock exit (live profile unchanged).
+- A capture-session hold (`beginCaptureSession`/`endCaptureSession` on the
+  renderer bridge, ref-counted via the existing full-resolution-asset depth) lets
+  the headless tiled renderer apply the heavy capture fidelity (seismic source
+  tier, MT high-precision volume swap, draped re-bake, sample steps) ONCE per
+  render instead of per tile.
+
+**Why:** a capture should maximize what cannot be recovered later and strip what
+can. Vignette/grain and the other lens/film FX are trivially re-added in post and
+are exactly the per-tile seam offenders, so stripping them both yields a cleaner
+master and removes the tiled seam (audit T1) at its source — no tile-aware shader
+work needed. The per-tile fidelity lock would otherwise re-load/re-build the heavy
+seismic/MT assets for every tile of every frame.
+
+**Trade-off accepted:** Clean Master is not WYSIWYG (the on-screen vignette/bloom
+look is absent from the master until re-graded). Baked-Look tiled output keeps the
+seam. Per-tile MSAA/grade still toggle (cheap); only the heavy asset fidelity is
+session-held. 16-bit/EXR/log capture remains a future option (`canvas.toBlob` is
+8-bit).
+
+**Guard:** grade strip + session hold are capture-scoped and fully restored on
+exit; default `captureGradeMode` is `"clean"`; validation tolerates older saved
+recipes missing the field (treated as clean). Source contract:
+`tests/tools/capture-director-source.test.mjs`; runtime:
+`tests/tools/capture-director-runtime.test.mjs`.
+
+## DEC-178 - Unified effective capture supersample across provider, job, endpoint, and CLI
+
+Extends DEC-176. Status: decided 2026-06-19; addresses external audit
+`01_issue audits/05_Capture Director Full Audit/...CODEX.md` findings F-CD-001/002/003.
+
+**Considered:** leave supersample handling split (UI display clamps, provider
+preflight validates raw, external-job/endpoint/CLI reject or default
+independently) — which made 8K+2x throw a false preflight error, 4K+2x fall back
+to JSON, and 8K jobs silently plan a 15360x8640 render; or unify on one effective
+value derived from output size.
+
+**Chose:** a single budget-math entry point
+`resolveCaptureEffectiveSupersample({ requested, width, height })` in
+`src/capture/captureResolution.ts` (with a per-dimension clamp:
+`width*scale <= 7680` AND `height*scale <= 4320`, fixing the prior long/short-edge
+clamp that mis-handled non-16:9). Layered policy:
+- The UI/requested recipe supersample is CLAMPED to budget. Provider recipe
+  builders write the effective value, so preflights validate what will render.
+- Headless video jobs carry `recipe.supersampleScale = 1` plus an optional
+  `CaptureVideoRenderJobV1.superscale` (v1 extension; absent => 1) set to the
+  effective value. `createExternalVideoRenderJob` derives it; the generated
+  `externalVideoRenderCommand` includes `--superscale`.
+- An EXPLICIT over-budget headless superscale (job field or `--superscale`) is
+  REJECTED with a clear error by `validateExternalVideoRenderJob`, the dev
+  endpoint `validateLocalCaptureVideoJob`, and the CLI (a manual `8K --superscale 2`
+  fails, never silently 1x).
+- External STILL fallback jobs normalize the embedded recipe to
+  `supersampleScale: 1` (the tiled still renders exact size), so a fallback
+  published from an effective-2 recipe is always valid.
+- The CLI `render-capture-video-job.mjs` default superscale is `1`, and it honors
+  `job.superscale` when no flag is passed; both dev endpoints pass an explicit
+  `--superscale`.
+
+**Why:** un-pinning the supersample selector (DEC-176) exposed validation gates
+that had never fired while it was pinned to 1, splitting behavior across layers.
+
+**Trade-off accepted:** the durable `CaptureVideoRenderJobV1` contract gains an
+optional `superscale`. Manual CLI runs default to exact size (opt into 2x with the
+flag). External still fallback does not supersample (renders exact).
+
+The endpoint validator `validateLocalCaptureVideoJob` is extracted to the
+dependency-free `plugins/capture-video-job-validation.ts` so it is executably
+tested (not only source-guarded).
+
+**Guard:** unit + source guards in `tests/tools/capture-director-runtime.test.mjs`
+and `...-source.test.mjs` (resolver budget incl. non-16:9; 4K/8K job superscale;
+over-budget rejection at the TS validator AND an executable endpoint-validator
+test; still fallback normalization; no `DEFAULT_SUPERSCALE = 2`; both spawns + the
+command include `--superscale`; provider builders never write raw supersample).
+Verified headless: still self-test 7680x4320; a 4K job with `superscale: 2` and no
+flag renders a 3840x2160 MP4 (ffmpeg-probed) from a 7680x4320 supersampled pass; an
+8K + `superscale: 2` job is rejected; an out-of-range `--superscale 99` is rejected
+with a range error (not clamped).

@@ -98,9 +98,14 @@ export async function installCaptureDirectorMocks(page: Page): Promise<void> {
       }
 
       stop() {
-        if (this.state === "inactive") return;
+        // Real MediaRecorder emits a final dataavailable only on the active->
+        // inactive transition, but a repeat stop() must still resolve any
+        // pending stop awaiter. Always emit "stop" (idempotent: the app's
+        // recorder attaches it `once` and guards completion), and only emit the
+        // final dataavailable when transitioning out of the recording state.
+        const wasActive = this.state !== "inactive";
         this.state = "inactive";
-        this.dispatchData();
+        if (wasActive) this.dispatchData();
         window.setTimeout(() => {
           this.dispatchEvent(new Event("stop"));
         }, 0);
@@ -364,20 +369,57 @@ export async function startAndAutoStopRecording(page: Page): Promise<void> {
   });
 }
 
-export async function ensureStillCaptureOpen(page: Page): Promise<void> {
-  const screenCaptureButton = page.getByTestId("capture-screen-capture");
-  if ((await screenCaptureButton.count()) === 0) {
-    await dispatchCaptureDirectorButton(
-      page,
-      "capture-still-header",
-      /Still Capture/,
-    );
+// The toolbar sections (realtime/render/still/camera-path) are independent
+// collapsibles, all collapsed on open. Expand one via its header (idempotent,
+// driven by aria-expanded) before reaching its controls. Multiple may be open.
+export async function expandCaptureSection(
+  page: Page,
+  headerTestId: string,
+): Promise<void> {
+  const header = page.getByTestId(headerTestId).first();
+  await expect(header).toBeVisible();
+  if ((await header.getAttribute("aria-expanded")) !== "true") {
+    await header.dispatchEvent("click");
   }
-  await expect(screenCaptureButton).toBeVisible();
+  await expect(header).toHaveAttribute("aria-expanded", "true");
+}
+
+// Expand the Still Capture section. The actual controls (resolution, screen
+// capture) live inside the Still Record popout (capture-still-record), so this
+// only guarantees the section is expanded and the record button is present.
+export async function ensureStillCaptureOpen(page: Page): Promise<void> {
+  await expandCaptureSection(page, "capture-still-header");
+  await expect(page.getByTestId("capture-still-record")).toBeVisible();
+}
+
+// Realtime/Video/Still controls each live inside a Record popout that must be
+// opened (after the section is expanded) before the selects are present.
+export async function openRealtimeRecordPopout(page: Page): Promise<void> {
+  await expandCaptureSection(page, "capture-realtime-header");
+  if ((await page.getByTestId("capture-mode-select").count()) === 0) {
+    await dispatchCaptureDirectorButton(page, "capture-realtime-record", /Record/);
+  }
+  await expect(page.getByTestId("capture-mode-select")).toBeVisible();
+}
+
+export async function openVideoRecordPopout(page: Page): Promise<void> {
+  await expandCaptureSection(page, "capture-render-header");
+  if ((await page.getByTestId("capture-render-resolution-select").count()) === 0) {
+    await dispatchCaptureDirectorButton(page, "capture-render-record", /Record/);
+  }
+  await expect(page.getByTestId("capture-render-resolution-select")).toBeVisible();
+}
+
+export async function openStillRecordPopout(page: Page): Promise<void> {
+  await ensureStillCaptureOpen(page);
+  if ((await page.getByTestId("capture-still-resolution-select").count()) === 0) {
+    await dispatchCaptureDirectorButton(page, "capture-still-record", /Record/);
+  }
+  await expect(page.getByTestId("capture-still-resolution-select")).toBeVisible();
 }
 
 export async function openScreenCaptureOptions(page: Page): Promise<void> {
-  await ensureStillCaptureOpen(page);
+  await openStillRecordPopout(page);
   if ((await page.getByTestId("capture-screen-capture-options").count()) === 0) {
     await dispatchCaptureDirectorButton(
       page,
@@ -398,6 +440,56 @@ export async function ensureCameraPathOpen(page: Page): Promise<void> {
     );
   }
   await expect(playPathButton).toBeVisible();
+}
+
+// Add Current Camera now opens a Keyframe/Transition kind popover; pick the kind
+// to actually add the node (a bare add click only opens the popover).
+export async function addCameraView(
+  page: Page,
+  kind: "keyframe" | "transition" = "keyframe",
+): Promise<void> {
+  await dispatchCaptureDirectorButton(
+    page,
+    "capture-keyframe-add",
+    "Add Current Camera",
+  );
+  await dispatchCaptureDirectorButton(
+    page,
+    `capture-camera-add-kind-${kind}`,
+    new RegExp(kind, "i"),
+  );
+}
+
+// The horizontal scrub slider was removed for a click-to-place playhead. Click the
+// Camera Path lane content at the given 0..1 x-fraction to place the playhead.
+// (Deliberately not the frame ruler, which lives in the Pages lane and would
+// select the Pages track as a side effect.)
+export async function scrubTimelineToFraction(
+  page: Page,
+  fraction: number,
+): Promise<void> {
+  const lane = page.getByTestId("capture-timeline-camera-path-content").first();
+  await expect(lane).toBeVisible();
+  const box = await lane.boundingBox();
+  if (!box) {
+    throw new Error("capture-timeline-camera-path-content has no bounding box");
+  }
+  const clamped = Math.max(0, Math.min(1, fraction));
+  // Offset slightly inside the lane to avoid the leading "Camera Path" label.
+  const x = box.x + Math.max(48, box.width * clamped);
+  await page.mouse.click(Math.min(x, box.x + box.width - 2), box.y + box.height / 2);
+}
+
+// The timeline diagnostic lanes (continuity / gd / aim / focus markers) render
+// only when captureTimeline.diagnosticsVisible is set; enable it via the wired
+// camera-path options toggle so those lanes are reachable.
+export async function enableTimelineDiagnostics(page: Page): Promise<void> {
+  const toggle = page.getByTestId("capture-path-show-diagnostics");
+  await expect(toggle).toBeVisible();
+  if (!(await toggle.isChecked())) {
+    await toggle.setChecked(true);
+  }
+  await expect(toggle).toBeChecked();
 }
 
 export async function resetCaptureDirectorEvents(

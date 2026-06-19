@@ -115,6 +115,7 @@ export async function exportDeterministicStillTile({
       tileX: tile.x,
       tileY: tile.y,
       tileId: tile.id,
+      gradeMode: recipe.captureGradeMode,
       mode: "max-detail-render",
     });
     await sceneHandle.waitForCaptureFidelityReady?.();

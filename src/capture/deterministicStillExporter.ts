@@ -6,7 +6,10 @@ import {
   validateCaptureRecipe,
   type CaptureRecipeV1,
 } from "./captureRecipe";
-import { validateRenderResolutionRequest } from "./captureResolution";
+import {
+  clampCaptureSupersampleScale,
+  validateRenderResolutionRequest,
+} from "./captureResolution";
 import { renderCaptureOverlay } from "./captureOverlayRenderer";
 import { captureVisibilityProfileForMode } from "./captureProfiles";
 import type { CaptureOverlayFrameContext } from "./captureTypes";
@@ -111,10 +114,16 @@ export async function exportDeterministicStill({
 
   const width = recipe.resolution.width;
   const height = recipe.resolution.height;
-  if (recipe.supersampleScale !== 1) {
-    throw new Error("Screen Capture supersampling exceeds the max-detail no-downsampling policy; render at exact output size.");
-  }
-  const supersampleScale = 1;
+  // Optional supersampling: render at width*scale x height*scale, then
+  // high-quality downscale to the exact output size in the final drawImage.
+  // The output is never upscaled; scale 1 is the exact-size path. The scale is
+  // clamped so the internal render stays within the safe budget (e.g. 8K is
+  // forced to 1x), avoiding the black-frame GPU-memory blowup.
+  const supersampleScale = clampCaptureSupersampleScale(
+    typeof recipe.supersampleScale === "number" ? recipe.supersampleScale : 1,
+    width,
+    height,
+  );
   const capabilityValidation = validateRenderResolutionRequest({
     resolution: recipe.resolution,
     supersampleScale,
@@ -144,6 +153,10 @@ export async function exportDeterministicStill({
   if (!outputContext) {
     throw new Error("Screen Capture output canvas could not be created.");
   }
+  // High-quality downscale for the supersample path (renderWidth/Height may
+  // exceed the output size). No-op when rendering at exact size (scale 1).
+  outputContext.imageSmoothingEnabled = true;
+  outputContext.imageSmoothingQuality = "high";
 
   const originalPose = capturePose(sceneHandle.camera, sceneHandle.controls);
   let snapshot: ReturnType<typeof applyRecipeLayerState> | null = null;
@@ -164,6 +177,7 @@ export async function exportDeterministicStill({
             reason: "still-capture",
             width: renderWidth,
             height: renderHeight,
+            gradeMode: recipe.captureGradeMode,
             mode: "max-detail-render",
           })
         : null;

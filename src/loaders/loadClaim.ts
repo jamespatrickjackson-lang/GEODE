@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { PROJECT_BOUNDS, utmToScene } from "../constants";
 import { setOverlayMask } from "../scene/heightSampler";
+import { registerDrapedCaptureFidelity } from "./drapedCaptureFidelity";
 import { debugLog } from "../utils/debugLog";
 
 // Vizsla Copper Corp consolidated mineral tenure boundary. Source data
@@ -130,5 +131,6 @@ export async function loadClaim(url: string): Promise<THREE.Group> {
   debugLog(
     `[loadClaim] ${res.features.length} feature(s) -> ${polyCount} polygons rasterized into ${MASK_RES}^2 mask`,
   );
+  registerDrapedCaptureFidelity(group, tex);
   return group;
 }

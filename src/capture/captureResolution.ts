@@ -135,6 +135,86 @@ export interface CaptureRenderResolutionValidationResult {
   renderHeight: number;
 }
 
+// Memory-safe internal render budget. 7680x4320 is the proven single-surface
+// capture render size; supersampling renders up to this and downscales.
+export const CAPTURE_MAX_RENDER_WIDTH = 7680;
+export const CAPTURE_MAX_RENDER_HEIGHT = 4320;
+
+/**
+ * Clamp the requested supersample factor so the internal render
+ * (outputWidth*scale x outputHeight*scale) never exceeds the safe render budget.
+ * 4K -> 2x (renders 7680x4320), 8K -> 1x (already at budget), 1080p -> up to 4x.
+ * Returns an integer >= 1. Rendering beyond this budget produces a black frame
+ * (GPU memory), so the clamp is silent and safe rather than an error.
+ *
+ * The budget is per-dimension (width<=7680 AND height<=4320), NOT long/short
+ * edge: a long/short clamp passes an over-budget portrait/ultrawide (e.g.
+ * 2160x3840 at 2x => 4320x7680, height 7680 > 4320).
+ */
+export function clampCaptureSupersampleScale(
+  requested: number,
+  outputWidth: number,
+  outputHeight: number,
+): number {
+  const safeRequested =
+    Number.isFinite(requested) && requested >= 1
+      ? Math.min(4, Math.floor(requested))
+      : 1;
+  if (
+    !Number.isFinite(outputWidth) ||
+    !Number.isFinite(outputHeight) ||
+    outputWidth <= 0 ||
+    outputHeight <= 0
+  ) {
+    return 1;
+  }
+  const maxScale = Math.max(
+    1,
+    Math.min(
+      Math.floor(CAPTURE_MAX_RENDER_WIDTH / outputWidth),
+      Math.floor(CAPTURE_MAX_RENDER_HEIGHT / outputHeight),
+    ),
+  );
+  return Math.max(1, Math.min(safeRequested, maxScale));
+}
+
+export interface CaptureEffectiveSupersampleInput {
+  requested: number;
+  width: number;
+  height: number;
+}
+
+export interface CaptureEffectiveSupersample {
+  requested: number;
+  effective: number;
+  renderWidth: number;
+  renderHeight: number;
+}
+
+/**
+ * Single budget-math entry point used by the provider recipe builders, the
+ * external job builder, job validation, and tests. `effective` is the requested
+ * scale clamped to the per-dimension render budget, and `renderWidth/renderHeight`
+ * are guaranteed `<= CAPTURE_MAX_RENDER_WIDTH/HEIGHT`.
+ */
+export function resolveCaptureEffectiveSupersample({
+  requested,
+  width,
+  height,
+}: CaptureEffectiveSupersampleInput): CaptureEffectiveSupersample {
+  const safeRequested =
+    Number.isFinite(requested) && requested >= 1
+      ? Math.min(4, Math.floor(requested))
+      : 1;
+  const effective = clampCaptureSupersampleScale(safeRequested, width, height);
+  return {
+    requested: safeRequested,
+    effective,
+    renderWidth: Math.round(width * effective),
+    renderHeight: Math.round(height * effective),
+  };
+}
+
 export function validateRenderResolutionRequest({
   resolution,
   supersampleScale,
@@ -152,9 +232,16 @@ export function validateRenderResolutionRequest({
   if (!Number.isFinite(supersampleScale) || supersampleScale < 1 || supersampleScale > 4) {
     errors.push("supersampleScale must be between 1 and 4.");
   }
-  if (renderWidth > 7680 || renderHeight > 4320) {
+  // The OUTPUT image is capped to <=7680x4320 by validateCaptureResolution above.
+  // The internal RENDER size (output x supersampleScale) is capped to the same
+  // 7680x4320 budget: this is the proven-safe single-surface render size
+  // (HalfFloat composer + post passes). Rendering larger (e.g. 8K x 2 = 15360,
+  // or 8K + MSAA) exceeds GPU memory and produces a black frame. Callers clamp
+  // the effective supersample with clampCaptureSupersampleScale so this is a
+  // backstop, not the normal path.
+  if (renderWidth > CAPTURE_MAX_RENDER_WIDTH || renderHeight > CAPTURE_MAX_RENDER_HEIGHT) {
     errors.push(
-      `${resolution.label} at ${supersampleScale}x supersampling exceeds the 7680x4320 render-output cap.`,
+      `${resolution.label} at ${supersampleScale}x supersampling exceeds the ${CAPTURE_MAX_RENDER_WIDTH}x${CAPTURE_MAX_RENDER_HEIGHT} capture render budget.`,
     );
   }
 

@@ -362,9 +362,11 @@ of leaving the UI in an indefinite encoding state.
 4K final video is not browser-first. When Render Out or Render Path Video is
 configured at 4K or higher in the local dev app, Capture Director posts a
 `CaptureVideoRenderJobV1` to the dev-only local renderer endpoint. The Vite
-dev server spawns `tools/render-capture-video-job.mjs`, writes the MP4/WebM
-under `.tmp/capture-video-outputs/`, and reports the output path, diagnostics
-path, elapsed time, and download URL back to the Capture Director job runtime.
+dev server spawns `tools/render-capture-video-job.mjs` with an explicit
+`--superscale` derived from the output budget, writes the MP4/WebM under
+`media_output/capture-video-outputs/` (DEC-174), and reports the output path,
+diagnostics path, elapsed time, and download URL back to the Capture Director job
+runtime.
 
 The JSON job is now fallback/export evidence, not the normal result of pressing
 Render. It is produced only when the local renderer endpoint is unavailable or
@@ -429,6 +431,48 @@ The real app route launches headless Chromium, opens the app URL stored in the
 job or supplied by `--app-url`, waits for `window.__geoseeCaptureStillRenderer`,
 renders projection-offset tiles, stitches them with `sharp`, encodes the final
 image, and writes `<output>.capture-diagnostics.json`.
+
+## Capture Output Fidelity (DEC-176)
+
+Every deterministic capture type (Still, external/tiled Still, Render Out, Render
+Path Video, Scroll Animation) renders under the shared capture fidelity lock,
+which drives scene-wide max fidelity for outputs and restores the live profile on
+exit (the runtime view and its VRAM are unchanged):
+
+- Topo ortho/detail textures: mipmaps + max anisotropy (sharp, non-aliased drape
+  at oblique angles), even for non-power-of-two sources.
+- Anti-aliasing: the EffectComposer render targets use WebGL2 MSAA under the lock
+  (geometry edges), in addition to SMAA. The sample count is budgeted by render
+  size (8 up to ~1440p, 4 up to 4K, 0 above) so MSAA never exceeds GPU memory.
+  `Supersample` (Off/2x) in the Render Out and Still panels renders at
+  `output x scale` then high-quality downscales to the exact output size; the
+  output is never upscaled. The scale is clamped so the internal render stays
+  within the memory-safe 7680x4320 budget (4K -> 2x; 8K -> 1x), which avoids the
+  black-frame GPU-memory blowup.
+- Seismic holds the `source` LOD tier (incl. volume); MT + seismic raymarch
+  volumes use max sample steps. Draped vector overlays (geology, claim, trees)
+  get mipmaps + anisotropy.
+- Data-tier (only after asset regeneration): the MT volume can ship an optional
+  Float32 capture-tier volume (`files.volumeHigh`, from
+  `prep/build_utah_forge_mt_volume_products.mjs`) that removes 8-bit banding under
+  the lock; the NAIP ortho prep resamples with Lanczos
+  (`tools/generate-naip-regional-overview-assets.py`,
+  `tools/generate-naip-beauty-assets.py`).
+
+Capture grade mode (DEC-177): the **Grade** selector in Render Out + Still chooses
+**Clean Master** (default) or **Baked Look**. Clean Master strips post-recoverable
+lens/film FX (vignette, grain, chromatic aberration, distortion, frame, guides,
+halation, streak, gate-weave, diffusion, sharpen) and disables bloom, depth-of-
+field, afterimage, and tiled SMAA, keeping resolution/AA/mipmaps, SSAO, tone map,
+and the color grade. The look is re-applied in post. Baked Look keeps the current
+WYSIWYG bake.
+
+The earlier per-tile screen-space post artifact (vignette grid + seams; audit T1)
+is removed in Clean Master, because there are no per-tile screen-space FX left to
+seam. Baked Look on the headless/tiled route may still show faint seams — use
+Clean Master (or a single-surface still) for seam-free output. A capture-session
+hold applies the heavy capture fidelity (seismic source tier, MT high-precision
+volume, draped re-bake) once per headless render instead of per tile.
 
 ## Verification Language
 

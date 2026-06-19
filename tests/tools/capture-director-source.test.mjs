@@ -1491,10 +1491,20 @@ test("Capture Director workflow UI is split into task panels", () => {
   ]) {
     assert.ok(source.includes(expected), `toolbar should include ${expected}`);
   }
-  assert.equal(
-    source.includes("Supersample"),
-    false,
-    "deterministic Render Out UI must not expose downsampling/supersampling controls",
+  // DEC: capture supersampling is now allowed (render Nx -> high-quality
+  // downscale to the exact output size; output is never upscaled). The Render Out
+  // and Still panels expose an optional supersample selector.
+  assert.ok(
+    source.includes('data-testid="capture-render-supersample-select"') &&
+      source.includes('data-testid="capture-still-supersample-select"'),
+    "deterministic Render Out + Still UI expose the optional supersample control",
+  );
+  // DEC-176: selectable capture grade mode (Clean Master strips post-recoverable
+  // lens/film FX for a seam-free master; Baked Look keeps the WYSIWYG look).
+  assert.ok(
+    source.includes('data-testid="capture-render-grade-mode-select"') &&
+      source.includes('data-testid="capture-still-grade-mode-select"'),
+    "deterministic Render Out + Still UI expose the capture grade-mode control",
   );
   assert.ok(
     source.includes("CONTROL_BUTTON_SIZE_PX = 36"),
@@ -3525,9 +3535,9 @@ test("Scroll package renderer has isolated endpoints, frame retention, and frame
   }
 
   assert.equal(
-    authorWritePlugin.includes("fs.rm(run.outputPath"),
+    authorWritePlugin.includes("captureVideoRunArtifactPaths"),
     true,
-    "old video endpoint may still clean old video outputs",
+    "video cancel cleans run artifacts (output/diagnostics/master) via the shared helper",
   );
   const scrollCancelStart = authorWritePlugin.indexOf('url === "/api/capture/scroll-package/cancel"');
   const scrollCancelEnd = authorWritePlugin.indexOf('if (url === "/api/write-file")', scrollCancelStart);
@@ -3593,4 +3603,114 @@ test("Scroll package handoff writes clean-render README, posters, contact sheet,
   for (const expected of ["contactSheetUrl", "readmeUrl"]) {
     assert.ok(localRunner.includes(expected), `local scroll status should expose ${expected}`);
   }
+});
+
+test("effective supersample is unified across provider, job, endpoint, and CLI (F-CD-001/002/003)", () => {
+  // Provider recipe builders use the resolver, never raw supersampleScaleRef.
+  const provider = readSource("src", "capture", "CaptureDirectorProvider.tsx");
+  assert.ok(
+    provider.includes("resolveCaptureEffectiveSupersample"),
+    "provider builds recipes via resolveCaptureEffectiveSupersample",
+  );
+  assert.ok(
+    !/supersampleScale:\s*supersampleScaleRef\.current/.test(provider),
+    "provider must not write raw supersampleScaleRef.current as supersampleScale",
+  );
+
+  // External video job builder + command carry an explicit superscale.
+  const videoJob = readSource("src", "capture", "externalVideoRenderJob.ts");
+  assert.ok(videoJob.includes("superscale?: number"), "video job has optional superscale");
+  assert.ok(
+    videoJob.includes("resolveCaptureEffectiveSupersample"),
+    "video job derives superscale from the resolver",
+  );
+  assert.ok(/--superscale/.test(videoJob), "externalVideoRenderCommand includes --superscale");
+
+  // Endpoint validator budget-checks job.superscale (extracted module, also
+  // executably tested in capture-director-runtime).
+  const endpointValidator = readSource("plugins", "capture-video-job-validation.ts");
+  assert.ok(
+    /job\.superscale/.test(endpointValidator) &&
+      /7680/.test(endpointValidator) &&
+      /4320/.test(endpointValidator),
+    "validateLocalCaptureVideoJob budget-checks job.superscale",
+  );
+  // Both video and scroll endpoint spawns push --superscale.
+  const plugin = readSource("plugins", "vite-plugin-author-write.ts");
+  const superscaleSpawns = plugin.match(/"--superscale"/g) ?? [];
+  assert.ok(
+    superscaleSpawns.length >= 2,
+    "both video and scroll endpoint spawns push --superscale",
+  );
+
+  // CLI default is 1 (never 2) and the zero-byte error names the real frame.
+  const cli = readSource("tools", "render-capture-video-job.mjs");
+  assert.ok(
+    /DEFAULT_SUPERSCALE = 1\b/.test(cli) && !/DEFAULT_SUPERSCALE = 2\b/.test(cli),
+    "CLI DEFAULT_SUPERSCALE is 1",
+  );
+  assert.ok(cli.includes("maxSuperscaleForOutput"), "CLI clamps/rejects by output budget");
+  assert.ok(
+    cli.includes("`frame ${actualFrameIndex} produced zero bytes`"),
+    "zero-byte frame error names actualFrameIndex (F-CD-006)",
+  );
+});
+
+test("video cancel cleans all artifacts + clears URLs, and FFmpeg validator checks served ESM (F-CD-005/007)", () => {
+  const plugin = readSource("plugins", "vite-plugin-author-write.ts");
+  // Cancel removes every artifact (incl. master) and clears stale URLs.
+  assert.ok(
+    plugin.includes("captureVideoRunArtifactPaths"),
+    "cancel-video uses the shared artifact-path cleanup helper",
+  );
+  assert.ok(
+    /run\.outputUrl = null/.test(plugin) && /run\.masterUrl = null/.test(plugin),
+    "cancel-video clears outputUrl and masterUrl",
+  );
+  // FFmpeg validator checks the served ESM build, not the unused UMD build.
+  const validator = readSource("tools", "validate-runtime-assets.mjs");
+  assert.ok(
+    /dist\/esm/.test(validator) &&
+      /ffmpeg-core\.js/.test(validator) &&
+      /ffmpeg-core\.wasm/.test(validator),
+    "runtime-asset validator checks served ESM ffmpeg core (.js + .wasm)",
+  );
+  assert.ok(
+    !/@ffmpeg\/core\/dist\/umd/.test(validator),
+    "runtime-asset validator no longer checks the unused UMD build",
+  );
+});
+
+test("capture render job extracts GPU + FFmpeg decision helpers (Patch C1/C2)", () => {
+  const runtime = readSource("tools", "render-capture-runtime.mjs");
+  assert.match(runtime, /export function evaluateRenderGpu/);
+  assert.match(runtime, /export function chooseFfmpegPath/);
+  assert.match(runtime, /SOFTWARE_RENDERER_PATTERN/);
+
+  const job = readSource("tools", "render-capture-video-job.mjs");
+  assert.match(
+    job,
+    /import\s*\{[\s\S]*chooseFfmpegPath[\s\S]*evaluateRenderGpu[\s\S]*\}\s*from\s*"\.\/render-capture-runtime\.mjs"/,
+  );
+  // GPU gate + ffmpeg path delegate to the extracted helpers.
+  assert.match(job, /evaluateRenderGpu\(gpuInfo,/);
+  assert.match(job, /chooseFfmpegPath\(\{/);
+  // The inline pattern + bespoke precedence are gone.
+  assert.doesNotMatch(job, /const SOFTWARE_RENDERER_PATTERN/);
+});
+
+test("capture video run status is shaped by the pure module with diagnosticsMissing (Patch C3)", () => {
+  const status = readSource("plugins", "capture-video-run-status.ts");
+  assert.match(status, /export function captureVideoRunPublicStatus/);
+  assert.match(status, /diagnosticsMissing: run\.diagnosticsEnriched !== true/);
+
+  const plugin = readSource("plugins", "vite-plugin-author-write.ts");
+  assert.match(
+    plugin,
+    /captureVideoRunPublicStatus as captureVideoRunPublicStatusShape/,
+  );
+  assert.match(plugin, /run\.diagnosticsEnriched = true/);
+
+  const runner = readSource("src", "capture", "localVideoRenderRunner.ts");
+  assert.match(runner, /diagnosticsMissing\?: boolean/);
 });

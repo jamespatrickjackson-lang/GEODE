@@ -15,6 +15,9 @@ import {
 } from "node:path";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import sharp from "sharp";
+import { validateLocalCaptureVideoJob } from "./capture-video-job-validation";
+import { captureVideoRunArtifactPaths } from "./capture-video-run-cleanup";
+import { captureVideoRunPublicStatus as captureVideoRunPublicStatusShape } from "./capture-video-run-status";
 import {
   createFinalScrollHandoffManifest,
   createPendingScrollHandoffManifest,
@@ -122,6 +125,7 @@ interface CaptureVideoRunRecord {
   masterPath?: string | null;
   masterUrl?: string | null;
   frameSequenceDir?: string | null;
+  diagnosticsEnriched?: boolean;
 }
 
 interface CaptureScrollPackageRenderBody {
@@ -389,79 +393,8 @@ function safeVideoOutputFilename(job: any, requested?: string): string {
   return `${stripped || "geosee-capture-video"}.${format}`;
 }
 
-function validateLocalCaptureVideoJob(job: any): string[] {
-  const errors: string[] = [];
-  if (!job || typeof job !== "object" || Array.isArray(job)) {
-    return ["job must be an object"];
-  }
-  if (job.schema !== "CaptureVideoRenderJobV1") {
-    errors.push("job.schema must be CaptureVideoRenderJobV1");
-  }
-  if (job.version !== 1) {
-    errors.push("job.version must be 1");
-  }
-  if (job.fidelity !== "max-detail-render") {
-    errors.push("job.fidelity must be max-detail-render");
-  }
-  if (!job.recipe || typeof job.recipe !== "object") {
-    errors.push("job.recipe is required");
-  } else {
-    if (job.recipe.mode === "full-ui" || job.recipe.mode === "off") {
-      errors.push("job.recipe.mode must be a scene marketing mode");
-    }
-    if (job.recipe.supersampleScale !== 1) {
-      errors.push("job.recipe.supersampleScale must be 1");
-    }
-  }
-  if (!job.video || typeof job.video !== "object") {
-    errors.push("job.video is required");
-  } else {
-    for (const field of ["width", "height", "fps", "totalFrames"] as const) {
-      if (!Number.isInteger(job.video[field]) || job.video[field] <= 0) {
-        errors.push(`job.video.${field} must be a positive integer`);
-      }
-    }
-    if (job.video.format !== "mp4" && job.video.format !== "webm") {
-      errors.push("job.video.format must be mp4 or webm");
-    }
-  }
-  return errors;
-}
-
-function captureVideoRunPublicStatus(
-  run: CaptureVideoRunRecord,
-): Omit<CaptureVideoRunRecord, "child" | "stdout" | "stderr" | "jobPath"> & {
-  elapsedSeconds: number;
-} {
-  const elapsedSeconds = Math.max(
-    0,
-    Math.floor(
-      ((run.completedAt ? Date.parse(run.completedAt) : Date.now()) -
-        Date.parse(run.startedAt)) /
-        1000,
-    ),
-  );
-  return {
-    runId: run.runId,
-    status: run.status,
-    phase: run.phase,
-    startedAt: run.startedAt,
-    completedAt: run.completedAt ?? null,
-    outputFilename: run.outputFilename,
-    outputPath: run.outputPath,
-    outputUrl: run.outputUrl,
-    diagnosticsPath: run.diagnosticsPath,
-    error: run.error ?? null,
-    exitCode: run.exitCode ?? null,
-    elapsedSeconds,
-    renderedFrames: run.renderedFrames ?? 0,
-    totalFrames: run.totalFrames ?? null,
-    renderer: run.renderer ?? null,
-    superscale: run.superscale ?? null,
-    masterUrl: run.masterUrl ?? null,
-    masterPath: run.masterPath ?? null,
-    frameSequenceDir: run.frameSequenceDir ?? null,
-  };
+function captureVideoRunPublicStatus(run: CaptureVideoRunRecord) {
+  return captureVideoRunPublicStatusShape(run);
 }
 
 function captureScrollPackageRunPublicStatus(
@@ -885,6 +818,8 @@ async function startCaptureVideoRun({
     outputPath,
     "--diagnostics",
     diagnosticsPath,
+    "--superscale",
+    String(job?.superscale ?? 1),
   ];
   if (typeof job?.app?.url === "string" && job.app.url.length > 0) {
     args.push("--app-url", job.app.url);
@@ -967,6 +902,7 @@ async function startCaptureVideoRun({
         }
         if (typeof diag?.gpu?.renderer === "string") run.renderer = diag.gpu.renderer;
         if (typeof diag?.supersample === "number") run.superscale = diag.supersample;
+        run.diagnosticsEnriched = true;
       } catch {
         // Diagnostics are best-effort enrichment; absence is not fatal.
       }
@@ -1196,6 +1132,8 @@ async function startCaptureScrollPackageRun({
     diagnosticsPath,
     "--frame-dir",
     frameDir,
+    "--superscale",
+    String((scrollRenderJob as { superscale?: number }).superscale ?? 1),
   ];
   if (mediaPath) {
     args.push("--out", mediaPath);
@@ -1695,10 +1633,16 @@ export function authorWritePlugin(): Plugin {
               run.phase = "cancelled";
               run.completedAt = new Date().toISOString();
               run.child.kill();
-              await Promise.allSettled([
-                fs.rm(run.outputPath, { force: true }),
-                fs.rm(run.diagnosticsPath, { force: true }),
-              ]);
+              await Promise.allSettled(
+                captureVideoRunArtifactPaths(run).map((path) =>
+                  fs.rm(path, { force: true }),
+                ),
+              );
+              // The removed files must not still be advertised by the cancelled
+              // status (F-CD-005); the completion handler nulls masterUrl the same
+              // way when a master is missing.
+              run.outputUrl = null;
+              run.masterUrl = null;
             }
             ok(res, captureVideoRunPublicStatus(run));
             return;

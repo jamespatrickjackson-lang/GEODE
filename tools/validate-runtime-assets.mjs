@@ -392,9 +392,14 @@ function validateCaptureDirectorFfmpegAssets() {
     packageLock.packages?.["node_modules/@ffmpeg/core"],
     "Capture Director should lock @ffmpeg/core for self-hosted FFmpeg assets",
   );
+  // Check the ESM core build Vite actually serves (vite.config.ts
+  // FFMPEG_CORE_ASSET_DIR = dist/esm). The UMD build is not served and importing
+  // it fails the browser worker. @ffmpeg/core 0.12.x ships only the .js + .wasm in
+  // dist/esm (no separate ffmpeg-core.worker.js); Vite's copy of the worker is
+  // existence-guarded, so it is not required here.
   for (const filename of ["ffmpeg-core.js", "ffmpeg-core.wasm"]) {
     assertFileExists(
-      `node_modules/@ffmpeg/core/dist/umd/${filename}`,
+      `node_modules/@ffmpeg/core/dist/esm/${filename}`,
       `Capture Director FFmpeg asset ${filename}`,
     );
   }

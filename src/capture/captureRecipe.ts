@@ -1,6 +1,7 @@
 import type { Pose } from "../pages/types";
 import type {
   CaptureFps,
+  CaptureGradeMode,
   CaptureMode,
   CaptureQualityPreset,
   CaptureRenderFidelityMode,
@@ -90,6 +91,7 @@ export interface CaptureRecipeV1 {
   environmentState: unknown;
   visualPreset: string | null;
   supersampleScale: number;
+  captureGradeMode: CaptureGradeMode;
   qualityPreset: CaptureQualityPreset;
   renderFidelity: CaptureRenderFidelityMode;
   createdAt: string;
@@ -117,6 +119,7 @@ export interface CaptureRecipeCreateInput {
   environmentState?: unknown;
   visualPreset?: string | null;
   supersampleScale?: number;
+  captureGradeMode?: CaptureGradeMode;
   qualityPreset?: CaptureQualityPreset;
   renderFidelity?: CaptureRenderFidelityMode;
   createdAt?: string;
@@ -322,6 +325,7 @@ export function createCaptureRecipeFromCurrentState(
     environmentState: input.environmentState ?? null,
     visualPreset: input.visualPreset ?? null,
     supersampleScale: input.supersampleScale ?? 1,
+    captureGradeMode: input.captureGradeMode ?? "clean",
     qualityPreset: input.qualityPreset ?? input.resolution.qualityPreset,
     renderFidelity: input.renderFidelity ?? "max-detail-render",
     createdAt: input.createdAt ?? new Date().toISOString(),
@@ -457,6 +461,15 @@ export function validateCaptureRecipe(
     recipe.supersampleScale > 4
   ) {
     errors.push("supersampleScale must be between 1 and 4.");
+  }
+  // Newly added field (DEC-176): tolerate older saved recipes that predate it
+  // (missing => treated as "clean" downstream). Reject only an explicit bad value.
+  if (
+    recipe.captureGradeMode !== undefined &&
+    recipe.captureGradeMode !== "clean" &&
+    recipe.captureGradeMode !== "baked"
+  ) {
+    errors.push('captureGradeMode must be "clean" or "baked".');
   }
   if (!recipe.createdAt || Number.isNaN(Date.parse(recipe.createdAt))) {
     errors.push("createdAt must be an ISO date.");

@@ -145,3 +145,59 @@ export async function saveCaptureStillBlobWithPicker({
     throw error;
   }
 }
+
+export type CaptureStillSaveTarget =
+  | { status: "handle"; handle: SaveFileHandle }
+  | { status: "unavailable" }
+  | { status: "cancelled" };
+
+// Acquire the save-file handle while the originating user gesture is still
+// active (i.e. BEFORE any slow await such as the still render). showSaveFilePicker
+// requires transient activation, so calling it after an awaited render throws a
+// SecurityError; here a non-abort failure (lost activation, not-allowed) degrades
+// to "unavailable" so the caller can fall back to a download instead of erroring.
+export async function acquireCaptureStillSaveHandle({
+  filename,
+  type,
+  picker = defaultSaveFilePicker(),
+}: {
+  filename: string;
+  type: CaptureStillImageType;
+  picker?: SaveFilePicker | null;
+}): Promise<CaptureStillSaveTarget> {
+  if (!picker) return { status: "unavailable" };
+  const mimeType = captureStillMimeType(type);
+  const extension = captureStillExtension(type);
+  try {
+    const handle = await picker({
+      suggestedName: filename,
+      types: [
+        {
+          description: `${type.toUpperCase()} image`,
+          accept: { [mimeType]: [`.${extension}`] },
+        },
+      ],
+    });
+    return { status: "handle", handle };
+  } catch (error) {
+    if (isAbortError(error)) return { status: "cancelled" };
+    return { status: "unavailable" };
+  }
+}
+
+// Write a blob to a previously acquired handle. A non-abort failure degrades to
+// "unavailable" so the caller falls back to a download rather than erroring.
+export async function writeCaptureStillHandle(
+  handle: SaveFileHandle,
+  blob: Blob,
+): Promise<SaveCaptureStillBlobResult> {
+  try {
+    const writable = await handle.createWritable();
+    await writable.write(blob);
+    await writable.close();
+    return { status: "saved" };
+  } catch (error) {
+    if (isAbortError(error)) return { status: "cancelled" };
+    return { status: "unavailable" };
+  }
+}
