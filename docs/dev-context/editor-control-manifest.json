@@ -1,9 +1,15 @@
 {
   "schemaVersion": 1,
   "status": "active-guard",
-  "lastReviewedAt": "2026-06-12",
-  "lastReviewNote": "SceneSectionPlanesContainer.tsx keeps representation-specific seismic section targets, SectionVisualsPanel exposes generic Section Visuals controls, and BoreholeLogsControls.tsx registers source-derived Utah FORGE borehole-log controls under FORGE Data > Bore Holes.",
+  "lastReviewedAt": "2026-06-18",
+  "lastReviewNote": "Dev Mode Inspector phases 2-6: EditorRoot.tsx gains an onDevCommit hook for the dev-mode Save/Discard bar (no sidebar control added). Dev-mode inspector controls (scoped panel, save/discard, reorder) are dev tooling and remain outside the sidebar manifest, consistent with the prior dev-mode control panel. devTextOverrides is dev-authored persisted state, not a sidebar control. Earlier note: SceneSectionPlanesContainer.tsx keeps representation-specific seismic section targets, SectionVisualsPanel exposes generic Section Visuals controls, and BoreholeLogsControls.tsx registers source-derived Utah FORGE borehole-log controls under FORGE Data > Bore Holes.",
   "description": "Canonical editor sidebar control manifest. Any user-facing editor sidebar control, command, section, or persisted variable must be represented here before editor-bar source changes are accepted.",
+  "devModeReorderGuard": {
+    "status": "active-guard",
+    "addedAt": "2026-06-17",
+    "note": "Dev mode (key 'd') can reorder collections by direct manipulation. Data-backed collections (pages, page blocks, layers, overlays, page sections) reorder their own model and are allowed. Reordering manifest-governed sidebar STRUCTURE (bars, peer groups, subsections, control rows) changes the canonical control order/inventory and would diverge from this manifest. Before applying or persisting any dev-mode reorder of manifest-governed structure, the agent MUST check this manifest as the order source and CONFIRM with the operator; if it is a problem, the reorder must also rewrite the manifest entry order plus matching source and pass `npm run check:editor-controls`. See Editor-Control-Manifest-Policy.md > Dev-Mode Reorder Guard.",
+    "reference": "docs/dev-context/Editor-Control-Manifest-Policy.md#dev-mode-reorder-guard"
+  },
   "approvalPolicy": {
     "removalStatuses": ["removed", "renamed", "hidden"],
     "requiredApprovalFields": ["status", "approvedBy", "approvedAt", "reason"],

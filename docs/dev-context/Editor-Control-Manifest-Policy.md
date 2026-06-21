@@ -67,6 +67,35 @@ Archive controls must preserve DEC-094 behavior: the Archive header toggles only
 on click, accepts page drops without toggling, archived rows render as full page
 rows, and relationship badges reveal/pulse their target without selecting it.
 
+## Dev-Mode Reorder Guard
+
+Status: active guardrail (added 2026-06-17).
+
+Dev mode (key `d`, `src/editor/DevModeInspector.tsx`) is planned to support
+direct-manipulation reorder of collections. The reorder targets split into two
+classes:
+
+- Data-backed collections — pages, page blocks, layers, overlays, page
+  sections. These reorder their own persisted data model and are allowed without
+  manifest involvement.
+- Manifest-governed sidebar STRUCTURE — top-level bars, peer groups, nested
+  subsections, and control rows. Their order and inventory are owned by
+  `editor-control-manifest.json`. A runtime reorder of these would diverge from
+  the canonical manifest order.
+
+Required agent behavior before any dev-mode reorder of manifest-governed
+structure:
+
+1. Check `editor-control-manifest.json` (the canonical order source) for the
+   impacted entries.
+2. Confirm with the operator that the structural reorder is intended.
+3. If accepted, the reorder must also rewrite the manifest entry order plus the
+   matching source order and pass `npm run check:editor-controls`. Do not persist
+   a runtime-only structural reorder that the manifest does not reflect.
+
+The mirrored short note lives at `editor-control-manifest.json` >
+`devModeReorderGuard`.
+
 ## Approval Metadata
 
 Any `removed`, `renamed`, or `hidden` entry must keep the old id in the

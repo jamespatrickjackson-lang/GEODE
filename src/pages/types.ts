@@ -1052,6 +1052,21 @@ export interface EditorChromeSettings {
   saveIconSizePx?: number;
   sliderTrackHeightPx?: number;
   sliderThumbSizePx?: number;
+  // Dev Mode Inspector (key "d") text/style overrides, keyed by a stable
+  // data-dev-text-source / data-dev-source tag. Tag-required persistence (R1);
+  // untagged edits are session-only and never written here.
+  devTextOverrides?: Record<string, DevTextOverride>;
+}
+
+export interface DevTextOverride {
+  text?: string;
+  fontSize?: number;
+  fontFamily?: string;
+  fontWeight?: string;
+  fontStyle?: string;
+  textTransform?: string;
+  color?: string;
+  opacity?: number;
 }
 
 export interface BoxOverlayStylePreset {
