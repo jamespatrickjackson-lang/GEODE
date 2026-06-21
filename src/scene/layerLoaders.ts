@@ -45,6 +45,7 @@ import { registerUtahForgeReferenceLoaders } from "../projectModules/utahForge/r
 import {
   UTAH_FORGE_BOREHOLE_LOGS_LAYER_ID,
   UTAH_FORGE_DEMO_BOREHOLES_LAYER_ID,
+  UTAH_FORGE_MT_THRESHOLD_SURFACES_LAYER_ID,
 } from "../projectModules/utahForge/layerIds";
 import { isTopoMapGraticuleLayer } from "../topoMap/settings";
 import { appAssetUrl } from "../projects/projectPathsRuntime";
@@ -538,6 +539,76 @@ const layerLoaders: LayerLoaderHandler[] = [
     },
   },
   {
+    // Lazy MT iso-resistivity surfaces: the slim preview carries only metadata;
+    // per-boundary geometry is fetched on demand by SceneManager when a surface
+    // becomes visible (see ensurePrecomputedMtSurfaceBoundaries).
+    id: "mt-threshold-surfaces-lazy",
+    matches: (spec) =>
+      spec.id === UTAH_FORGE_MT_THRESHOLD_SURFACES_LAYER_ID &&
+      !!layerFiles(spec).meshPreview,
+    load: (context) => {
+      const previewPath = context.files.meshPreview;
+      const previewUrl = layerDataPath(context, previewPath);
+      const marker = "threshold_surfaces/";
+      const volumeBase = previewPath.includes(marker)
+        ? previewPath.slice(0, previewPath.indexOf(marker))
+        : "";
+      fetch(previewUrl)
+        .then((response) => {
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          return response.json();
+        })
+        .then((payload) => {
+          const group = new THREE.Group();
+          group.name = payload?.label ?? "MT iso-resistivity surfaces";
+          group.userData.displayName = group.name;
+          group.userData.mtThresholdSurfaceLazy = true;
+          const processing = payload?.processing ?? {};
+          if (Array.isArray(processing.isosurfaceProducts)) {
+            group.userData.mtIsosurfaceProducts = processing.isosurfaceProducts;
+          }
+          const surfaces = Array.isArray(processing.thresholdSurfaces)
+            ? processing.thresholdSurfaces
+            : [];
+          group.userData.mtThresholdSurfaceDefinitions = surfaces.map((s: any) => ({
+            id: s?.id,
+            label: s?.label,
+            color: s?.color,
+            comparison: s?.comparison,
+            thresholdOhmM: s?.thresholdOhmM,
+            thresholdLog10: s?.thresholdLog10,
+            kind: s?.kind,
+          }));
+          const registry: Record<
+            string,
+            { assetUrl: string; isoProductId: string; id: string }
+          > = {};
+          for (const s of surfaces) {
+            if (
+              typeof s?.assetFile !== "string" ||
+              typeof s?.isoProductId !== "string" ||
+              typeof s?.id !== "string"
+            ) {
+              continue;
+            }
+            registry[`${s.isoProductId}:${s.id}`] = {
+              assetUrl: layerDataPath(context, volumeBase + s.assetFile),
+              isoProductId: s.isoProductId,
+              id: s.id,
+            };
+          }
+          group.userData.mtThresholdSurfaceRegistry = registry;
+          context.onLoaded(group);
+        })
+        .catch((error) =>
+          console.error(
+            `loadMtThresholdSurfacesLazy (${context.spec.id}) failed:`,
+            error,
+          ),
+        );
+    },
+  },
+  {
     id: "mesh-preview",
     matches: (spec) => spec.type === "mesh" && !!layerFiles(spec).meshPreview,
     load: (context) =>
@@ -973,6 +1044,12 @@ export function loadLayerInto(
         Object.assign(group.userData, obj.userData);
       }
       if (obj.userData?.scalarVolumeLayer === true) {
+        Object.assign(group.userData, obj.userData);
+      }
+      if (obj.userData?.mtThresholdSurfaceLazy === true) {
+        // Hoist the lazy registry/definitions onto the layer group so
+        // SceneManager.ensurePrecomputedMtSurfaceBoundaries (which reads
+        // this.layers.get(id)) can fetch visible boundaries on demand.
         Object.assign(group.userData, obj.userData);
       }
       if (obj.userData?.localAtmosphereVolumeLayer === true) {

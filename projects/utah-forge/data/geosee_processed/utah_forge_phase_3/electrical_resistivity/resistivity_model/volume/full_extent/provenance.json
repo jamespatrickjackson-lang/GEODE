@@ -11,20 +11,20 @@
   "transform": {
     "sceneCrs": "local meters, X east, Y north, Z up",
     "verticalExaggeration": 1,
-    "crop": "full-extent",
-    "resampling": "cell-center bin average into regular browser volume",
-    "scalarEncoding": "uint8 normalized over source log10 resistivity range; mask.u8 defines occupied voxels"
+    "crop": "uncropped-depth-bounded",
+    "resampling": "Gaussian-weighted blend of cell-center source values with bounded in-range extrapolation (continuity-first); not nearest-bin",
+    "scalarEncoding": "uint8 normalized over source log10 resistivity range; mask.u8 defines occupied voxels (empty over large unconstrained voids)"
   },
   "processing": {
     "script": "prep/build_utah_forge_mt_volume_products.mjs",
     "generatedDate": "2026-05-12",
     "dimensions": [
-      144,
-      118,
-      65
+      383,
+      313,
+      33
     ],
-    "sourceRowsInBounds": 1094579,
-    "occupiedVoxelCount": 57575
+    "sourceRowsInBounds": 851730,
+    "occupiedVoxelCount": 780503
   },
   "caveats": [
     "Source-derived visualization volume resampled from the inversion model.",

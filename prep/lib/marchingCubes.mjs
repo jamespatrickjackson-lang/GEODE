@@ -117,7 +117,13 @@ function edgeKey(a, b) {
   return a < b ? `${a}:${b}` : `${b}:${a}`;
 }
 
-function smoothMeshVertices({ vertices, indices, round }) {
+function smoothMeshVertices({
+  vertices,
+  indices,
+  round,
+  iterations = 8,
+  pinBoundary = false,
+}) {
   const vertexCount = vertices.length / 3;
   const adjacency = Array.from({ length: vertexCount }, () => new Set());
   const edgeUseCounts = new Map();
@@ -152,7 +158,6 @@ function smoothMeshVertices({ vertices, indices, round }) {
 
   const lambda = 0.15;
   const mu = -0.16;
-  const iterations = 2;
   let current = vertices.slice();
   const passFactors = Array.from({ length: iterations }, () => [
     lambda,
@@ -162,7 +167,8 @@ function smoothMeshVertices({ vertices, indices, round }) {
   for (const factor of passFactors) {
     const next = current.slice();
     for (let i = 0; i < vertexCount; i += 1) {
-      if (boundaryVertices.has(i) || adjacency[i].size === 0) continue;
+      if ((pinBoundary && boundaryVertices.has(i)) || adjacency[i].size === 0)
+        continue;
       let avgX = 0;
       let avgY = 0;
       let avgZ = 0;
@@ -191,8 +197,65 @@ function smoothMeshVertices({ vertices, indices, round }) {
       iterations,
       lambda,
       mu,
+      pinBoundary,
       boundaryVertexCount: boundaryVertices.size,
-      smoothedVertexCount: vertexCount - boundaryVertices.size,
+      smoothedVertexCount: pinBoundary
+        ? vertexCount - boundaryVertices.size
+        : vertexCount,
+    },
+  };
+}
+
+// One level of linear (1->4) triangle subdivision with shared edge midpoints,
+// decoupled from the voxel grid. Geometry-only: midpoints are averages of
+// in-surface vertices, so no resistivity value is fabricated. Per-surface color
+// and scalar are uniform, so they are simply re-emitted at the new vertex count.
+function subdivideMesh({ vertices, indices, color, scalarValue, round }) {
+  const outVertices = vertices.slice();
+  const midCache = new Map();
+  const midpoint = (a, b) => {
+    const key = a < b ? `${a}:${b}` : `${b}:${a}`;
+    const cached = midCache.get(key);
+    if (cached !== undefined) return cached;
+    const index = outVertices.length / 3;
+    outVertices.push(
+      round((vertices[a * 3] + vertices[b * 3]) / 2, 2),
+      round((vertices[a * 3 + 1] + vertices[b * 3 + 1]) / 2, 2),
+      round((vertices[a * 3 + 2] + vertices[b * 3 + 2]) / 2, 2),
+    );
+    midCache.set(key, index);
+    return index;
+  };
+  const outIndices = [];
+  for (let i = 0; i < indices.length; i += 3) {
+    const a = indices[i];
+    const b = indices[i + 1];
+    const c = indices[i + 2];
+    const ab = midpoint(a, b);
+    const bc = midpoint(b, c);
+    const ca = midpoint(c, a);
+    outIndices.push(a, ab, ca, b, bc, ab, c, ca, bc, ab, bc, ca);
+  }
+  const vertexCount = outVertices.length / 3;
+  const outColors = new Array(vertexCount * 3);
+  const outScalarValues = new Array(vertexCount);
+  const roundedScalar = round(scalarValue, 6);
+  for (let v = 0; v < vertexCount; v += 1) {
+    outColors[v * 3] = color[0];
+    outColors[v * 3 + 1] = color[1];
+    outColors[v * 3 + 2] = color[2];
+    outScalarValues[v] = roundedScalar;
+  }
+  return {
+    vertices: outVertices,
+    indices: outIndices,
+    colors: outColors,
+    scalarValues: outScalarValues,
+    stats: {
+      inputVertexCount: vertices.length / 3,
+      subdividedVertexCount: vertexCount,
+      inputTriangleCount: indices.length / 3,
+      subdividedTriangleCount: outIndices.length / 3,
     },
   };
 }
@@ -294,24 +357,34 @@ export function extractMaskAwareMarchingCubes({
   }
 
   const welded = weldMeshVertices({ vertices, colors, scalarValues, indices });
-  const smoothed = smoothMeshVertices({
+  const subdivided = subdivideMesh({
     vertices: welded.vertices,
     indices: welded.indices,
+    color,
+    scalarValue: thresholdLog10,
     round,
+  });
+  const smoothed = smoothMeshVertices({
+    vertices: subdivided.vertices,
+    indices: subdivided.indices,
+    round,
+    iterations: 8,
+    pinBoundary: false,
   });
 
   return {
     vertices: smoothed.vertices,
-    colors: welded.colors,
-    scalarValues: welded.scalarValues,
-    indices: welded.indices,
+    colors: subdivided.colors,
+    scalarValues: subdivided.scalarValues,
+    indices: subdivided.indices,
     stats: {
       visitedCubeCount,
       skippedMaskedCubeCount,
       activeCubeCount,
-      triangleCount: welded.indices.length / 3,
-      vertexCount: welded.vertices.length / 3,
+      triangleCount: subdivided.indices.length / 3,
+      vertexCount: subdivided.vertices.length / 3,
       welding: welded.stats,
+      subdivision: subdivided.stats,
       smoothing: smoothed.stats,
     },
   };

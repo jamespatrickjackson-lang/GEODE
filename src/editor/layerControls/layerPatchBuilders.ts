@@ -136,7 +136,7 @@ export function mtVolumePatchFromStyle(style: EditableStyle): Partial<EditableSt
     scalarVolumeProductId:
       typeof style.scalarVolumeProductId === "string"
         ? style.scalarVolumeProductId
-        : "mt-resistivity-forge-focused-volume",
+        : "mt-resistivity-full-extent-volume",
     scalarVolumeRenderMode: "raymarch",
     scalarVolumeOpacity: styleNumber(
       style,
@@ -177,7 +177,7 @@ export function mtThresholdSurfacePatchFromStyle(
     mtIsosurfaceProductId:
       typeof style.mtIsosurfaceProductId === "string"
         ? style.mtIsosurfaceProductId
-        : "mt-isosurface-forge-focused",
+        : "mt-isosurface-full-extent",
     mtSurfaceBoundaryMode: mtSurfaceBoundaryMode(style),
     mtSurfaceBoundaryOrder: Array.isArray(style.mtSurfaceBoundaryOrder)
       ? [...style.mtSurfaceBoundaryOrder]

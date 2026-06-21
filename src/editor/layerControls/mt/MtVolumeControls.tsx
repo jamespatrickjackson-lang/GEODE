@@ -56,12 +56,8 @@ function mtVolumeProductOptions(
   }
   return [
     {
-      id: "mt-resistivity-forge-focused-volume",
-      label: "3D MT resistivity FORGE-focused volume",
-    },
-    {
       id: "mt-resistivity-full-extent-volume",
-      label: "3D MT resistivity full-source volume",
+      label: "3D MT resistivity volume",
     },
   ];
 }
@@ -94,7 +90,7 @@ export function MtVolumeControls({
 }) {
   const options = mtVolumeProductOptions(layer);
   const fallbackProduct =
-    options[0]?.id ?? "mt-resistivity-forge-focused-volume";
+    options[0]?.id ?? "mt-resistivity-full-extent-volume";
   const selected = options.some(
     (option) => option.id === style.scalarVolumeProductId,
   )

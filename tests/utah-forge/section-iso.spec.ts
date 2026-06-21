@@ -498,7 +498,7 @@ test("Utah FORGE section ISO supports seismic sections and MT volume cuts", asyn
       sceneSectionHelperVisible: true,
     });
     manager?.applyStyle?.("utah-forge-mt-resistivity-volume", {
-      scalarVolumeProductId: "mt-resistivity-forge-focused-volume",
+      scalarVolumeProductId: "mt-resistivity-full-extent-volume",
       scalarVolumeRenderMode: "raymarch",
       scalarVolumeOpacity: 0.48,
       scalarVolumeDensity: 0.78,
@@ -601,7 +601,7 @@ test("Utah FORGE section ISO supports seismic sections and MT volume cuts", asyn
       "utah-forge-mt-resistivity-threshold-surfaces",
       {
         opacity: 0.86,
-        mtIsosurfaceProductId: "mt-isosurface-forge-focused",
+        mtIsosurfaceProductId: "mt-isosurface-full-extent",
         mtThresholdSurfaceVisibility: {
           "conductive-le-10-ohm-m": false,
           "conductive-le-30-ohm-m": true,
@@ -711,7 +711,7 @@ test("Utah FORGE section ISO supports seismic sections and MT volume cuts", asyn
       }
     ).__scene?.manager;
     manager?.applyStyle?.("utah-forge-mt-resistivity-volume", {
-      scalarVolumeProductId: "mt-resistivity-forge-focused-volume",
+      scalarVolumeProductId: "mt-resistivity-full-extent-volume",
       scalarVolumeRenderMode: "raymarch",
       scalarVolumeOpacity: 0.48,
       scalarVolumeDensity: 0.78,
@@ -769,7 +769,7 @@ test("Utah FORGE section ISO supports seismic sections and MT volume cuts", asyn
       sceneSectionHelperVisible: true,
     });
     manager?.applyStyle?.("utah-forge-mt-resistivity-volume", {
-      scalarVolumeProductId: "mt-resistivity-forge-focused-volume",
+      scalarVolumeProductId: "mt-resistivity-full-extent-volume",
       scalarVolumeRenderMode: "raymarch",
       scalarVolumeOpacity: 0.48,
       scalarVolumeDensity: 0.78,
@@ -954,7 +954,7 @@ test("Utah FORGE section ISO supports seismic sections and MT volume cuts", asyn
     if (seismic) seismic.visible = true;
     if (volume) volume.visible = true;
     manager?.applyStyle?.("utah-forge-mt-resistivity-volume", {
-      scalarVolumeProductId: "mt-resistivity-forge-focused-volume",
+      scalarVolumeProductId: "mt-resistivity-full-extent-volume",
       scalarVolumeRenderMode: "raymarch",
       scalarVolumeThresholdMin: -2,
       scalarVolumeThresholdMax: 4.5,
@@ -1291,7 +1291,7 @@ test("Utah FORGE section ISO supports seismic sections and MT volume cuts", asyn
       }
     ).__scene?.manager;
     manager?.applyStyle?.("utah-forge-mt-resistivity-volume", {
-      scalarVolumeProductId: "mt-resistivity-forge-focused-volume",
+      scalarVolumeProductId: "mt-resistivity-full-extent-volume",
       sectionIsoEnabled: false,
       sectionIsoLinesVisible: true,
       sectionIsoBandsVisible: true,

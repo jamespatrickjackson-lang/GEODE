@@ -60,13 +60,8 @@ function mtIsosurfaceProductOptions(
   }
   return [
     {
-      id: "mt-isosurface-forge-focused",
-      label: "MT FORGE-focused iso-resistivity surfaces",
-      cropStatus: "presentation-crop",
-    },
-    {
       id: "mt-isosurface-full-extent",
-      label: "MT full-source iso-resistivity surfaces",
+      label: "MT iso-resistivity surfaces",
       cropStatus: "full-source",
     },
   ];
@@ -103,7 +98,7 @@ export function MtThresholdSurfaceControls({
   const selectedProductId =
     typeof style.mtIsosurfaceProductId === "string"
       ? style.mtIsosurfaceProductId
-      : "mt-isosurface-forge-focused";
+      : "mt-isosurface-full-extent";
   const [boundaryToAddId, setBoundaryToAddId] = useState("");
   const boundaryMode = mtSurfaceBoundaryMode(style);
   const boundaryOrder = mtSurfaceBoundaryOrder(style, definitions);

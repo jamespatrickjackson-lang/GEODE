@@ -59,9 +59,16 @@ export function applyMtThresholdSurfaceStyle(this: any, id: string, style: Edita
   const selectedProductId =
     typeof style.mtIsosurfaceProductId === "string"
       ? style.mtIsosurfaceProductId
-      : "mt-isosurface-forge-focused";
+      : "mt-isosurface-full-extent";
   this.ensureLiveMtSurfaceBoundaries(
     group,
+    selectedProductId,
+    boundaries,
+    style,
+  );
+  this.ensurePrecomputedMtSurfaceBoundaries(
+    group,
+    id,
     selectedProductId,
     boundaries,
     style,

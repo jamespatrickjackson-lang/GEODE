@@ -194,82 +194,87 @@ function validateVolumesAndSurfaces(stats) {
   const thresholdProvenance = readJson(THRESHOLD_PROVENANCE_PATH);
   assert.equal(manifest.schema, "geosee.scalar-volume.v1");
   assertSourceCounts("volume manifest", manifest.rowCounts, stats);
-  assertArrayContainsAll(
-    manifest.products.map((product) => product.id),
-    ["mt-resistivity-full-extent-volume", "mt-resistivity-forge-focused-volume"],
-    "MT scalar volume products",
-  );
 
-  const fullExtent = manifest.products.find(
-    (product) => product.id === "mt-resistivity-full-extent-volume",
-  );
-  const focused = manifest.products.find(
-    (product) => product.id === "mt-resistivity-forge-focused-volume",
-  );
-  assert.match(fullExtent.description, /Uncropped/i);
-  assert.match(focused.description, /cropped/i);
-  assertGreaterThanOrEqual(
-    fullExtent.sourceRowsInBounds,
-    positiveSourceCount(stats) - 100,
-    "full-extent volume should retain effectively all positive rows",
-  );
-  assertGreaterThan(
-    positiveSourceCount(stats),
-    focused.sourceRowsInBounds,
-    "focused volume should be explicitly cropped",
-  );
+  // Single uncropped product (DEC supersede: focused/full-extent duality removed).
+  assert.equal(manifest.products.length, 1, "single MT scalar volume product");
+  const product = manifest.products[0];
+  assert.equal(product.id, "mt-resistivity-full-extent-volume");
+  assert.match(product.description, /uncropped/i);
 
-  for (const product of manifest.products) {
-    const voxelCount = product.dimensions.reduce((sum, value) => sum * value, 1);
-    const volumePath = manifestRelativePath(VOLUME_MANIFEST_PATH, product.files.volume);
-    const maskPath = manifestRelativePath(VOLUME_MANIFEST_PATH, product.files.mask);
-    assertFileExists(volumePath, `${product.id} volume`);
-    assertFileExists(maskPath, `${product.id} mask`);
-    assert.equal(fileSize(volumePath), voxelCount, `${product.id} volume bytes`);
-    assert.equal(fileSize(maskPath), voxelCount, `${product.id} mask bytes`);
+  const voxelCount = product.dimensions.reduce((sum, value) => sum * value, 1);
+  const volumePath = manifestRelativePath(VOLUME_MANIFEST_PATH, product.files.volume);
+  const maskPath = manifestRelativePath(VOLUME_MANIFEST_PATH, product.files.mask);
+  assertFileExists(volumePath, `${product.id} volume`);
+  assertFileExists(maskPath, `${product.id} mask`);
+  assert.equal(fileSize(volumePath), voxelCount, `${product.id} volume bytes`);
+  assert.equal(fileSize(maskPath), voxelCount, `${product.id} mask bytes`);
+
+  // Resolution floor: grid no coarser than ~source core density (guards the
+  // "invisible to check:*" gap — a coarse regression now fails the build).
+  const isoProduct = manifest.thresholdSurfaces.products[0];
+  for (const axis of ["x_m", "y_m", "z_m"]) {
+    assertGreaterThanOrEqual(
+      800,
+      isoProduct.voxelSpacingM[axis],
+      `voxel spacing floor ${axis}`,
+    );
   }
 
+  // No overshoot: reconstructed values stay inside the source range, even where
+  // the continuity reconstruction extrapolates across data gaps.
+  const productStats = readJson(
+    manifestRelativePath(VOLUME_MANIFEST_PATH, product.files.stats),
+  );
+  assertGreaterThanOrEqual(
+    productStats.log10Resistivity.min,
+    stats.log10Resistivity.min,
+    "no overshoot below source min",
+  );
+  assertGreaterThanOrEqual(
+    stats.log10Resistivity.max,
+    productStats.log10Resistivity.max,
+    "no overshoot above source max",
+  );
+
+  // Continuity reconstruction metadata recorded (not nearest-bin).
+  assert.equal(
+    productStats.reconstruction?.method,
+    "gaussian-blend-bounded-extrapolation",
+  );
+  assert.equal(productStats.reconstruction?.inRangeClamped, true);
+  assertGreaterThan(
+    productStats.reconstruction?.extrapolatedVoxelCount,
+    0,
+    "continuity extrapolation occurred",
+  );
+
+  // Slim, lazy preview: geometry is fetched per boundary at runtime.
   assert.equal(thresholdMesh.schema, "geosee.scalar-grid-mesh-preview.v1");
+  assert.equal(thresholdMesh.lazyBoundaries, true, "slim lazy preview");
+  assert.equal(thresholdMesh.vertices.length, 0, "preview geometry is lazy (empty)");
   assert.equal(
     thresholdMesh.processing.extractionMethod,
     "mask-aware-marching-cubes",
   );
-  assert.equal(
-    thresholdProvenance.extractionMethod,
-    "mask-aware-marching-cubes",
-  );
-  assertArrayContainsAll(
-    thresholdMesh.processing.sourceProductIds,
-    ["mt-resistivity-full-extent-volume", "mt-resistivity-forge-focused-volume"],
-    "threshold surface source products",
-  );
-  assertArrayContainsAll(
-    manifest.thresholdSurfaces.products.map((product) => product.id),
-    ["mt-isosurface-full-extent", "mt-isosurface-forge-focused"],
-    "manifest isosurface products",
-  );
+  assert.equal(thresholdProvenance.extractionMethod, "mask-aware-marching-cubes");
   assert.equal(
     manifest.thresholdSurfaces.defaultProductId,
-    "mt-isosurface-forge-focused",
+    "mt-isosurface-full-extent",
   );
-  const isoProducts = thresholdMesh.processing.isosurfaceProducts ?? [];
-  assertArrayContainsAll(
-    isoProducts.map((product) => product.id),
-    ["mt-isosurface-full-extent", "mt-isosurface-forge-focused"],
-    "threshold mesh isosurface products",
+  assert.equal(
+    manifest.thresholdSurfaces.products.length,
+    1,
+    "single isosurface product",
   );
-  const fullIso = isoProducts.find(
-    (product) => product.id === "mt-isosurface-full-extent",
-  );
-  const focusedIso = isoProducts.find(
-    (product) => product.id === "mt-isosurface-forge-focused",
-  );
-  assert.equal(fullIso.sourceProductId, "mt-resistivity-full-extent-volume");
-  assert.equal(fullIso.cropStatus, "full-source");
-  assert.equal(focusedIso.sourceProductId, "mt-resistivity-forge-focused-volume");
-  assert.equal(focusedIso.cropStatus, "presentation-crop");
+  assert.equal(manifest.thresholdSurfaces.products[0].id, "mt-isosurface-full-extent");
 
-  const expectedPerProductBoundaryCount = 23;
+  const isoProducts = thresholdMesh.processing.isosurfaceProducts ?? [];
+  assert.equal(isoProducts.length, 1, "single threshold-mesh isosurface product");
+  assert.equal(isoProducts[0].id, "mt-isosurface-full-extent");
+  assert.equal(isoProducts[0].sourceProductId, "mt-resistivity-full-extent-volume");
+  assert.equal(isoProducts[0].cropStatus, "full-source");
+
+  const expectedBoundaryCount = 23;
   assert.equal(
     thresholdMesh.processing.boundaryBank?.intervalCount,
     20,
@@ -277,7 +282,8 @@ function validateVolumesAndSurfaces(stats) {
   );
   assert.equal(
     thresholdMesh.processing.thresholdSurfaces.length,
-    expectedPerProductBoundaryCount * 2,
+    expectedBoundaryCount,
+    "single-product threshold count",
   );
   assertArrayContainsAll(
     thresholdMesh.processing.thresholdSurfaces.map((surface) => surface.id),
@@ -286,15 +292,19 @@ function validateVolumesAndSurfaces(stats) {
   );
   for (const surface of thresholdMesh.processing.thresholdSurfaces) {
     assert.equal(surface.extractionMethod, "mask-aware-marching-cubes");
+    assert.equal(
+      surface.isoProductId,
+      "mt-isosurface-full-extent",
+      `${surface.meshId} product id`,
+    );
     assert.match(
       surface.assetFile,
       /^threshold_surfaces\/boundaries\//,
       `${surface.meshId} lazy boundary asset`,
     );
-    assertFileExists(
-      manifestRelativePath(VOLUME_MANIFEST_PATH, surface.assetFile),
-      `${surface.meshId} lazy boundary asset`,
-    );
+    const assetPath = manifestRelativePath(VOLUME_MANIFEST_PATH, surface.assetFile);
+    assertFileExists(assetPath, `${surface.meshId} lazy boundary asset`);
+    assertGreaterThan(fileSize(assetPath), 0, `${surface.meshId} boundary asset non-empty`);
     assert.equal(surface.smoothing?.method, "taubin-laplacian");
     assertGreaterThan(
       surface.smoothing?.smoothedVertexCount,
@@ -306,41 +316,26 @@ function validateVolumesAndSurfaces(stats) {
       surface.vertexWelding?.weldedVertexCount,
       `${surface.meshId} welded vertices`,
     );
-    assert.equal(
-      surface.normalPolicy,
-      "runtime-computed-smooth-vertex-normals",
-    );
+    assert.equal(surface.normalPolicy, "runtime-computed-smooth-vertex-normals");
     assert.equal(surface.decimation, "none");
     assert.equal(surface.candidateBoundaryFaceCount, undefined);
     assert.equal(surface.decimationStride, undefined);
     assertGreaterThan(surface.marchingCubes?.triangleCount, 0, `${surface.meshId} triangles`);
     assertGreaterThan(surface.marchingCubes?.vertexCount, 0, `${surface.meshId} vertices`);
-    assertArrayContainsAll(
-      ["mt-isosurface-full-extent", "mt-isosurface-forge-focused"],
-      [surface.isoProductId],
-      `${surface.meshId} product id`,
+    // Subdivision delivers the finer mesh ("twice as fine"), geometry-only.
+    assertGreaterThan(
+      surface.marchingCubes?.subdivision?.subdividedTriangleCount,
+      surface.marchingCubes?.subdivision?.inputTriangleCount,
+      `${surface.meshId} subdivided`,
     );
   }
-  for (const productId of ["mt-isosurface-full-extent", "mt-isosurface-forge-focused"]) {
-    assert.equal(
-      thresholdMesh.processing.thresholdSurfaces.filter(
-        (surface) => surface.isoProductId === productId,
-      ).length,
-      expectedPerProductBoundaryCount,
-      `${productId} threshold count`,
-    );
-    assert.equal(
-      thresholdMesh.processing.thresholdSurfaces.filter(
-        (surface) =>
-          surface.isoProductId === productId &&
-          surface.boundarySource === "precomputed-bank",
-      ).length,
-      20,
-      `${productId} precomputed bank count`,
-    );
-  }
-  assertGreaterThan(thresholdMesh.vertices.length, 0, "threshold vertices");
-  assertGreaterThan(thresholdMesh.indices.length, 0, "threshold indices");
+  assert.equal(
+    thresholdMesh.processing.thresholdSurfaces.filter(
+      (surface) => surface.boundarySource === "precomputed-bank",
+    ).length,
+    20,
+    "precomputed bank count",
+  );
 }
 
 function validatePrepScripts() {

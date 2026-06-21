@@ -8002,15 +8002,9 @@
         "isosurfaceProducts": [
           {
             "id": "mt-isosurface-full-extent",
-            "label": "MT full-extent isosurfaces",
+            "label": "MT iso-resistivity surfaces",
             "sourceProductId": "mt-resistivity-full-extent-volume",
             "cropStatus": "full-source"
-          },
-          {
-            "id": "mt-isosurface-forge-focused",
-            "label": "MT FORGE-focused isosurfaces",
-            "sourceProductId": "mt-resistivity-forge-focused-volume",
-            "cropStatus": "presentation-crop"
           }
         ],
         "thresholdSurfaces": [

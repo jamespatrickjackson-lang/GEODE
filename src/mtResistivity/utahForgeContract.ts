@@ -68,21 +68,9 @@ export const UTAH_FORGE_MT_RESISTIVITY_CONTRACT = {
       dataPath:
         "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/volume/threshold_surfaces/mt_threshold_surfaces_mesh_preview.json",
       notes: [
-        "Full-extent threshold meshes are fixed, mask-aware Marching Cubes outputs derived from the full-source scalar volume.",
-        "They are regional context products, not interpreted geological contacts, resource shells, or targets.",
-      ],
-    },
-    {
-      id: "utah-forge-mt-isosurface-forge-focused",
-      kind: "isosurfaces",
-      layerId: UTAH_FORGE_MT_THRESHOLD_SURFACES_LAYER_ID,
-      sourceModelId: "utah-forge-mt-model-17-cell-centers",
-      cropStatus: "presentation-crop",
-      dataPath:
-        "projects/utah-forge/data/geosee_processed/utah_forge_phase_3/electrical_resistivity/resistivity_model/volume/threshold_surfaces/mt_threshold_surfaces_mesh_preview.json",
-      notes: [
-        "FORGE-focused threshold meshes are fixed, mask-aware Marching Cubes outputs derived from the focused scalar volume crop.",
-        "They are presentation-cropped for readability and must not be treated as the authoritative model extent.",
+        "Single uncropped source-derived iso-resistivity surface set, mask-aware Marching Cubes on a continuity-reconstructed (in-range, gap-bridging) scalar volume, mesh-subdivided for fineness.",
+        "Geometry is lazy-loaded per boundary from threshold_surfaces/boundaries/.",
+        "Source-derived communication surfaces, not interpreted geological contacts, resource shells, or targets.",
       ],
     },
     {

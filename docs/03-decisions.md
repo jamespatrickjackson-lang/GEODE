@@ -3526,3 +3526,47 @@ until a GitHub remote exists.
 and `Client-Data-Intake-Process.md` — currently inert by the evidence rubric but
 retained as the foundation for the incoming QMS/DHF + QA-RA track; they graduate
 to load-bearing once `R-NNN` ids are bound from code, tests, or `DEC-NNN`.
+
+## DEC-180 - MT iso-resistivity surfaces: single uncropped product, continuity reconstruction, lazy-loaded
+
+**Supersedes** the focused/full-extent surface-product duality (the prior
+`defaultProductId: mt-isosurface-forge-focused` + presentation-crop product).
+
+**Considered:** keep two iso-surface crops; tessellation as a grid-resolution
+problem (refine the voxel grid); strict bounded fill (leave gaps where data is
+sparse).
+
+**Chose:**
+- One uncropped product (`mt-isosurface-full-extent`, full lateral extent, depth
+  bounded to resolved data support at −20 km). The focused crop and the
+  `mtIsosurfaceProductId` two-option selector are retired.
+- Replace nearest-bin averaging in
+  `prep/build_utah_forge_mt_volume_products.mjs` with a continuity-first
+  Gaussian-blend reconstruction with bounded in-range extrapolation: surfaces
+  bridge data gaps (no interior holes/fragments), values are hard-clamped to the
+  source `[min,max]` (no overshoot, validated on real shallow + deep slices),
+  and large genuinely-unconstrained voids (deep halfspace, far padding) stay
+  empty.
+- "Twice as fine" delivered by geometry-only Loop-style mesh subdivision +
+  stronger unpinned Taubin smoothing in `prep/lib/marchingCubes.mjs`, not by
+  blowing up the voxel grid (grid stays ~730 m source-core density).
+- Full-fineness surfaces (23 bank/semantic boundaries, ~3.2 M triangles) are too
+  large to load at once, so the runtime lazy-loads per-boundary geometry on
+  demand: the preview is slimmed to metadata, and
+  `SceneManager.ensurePrecomputedMtSurfaceBoundaries` fetches only visible
+  surfaces (`boundaries/<product>/<id>.json`, each a self-contained payload).
+
+**Why:** tessellation is a field-reconstruction problem, not a grid-count
+problem; an MT inversion is itself smoothness-regularized with depth-decaying
+resolution, so a bounded, range-clamped, gap-bridging reconstruction is more
+faithful than blocky binning. The guard
+(`tools/audit-mt-resistivity.mjs`) now enforces the integrity that was
+previously invisible to `check:*`: single product, no overshoot (in-range),
+continuity-reconstruction metadata, a voxel-spacing resolution floor, and
+subdivision-on.
+
+**Trade-off accepted:** per-boundary geometry assets are large in git
+(~197 MB JSON at full fineness) — the user chose full fineness over smaller
+assets; a future optimization is binary (.bin) boundary encoding and dropping
+redundant per-vertex colors. The editor's single-option iso-surface selector is
+neutralized (one product) but not yet removed from the control manifest.

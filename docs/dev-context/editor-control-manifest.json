@@ -1240,6 +1240,19 @@
       "status": "active"
     },
     {
+      "id": "mt.threshold.iso-surface-product",
+      "label": "Iso-surface product",
+      "kind": "control",
+      "parentId": "mt.threshold.iso-resistivity-surfaces",
+      "sourceFile": "src/editor/layerControls/mt/MtThresholdSurfaceControls.tsx",
+      "sourceAnchor": "testId=\"mt-isosurface-product\"",
+      "scope": "mt-threshold-surface layers",
+      "backedBy": "EditableStyle.mtIsosurfaceProductId",
+      "setterRoute": "setEnvLayerStyle/setPageLayerOverride",
+      "status": "active",
+      "note": "DEC-180 collapsed the focused/full-extent iso-surface duality to one uncropped product; the selector now exposes a single option and defaults to mt-isosurface-full-extent."
+    },
+    {
       "id": "mt.threshold.opacity",
       "label": "Surface opacity",
       "kind": "control",

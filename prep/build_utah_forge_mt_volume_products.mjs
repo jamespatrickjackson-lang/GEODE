@@ -43,36 +43,35 @@ const DEFAULT_OUTPUT_DIR = path.join(
   "volume",
 );
 
+// Single uncropped product (DEC supersede: no focused/full-extent duality).
+// Full lateral extent; depth bounded to resolved data support (the deep
+// halfspace below this is a large unconstrained void, not real structure).
+const DEPTH_FLOOR_M = -20000;
+// Grid spacing target ~ source core density. Render fineness comes from mesh
+// subdivision, not grid blow-up, so this stays near source density.
+const TARGET_SPACING_M = 730;
+// Continuity-first reconstruction kernel (in voxel units) and the minimum
+// blended weight required to treat a voxel as supported. Larger sigma / smaller
+// weight bridge wider same-surface gaps; far unconstrained voids stay empty.
+const RECON_SIGMA_VOXELS = 2.5;
+const RECON_MIN_WEIGHT = 0.05;
+
 const PRODUCTS = [
   {
     id: "mt-resistivity-full-extent-volume",
-    label: "MT resistivity full-extent volume",
+    label: "MT resistivity volume",
     description:
-      "Uncropped source-derived scalar volume resampled from every positive MT cell-center inversion row.",
-    crop: "full-extent",
+      "Single uncropped source-derived scalar volume reconstructed from every positive MT cell-center inversion row (full lateral extent, depth bounded to resolved data support).",
+    crop: "uncropped-depth-bounded",
     outputDir: "full_extent",
-  },
-  {
-    id: "mt-resistivity-forge-focused-volume",
-    label: "MT resistivity FORGE-focused volume",
-    description:
-      "Meeting-focused scalar volume cropped around the MT station footprint and upper 30 km of the model.",
-    crop: "station-footprint-upper-model",
-    outputDir: "forge_focused",
   },
 ];
 const ISOSURFACE_PRODUCT_IDS = {
   "mt-resistivity-full-extent-volume": {
     id: "mt-isosurface-full-extent",
-    label: "MT full-extent isosurfaces",
+    label: "MT iso-resistivity surfaces",
     cropStatus: "full-source",
-    classification: "source-derived full-source iso-resistivity surfaces",
-  },
-  "mt-resistivity-forge-focused-volume": {
-    id: "mt-isosurface-forge-focused",
-    label: "MT FORGE-focused isosurfaces",
-    cropStatus: "presentation-crop",
-    classification: "source-derived presentation-crop iso-resistivity surfaces",
+    classification: "source-derived iso-resistivity surfaces",
   },
 };
 const SEMANTIC_THRESHOLDS = [
@@ -316,21 +315,16 @@ function stationSceneBounds(collection) {
   return bounds;
 }
 
-function productBounds(product, modelBounds, stationBounds) {
-  if (product.crop === "full-extent") return modelBounds;
-  const padX = Math.max(8000, (stationBounds.maxX - stationBounds.minX) * 0.08);
-  const padY = Math.max(8000, (stationBounds.maxY - stationBounds.minY) * 0.08);
-  return clampBounds(
-    {
-      minX: stationBounds.minX - padX,
-      maxX: stationBounds.maxX + padX,
-      minY: stationBounds.minY - padY,
-      maxY: stationBounds.maxY + padY,
-      minZ: -30000,
-      maxZ: Math.min(modelBounds.maxZ, Math.max(3500, stationBounds.maxZ + 1000)),
-    },
-    modelBounds,
-  );
+function productBounds(product, modelBounds) {
+  // Full lateral extent (no crop); depth floored to resolved data support.
+  return {
+    minX: modelBounds.minX,
+    maxX: modelBounds.maxX,
+    minY: modelBounds.minY,
+    maxY: modelBounds.maxY,
+    minZ: Math.max(modelBounds.minZ, DEPTH_FLOOR_M),
+    maxZ: modelBounds.maxZ,
+  };
 }
 
 function containsPoint(bounds, x, y, z) {
@@ -367,17 +361,89 @@ async function collectSourceAxisStats(options, origin, products) {
   return byProduct;
 }
 
-function deriveSourceFidelityVolumeDimensions(product, bounds, axisStats) {
-  const rowCount = Math.max(8, axisStats?.positiveRowsInBounds ?? 0);
+function deriveSourceFidelityVolumeDimensions(bounds) {
+  // Grid sized to a fixed target spacing (~source core density). Fineness is
+  // delivered by mesh subdivision downstream, not by refining this grid.
   const extentX = Math.max(1, bounds.maxX - bounds.minX);
   const extentY = Math.max(1, bounds.maxY - bounds.minY);
   const extentZ = Math.max(1, bounds.maxZ - bounds.minZ);
-  const sourceEquivalentSpacingM = Math.cbrt((extentX * extentY * extentZ) / rowCount);
   return [
-    Math.max(2, Math.ceil(extentX / sourceEquivalentSpacingM)),
-    Math.max(2, Math.ceil(extentY / sourceEquivalentSpacingM)),
-    Math.max(2, Math.ceil(extentZ / sourceEquivalentSpacingM)),
+    Math.max(2, Math.ceil(extentX / TARGET_SPACING_M)),
+    Math.max(2, Math.ceil(extentY / TARGET_SPACING_M)),
+    Math.max(2, Math.ceil(extentZ / TARGET_SPACING_M)),
   ];
+}
+
+function gaussianKernel1D(sigma) {
+  const radius = Math.max(1, Math.ceil(sigma * 3));
+  const kernel = new Float64Array(2 * radius + 1);
+  let sum = 0;
+  for (let i = -radius; i <= radius; i += 1) {
+    const value = Math.exp(-0.5 * (i / sigma) ** 2);
+    kernel[i + radius] = value;
+    sum += value;
+  }
+  for (let i = 0; i < kernel.length; i += 1) kernel[i] /= sum;
+  return { kernel, radius };
+}
+
+// Separable 3D Gaussian blur with clamped (replicate) edges. Voxel order is
+// x-fastest, then y, then z (matches volumeIndex).
+function blur3DSeparable(source, dimensions, sigma) {
+  const [nx, ny, nz] = dimensions;
+  const { kernel, radius } = gaussianKernel1D(sigma);
+  const slice = nx * ny;
+  let a = source;
+  let b = new Float64Array(a.length);
+  for (let z = 0; z < nz; z += 1) {
+    for (let y = 0; y < ny; y += 1) {
+      const base = z * slice + y * nx;
+      for (let x = 0; x < nx; x += 1) {
+        let acc = 0;
+        for (let t = -radius; t <= radius; t += 1) {
+          let xx = x + t;
+          if (xx < 0) xx = 0;
+          else if (xx >= nx) xx = nx - 1;
+          acc += a[base + xx] * kernel[t + radius];
+        }
+        b[base + x] = acc;
+      }
+    }
+  }
+  [a, b] = [b, a];
+  for (let z = 0; z < nz; z += 1) {
+    for (let x = 0; x < nx; x += 1) {
+      const base = z * slice + x;
+      for (let y = 0; y < ny; y += 1) {
+        let acc = 0;
+        for (let t = -radius; t <= radius; t += 1) {
+          let yy = y + t;
+          if (yy < 0) yy = 0;
+          else if (yy >= ny) yy = ny - 1;
+          acc += a[base + yy * nx] * kernel[t + radius];
+        }
+        b[base + y * nx] = acc;
+      }
+    }
+  }
+  [a, b] = [b, a];
+  for (let y = 0; y < ny; y += 1) {
+    for (let x = 0; x < nx; x += 1) {
+      const base = y * nx + x;
+      for (let z = 0; z < nz; z += 1) {
+        let acc = 0;
+        for (let t = -radius; t <= radius; t += 1) {
+          let zz = z + t;
+          if (zz < 0) zz = 0;
+          else if (zz >= nz) zz = nz - 1;
+          acc += a[base + zz * slice] * kernel[t + radius];
+        }
+        b[base + z * slice] = acc;
+      }
+    }
+  }
+  [a, b] = [b, a];
+  return a;
 }
 
 function makeAccumulator(product, bounds, scalarRange) {
@@ -434,23 +500,52 @@ function percentile(sorted, fraction) {
 }
 
 function finalizeAccumulator(accumulator) {
-  const { counts, sums, values, mask, volume, volumeHigh, scalarRange } =
-    accumulator;
+  const {
+    counts,
+    sums,
+    values,
+    mask,
+    volume,
+    volumeHigh,
+    scalarRange,
+    dimensions,
+  } = accumulator;
   const occupiedValues = [];
   const sourceSpan = Math.max(1e-9, scalarRange.max - scalarRange.min);
   let occupiedVoxelCount = 0;
+  let extrapolatedVoxelCount = 0;
   let logMin = Infinity;
   let logMax = -Infinity;
+  // Continuity-first reconstruction: Gaussian-weighted blend of the binned
+  // source values. The field is continuous across data gaps so iso-surfaces
+  // bridge naturally (no interior holes/fragments). A weighted blend of in-range
+  // source values is itself in-range, so no value is fabricated outside the
+  // source range (the clamp is belt-and-suspenders). Voxels with negligible
+  // nearby data (large unconstrained voids: deep halfspace, far lateral
+  // padding) stay empty and produce no surfaces.
+  const blurredSums = blur3DSeparable(
+    Float64Array.from(sums),
+    dimensions,
+    RECON_SIGMA_VOXELS,
+  );
+  const blurredCounts = blur3DSeparable(
+    Float64Array.from(counts),
+    dimensions,
+    RECON_SIGMA_VOXELS,
+  );
   for (let index = 0; index < counts.length; index += 1) {
-    if (counts[index] <= 0) {
+    if (!(blurredCounts[index] > RECON_MIN_WEIGHT)) {
       values[index] = Number.NaN;
       volume[index] = 0;
       volumeHigh[index] = 0;
       mask[index] = 0;
       continue;
     }
-    const logValue = sums[index] / counts[index];
+    let logValue = blurredSums[index] / blurredCounts[index];
+    if (logValue < scalarRange.min) logValue = scalarRange.min;
+    else if (logValue > scalarRange.max) logValue = scalarRange.max;
     values[index] = logValue;
+    if (counts[index] <= 0) extrapolatedVoxelCount += 1;
     occupiedValues.push(logValue);
     occupiedVoxelCount += 1;
     logMin = Math.min(logMin, logValue);
@@ -474,6 +569,16 @@ function finalizeAccumulator(accumulator) {
     emptyVoxelCount: counts.length - occupiedVoxelCount,
     sourceRowsInBounds: accumulator.positiveRowsInBounds,
     occupancyFraction: round(occupiedVoxelCount / Math.max(1, counts.length), 6),
+    reconstruction: {
+      method: "gaussian-blend-bounded-extrapolation",
+      sigmaVoxels: RECON_SIGMA_VOXELS,
+      minWeight: RECON_MIN_WEIGHT,
+      kernelScaleM: round(RECON_SIGMA_VOXELS * TARGET_SPACING_M, 3),
+      cellScaleM: TARGET_SPACING_M,
+      extrapolatedVoxelCount,
+      directlySampledVoxelCount: occupiedVoxelCount - extrapolatedVoxelCount,
+      inRangeClamped: true,
+    },
     log10Resistivity: {
       min: round(Number.isFinite(logMin) ? logMin : scalarRange.min, 6),
       p02: round(percentile(occupiedValues, 0.02) ?? scalarRange.min, 6),
@@ -587,10 +692,16 @@ function appendMarchingCubesSurface(mesh, accumulator, threshold) {
     round,
   });
   const vertexOffset = mesh.vertices.length / 3;
-  mesh.vertices.push(...extracted.vertices);
-  mesh.colors.push(...extracted.colors);
-  mesh.scalarValues.push(...extracted.scalarValues);
-  mesh.indices.push(...extracted.indices.map((index) => index + vertexOffset));
+  // Append element-by-element: spread (push(...arr)) overflows the argument
+  // limit now that subdivided surfaces can contain millions of entries.
+  for (let i = 0; i < extracted.vertices.length; i += 1)
+    mesh.vertices.push(extracted.vertices[i]);
+  for (let i = 0; i < extracted.colors.length; i += 1)
+    mesh.colors.push(extracted.colors[i]);
+  for (let i = 0; i < extracted.scalarValues.length; i += 1)
+    mesh.scalarValues.push(extracted.scalarValues[i]);
+  for (let i = 0; i < extracted.indices.length; i += 1)
+    mesh.indices.push(extracted.indices[i] + vertexOffset);
 
   const vertexCount = mesh.vertices.length / 3 - vertexStart;
   const indexCount = mesh.indices.length - indexStart;
@@ -813,9 +924,10 @@ async function writeProduct(accumulator, options) {
       sceneCrs: "local meters, X east, Y north, Z up",
       verticalExaggeration: 1,
       crop: accumulator.crop,
-      resampling: "cell-center bin average into regular browser volume",
+      resampling:
+        "Gaussian-weighted blend of cell-center source values with bounded in-range extrapolation (continuity-first); not nearest-bin",
       scalarEncoding:
-        "uint8 normalized over source log10 resistivity range; mask.u8 defines occupied voxels",
+        "uint8 normalized over source log10 resistivity range; mask.u8 defines occupied voxels (empty over large unconstrained voids)",
     },
     processing: {
       script: "prep/build_utah_forge_mt_volume_products.mjs",
@@ -841,10 +953,8 @@ async function main() {
   const options = parseArgs(process.argv);
   const transform = JSON.parse(await readFile(options.transformPath, "utf8"));
   const stats = JSON.parse(await readFile(options.statsPath, "utf8"));
-  const stations = JSON.parse(await readFile(options.stationPath, "utf8"));
   const origin = readOrigin(transform);
   const modelBounds = readSceneBounds(stats);
-  const stationBounds = stationSceneBounds(stations);
   const scalarRange = {
     min: stats.log10Resistivity?.min ?? -2,
     max: stats.log10Resistivity?.max ?? 4.5,
@@ -853,15 +963,11 @@ async function main() {
   };
   const productPlans = PRODUCTS.map((product) => ({
     ...product,
-    bounds: productBounds(product, modelBounds, stationBounds),
+    bounds: productBounds(product, modelBounds),
   }));
   const sourceAxisStats = await collectSourceAxisStats(options, origin, productPlans);
   const accumulators = productPlans.map((product) => {
-    const dimensions = deriveSourceFidelityVolumeDimensions(
-      product,
-      product.bounds,
-      sourceAxisStats.get(product.id),
-    );
+    const dimensions = deriveSourceFidelityVolumeDimensions(product.bounds);
     return makeAccumulator({ ...product, dimensions }, product.bounds, scalarRange);
   });
 
@@ -934,9 +1040,22 @@ async function main() {
   await mkdir(thresholdDir, { recursive: true });
   const thresholdMesh = buildThresholdMesh(accumulators, options);
   await writeThresholdBoundaryAssets(thresholdMesh, thresholdDir);
+  // Slim preview: geometry is lazy-loaded per boundary at runtime (each
+  // boundaries/<product>/<id>.json is itself a valid single-surface payload).
+  // The preview carries only metadata (surface descriptors with assetFile +
+  // isosurface products), so the runtime fetches it cheaply to discover what
+  // exists, then fetches geometry only for visible surfaces.
+  const slimPreview = {
+    ...thresholdMesh,
+    lazyBoundaries: true,
+    vertices: [],
+    colors: [],
+    indices: [],
+    attributes: { scalar: thresholdMesh.attributes.scalar, scalarValues: [] },
+  };
   await writeFile(
     path.join(thresholdDir, "mt_threshold_surfaces_mesh_preview.json"),
-    `${JSON.stringify(thresholdMesh)}\n`,
+    `${JSON.stringify(slimPreview)}\n`,
     "utf8",
   );
   const thresholdProvenance = {
@@ -1005,32 +1124,21 @@ async function main() {
     thresholdSurfaces: {
       file: "threshold_surfaces/mt_threshold_surfaces_mesh_preview.json",
       provenance: "threshold_surfaces/provenance.json",
-      defaultProductId: "mt-isosurface-forge-focused",
+      defaultProductId: "mt-isosurface-full-extent",
       products: thresholdMesh.processing.isosurfaceProducts,
       surfaces: thresholdMesh.processing.thresholdSurfaces,
     },
     displayRecipes: [
       {
-        id: "mt-volume-investor-focused",
-        label: "MT focused volume",
-        productId: "mt-resistivity-forge-focused-volume",
+        id: "mt-volume-default",
+        label: "MT resistivity volume",
+        productId: "mt-resistivity-full-extent-volume",
         opacity: 0.46,
         density: 0.72,
         sampleSteps: 112,
         transferMode: "balanced",
-        thresholdSurfaceProductId: "mt-isosurface-forge-focused",
-        thresholdSurfaces: ["conductive-le-30-ohm-m", "resistive-ge-1000-ohm-m"],
-      },
-      {
-        id: "mt-volume-full-extent-context",
-        label: "MT full-extent context",
-        productId: "mt-resistivity-full-extent-volume",
-        opacity: 0.34,
-        density: 0.54,
-        sampleSteps: 96,
-        transferMode: "soft",
         thresholdSurfaceProductId: "mt-isosurface-full-extent",
-        thresholdSurfaces: [],
+        thresholdSurfaces: ["conductive-le-30-ohm-m", "resistive-ge-1000-ohm-m"],
       },
     ],
     caveats: [

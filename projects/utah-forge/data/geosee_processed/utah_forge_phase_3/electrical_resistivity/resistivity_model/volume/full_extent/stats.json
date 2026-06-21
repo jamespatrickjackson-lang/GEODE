@@ -1,23 +1,33 @@
 {
   "productId": "mt-resistivity-full-extent-volume",
-  "label": "MT resistivity full-extent volume",
+  "label": "MT resistivity volume",
   "generatedDate": "2026-05-12",
   "dimensions": [
-    144,
-    118,
-    65
+    383,
+    313,
+    33
   ],
-  "voxelCount": 1104480,
-  "occupiedVoxelCount": 57575,
-  "emptyVoxelCount": 1046905,
-  "sourceRowsInBounds": 1094579,
-  "occupancyFraction": 0.052129,
+  "voxelCount": 3956007,
+  "occupiedVoxelCount": 780503,
+  "emptyVoxelCount": 3175504,
+  "sourceRowsInBounds": 851730,
+  "occupancyFraction": 0.197296,
+  "reconstruction": {
+    "method": "gaussian-blend-bounded-extrapolation",
+    "sigmaVoxels": 2.5,
+    "minWeight": 0.05,
+    "kernelScaleM": 1825,
+    "cellScaleM": 730,
+    "extrapolatedVoxelCount": 640653,
+    "directlySampledVoxelCount": 139850,
+    "inRangeClamped": true
+  },
   "log10Resistivity": {
-    "min": -0.465901,
-    "p02": 0.808583,
-    "p50": 2.006765,
-    "p98": 3.713504,
-    "max": 4.5,
+    "min": -0.304113,
+    "p02": 0.824024,
+    "p50": 2.499414,
+    "p98": 3.731305,
+    "max": 4.392937,
     "sourceMin": -2,
     "sourceMax": 4.5,
     "displayMin": 0.139879,
@@ -27,7 +37,7 @@
     "min": [
       -139570.65,
       -113944.5,
-      -122114
+      -20000
     ],
     "max": [
       139570.65,

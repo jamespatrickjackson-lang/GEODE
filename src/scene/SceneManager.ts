@@ -21,6 +21,7 @@ import type { PostHandle } from "./postprocessing";
 import { LineMaterial } from "three/examples/jsm/lines/LineMaterial.js";
 import type { SceneOverlayHandle } from "../loaders/loadSceneOverlays";
 import type { GeologyHandle } from "../loaders/loadGeology";
+import { loadMeshPreview } from "../loaders/loadMeshPreview";
 import {
   setDistanceAttenuatedLineWidth,
 } from "../loaders/topoLineMaterial";
@@ -4082,9 +4083,8 @@ export class SceneManager {
     group: THREE.Group,
   ): MtSurfaceBoundaryDefinition[] {
     const byId = new Map<string, MtSurfaceBoundaryDefinition>();
-    group.traverse((obj) => {
-      if (obj.userData?.mtThresholdSurfacePreview !== true) return;
-      const surface = obj.userData.mtThresholdSurface as
+    const addSurface = (
+      surface:
         | {
             id?: unknown;
             label?: unknown;
@@ -4094,12 +4094,14 @@ export class SceneManager {
             thresholdLog10?: unknown;
             kind?: unknown;
           }
-        | undefined;
+        | undefined,
+      fallbackId?: unknown,
+    ) => {
       const id =
         typeof surface?.id === "string"
           ? surface.id
-          : typeof obj.userData.mtThresholdSurfaceId === "string"
-            ? obj.userData.mtThresholdSurfaceId
+          : typeof fallbackId === "string"
+            ? fallbackId
             : "";
       if (!id || byId.has(id)) return;
       const thresholdOhmM =
@@ -4151,6 +4153,20 @@ export class SceneManager {
         kind: typeof surface?.kind === "string" ? surface.kind : undefined,
         source: "precomputed",
       });
+    };
+    // Lazy boundaries: full surface descriptors are stashed on the group by the
+    // loader so every definition exists before any geometry is fetched.
+    const stashed = group.userData?.mtThresholdSurfaceDefinitions;
+    if (Array.isArray(stashed)) {
+      for (const surface of stashed) addSurface(surface);
+    }
+    // Loaded/live surfaces also carry their descriptor on the mesh userData.
+    group.traverse((obj) => {
+      if (obj.userData?.mtThresholdSurfacePreview !== true) return;
+      addSurface(
+        obj.userData.mtThresholdSurface as Parameters<typeof addSurface>[0],
+        obj.userData.mtThresholdSurfaceId,
+      );
     });
     for (const boundary of DEFAULT_MT_SURFACE_BOUNDARIES) {
       if (!byId.has(boundary.id)) byId.set(boundary.id, boundary);
@@ -4158,10 +4174,9 @@ export class SceneManager {
     return [...byId.values()];
   }
 
-  private mtVolumeProductIdForIsosurfaceProduct(productId: string): string {
-    return productId === "mt-isosurface-full-extent"
-      ? "mt-resistivity-full-extent-volume"
-      : "mt-resistivity-forge-focused-volume";
+  private mtVolumeProductIdForIsosurfaceProduct(_productId: string): string {
+    // Single uncropped product (DEC-180): the focused volume was retired.
+    return "mt-resistivity-full-extent-volume";
   }
 
   private activeMtScalarVolumeForIsosurface(productId: string): THREE.Mesh | null {
@@ -4341,6 +4356,70 @@ export class SceneManager {
       // Newly attached live surfaces must be patched by working-area focus
       // before they can render during a transition (DEC-173 rehydration).
       this.reapplyWorkingAreaFocus();
+    }
+  }
+
+  // Lazy precomputed boundaries (DEC supersede): the single uncropped product
+  // carries 23 source-derived surfaces at full fineness, far too large to load
+  // at once. Each boundaries/<product>/<id>.json is a self-contained
+  // single-surface mesh-preview payload; fetch only the surfaces that should be
+  // visible for the selected product, on demand, and cache them on the group.
+  ensurePrecomputedMtSurfaceBoundaries(
+    group: THREE.Group,
+    layerId: string,
+    selectedProductId: string,
+    boundaries: ResolvedMtSurfaceBoundary[],
+    style: EditableStyle,
+  ): void {
+    const registry = group.userData?.mtThresholdSurfaceRegistry as
+      | Record<string, { assetUrl: string; isoProductId: string; id: string }>
+      | undefined;
+    if (!registry) return;
+    const inFlight: Set<string> =
+      group.userData.__mtPrecomputedInFlight instanceof Set
+        ? group.userData.__mtPrecomputedInFlight
+        : (group.userData.__mtPrecomputedInFlight = new Set<string>());
+    for (const boundary of boundaries) {
+      if (!boundary.visible || boundary.source === "live") continue;
+      const meshId = `${selectedProductId}:${boundary.id}`;
+      const entry = registry[meshId];
+      if (!entry) continue;
+      const present = group.children.some(
+        (child) =>
+          child.userData?.mtThresholdSurfacePreview === true &&
+          child.userData?.mtSurfaceBoundaryLive !== true &&
+          child.userData?.mtThresholdSurfaceId === boundary.id &&
+          child.userData?.mtIsosurfaceProductId === selectedProductId,
+      );
+      if (present || inFlight.has(meshId)) continue;
+      inFlight.add(meshId);
+      loadMeshPreview(entry.assetUrl)
+        .then((loaded) => {
+          if (this.layers.get(layerId) !== group) return;
+          for (const child of [...loaded.children]) {
+            if (child.userData?.mtThresholdSurfacePreview === true) {
+              child.userData.mtSurfaceBoundaryPrecomputedLazy = true;
+              loaded.remove(child);
+              group.add(child);
+            }
+          }
+          disposeObjectTree(loaded);
+        })
+        .catch((error) =>
+          console.error(
+            `MT precomputed boundary load failed (${meshId}):`,
+            error,
+          ),
+        )
+        .finally(() => {
+          inFlight.delete(meshId);
+          if (this.layers.get(layerId) === group) {
+            // Re-apply so freshly attached surfaces receive visibility/material
+            // and working-area focus patching (DEC-173 rehydration).
+            this.applyMtThresholdSurfaceStyle(layerId, style);
+            this.reapplyWorkingAreaFocus();
+          }
+        });
     }
   }
 

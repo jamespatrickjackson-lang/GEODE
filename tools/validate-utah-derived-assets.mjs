@@ -325,9 +325,10 @@ function validatePublicContext() {
 function validateMtProducts() {
   const manifest = readJson(MT_VOLUME_MANIFEST_PATH);
   assert.equal(manifest.schema, "geosee.scalar-volume.v1");
+  assert.equal(manifest.products.length, 1, "single MT volume product");
   assertArrayContainsAll(
     manifest.products.map((product) => product.id),
-    ["mt-resistivity-full-extent-volume", "mt-resistivity-forge-focused-volume"],
+    ["mt-resistivity-full-extent-volume"],
     "MT volume products",
   );
 
@@ -355,15 +356,20 @@ function validateMtProducts() {
   );
   assert.equal(
     manifest.thresholdSurfaces.defaultProductId,
-    "mt-isosurface-forge-focused",
+    "mt-isosurface-full-extent",
+  );
+  assert.equal(
+    manifest.thresholdSurfaces.products.length,
+    1,
+    "single MT isosurface product",
   );
   assertArrayContainsAll(
     manifest.thresholdSurfaces.products.map((product) => product.id),
-    ["mt-isosurface-full-extent", "mt-isosurface-forge-focused"],
+    ["mt-isosurface-full-extent"],
     "MT isosurface products",
   );
-  const expectedPerProductBoundaryCount = 23;
-  assert.equal(manifest.thresholdSurfaces.surfaces.length, expectedPerProductBoundaryCount * 2);
+  const expectedBoundaryCount = 23;
+  assert.equal(manifest.thresholdSurfaces.surfaces.length, expectedBoundaryCount);
   assertArrayContainsAll(
     manifest.thresholdSurfaces.surfaces.map((surface) => surface.id),
     ["conductive-le-10-ohm-m", "conductive-le-30-ohm-m", "resistive-ge-1000-ohm-m"],
@@ -382,11 +388,11 @@ function validateMtProducts() {
   );
   assert.equal(
     thresholdMesh.processing.thresholdSurfaces.length,
-    expectedPerProductBoundaryCount * 2,
+    expectedBoundaryCount,
   );
   assertArrayContainsAll(
     thresholdMesh.processing.isosurfaceProducts.map((product) => product.id),
-    ["mt-isosurface-full-extent", "mt-isosurface-forge-focused"],
+    ["mt-isosurface-full-extent"],
     "MT threshold mesh products",
   );
   for (const surface of thresholdMesh.processing.thresholdSurfaces) {
@@ -401,8 +407,10 @@ function validateMtProducts() {
     assert.equal(surface.smoothing?.method, "taubin-laplacian");
     assert.equal(surface.normalPolicy, "runtime-computed-smooth-vertex-normals");
   }
-  assertGreaterThan(thresholdMesh.vertices.length, 0, "threshold mesh vertices");
-  assertGreaterThan(thresholdMesh.indices.length, 0, "threshold mesh indices");
+  // Slim lazy preview: geometry is fetched per boundary at runtime, so the
+  // preview itself carries no concatenated geometry.
+  assert.equal(thresholdMesh.lazyBoundaries, true, "slim lazy preview");
+  assert.equal(thresholdMesh.vertices.length, 0, "preview geometry is lazy");
 
   const stationQc = readJson(MT_STATION_QC_PATH);
   assert.equal(stationQc.schema, "geosee.mt-station-qc.v1");
