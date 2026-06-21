@@ -1068,14 +1068,15 @@ function reducer(state: EditorState, action: EditorAction): EditorState {
       // UI-only sidebar arrangement. orderedIds is one sidebar group's members
       // in their new order; re-thread them into manifest.layers slot-for-slot so
       // non-group layers keep their positions. Scene/transition is id/Map-based.
-      const set = new Set(action.orderedIds);
+      // Tolerate virtual/derived rows whose id is not a real catalog layer:
+      // reorder only the manifest layers among themselves, preserving their
+      // relative order from orderedIds.
       const byId = new Map(state.manifest.layers.map((l) => [l.id, l]));
       const ordered = action.orderedIds
         .map((id) => byId.get(id))
         .filter((l): l is NonNullable<typeof l> => Boolean(l));
-      if (ordered.length === 0 || ordered.length !== action.orderedIds.length) {
-        return state;
-      }
+      if (ordered.length < 2) return state;
+      const set = new Set(ordered.map((l) => l.id));
       const manifest = clone(state.manifest);
       let gi = 0;
       manifest.layers = manifest.layers.map((l) =>
@@ -1091,8 +1092,11 @@ function reducer(state: EditorState, action: EditorAction): EditorState {
         const ordered = action.orderedIds
           .map((id) => byId.get(id))
           .filter((r): r is NonNullable<typeof r> => Boolean(r));
-        if (ordered.length !== refs.length) return p;
-        return { ...p, sceneOverlays: ordered };
+        if (ordered.length < 2) return p;
+        const set = new Set(ordered.map((r) => r.id));
+        let gi = 0;
+        const next = refs.map((r) => (set.has(r.id) ? ordered[gi++] : r));
+        return { ...p, sceneOverlays: next };
       });
       return {
         ...state,
