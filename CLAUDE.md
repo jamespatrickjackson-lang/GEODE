@@ -154,19 +154,19 @@ following paths unless the task explicitly requires them:
 When a search must hit those paths, scope it: pass `glob` or `path`
 arguments narrowed to the specific subtree.
 
+<!-- mirror:monoliths begin (kept in sync with AGENTS.md by check:mirror) -->
 The following source files are very large; never `Read` them in full
 without `offset`+`limit`, and prefer `Grep` first to locate the target
-range:
+range (approximate current line counts):
 
-- `src/editor/LayerPanel.tsx` (~2,500 lines; R1 split target met)
-- `src/scene/SceneManager.ts` (~5,300 lines; grew back past the post-R2
-  ~2,550 target)
-- `src/scene/section/sceneSectionController.ts` (~4,500 lines; over the
-  stated 1,200-line cap)
-- `src/editor/EnvironmentScenePanel.tsx` (~3,800 lines)
-- `src/editor/PagePanel.tsx` (~2,400 lines)
-- `src/editor/topoMap/TopoMapPanel.tsx` (~2,100 lines)
-- `src/editor/EditorContext.tsx` (~1,900 lines)
+- `src/scene/SceneManager.ts` (~6,060 lines)
+- `src/editor/EnvironmentScenePanel.tsx` (~5,740 lines)
+- `src/scene/section/sceneSectionController.ts` (~4,700 lines)
+- `src/editor/PagePanel.tsx` (~4,160 lines)
+- `src/editor/EditorContext.tsx` (~3,880 lines)
+- `src/editor/topoMap/TopoMapPanel.tsx` (~3,690 lines)
+- `src/editor/LayerPanel.tsx` (~2,950 lines)
+<!-- mirror:monoliths end -->
 
 ## Decision Discipline
 

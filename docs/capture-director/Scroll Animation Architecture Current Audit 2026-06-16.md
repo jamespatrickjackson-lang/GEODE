@@ -10,7 +10,7 @@
 > `media_output/`. Kept as historical context. See DEC-174 and the production
 > notes in `docs/capture-director/README.md`.
 
-Date: 2026-06-16
+Authored: 2026-06-16
 
 Status: superseded by shipped implementation (was: audit-only findings)
 

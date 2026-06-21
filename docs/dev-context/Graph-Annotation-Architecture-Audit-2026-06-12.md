@@ -2,7 +2,7 @@
 
 Status: implemented architecture audit
 
-Date: 2026-06-12
+Authored: 2026-06-12
 
 ## Finding
 

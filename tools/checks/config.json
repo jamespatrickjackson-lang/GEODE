@@ -1,0 +1,18 @@
+{
+  "routingDoc": "docs/dev-context/Verification-Routing.md",
+  "routeReferencePatterns": [
+    "npm run ([A-Za-z0-9:_-]+)",
+    "`(check:[A-Za-z0-9:_-]+)`"
+  ],
+  "routeIgnore": [],
+  "mirrorPairs": [
+    {
+      "a": "CLAUDE.md",
+      "b": "AGENTS.md",
+      "beginMarker": "mirror:monoliths begin",
+      "endMarker": "mirror:monoliths end"
+    }
+  ],
+  "sourceTestGlobs": ["tests/tools/**/*.test.mjs"],
+  "sourceTestExcludeGlobs": ["node_modules", ".git", "dist", "dist-tsbuild", "media_output", "projects", "data", "docs", "01_issue audits", "playwright-report", "test-results", ".tmp", ".tmp.driveupload", "Major _issue_Tracking"]
+}

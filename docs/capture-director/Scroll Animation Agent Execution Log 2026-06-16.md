@@ -7,7 +7,7 @@
 > `src/editor/` sidebar only, not the Capture Director toolbar (`src/capture/`).
 > Kept as historical context. See DEC-174.
 
-Date: 2026-06-16
+Authored: 2026-06-16
 
 Status: superseded — full feature shipped (was: approved Task-1-only plan)
 

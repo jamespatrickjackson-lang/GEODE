@@ -11,8 +11,6 @@ Status: active verification and workspace-state routing
 
 Run `npm run check:workspace` before commits or broad verification. A dirty tree is not automatically a failure, but snapshot-sensitive local files mean broad snapshot/browser results describe the local sketch state, not just committed repo state.
 
-Shared vocabulary for these states lives in `docs/dev-context/GeoSee-Terms.md`.
-
 ## Workspace Policy Modes
 
 - `npm run check:workspace`: report-only. Use this before commits and verification to see whether local sketch or excluded user work is present.
@@ -28,7 +26,6 @@ Shared vocabulary for these states lives in `docs/dev-context/GeoSee-Terms.md`.
 - Active context-drag markers: `npm run check:agent-drag`
 - Runtime asset wiring: `npm run check:runtime-assets`
 - Utah runtime and derived-product integrity: `npm run check:utah-runtime`
-- Utah presentation snapshot drift: `npm run check:utah-snapshot`
 - Utah artifact metadata: `npm run check:artifacts`
 - Seismic source/geometry gates: `node tests/tools/seismic-trace-geometry-source.test.mjs`, `node tests/tools/seismic-product-catalog-source.test.mjs`, and `npm run check:seismic-source-gates`
 - Project artifact coverage: `npm run check:coverage`
@@ -43,7 +40,6 @@ Shared vocabulary for these states lives in `docs/dev-context/GeoSee-Terms.md`.
 - Layer file or runtime data path changes: add `npm run check:runtime-assets`.
 - Utah derived/data product changes: add `npm run check:utah-runtime`.
 - Seismic prep, seismic manifest, seismic editor controls, or seismic source-gate changes: run `node tests/tools/seismic-trace-geometry-source.test.mjs`, `node tests/tools/seismic-product-catalog-source.test.mjs`, and `npm run check:seismic-source-gates`. Add `node tests/tools/utah-forge-source-fidelity-source.test.mjs` when CRS, datum, registration, or source-fidelity metadata changes. Add `npm run check:editor-controls` when editor controls or the control manifest change.
-- Utah presentation sketch changes: use `npm run check:utah-snapshot` only when the sketch state is intentionally being checked.
 - Browser/render/editor behavior: run `npm run check:visual-qa-clean` before opening the app and again after closing the app, then use the smallest targeted Utah browser script that covers the changed behavior. If the after-check finds snapshot-sensitive files, stop and treat the browser evidence as contaminated by disposable page or overlay state until those files are reverted, stashed, or intentionally accepted.
 - Full `npm run test:utah-forge` is broad regression only, not default iteration. Treat it as committed-state evidence only when `npm run check:workspace` reports no relevant local sketch files.
 
@@ -51,7 +47,7 @@ Shared vocabulary for these states lives in `docs/dev-context/GeoSee-Terms.md`.
 
 `projects/utah-forge/pages/*.json` are disposable authoring state. Deleting, rebuilding, or reordering deck pages must not break app-behavior tests. App-behavior tests (`test:utah:browser` and the individual Utah test scripts) must not hardcode deck page IDs or assume specific deck positions. Synthetic in-memory fixtures or fixture builders must be used instead.
 
-`check:utah-snapshot` is the deck snapshot check â€” it intentionally hardcodes page IDs and deck order as content evidence. It is NOT an app-behavior check and must not be included in `test:utah-forge`.
+The former check:utah-snapshot deck-snapshot check has been retired: Utah pages are disposable authoring state, so deck-order snapshotting is no longer a routed command. Deck-order content must not be asserted by app-behavior tests or included in `test:utah-forge`.
 
 ## Dev Server Rule
 

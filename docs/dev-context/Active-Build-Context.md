@@ -248,7 +248,6 @@ profile.
 ## Focused Routing
 
 - Workspace state and verification tiers: `docs/dev-context/Verification-Routing.md`
-- Operating vocabulary: `docs/dev-context/GeoSee-Terms.md`
 - Global toolset structure and topo map precedent: `docs/dev-context/Global-Toolset-Structure.md`
 - Topo Environment/clouds/sun/cinematics thread receipt: `docs/dev-context/Topo-Environment-Clouds-Cinematics-Thread-Update-2026-06-03.md`
 - Topo editor panel field audit: `docs/dev-context/Topo-Editor-Panel-Audit-2026-06-03.md`

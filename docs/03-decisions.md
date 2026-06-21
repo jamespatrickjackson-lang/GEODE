@@ -3489,3 +3489,40 @@ Verified headless: still self-test 7680x4320; a 4K job with `superscale: 2` and 
 flag renders a 3840x2160 MP4 (ffmpeg-probed) from a 7680x4320 supersampled pass; an
 8K + `superscale: 2` job is rejected; an out-of-range `--superscale 99` is rejected
 with a range error (not clamped).
+
+## DEC-179 - DMT audit remediation: enforcement gate + inert-doc retirement
+
+**Considered:** leave the agent-method enforcement convention-only and keep the
+inert docs; versus wiring a machine gate and retiring drag.
+
+**Chose:** adopt the DMT audit resolution (audit at `C:\GeoSee\DMT`):
+- Removed the retired `check:utah-snapshot` `console.log` stub from
+  `package.json` and its references in `Verification-Routing.md` — a routed
+  command that no longer ran.
+- Reconciled the `CLAUDE.md` ⇄ `AGENTS.md` large-file ("monolith") list to
+  measured line counts and fenced it with `mirror:monoliths` markers so it
+  cannot silently drift again.
+- Retired two inert docs (0 live refs, 0 enforcement):
+  `docs/dev-context/Active-Build-Queue.md` and
+  `docs/dev-context/GeoSee-Terms.md` (its workspace terms already live inline in
+  `Verification-Routing.md`).
+- Added gate checks `tools/checks/check-routes-resolve.mjs` and
+  `tools/checks/check-mirror-diff.mjs` + npm scripts `check:routes`,
+  `check:mirror`, `test:tools`, `check:gate`, plus a not-auto-enabled
+  `.githooks/pre-commit` and a dormant `.github/workflows/checks.yml`.
+
+**Why:** the method's guards were strong but enforced only by convention (no
+hook/CI). The new checks fail the build on the exact defect classes the audit
+found (a routed-but-retired command; CLAUDE/AGENTS drift). The retired docs were
+drag — nothing referenced or enforced them.
+
+**Trade-off accepted:** the pre-commit hook is created but NOT auto-enabled — a
+blocking hook could disrupt automated "GeoSee Local Checkpoint" commits, and
+`check:agent-drag` / `test:tools` have pre-existing failures. Enable with
+`git config core.hooksPath .githooks` once those are green. CI stays dormant
+until a GitHub remote exists.
+
+**Kept (deliberately NOT pruned):** `docs/risk-management/GeoSee-Risk-Register.md`
+and `Client-Data-Intake-Process.md` — currently inert by the evidence rubric but
+retained as the foundation for the incoming QMS/DHF + QA-RA track; they graduate
+to load-bearing once `R-NNN` ids are bound from code, tests, or `DEC-NNN`.

@@ -1,0 +1,17 @@
+#!/bin/sh
+# GeoSee pre-commit gate (DEC-179: enforcement-gate adoption, DMT audit).
+# Closes the "guards exist but nothing auto-runs them" gap the audit found.
+#
+# NOT auto-enabled. Turn on with:  git config core.hooksPath .githooks
+# Turn off with:                   git config --unset core.hooksPath
+#
+# Runs the fast, currently-green guards. The full source-fidelity suite
+# (test:tools) runs in CI / pre-push, not here, to keep commits fast. If an
+# automated checkpoint committer is in use, confirm these pass during active
+# editor edits before relying on this hook.
+set -e
+echo "[pre-commit] check:routes";          npm run --silent check:routes
+echo "[pre-commit] check:mirror";          npm run --silent check:mirror
+echo "[pre-commit] check:editor-controls"; npm run --silent check:editor-controls
+echo "[pre-commit] check:agent-drag";      npm run --silent check:agent-drag
+echo "[pre-commit] gate passed"

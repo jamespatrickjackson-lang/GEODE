@@ -1,0 +1,26 @@
+name: checks
+# GeoSee CI gate (DEC-179: enforcement-gate adoption, DMT audit). Dormant until
+# the repo has a GitHub remote; runs the guards on push/PR once it does.
+on:
+  push:
+  pull_request:
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci
+      # Blocking — currently green:
+      - run: npm run check:routes
+      - run: npm run check:mirror
+      - run: npm run check:editor-controls
+      - run: npm run check:agent-drag
+      - run: npm run check:pages
+      # test:tools flips to blocking once the pre-existing tests/tools failures
+      # are resolved (see DMT/audit/tests-tools-triage-2026-06-20.md). Until then:
+      - run: npm run test:tools
+        continue-on-error: true

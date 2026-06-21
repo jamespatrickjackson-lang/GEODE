@@ -3,6 +3,12 @@
 Status: active draft foundation. This register is intentionally conservative
 and may receive new risks without prior approval.
 
+Reference state: no code or test currently cites an `R-NNN` id, so by the DMT
+evidence rubric this register is *foundational, not yet load-bearing*. It is
+retained deliberately as the basis for the incoming QMS / DHF + QA-RA track and
+graduates to load-bearing once `R-NNN` ids are bound from code, tests, or
+`DEC-NNN` entries.
+
 ## High-Priority Unresolved Risks
 
 ### R-001: Client data intake process is not yet approved
