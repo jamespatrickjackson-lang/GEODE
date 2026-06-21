@@ -1,3 +1,4 @@
+import { encodeCaptureExr, encodeCapturePng16 } from "./captureFloatStill";
 import type { SceneHandle } from "../scene";
 import { applyPose, capturePose } from "../pages/capturePose";
 import type { Pose } from "../pages/types";
@@ -8,7 +9,9 @@ import {
 } from "./captureRecipe";
 import {
   clampCaptureSupersampleScale,
+  resolveEffectiveCaptureCapabilities,
   validateRenderResolutionRequest,
+  type CaptureCapabilityLimits,
 } from "./captureResolution";
 import { renderCaptureOverlay } from "./captureOverlayRenderer";
 import { captureVisibilityProfileForMode } from "./captureProfiles";
@@ -19,7 +22,13 @@ import {
   sampleCaptureRecipeCameraPoseAtFrame,
 } from "./deterministicFrameSequenceExporter";
 
-export type DeterministicStillMimeType = "image/png" | "image/webp" | "image/jpeg";
+export type DeterministicStillMimeType =
+  | "image/png"
+  | "image/webp"
+  | "image/jpeg"
+  | "image/x-exr"
+  // Routing marker for 16-bit PNG (saved as image/png .png); takes the float path.
+  | "image/x-png16";
 
 export interface DeterministicStillExportOptions {
   sceneHandle: SceneHandle;
@@ -30,7 +39,16 @@ export interface DeterministicStillExportOptions {
   frameIndex?: number;
   mimeType?: DeterministicStillMimeType;
   imageQuality?: number;
+  // Apply the capture log transfer before EXR / 16-bit PNG encode (grading
+  // latitude). Ignored by the 8-bit canvas formats.
+  logTransfer?: boolean;
   filenamePrefix?: string;
+  // Resolved capability budget from the caller (e.g. the provider preflight,
+  // which honors the dev capability override). Combined with the raw GL caps as
+  // the STRICTER limit, so the exporter never validates more permissively than
+  // the preflight and never attempts a render the device was already told it
+  // cannot perform.
+  capabilities?: CaptureCapabilityLimits | null;
   overlayContext?: (
     frame: Pick<
       DeterministicStillExportResult,
@@ -55,10 +73,18 @@ export interface DeterministicStillExportResult {
   cleanup(): void;
 }
 
-function stillExtension(mimeType: DeterministicStillMimeType): "png" | "webp" | "jpg" {
+function stillExtension(
+  mimeType: DeterministicStillMimeType,
+): "png" | "webp" | "jpg" | "exr" {
   if (mimeType === "image/webp") return "webp";
   if (mimeType === "image/jpeg") return "jpg";
+  if (mimeType === "image/x-exr") return "exr";
+  // image/x-png16 (and image/png) save as .png.
   return "png";
+}
+
+function isFloatStillMimeType(mimeType: DeterministicStillMimeType): boolean {
+  return mimeType === "image/x-exr" || mimeType === "image/x-png16";
 }
 
 function encodeStillCanvas(
@@ -95,7 +121,9 @@ export async function exportDeterministicStill({
   frameIndex,
   mimeType = "image/png",
   imageQuality = 0.92,
+  logTransfer = false,
   filenamePrefix = "geosee-screen-capture",
+  capabilities,
   overlayContext,
 }: DeterministicStillExportOptions): Promise<DeterministicStillExportResult> {
   const validation = validateCaptureRecipe(recipe);
@@ -127,7 +155,10 @@ export async function exportDeterministicStill({
   const capabilityValidation = validateRenderResolutionRequest({
     resolution: recipe.resolution,
     supersampleScale,
-    ...sceneHandle.getCaptureCapabilities(),
+    ...resolveEffectiveCaptureCapabilities(
+      sceneHandle.getCaptureCapabilities(),
+      capabilities,
+    ),
   });
   if (!capabilityValidation.valid) {
     throw new Error(
@@ -196,28 +227,54 @@ export async function exportDeterministicStill({
     if (cameraPose) {
       applyPose(sceneHandle.camera, sceneHandle.controls, cameraPose);
     }
-    sceneHandle.renderCaptureFrame({
-      timeSeconds: resolvedTimeSeconds,
-      frameIndex: resolvedFrameIndex,
-    });
-    outputContext.clearRect(0, 0, width, height);
-    outputContext.drawImage(sceneHandle.getCanvas(), 0, 0, width, height);
-    if (recipe.mode === "scene-annotations" || recipe.mode === "presentation-ui") {
-      renderCaptureOverlay(outputContext, {
-        mode: recipe.mode,
-        title: recipe.pageId ?? recipe.projectSlug,
-        projectName: recipe.projectSlug,
-        pageLabel: recipe.pageId,
-        ...(overlayContext?.({
-          frameIndex: resolvedFrameIndex,
-          timeSeconds: resolvedTimeSeconds,
-        }) ?? {}),
-        width,
-        height,
+    let blob: Blob;
+    if (isFloatStillMimeType(mimeType)) {
+      // EXR / 16-bit PNG: keep the full HalfFloat composed range (no 8-bit blit,
+      // no banding). The 2D overlay + supersample downscale are skipped; these are
+      // clean, render-resolution float plates.
+      if (typeof sceneHandle.renderCaptureFloatTarget !== "function") {
+        throw new Error(
+          "Float capture requires the float render path, which this renderer does not expose.",
+        );
+      }
+      const floatTarget = sceneHandle.renderCaptureFloatTarget({
+        timeSeconds: resolvedTimeSeconds,
+        frameIndex: resolvedFrameIndex,
       });
+      if (!floatTarget) {
+        throw new Error("Float capture produced no float render target.");
+      }
+      blob =
+        mimeType === "image/x-png16"
+          ? await encodeCapturePng16(sceneHandle.renderer, floatTarget, {
+              log: logTransfer,
+            })
+          : await encodeCaptureExr(sceneHandle.renderer, floatTarget, {
+              log: logTransfer,
+            });
+    } else {
+      sceneHandle.renderCaptureFrame({
+        timeSeconds: resolvedTimeSeconds,
+        frameIndex: resolvedFrameIndex,
+      });
+      outputContext.clearRect(0, 0, width, height);
+      outputContext.drawImage(sceneHandle.getCanvas(), 0, 0, width, height);
+      if (recipe.mode === "scene-annotations" || recipe.mode === "presentation-ui") {
+        renderCaptureOverlay(outputContext, {
+          mode: recipe.mode,
+          title: recipe.pageId ?? recipe.projectSlug,
+          projectName: recipe.projectSlug,
+          pageLabel: recipe.pageId,
+          ...(overlayContext?.({
+            frameIndex: resolvedFrameIndex,
+            timeSeconds: resolvedTimeSeconds,
+          }) ?? {}),
+          width,
+          height,
+        });
+      }
+      blob = await encodeStillCanvas(outputCanvas, mimeType, imageQuality);
     }
-
-    const blob = await encodeStillCanvas(outputCanvas, mimeType, imageQuality);
     validateStillBlob(blob);
     outputUrl = URL.createObjectURL(blob);
     const resultUrl = outputUrl;

@@ -38,6 +38,10 @@ export interface LocalVideoRenderRunStatus {
   masterPath?: string | null;
   frameSequenceDir?: string | null;
   diagnosticsMissing?: boolean;
+  // A run reported "complete" but its output file is gone from disk; the status
+  // endpoint probes existence so a deleted/moved output is not presented as a
+  // valid "Ready" download.
+  outputMissing?: boolean;
 }
 
 export interface StartLocalVideoRenderJobOptions {

@@ -82,10 +82,12 @@
       },
       "files": {
         "volume": "full_extent/volume.u8",
+        "volumeHigh": "full_extent/volume_high.f32",
         "mask": "full_extent/mask.u8",
         "stats": "full_extent/stats.json",
         "provenance": "full_extent/provenance.json"
       },
+      "volumeHighEncoding": "float32-normalized",
       "displayRecipe": {
         "opacity": 0.34,
         "density": 0.54,
@@ -141,10 +143,12 @@
       },
       "files": {
         "volume": "forge_focused/volume.u8",
+        "volumeHigh": "forge_focused/volume_high.f32",
         "mask": "forge_focused/mask.u8",
         "stats": "forge_focused/stats.json",
         "provenance": "forge_focused/provenance.json"
       },
+      "volumeHighEncoding": "float32-normalized",
       "displayRecipe": {
         "opacity": 0.46,
         "density": 0.72,

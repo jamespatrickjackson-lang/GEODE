@@ -63,7 +63,11 @@ export function createCompositedCaptureRecorder({
         drawFailed = true;
         onDrawError?.(drawError);
         if (stream) stopMediaStreamTracks(stream);
-        void recorder?.stop().catch(() => undefined);
+        // Abort (not stop): a draw failure is an unexpected terminal failure, so
+        // it must surface through onRecorderError/onUnexpectedStop rather than be
+        // masked as an intentional stop. stop() would set stopRequested and
+        // suppress those callbacks, leaving the recorder owner wedged.
+        void recorder?.abort?.(drawError).catch(() => undefined);
       }
       return false;
     }

@@ -1164,6 +1164,54 @@ test("scroll handoff packages validate explicit status and complete outputs", as
   assert.match(arraySourceContract.errors.join("\n"), /sourceContract/);
 });
 
+test("scroll handoff keeps the primary media + a warning when a secondary format fails", async () => {
+  const { createScrollRecordRequest } = await importBundled(
+    "src/capture/captureScrollTimeline.ts",
+  );
+  const {
+    createPendingScrollHandoffManifest,
+    createFinalScrollHandoffManifest,
+    validateScrollHandoffManifest,
+  } = await importBundled("src/capture/scrollHandoffPackage.ts");
+
+  const request = createScrollRecordRequest({
+    timeline: validScrollTimeline({ durationSeconds: 2 }),
+    format: "mp4",
+    formats: ["mp4", "webm"],
+    quality: { preset: "1080p", width: 1920, height: 1080 },
+    destination: ".tmp/capture-scroll-outputs",
+    packageName: "multi-format-secondary-fail",
+    cleanRender: true,
+    renderRouteIntent: "browser-inline",
+    createdAt: "2026-06-20T00:00:00.000Z",
+  });
+  const pending = createPendingScrollHandoffManifest(request);
+  // Primary mp4 succeeded; the secondary webm delivery encode failed. The package
+  // still ships the primary with a recorded warning rather than failing the run.
+  const final = createFinalScrollHandoffManifest({
+    manifest: pending,
+    status: "complete",
+    media: [
+      {
+        role: "primary",
+        path: "media/scroll-master.mp4",
+        mimeType: "video/mp4",
+        byteLength: 4096,
+      },
+    ],
+    frames: { directory: "frames", pattern: "frame-%06d.png", count: 10 },
+    warnings: ["webm delivery encode failed: ffmpeg exited with code 1"],
+  });
+  assert.equal(final.status, "complete");
+  assert.equal(final.media.length, 1);
+  assert.equal(final.media[0].role, "primary");
+  assert.ok(
+    final.warnings.some((warning) => /webm/.test(warning)),
+    "retains the failed secondary-format warning",
+  );
+  assert.equal(validateScrollHandoffManifest(final).valid, true);
+});
+
 test("scroll handoff complete, cancelled, and failed manifests retain package evidence", async () => {
   const {
     createScrollRecordRequest,
@@ -2889,6 +2937,10 @@ function installRecorderUrlStub() {
 
 function installMediaRecorderStub({
   chunks = [new Blob(["recording"], { type: "video/webm" })],
+  // When false, stop() transitions to inactive but never fires the "stop"
+  // event, simulating a recorder whose source tracks ended without a clean
+  // stop. Used to prove abort()/the stop watchdog settle without that event.
+  emitStopOnStop = true,
 } = {}) {
   const previous = globalThis.MediaRecorder;
   const calls = [];
@@ -2918,6 +2970,7 @@ function installMediaRecorderStub({
       calls.push(["stop"]);
       if (this.state === "inactive") return;
       this.state = "inactive";
+      if (!emitStopOnStop) return;
       queueMicrotask(() => {
         this.dispatchEvent(new Event("stop"));
       });
@@ -3302,6 +3355,184 @@ test("composited recorder rejects zero-byte output and cleans stream resources",
   } finally {
     urlStub.restore();
     recorderStub.restore();
+    restoreDocument();
+  }
+});
+
+test("media stream recorder abort() surfaces a terminal recorder error without a stop event", async () => {
+  // emitStopOnStop:false => the underlying recorder never fires "stop". abort()
+  // must still settle the result (reject) and fire onRecorderError, NOT mask the
+  // failure as a user stop (which would suppress the callback).
+  const recorderStub = installMediaRecorderStub({
+    chunks: [new Blob([])],
+    emitStopOnStop: false,
+  });
+  const urlStub = installRecorderUrlStub();
+  try {
+    const { createMediaStreamRecorder } = await importBundled(
+      "src/capture/canvasPreviewRecorder.ts",
+    );
+    const { track } = fakeCaptureTrack();
+    const stream = {
+      getTracks: () => [track],
+      getVideoTracks: () => [track],
+    };
+    let recorderError = null;
+    let unexpected = null;
+    const recorder = createMediaStreamRecorder(stream, {
+      mimeType: "video/webm",
+      outputContext: { width: 1920, height: 1080, fps: 30 },
+      onUnexpectedStop: (result) => {
+        unexpected = result;
+      },
+      onRecorderError: (error) => {
+        recorderError = error;
+      },
+    });
+
+    const drawError = new Error("canvas read failed");
+    await assert.rejects(() => recorder.abort(drawError), /canvas read failed/);
+    assert.equal(
+      recorderError?.message,
+      "canvas read failed",
+      "abort surfaces the failure through onRecorderError",
+    );
+    assert.equal(
+      unexpected,
+      null,
+      "abort with an error does not report an unexpected completed stop",
+    );
+    assert.equal(
+      urlStub.created.length,
+      0,
+      "no output URL is created for an aborted recording",
+    );
+  } finally {
+    urlStub.restore();
+    recorderStub.restore();
+  }
+});
+
+test("composited recorder draw failure aborts as a terminal recorder error, not a masked stop", async () => {
+  // A 2D context whose drawImage throws AFTER the construction frame simulates a
+  // mid-recording WebGL read failure. The failure must surface through
+  // onRecorderError (terminal) so the owner can leave the recording state.
+  class FailingDrawCanvas extends FakeCanvas {
+    constructor() {
+      super();
+      this.draws = 0;
+    }
+    getContext() {
+      const base = super.getContext();
+      const self = this;
+      const original = base.drawImage;
+      base.drawImage = function drawImage(...args) {
+        self.draws += 1;
+        if (self.draws > 1) {
+          throw new Error("canvas read failed");
+        }
+        return original.apply(this, args);
+      };
+      return base;
+    }
+  }
+  const previousDocument = globalThis.document;
+  const createdCanvases = [];
+  globalThis.document = {
+    createElement(tag) {
+      assert.equal(tag, "canvas");
+      const canvas = new FailingDrawCanvas();
+      createdCanvases.push(canvas);
+      return canvas;
+    },
+  };
+  const recorderStub = installMediaRecorderStub({ chunks: [new Blob([])] });
+  const urlStub = installRecorderUrlStub();
+  try {
+    const { createCompositedCaptureRecorder } = await importBundled(
+      "src/capture/compositedCaptureRecorder.ts",
+    );
+    const sceneHandle = fakeSceneHandle();
+    let drawError = null;
+    let recorderError = null;
+    createCompositedCaptureRecorder({
+      sceneHandle,
+      width: 1920,
+      height: 1080,
+      fps: 30,
+      mimeType: "video/webm",
+      overlayContext: () => ({
+        mode: "scene-annotations",
+        width: 1920,
+        height: 1080,
+        title: "Runtime Overlay",
+      }),
+      outputContext: {
+        mode: "scene-annotations",
+        width: 1920,
+        height: 1080,
+        fps: 30,
+      },
+      onDrawError: (error) => {
+        drawError = error;
+      },
+      onRecorderError: (error) => {
+        recorderError = error;
+      },
+    });
+
+    sceneHandle.triggerAfterRender();
+    await Promise.resolve();
+    await Promise.resolve();
+
+    assert.ok(drawError, "onDrawError fires with the draw failure");
+    assert.equal(
+      recorderError?.message,
+      "canvas read failed",
+      "draw failure surfaces as a terminal onRecorderError, not a masked stop",
+    );
+    assert.ok(
+      createdCanvases[0].captureTrackCalls.includes("stop"),
+      "capture stream tracks are stopped on draw failure",
+    );
+  } finally {
+    urlStub.restore();
+    recorderStub.restore();
+    globalThis.document = previousDocument;
+  }
+});
+
+test("deterministic still honors a stricter caller capability budget", async () => {
+  const restoreDocument = installDocumentStub();
+  const urlStub = installUrlStub();
+  try {
+    const { exportDeterministicStill } = await importBundled(
+      "src/capture/deterministicStillExporter.ts",
+    );
+    const sceneHandle = fakeSceneHandle({ maxTextureSize: 16384 });
+    const recipe = validRecipe({
+      mode: "scene-annotations",
+      resolution: { width: 2048, height: 1152, label: "Wide" },
+    });
+
+    // Raw GL caps (16384) allow this size: the in-browser render path runs.
+    const still = await exportDeterministicStill({ sceneHandle, recipe });
+    assert.equal(still.width, 2048);
+
+    // A stricter caller budget (the provider preflight) must reject the same
+    // size BEFORE any render, so the provider routes to the external job instead
+    // of attempting a doomed render that churns the main thread.
+    await assert.rejects(
+      () =>
+        exportDeterministicStill({
+          sceneHandle,
+          recipe,
+          capabilities: { maxTextureSize: 1024 },
+        }),
+      /render output is not available[\s\S]*exceeds/i,
+    );
+  } finally {
+    urlStub.restore();
     restoreDocument();
   }
 });
@@ -5145,6 +5376,116 @@ test("captureVideoRunPublicStatus shapes status + diagnosticsMissing (Patch C3)"
   });
   assert.equal(enriched.diagnosticsMissing, false);
   assert.equal(enriched.renderer, "ANGLE");
+});
+
+test("captureVideoRunPublicStatus flags outputMissing when a completed run's file is gone", async () => {
+  const { captureVideoRunPublicStatus } = await importBundled(
+    "plugins/capture-video-run-status.ts",
+  );
+  const base = {
+    runId: "run-2",
+    status: "complete",
+    phase: "complete",
+    startedAt: "2026-06-20T00:00:00.000Z",
+    completedAt: "2026-06-20T00:00:05.000Z",
+    outputFilename: "out.mp4",
+    outputPath: "/runs/out.mp4",
+    outputUrl: "/api/capture/video-output/run-2",
+    diagnosticsPath: "/runs/diag.json",
+  };
+  // Unknown existence (field absent) never raises the warning.
+  assert.equal(captureVideoRunPublicStatus(base).outputMissing, false);
+  // Completed + file present: not missing.
+  assert.equal(
+    captureVideoRunPublicStatus({ ...base, outputExists: true }).outputMissing,
+    false,
+  );
+  // Completed + file gone: missing.
+  assert.equal(
+    captureVideoRunPublicStatus({ ...base, outputExists: false }).outputMissing,
+    true,
+  );
+  // Still rendering + file absent: not missing (only warns once complete).
+  assert.equal(
+    captureVideoRunPublicStatus({
+      ...base,
+      status: "rendering",
+      outputExists: false,
+    }).outputMissing,
+    false,
+  );
+});
+
+test("EXR capture encodes a valid OpenEXR HalfFloat image", async () => {
+  // DataTexture form needs no renderer, so the HalfFloat -> OpenEXR encode that
+  // the still EXR branch depends on is testable headless.
+  const { EXRExporter } = await import(
+    "three/examples/jsm/exporters/EXRExporter.js"
+  );
+  const THREE = await import("three");
+  const width = 4;
+  const height = 4;
+  const data = new Uint16Array(width * height * 4);
+  for (let i = 0; i < width * height; i += 1) {
+    data[i * 4 + 0] = 0x3c00; // 1.0 (half)
+    data[i * 4 + 1] = 0x3800; // ~0.5 (half)
+    data[i * 4 + 2] = 0x0000; // 0.0
+    data[i * 4 + 3] = 0x3c00; // 1.0
+  }
+  const texture = new THREE.DataTexture(
+    data,
+    width,
+    height,
+    THREE.RGBAFormat,
+    THREE.HalfFloatType,
+  );
+  texture.needsUpdate = true;
+  const exporter = new EXRExporter();
+  const bytes = await exporter.parse(texture, { type: THREE.HalfFloatType });
+  assert.ok(bytes instanceof Uint8Array && bytes.length > 0, "EXR bytes produced");
+  // OpenEXR magic number 0x76 0x2f 0x31 0x01.
+  assert.deepEqual(Array.from(bytes.slice(0, 4)), [0x76, 0x2f, 0x31, 0x01]);
+});
+
+test("capture log transfer + 16-bit quantize are correct and monotonic", async () => {
+  const {
+    captureLogEncode,
+    applyCaptureLogTransfer,
+    quantizeFloatToUint16,
+    CAPTURE_LOG_PIVOT,
+  } = await importBundled("src/capture/captureFloatStill.ts");
+  // Mid-gray pivot maps to (0 - (-8)) / 14 stops = 8/14.
+  assert.ok(Math.abs(captureLogEncode(CAPTURE_LOG_PIVOT) - 8 / 14) < 1e-6);
+  // Clamped to [0, 1].
+  assert.equal(captureLogEncode(0), 0);
+  assert.equal(captureLogEncode(1e9), 1);
+  // Monotonic increasing.
+  assert.ok(captureLogEncode(0.05) < captureLogEncode(CAPTURE_LOG_PIVOT));
+  assert.ok(captureLogEncode(CAPTURE_LOG_PIVOT) < captureLogEncode(0.9));
+  // Applies to RGB, leaves alpha linear.
+  const px = new Float32Array([CAPTURE_LOG_PIVOT, CAPTURE_LOG_PIVOT, CAPTURE_LOG_PIVOT, 1]);
+  applyCaptureLogTransfer(px);
+  assert.ok(Math.abs(px[0] - 8 / 14) < 1e-6);
+  assert.equal(px[3], 1);
+  // 16-bit quantization clamps and scales.
+  assert.deepEqual(
+    Array.from(quantizeFloatToUint16(new Float32Array([0, 0.5, 1, 2]))),
+    [0, Math.round(0.5 * 65535), 65535, 65535],
+  );
+});
+
+test("16-bit PNG encodes/decodes at depth 16 via fast-png", async () => {
+  const fp = await import("fast-png");
+  const data = new Uint16Array([
+    65535, 0, 0, 65535, 0, 65535, 0, 65535, 0, 0, 65535, 65535, 32768, 32768,
+    32768, 65535,
+  ]);
+  const png = fp.encode({ width: 2, height: 2, depth: 16, channels: 4, data });
+  assert.ok(fp.hasPngSignature(png), "valid PNG signature");
+  const decoded = fp.decode(png);
+  assert.equal(decoded.depth, 16);
+  assert.equal(decoded.channels, 4);
+  assert.deepEqual(Array.from(decoded.data.slice(0, 4)), [65535, 0, 0, 65535]);
 });
 
 test("page clip start-frame edit holds on the first clip (leading offset)", async () => {

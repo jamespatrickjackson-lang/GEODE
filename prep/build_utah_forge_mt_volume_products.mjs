@@ -392,6 +392,9 @@ function makeAccumulator(product, bounds, scalarRange) {
     values: new Float32Array(voxelCount),
     mask: new Uint8Array(voxelCount),
     volume: new Uint8Array(voxelCount),
+    // Capture-tier high-precision volume: normalized 0..1 (same range as the
+    // uint8 `volume`) stored as Float32 to remove 8-bit banding in capture.
+    volumeHigh: new Float32Array(voxelCount),
     observedRows: 0,
     positiveRowsInBounds: 0,
   };
@@ -431,7 +434,8 @@ function percentile(sorted, fraction) {
 }
 
 function finalizeAccumulator(accumulator) {
-  const { counts, sums, values, mask, volume, scalarRange } = accumulator;
+  const { counts, sums, values, mask, volume, volumeHigh, scalarRange } =
+    accumulator;
   const occupiedValues = [];
   const sourceSpan = Math.max(1e-9, scalarRange.max - scalarRange.min);
   let occupiedVoxelCount = 0;
@@ -441,6 +445,7 @@ function finalizeAccumulator(accumulator) {
     if (counts[index] <= 0) {
       values[index] = Number.NaN;
       volume[index] = 0;
+      volumeHigh[index] = 0;
       mask[index] = 0;
       continue;
     }
@@ -450,11 +455,12 @@ function finalizeAccumulator(accumulator) {
     occupiedVoxelCount += 1;
     logMin = Math.min(logMin, logValue);
     logMax = Math.max(logMax, logValue);
-    const normalized = Math.max(
+    const normalizedFloat = Math.max(
       0,
-      Math.min(255, Math.round(((logValue - scalarRange.min) / sourceSpan) * 255)),
+      Math.min(1, (logValue - scalarRange.min) / sourceSpan),
     );
-    volume[index] = normalized;
+    volume[index] = Math.round(normalizedFloat * 255);
+    volumeHigh[index] = normalizedFloat;
     mask[index] = 255;
   }
   occupiedValues.sort((a, b) => a - b);
@@ -779,6 +785,14 @@ async function writeProduct(accumulator, options) {
   const productDir = path.join(options.outputDir, accumulator.outputDir);
   await mkdir(productDir, { recursive: true });
   await writeFile(path.join(productDir, "volume.u8"), Buffer.from(accumulator.volume));
+  await writeFile(
+    path.join(productDir, "volume_high.f32"),
+    Buffer.from(
+      accumulator.volumeHigh.buffer,
+      accumulator.volumeHigh.byteOffset,
+      accumulator.volumeHigh.byteLength,
+    ),
+  );
   await writeFile(path.join(productDir, "mask.u8"), Buffer.from(accumulator.mask));
   await writeFile(
     path.join(productDir, "stats.json"),
@@ -894,10 +908,12 @@ async function main() {
       scalarRange,
       files: {
         volume: `${accumulator.outputDir}/volume.u8`,
+        volumeHigh: `${accumulator.outputDir}/volume_high.f32`,
         mask: `${accumulator.outputDir}/mask.u8`,
         stats: `${accumulator.outputDir}/stats.json`,
         provenance: `${accumulator.outputDir}/provenance.json`,
       },
+      volumeHighEncoding: "float32-normalized",
       displayRecipe: {
         opacity: accumulator.id.includes("focused") ? 0.46 : 0.34,
         density: accumulator.id.includes("focused") ? 0.72 : 0.54,

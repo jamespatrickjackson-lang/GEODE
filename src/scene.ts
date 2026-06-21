@@ -408,6 +408,13 @@ export interface SceneHandle {
     timeSeconds: number;
     frameIndex: number;
   }): void;
+  // Render the capture frame through the composer but keep the result in the
+  // composer's HalfFloat read buffer (no 8-bit screen blit), so EXR/float capture
+  // can read the full-range composed pixels. Returns the HalfFloat RGBA target.
+  renderCaptureFloatTarget?(options: {
+    timeSeconds: number;
+    frameIndex: number;
+  }): THREE.WebGLRenderTarget | null;
   getCameraPose(): CaptureCameraPathKeyframeV1;
   setCameraPose(pose: CaptureCameraPathSample | CaptureCameraPathKeyframeV1): void;
   beginCaptureFidelityLock(options: {
@@ -843,6 +850,41 @@ export function mountScene(
       }
     }
   };
+  // Float/EXR capture: same prepare + composer render as renderCaptureFrame, but
+  // with the composer NOT blitting to the 8-bit screen (renderToScreen=false), so
+  // the final composed pixels stay in the HalfFloat read buffer for readback.
+  const renderCaptureFloatTarget = ({
+    timeSeconds,
+  }: {
+    timeSeconds: number;
+    frameIndex: number;
+  }): THREE.WebGLRenderTarget | null => {
+    const timeMs = timeSeconds * 1000;
+    const cameraPathOverlayVisible = captureCameraPathOverlay.visible;
+    captureCameraPathOverlay.visible = false;
+    const previousRenderToScreen = post.composer.renderToScreen;
+    try {
+      for (const ticker of tickers) {
+        ticker.fn(timeMs);
+      }
+      syncCaptureNativeAnnotationVisibility();
+      controls.update();
+      manager.frameUpdate(camera, timeMs);
+      if (captureGradeMode === "clean") {
+        post.applyCaptureCleanGrade(captureGradeTiled);
+      }
+      post.composer.renderToScreen = false;
+      post.composer.render();
+      notifyAfterRenderCallbacks();
+      // After a non-screen render the final pass output lands in readBuffer.
+      return post.composer.readBuffer ?? null;
+    } finally {
+      post.composer.renderToScreen = previousRenderToScreen;
+      if (!captureSizeSnapshot) {
+        captureCameraPathOverlay.visible = cameraPathOverlayVisible;
+      }
+    }
+  };
   const renderCameraPathPreviewFrame = ({
     pose,
     width,
@@ -1027,6 +1069,25 @@ export function mountScene(
     if (captureGradeMode === "clean") {
       post.applyCaptureCleanGrade(captureGradeTiled);
     }
+    // Tiled capture: map the grade pass's screen-space vignette into full-frame
+    // space so it is one global gradient, not a per-tile grid (Baked Look seam).
+    // Identity for the single-surface path.
+    if (
+      captureGradeTiled &&
+      typeof options.fullOutputWidth === "number" &&
+      options.fullOutputWidth > 0 &&
+      typeof options.fullOutputHeight === "number" &&
+      options.fullOutputHeight > 0
+    ) {
+      post.setCaptureTileRect(
+        (options.tileX ?? 0) / options.fullOutputWidth,
+        (options.tileY ?? 0) / options.fullOutputHeight,
+        options.width / options.fullOutputWidth,
+        options.height / options.fullOutputHeight,
+      );
+    } else {
+      post.setCaptureTileRect(0, 0, 1, 1);
+    }
     renderer.domElement.dataset.captureFidelity = options.mode;
     renderer.domElement.dataset.captureDownsampling = "disabled";
     renderer.domElement.dataset.captureMsaaSamples = String(captureSamples);
@@ -1039,6 +1100,9 @@ export function mountScene(
     delete renderer.domElement.dataset.captureMsaaSamples;
     delete renderer.domElement.dataset.captureGradeMode;
     post.clearCaptureGrade();
+    // Authoritative reset: clearCaptureGrade early-returns in Baked Look (no clean
+    // snapshot), so reset the tile remap here unconditionally.
+    post.setCaptureTileRect(0, 0, 1, 1);
     captureGradeMode = null;
     captureGradeTiled = false;
     post.setCaptureMultisample(0);
@@ -3779,6 +3843,7 @@ export function mountScene(
     endCaptureSize,
     onAfterRender,
     renderCaptureFrame,
+    renderCaptureFloatTarget,
     getCameraPose,
     setCameraPose,
     beginCaptureFidelityLock,

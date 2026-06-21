@@ -486,8 +486,11 @@ def qgis_gdal_translate_cog(
             "-outsize",
             f"{width}",
             f"{height}",
+            # Lanczos preserves high-frequency detail far better than bilinear
+            # at the long-edge downsample, which is the irreversible source
+            # ceiling for the draped ortho (see capture output quality audit).
             "-r",
-            "bilinear",
+            "lanczos",
             "-co",
             "COMPRESS=WEBP",
             "-co",
@@ -688,8 +691,11 @@ def qgis_gdal_translate(
             "-outsize",
             f"{width}",
             f"{height}",
+            # Lanczos preserves high-frequency detail far better than bilinear
+            # at the long-edge downsample (irreversible source ceiling for the
+            # draped ortho).
             "-r",
-            "bilinear",
+            "lanczos",
             "-co",
             f"QUALITY={quality}",
             str(source),

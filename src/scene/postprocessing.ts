@@ -97,6 +97,13 @@ const lensGradeShader = {
     tintStrength: { value: 0.04 },
     vignetteStrength: { value: 0.95 },
     vignetteSmoothness: { value: 0.75 },
+    // Maps tile-local vUv into full-frame UV so screen-space FX (the radial
+    // vignette) are computed against the whole output, not each tile. Identity
+    // (offset 0, scale 1) for normal/non-tiled rendering, so live output is
+    // unchanged; set to the tile's normalized rect during tiled capture to remove
+    // the per-tile vignette grid/seam in Baked Look.
+    uTileOffset: { value: new THREE.Vector2(0, 0) },
+    uTileScale: { value: new THREE.Vector2(1, 1) },
     temperature: { value: 0 },
     blackPoint: { value: 0 },
     whitePoint: { value: 1 },
@@ -143,6 +150,8 @@ const lensGradeShader = {
     uniform float tintStrength;
     uniform float vignetteStrength;
     uniform float vignetteSmoothness;
+    uniform vec2 uTileOffset;
+    uniform vec2 uTileScale;
     uniform float temperature;
     uniform float blackPoint;
     uniform float whitePoint;
@@ -364,7 +373,11 @@ const lensGradeShader = {
       c = mix(c, c * splitColor * 1.45, clamp(splitToneAmount, 0.0, 1.0));
       c = mix(c, c * filterColor * 1.2, clamp(filterIntensity, 0.0, 1.0));
 
-      vec2 d = vUv - 0.5;
+      // Full-frame UV: identity (== vUv) for live/non-tiled render; the tile's
+      // place in the whole frame during tiled capture, so the radial vignette is
+      // one global gradient instead of a per-tile grid (Baked Look seam fix).
+      vec2 frameUv = vUv * uTileScale + uTileOffset;
+      vec2 d = frameUv - 0.5;
       float r = length(d) * 1.4142;
       float v = smoothstep(vignetteStrength, vignetteStrength - vignetteSmoothness, r);
       c *= mix(1.0 - vignetteStrength * 0.5, 1.0, v);
@@ -374,8 +387,11 @@ const lensGradeShader = {
         c += (g - 0.5) * grainAmount;
       }
 
-      c = applyGuides(c, vUv);
-      c = applyPresentationFrame(c, vUv);
+      // Positional overlays use the full-frame UV so the frame border + guides
+      // align across tiles (same seam fix as the vignette). The optics/distortion
+      // and gate-weave sample the tile texture and stay tile-local.
+      c = applyGuides(c, frameUv);
+      c = applyPresentationFrame(c, frameUv);
 
       gl_FragColor = vec4(max(c, vec3(0.0)), 1.0);
     }
@@ -397,6 +413,14 @@ export interface PostHandle {
   setCaptureMultisample(samples: number): void;
   applyCaptureCleanGrade(tiled: boolean): void;
   clearCaptureGrade(): void;
+  // Set the grade pass's full-frame remap so screen-space FX (vignette) align
+  // across tiles. Pass the tile's normalized rect; call with (0,0,1,1) to reset.
+  setCaptureTileRect(
+    offsetX: number,
+    offsetY: number,
+    scaleX: number,
+    scaleY: number,
+  ): void;
   baseBloomStrength: number;
   setBloomStrength(s: number): void;
 }
@@ -588,6 +612,13 @@ export function buildPostprocessing(
       afterimagePass.enabled = snap.afterimage;
       smaaPass.enabled = snap.smaa;
       captureGradeSnapshot = null;
+      // Tile remap is a capture-only concern; always restore identity on clear.
+      lensGradePass.uniforms.uTileOffset.value.set(0, 0);
+      lensGradePass.uniforms.uTileScale.value.set(1, 1);
+    },
+    setCaptureTileRect(offsetX, offsetY, scaleX, scaleY) {
+      lensGradePass.uniforms.uTileOffset.value.set(offsetX, offsetY);
+      lensGradePass.uniforms.uTileScale.value.set(scaleX, scaleY);
     },
     baseBloomStrength,
     setBloomStrength(s) {

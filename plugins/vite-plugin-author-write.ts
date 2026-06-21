@@ -1,5 +1,5 @@
 import type { Plugin, ViteDevServer } from "vite";
-import { promises as fs } from "node:fs";
+import { promises as fs, existsSync } from "node:fs";
 import { spawn } from "node:child_process";
 import type { ChildProcess } from "node:child_process";
 import { createHash, randomUUID } from "node:crypto";
@@ -394,7 +394,12 @@ function safeVideoOutputFilename(job: any, requested?: string): string {
 }
 
 function captureVideoRunPublicStatus(run: CaptureVideoRunRecord) {
-  return captureVideoRunPublicStatusShape(run);
+  // Probe the output on disk so a completed run whose file was deleted/moved
+  // surfaces `outputMissing` instead of a dead "Ready" download.
+  return captureVideoRunPublicStatusShape({
+    ...run,
+    outputExists: existsSync(run.outputPath),
+  });
 }
 
 function captureScrollPackageRunPublicStatus(

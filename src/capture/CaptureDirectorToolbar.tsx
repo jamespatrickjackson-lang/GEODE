@@ -944,6 +944,8 @@ export function CaptureDirectorToolbar() {
     setScreenCaptureOptionsOpen,
     screenCaptureType,
     setScreenCaptureType,
+    screenCaptureLogTransfer,
+    setScreenCaptureLogTransfer,
     screenCaptureQuality,
     setScreenCaptureQuality,
     screenCaptureSaveMessage,
@@ -1133,6 +1135,21 @@ export function CaptureDirectorToolbar() {
   const deterministicVideoJob = [...captureJobs]
     .reverse()
     .find((job) => job.kind === "deterministic-video");
+  // A completed video job whose only output is the external-job JSON (the local
+  // renderer was unavailable) must not read as finished media. Flag it so the
+  // status reads distinctly instead of a misleading "Ready".
+  const deterministicVideoFallbackOnly = Boolean(
+    deterministicVideoJob &&
+      deterministicVideoJob.status === "complete" &&
+      deterministicVideoJob.diagnostics.fallbackOnly === true,
+  );
+  // Same distinction for the path-render job: a completed path render whose only
+  // artifact is the external-job JSON (local renderer unavailable) must not read
+  // as finished media.
+  const pathRenderFallbackOnly =
+    pathRenderStatus === "complete" &&
+    Boolean(externalVideoJobUrl) &&
+    !pathRenderOutputUrl;
   const pageRangeSummary =
     captureScope === "page-range"
       ? capturePageRange.valid
@@ -1251,7 +1268,8 @@ export function CaptureDirectorToolbar() {
   ].filter((link): link is { label: string; url: string } => Boolean(link.url));
   const scrollRenderProgressLabel =
     scrollPackageProgressLabel ?? `Ready 0/${scrollEstimatedFrameCount} frames`;
-  const stillQualityDisabled = screenCaptureType === "png";
+  const stillQualityDisabled =
+    screenCaptureType === "png" || screenCaptureType === "exr";
   const cameraPathTimeline = useMemo(
     () => resolveCaptureCameraPathV3Timeline(captureCameraPathV3),
     [captureCameraPathV3],
@@ -1609,14 +1627,22 @@ export function CaptureDirectorToolbar() {
                 expanded={expandedSections.render}
                 onToggle={() => updateSectionExpanded("render")}
                 status={
-                  <span data-testid="capture-export-state" style={statusStyle}>
+                  <span
+                    data-testid="capture-export-state"
+                    data-fallback-only={
+                      deterministicVideoFallbackOnly ? "true" : undefined
+                    }
+                    style={statusStyle}
+                  >
                   {deterministicExportStatus === "rendering"
                     ? deterministicVideoJob?.progress.message ??
                       `Rendering ${deterministicExportProgress.renderedFrames}/${deterministicExportProgress.totalFrames}`
                     : deterministicExportStatus === "encoding"
                       ? deterministicVideoJob?.progress.message ?? "Encoding"
                       : deterministicExportStatus === "complete"
-                        ? "Ready"
+                        ? deterministicVideoFallbackOnly
+                          ? "Fallback JSON · no media"
+                          : "Ready"
                         : "Idle"}
                   </span>
                 }
@@ -1962,15 +1988,19 @@ export function CaptureDirectorToolbar() {
                   >
                     Cancel Path Render
                   </button>
-                  <span data-testid="capture-path-render-status" style={statusStyle}>
+                  <span
+                    data-testid="capture-path-render-status"
+                    data-fallback-only={pathRenderFallbackOnly ? "true" : undefined}
+                    style={statusStyle}
+                  >
                     {pathRenderStatus === "rendering"
                       ? pathRenderProgress.message ??
                         `Rendering ${pathRenderProgress.renderedFrames ?? 0}/${pathRenderProgress.totalFrames ?? 0}`
                       : pathRenderStatus === "encoding"
                         ? pathRenderProgress.message ?? "Encoding path video. No file has been saved yet."
                         : pathRenderStatus === "complete"
-                          ? externalVideoJobUrl && !pathRenderOutputUrl
-                            ? "External path video job ready"
+                          ? pathRenderFallbackOnly
+                            ? "Fallback JSON · external job, no media"
                             : "Rendered path video ready"
                           : pathRenderStatus === "failed"
                             ? "Path render failed"
@@ -2153,8 +2183,24 @@ export function CaptureDirectorToolbar() {
                       <option value="png">PNG</option>
                       <option value="webp">WebP</option>
                       <option value="jpeg">JPEG</option>
+                      <option value="exr">EXR (16-bit float)</option>
+                      <option value="png16">PNG (16-bit)</option>
                     </select>
                   </label>
+                  {(screenCaptureType === "exr" ||
+                    screenCaptureType === "png16") && (
+                    <label style={labelStyle}>
+                      <span>Log encoding</span>
+                      <input
+                        data-testid="capture-screen-log-transfer"
+                        type="checkbox"
+                        checked={screenCaptureLogTransfer}
+                        onChange={(event) =>
+                          setScreenCaptureLogTransfer(event.currentTarget.checked)
+                        }
+                      />
+                    </label>
+                  )}
                   <label style={labelStyle}>
                     <span>Quality</span>
                     <input

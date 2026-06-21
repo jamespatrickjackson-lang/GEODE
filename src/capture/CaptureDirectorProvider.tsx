@@ -108,6 +108,7 @@ import type {
 import {
   exportDeterministicStill,
   validateStillBlob,
+  type DeterministicStillMimeType,
 } from "./deterministicStillExporter";
 import { exportDeterministicStillTile } from "./deterministicStillTileExporter";
 import { encodeDeterministicFrameSequenceWithFfmpeg } from "./frameSequenceVideoEncoder";
@@ -182,6 +183,7 @@ import {
 import { createPendingScrollHandoffManifest } from "./scrollHandoffPackage";
 import {
   acquireCaptureStillSaveHandle,
+  captureStillExporterMimeType,
   captureStillFilename,
   captureStillMimeType,
   normalizeCaptureStillQuality,
@@ -449,6 +451,8 @@ interface CaptureDirectorContextValue {
   setScreenCaptureOptionsOpen(open: boolean): void;
   screenCaptureType: CaptureStillImageType;
   setScreenCaptureType(type: CaptureStillImageType): void;
+  screenCaptureLogTransfer: boolean;
+  setScreenCaptureLogTransfer(value: boolean): void;
   screenCaptureQuality: number;
   setScreenCaptureQuality(quality: number): void;
   screenCaptureSaveMessage: string | null;
@@ -567,6 +571,19 @@ function readAvailability(): CaptureFeatureAvailability {
 function formatCaptureError(error: unknown): string {
   if (error instanceof Error) return error.message;
   return "Capture recording failed.";
+}
+
+// Hard ceiling for awaiting a recorder stop. If the underlying MediaRecorder
+// never settles (source tracks ended without a "stop" event, headless rAF
+// stalls), the watchdog force-terminates the recording so the UI can never
+// wedge at "stopping" and the director can always close.
+const RECORDING_STOP_TIMEOUT_MS = 8000;
+
+class CaptureRecordingStopTimeoutError extends Error {
+  constructor() {
+    super("Recording stop timed out; the recorder was force-stopped.");
+    this.name = "CaptureRecordingStopTimeoutError";
+  }
 }
 
 // Fallback save when no file-system handle is available (showSaveFilePicker
@@ -1048,6 +1065,8 @@ export function CaptureDirectorProvider({
   const [screenCaptureOptionsOpen, setScreenCaptureOptionsOpen] = useState(false);
   const [screenCaptureType, setScreenCaptureType] =
     useState<CaptureStillImageType>("png");
+  // Apply the capture log transfer for the float (EXR / 16-bit PNG) still path.
+  const [screenCaptureLogTransfer, setScreenCaptureLogTransfer] = useState(false);
   const [screenCaptureQuality, setScreenCaptureQualityState] = useState(0.92);
   const [screenCaptureSaveMessage, setScreenCaptureSaveMessage] = useState<
     string | null
@@ -1180,6 +1199,12 @@ export function CaptureDirectorProvider({
   const [availability, setAvailability] =
     useState<CaptureFeatureAvailability>(() => readAvailability());
   const recorderRef = useRef<CaptureRecorderController | null>(null);
+  // Per-recording session id (0 = no active session). Every terminal transition
+  // (unexpected stop, recorder error, user stop, watchdog timeout) claims the
+  // active session so the cleanup runs exactly once even when several signals
+  // race (e.g. a composited draw failure plus a user stop).
+  const recordingSessionRef = useRef(0);
+  const recordingSessionSeqRef = useRef(0);
   const captureSizedRef = useRef(false);
   const elapsedTimerRef = useRef<number | null>(null);
   const startedAtRef = useRef<number | null>(null);
@@ -1752,6 +1777,16 @@ export function CaptureDirectorProvider({
     },
     [finishCaptureJob],
   );
+
+  // Atomic check-and-clear: returns true only for the first terminal signal of
+  // the given session, then retires the session so later signals are ignored.
+  const claimRecordingTerminal = useCallback((sessionId: number): boolean => {
+    if (sessionId === 0 || recordingSessionRef.current !== sessionId) {
+      return false;
+    }
+    recordingSessionRef.current = 0;
+    return true;
+  }, []);
 
   const completeRecordingFromResult = useCallback(
     (result: CaptureRecorderResult, mode: ActiveCaptureMode) => {
@@ -2820,6 +2855,8 @@ export function CaptureDirectorProvider({
     setRecordingStatus("preparing");
     setCaptureMode(armedMode);
     const activeMode = armedMode;
+    const sessionId = ++recordingSessionSeqRef.current;
+    recordingSessionRef.current = sessionId;
     const outputContext = recorderOutputContextForMode({
       mode: activeMode,
       resolution: previewResolution,
@@ -2827,9 +2864,11 @@ export function CaptureDirectorProvider({
     });
     const recorderCallbacks = {
       onUnexpectedStop: (result: CaptureRecorderResult) => {
+        if (!claimRecordingTerminal(sessionId)) return;
         completeRecordingFromResult(result, activeMode);
       },
       onRecorderError: (recordingError: Error) => {
+        if (!claimRecordingTerminal(sessionId)) return;
         failRecordingFromError(recordingError);
       },
     };
@@ -2900,6 +2939,7 @@ export function CaptureDirectorProvider({
       startElapsedTimer();
       setRecordingStatus("recording");
     } catch (recordingError) {
+      recordingSessionRef.current = 0;
       recorderRef.current = null;
       clearElapsedTimer();
       restoreCaptureSize();
@@ -2910,6 +2950,7 @@ export function CaptureDirectorProvider({
     }
   }, [
     armedMode,
+    claimRecordingTerminal,
     clearPreviewOutput,
     clearElapsedTimer,
     completeRecordingFromResult,
@@ -2927,9 +2968,26 @@ export function CaptureDirectorProvider({
   const stopRecording = useCallback(async () => {
     const recorder = recorderRef.current;
     if (!recorder || recordingStatus === "stopping") return;
+    const sessionId = recordingSessionRef.current;
     setRecordingStatus("stopping");
+    // Watchdog: never await recorder.stop() unbounded. If it does not settle
+    // within RECORDING_STOP_TIMEOUT_MS the recording is force-terminated, so the
+    // UI cannot wedge at "stopping" and the director close path cannot hang.
+    let watchdog: number | null = null;
     try {
-      const result = await recorder.stop();
+      const result = await Promise.race([
+        recorder.stop(),
+        new Promise<never>((_, reject) => {
+          watchdog = window.setTimeout(() => {
+            reject(new CaptureRecordingStopTimeoutError());
+          }, RECORDING_STOP_TIMEOUT_MS);
+        }),
+      ]);
+      if (watchdog !== null) window.clearTimeout(watchdog);
+      // A terminal signal (unexpected stop / draw failure) may have already
+      // claimed this session while the stop was in flight; if so, leave its
+      // state transition in place rather than double-applying.
+      if (!claimRecordingTerminal(sessionId)) return;
       try {
         validateCaptureRecorderBlob(
           result.blob,
@@ -2950,6 +3008,10 @@ export function CaptureDirectorProvider({
       setCaptureMode("off");
       completePathPreviewJob(result, `geosee-capture-${armedMode}.webm`);
     } catch (stopError) {
+      if (watchdog !== null) window.clearTimeout(watchdog);
+      // If a recorder callback already drove the terminal transition for this
+      // session, do not overwrite its state with the (now redundant) error.
+      if (!claimRecordingTerminal(sessionId)) return;
       recorderRef.current = null;
       clearElapsedTimer();
       restoreCaptureSize();
@@ -2960,6 +3022,7 @@ export function CaptureDirectorProvider({
       failPathPreviewJob(stopError);
     }
   }, [
+    claimRecordingTerminal,
     armedMode,
     clearElapsedTimer,
     clearPreviewOutput,
@@ -5418,6 +5481,7 @@ export function CaptureDirectorProvider({
           const pageIndex = pages.findIndex((entry) => entry.id === page.id);
           const segment = await exportDeterministicFrameSequence({
             sceneHandle,
+            capabilities: captureCapabilitiesForPreflight(sceneHandle),
             recipe: segmentRecipe,
             signal: abortController.signal,
             filenamePrefix: `geosee-${recipe.projectSlug}-${page.id}-${recipe.resolution.label}`,
@@ -5483,6 +5547,7 @@ export function CaptureDirectorProvider({
           const pageIndex = pages.findIndex((entry) => entry.id === page.id);
           const segment = await exportDeterministicFrameSequence({
             sceneHandle,
+            capabilities: captureCapabilitiesForPreflight(sceneHandle),
             recipe: segmentRecipe,
             signal: abortController.signal,
             filenamePrefix: `geosee-${recipe.projectSlug}-${page.id}-${recipe.resolution.label}`,
@@ -5513,6 +5578,7 @@ export function CaptureDirectorProvider({
       } else {
         sequence = await exportDeterministicFrameSequence({
           sceneHandle,
+          capabilities: captureCapabilitiesForPreflight(sceneHandle),
           recipe,
           signal: abortController.signal,
           filenamePrefix: `geosee-${recipe.projectSlug}-${recipe.resolution.label}`,
@@ -5861,6 +5927,7 @@ export function CaptureDirectorProvider({
       }
       const sequence = await exportDeterministicFrameSequence({
         sceneHandle,
+        capabilities: captureCapabilitiesForPreflight(sceneHandle),
         recipe,
         signal: abortController.signal,
         filenamePrefix: `geosee-${recipe.projectSlug}-path-${recipe.resolution.label}`,
@@ -6091,7 +6158,31 @@ export function CaptureDirectorProvider({
     const mimeType = captureStillMimeType(screenCaptureType) as
       | "image/png"
       | "image/webp"
-      | "image/jpeg";
+      | "image/jpeg"
+      | "image/x-exr";
+    // Exporter routing mime: EXR + 16-bit PNG take the float path (distinct
+    // markers); the saved file/blob still uses `mimeType` above.
+    const exporterMimeType = captureStillExporterMimeType(
+      screenCaptureType,
+    ) as DeterministicStillMimeType;
+
+    // EXR / 16-bit PNG are float scene renders; the browser cannot encode them
+    // from a display (toBlob) capture, so they are unavailable in Full UI mode.
+    if (
+      (screenCaptureType === "exr" || screenCaptureType === "png16") &&
+      armedMode === "full-ui"
+    ) {
+      setScreenCaptureStatus("idle");
+      setError(
+        "EXR / 16-bit PNG capture is only available for scene render modes, not Full UI display capture.",
+      );
+      finishCaptureJob(activeStillJobId, (job) =>
+        cancelCaptureJob(job, {
+          reason: "Float capture is unavailable for Full UI capture.",
+        }),
+      );
+      return;
+    }
 
     try {
       if (armedMode === "full-ui") {
@@ -6187,7 +6278,40 @@ export function CaptureDirectorProvider({
         ...captureCapabilitiesForPreflight(sceneHandle),
       });
       if (!stillRenderValidation.valid) {
-        throw new Error(stillRenderValidation.errors.join(" "));
+        // The device cannot render this size in-browser. Route directly to the
+        // external/headless tiled job: do NOT enter the render path (a doomed
+        // in-browser render can churn/hang the main thread) and do NOT prompt a
+        // save dialog. This is the deterministic 8K-on-limited-GPU fallback;
+        // the string-matched catch below remains only as a backstop for an
+        // unexpected render-time failure.
+        const failureReason = `Screen Capture render output is not available: ${stillRenderValidation.errors.join(" ")}`;
+        setCaptureMode("off");
+        let publishedExternalJob = false;
+        try {
+          publishExternalStillJob({ recipe, failureReason });
+          publishedExternalJob = true;
+        } catch {
+          // Fall through to a plain error if the fallback job cannot be created.
+        }
+        setScreenCaptureStatus("idle");
+        if (publishedExternalJob) {
+          setError(failureReason);
+          finishCaptureJob(activeStillJobId, (job) =>
+            completeCaptureJob(job, {
+              diagnostics: {
+                saveDestination: "external-job",
+                fallbackReason: failureReason,
+              },
+            }),
+          );
+        } else {
+          clearScreenCaptureOutput();
+          setError(failureReason);
+          finishCaptureJob(activeStillJobId, (job) =>
+            failCaptureJob(job, new Error(failureReason)),
+          );
+        }
+        return;
       }
       // Acquire the save-file handle WHILE the click gesture is still active,
       // i.e. before the slow capture-fidelity render. showSaveFilePicker requires
@@ -6214,14 +6338,16 @@ export function CaptureDirectorProvider({
       const still = await exportDeterministicStill({
         sceneHandle,
         recipe,
+        capabilities: captureCapabilitiesForPreflight(sceneHandle),
         cameraPose: capturePose(sceneHandle.camera, sceneHandle.controls),
         useCurrentSceneState: true,
         timeSeconds: Math.min(
           deterministicDurationSeconds,
           cameraKeyframes[0]?.timeSeconds ?? 0,
         ),
-        mimeType,
+        mimeType: exporterMimeType,
         imageQuality: stillQuality ?? 0.92,
+        logTransfer: screenCaptureLogTransfer,
         filenamePrefix: `geosee-${recipe.projectSlug}-${recipe.resolution.label}`,
         overlayContext: () => overlayContext(),
       });
@@ -6534,6 +6660,8 @@ export function CaptureDirectorProvider({
       setScreenCaptureOptionsOpen,
       screenCaptureType,
       setScreenCaptureType,
+      screenCaptureLogTransfer,
+      setScreenCaptureLogTransfer,
       screenCaptureQuality,
       setScreenCaptureQuality,
       screenCaptureSaveMessage,
@@ -6801,6 +6929,7 @@ export function CaptureDirectorProvider({
       screenCaptureQuality,
       screenCaptureSaveMessage,
       screenCaptureType,
+      screenCaptureLogTransfer,
       saveCameraPathPreviewStill,
       setEqualHoldSeconds,
       setPageClipEnabled,

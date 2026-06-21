@@ -129,6 +129,92 @@ test("MediaRecorder MIME negotiation preserves marketing fallback order", () => 
   }
 });
 
+test("recording stop race is hardened: non-masking abort, session token, watchdog", () => {
+  const canvasRecorder = readSource("src", "capture", "canvasPreviewRecorder.ts");
+  const composited = readSource("src", "capture", "compositedCaptureRecorder.ts");
+  const provider = readSource("src", "capture", "CaptureDirectorProvider.tsx");
+
+  // Low-level recorder exposes a non-masking abort() that settles via the
+  // failure callbacks instead of the user-stop path.
+  assert.ok(
+    /abort\(error\?: Error\) \{/.test(canvasRecorder),
+    "createMediaStreamRecorder should expose abort(error?)",
+  );
+  const types = readSource("src", "capture", "captureTypes.ts");
+  assert.ok(
+    /abort\?\(error\?: Error\): Promise<CaptureRecorderResult>;/.test(types),
+    "controller type should declare the optional abort method",
+  );
+
+  // Composited draw failures route through abort(), never the masking stop().
+  assert.ok(
+    composited.includes("recorder?.abort?.(drawError)"),
+    "composited draw failure should call abort(drawError)",
+  );
+  assert.ok(
+    !composited.includes("recorder?.stop().catch"),
+    "composited draw failure must not mask the failure as a user stop",
+  );
+
+  // Provider: idempotent terminal transition + stop watchdog.
+  for (const expected of [
+    "const RECORDING_STOP_TIMEOUT_MS",
+    "class CaptureRecordingStopTimeoutError",
+    "recordingSessionRef",
+    "recordingSessionSeqRef",
+    "claimRecordingTerminal",
+    "new CaptureRecordingStopTimeoutError()",
+  ]) {
+    assert.ok(
+      provider.includes(expected),
+      `provider should include ${expected}`,
+    );
+  }
+  // stopRecording races the stop against the watchdog and claims the session.
+  assert.match(
+    provider,
+    /const stopRecording = useCallback\(async \(\) => \{[\s\S]*?Promise\.race\(\[[\s\S]*?recorder\.stop\(\)[\s\S]*?CaptureRecordingStopTimeoutError[\s\S]*?claimRecordingTerminal\(sessionId\)/,
+  );
+});
+
+test("8K still routing: unified capability source and pre-render external fallback", () => {
+  const provider = readSource("src", "capture", "CaptureDirectorProvider.tsx");
+  const still = readSource("src", "capture", "deterministicStillExporter.ts");
+  const frames = readSource("src", "capture", "deterministicFrameSequenceExporter.ts");
+  const resolution = readSource("src", "capture", "captureResolution.ts");
+
+  assert.ok(
+    resolution.includes("export function resolveEffectiveCaptureCapabilities"),
+    "captureResolution should export the stricter-capability resolver",
+  );
+  for (const exporter of [still, frames]) {
+    assert.ok(
+      exporter.includes("capabilities?: CaptureCapabilityLimits"),
+      "exporter should accept a caller capability budget",
+    );
+    assert.ok(
+      exporter.includes("resolveEffectiveCaptureCapabilities("),
+      "exporter should combine caller + raw caps as the stricter limit",
+    );
+  }
+  // Provider threads the preflight caps into every deterministic render.
+  assert.ok(
+    provider.includes("capabilities: captureCapabilitiesForPreflight(sceneHandle)"),
+    "provider should pass preflight caps into the exporters",
+  );
+  // startScreenCapture routes to the external still job BEFORE acquiring a save
+  // handle / rendering when the capability check fails.
+  assert.match(
+    provider,
+    /if \(!stillRenderValidation\.valid\) \{[\s\S]*?publishExternalStillJob\(\{ recipe, failureReason \}\)[\s\S]*?return;/,
+  );
+  assert.ok(
+    provider.indexOf("publishExternalStillJob({ recipe, failureReason })") <
+      provider.indexOf("acquireCaptureStillSaveHandle({"),
+    "the external fallback branch must precede save-handle acquisition",
+  );
+});
+
 test("capture resolution presets and validation cover v1 quality targets", () => {
   const source = readSource("src", "capture", "captureResolution.ts");
   for (const expected of [
@@ -3699,6 +3785,17 @@ test("capture render job extracts GPU + FFmpeg decision helpers (Patch C1/C2)", 
   assert.doesNotMatch(job, /const SOFTWARE_RENDERER_PATTERN/);
 });
 
+test("render job resolves ffmpeg with a PATH fallback and surfaces clear errors when absent", () => {
+  const job = readSource("tools", "render-capture-video-job.mjs");
+  // No bundled/env ffmpeg -> "ffmpeg" PATH fallback (so a bare host still tries).
+  assert.match(job, /pathFallback:\s*"ffmpeg"/);
+  // A missing binary (ENOENT) propagates via the spawn error handler, and an
+  // encode failure / zero-byte output reads clearly rather than silently.
+  assert.match(job, /child\.on\("error",/);
+  assert.match(job, /exited with code \$\{code\}/);
+  assert.match(job, /produced a zero-byte file/);
+});
+
 test("capture video run status is shaped by the pure module with diagnosticsMissing (Patch C3)", () => {
   const status = readSource("plugins", "capture-video-run-status.ts");
   assert.match(status, /export function captureVideoRunPublicStatus/);
@@ -3713,4 +3810,120 @@ test("capture video run status is shaped by the pure module with diagnosticsMiss
 
   const runner = readSource("src", "capture", "localVideoRenderRunner.ts");
   assert.match(runner, /diagnosticsMissing\?: boolean/);
+});
+
+test("capture video run status flags outputMissing for a deleted completed output", () => {
+  const status = readSource("plugins", "capture-video-run-status.ts");
+  // Pure module derives the warning from a caller-supplied existence flag.
+  assert.match(status, /outputExists\?: boolean/);
+  assert.match(
+    status,
+    /outputMissing: run\.status === "complete" && run\.outputExists === false/,
+  );
+
+  const plugin = readSource("plugins", "vite-plugin-author-write.ts");
+  // The endpoint probes the file on disk and feeds the flag to the pure module.
+  assert.match(plugin, /existsSync/);
+  assert.match(plugin, /outputExists: existsSync\(run\.outputPath\)/);
+
+  const runner = readSource("src", "capture", "localVideoRenderRunner.ts");
+  assert.match(runner, /outputMissing\?: boolean/);
+});
+
+test("video render status reads distinctly when the output is external-job JSON only", () => {
+  const toolbar = readSource("src", "capture", "CaptureDirectorToolbar.tsx");
+  // A complete job whose diagnostics are fallbackOnly is flagged...
+  assert.match(toolbar, /deterministicVideoFallbackOnly/);
+  assert.match(toolbar, /diagnostics\.fallbackOnly === true/);
+  // ...and surfaced distinctly instead of a misleading "Ready".
+  assert.match(toolbar, /Fallback JSON/);
+  assert.match(toolbar, /data-fallback-only/);
+  // The path-render job carries the same distinction.
+  assert.match(toolbar, /pathRenderFallbackOnly/);
+  assert.match(
+    toolbar,
+    /pathRenderFallbackOnly\s*=\s*[\s\S]*externalVideoJobUrl[\s\S]*!pathRenderOutputUrl/,
+  );
+});
+
+test("baked-look tiled capture maps the vignette into full-frame space (seam fix)", () => {
+  const post = readSource("src", "scene", "postprocessing.ts");
+  // Full-frame remap uniforms; the vignette is computed from frameUv, not the
+  // tile-local vUv (otherwise each tile draws its own vignette -> seam grid).
+  assert.match(post, /uTileOffset/);
+  assert.match(post, /uTileScale/);
+  assert.match(post, /vec2 frameUv = vUv \* uTileScale \+ uTileOffset/);
+  assert.match(post, /vec2 d = frameUv - 0\.5/);
+  assert.match(post, /setCaptureTileRect\(/);
+
+  const scene = readSource("src", "scene.ts");
+  // The fidelity lock forwards the tile's normalized rect and resets to identity.
+  assert.match(scene, /post\.setCaptureTileRect\(/);
+  assert.match(scene, /options\.tileX[\s\S]*?options\.fullOutputWidth/);
+});
+
+test("16-bit/EXR float capture is wired end to end", () => {
+  // Renderer: a float read-back path that keeps the composer's HalfFloat buffer.
+  const scene = readSource("src", "scene.ts");
+  assert.match(scene, /renderCaptureFloatTarget/);
+  assert.match(scene, /renderToScreen = false/);
+  assert.match(scene, /composer\.readBuffer/);
+
+  // Exporter: a float branch delegating to the shared float-still encoders.
+  const still = readSource("src", "capture", "deterministicStillExporter.ts");
+  assert.match(still, /image\/x-exr/);
+  assert.match(still, /renderCaptureFloatTarget\(/);
+  assert.match(still, /encodeCaptureExr/);
+  // The OpenEXR exporter is dynamically imported in the shared float module.
+  const float = readSource("src", "capture", "captureFloatStill.ts");
+  assert.match(
+    float,
+    /import\(\s*["']three\/examples\/jsm\/exporters\/EXRExporter\.js["']\s*\)/,
+  );
+
+  // Save options: exr type/mime/extension + lossless (no quality) handling.
+  const save = readSource("src", "capture", "screenCaptureSaveOptions.ts");
+  assert.match(save, /"png"\s*\|\s*"webp"\s*\|\s*"jpeg"\s*\|\s*"exr"/);
+  assert.match(save, /exr:\s*"image\/x-exr"/);
+  assert.match(save, /type === "png" \|\| type === "exr"/);
+
+  // UI select option + provider Full-UI guard.
+  const toolbar = readSource("src", "capture", "CaptureDirectorToolbar.tsx");
+  assert.match(toolbar, /value="exr"/);
+  const provider = readSource("src", "capture", "CaptureDirectorProvider.tsx");
+  assert.match(provider, /image\/x-exr/);
+  assert.match(
+    provider,
+    /screenCaptureType === "exr" \|\| screenCaptureType === "png16"/,
+  );
+});
+
+test("16-bit PNG + log transfer are wired end to end", () => {
+  const float = readSource("src", "capture", "captureFloatStill.ts");
+  assert.match(float, /export function captureLogEncode/);
+  assert.match(float, /export function applyCaptureLogTransfer/);
+  assert.match(float, /export async function encodeCapturePng16/);
+  assert.match(float, /from "fast-png"|import\("fast-png"\)/);
+  assert.match(float, /depth: 16/);
+
+  const still = readSource("src", "capture", "deterministicStillExporter.ts");
+  assert.match(still, /image\/x-png16/);
+  assert.match(still, /isFloatStillMimeType/);
+  assert.match(still, /logTransfer/);
+  assert.match(still, /encodeCapturePng16/);
+
+  const save = readSource("src", "capture", "screenCaptureSaveOptions.ts");
+  assert.match(save, /"exr"\s*\|\s*"png16"/);
+  assert.match(save, /captureStillExporterMimeType/);
+  assert.match(save, /png16:\s*"image\/x-png16"/);
+
+  const toolbar = readSource("src", "capture", "CaptureDirectorToolbar.tsx");
+  assert.match(toolbar, /value="png16"/);
+  assert.match(toolbar, /capture-screen-log-transfer/);
+});
+
+test("baked-look seam remap also covers the frame + guides overlays", () => {
+  const post = readSource("src", "scene", "postprocessing.ts");
+  assert.match(post, /applyGuides\(c, frameUv\)/);
+  assert.match(post, /applyPresentationFrame\(c, frameUv\)/);
 });

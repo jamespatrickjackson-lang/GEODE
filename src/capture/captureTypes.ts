@@ -177,6 +177,12 @@ export interface CaptureRecorderOutputContext {
 export interface CaptureRecorderController {
   readonly mimeType: string;
   stop(): Promise<CaptureRecorderResult>;
+  // Terminal failure that is NOT a user-requested stop (e.g. the composited
+  // recorder could no longer read the source canvas). Settles the recorder
+  // through the unexpected-stop/error callbacks instead of masking the failure
+  // as an intentional stop. Optional: only the MediaRecorder-backed controller
+  // implements it.
+  abort?(error?: Error): Promise<CaptureRecorderResult>;
 }
 
 export interface CaptureRecorderStartOptions {

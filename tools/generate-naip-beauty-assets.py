@@ -99,8 +99,9 @@ def qgis_gdal_translate(
         "-outsize",
         f"{width}",
         f"{height}",
+        # Lanczos keeps high-frequency detail at the downsample (vs bilinear).
         "-r",
-        "bilinear",
+        "lanczos",
         "-co",
         "QUALITY=94",
         str(source),

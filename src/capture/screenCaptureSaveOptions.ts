@@ -1,4 +1,4 @@
-export type CaptureStillImageType = "png" | "webp" | "jpeg";
+export type CaptureStillImageType = "png" | "webp" | "jpeg" | "exr" | "png16";
 
 export interface CaptureStillSaveOptions {
   type: CaptureStillImageType;
@@ -43,13 +43,35 @@ const CAPTURE_STILL_MIME_TYPES: Record<CaptureStillImageType, string> = {
   png: "image/png",
   webp: "image/webp",
   jpeg: "image/jpeg",
+  exr: "image/x-exr",
+  // 16-bit PNG saves as a normal PNG file (the float path produces the bytes).
+  png16: "image/png",
 };
 
 const CAPTURE_STILL_EXTENSIONS: Record<CaptureStillImageType, string> = {
   png: "png",
   webp: "webp",
   jpeg: "jpg",
+  exr: "exr",
+  png16: "png",
 };
+
+// Internal mime the deterministic still exporter routes on. EXR and 16-bit PNG
+// take the float path (distinct markers); the rest match their save mime.
+const CAPTURE_STILL_EXPORTER_MIME_TYPES: Record<CaptureStillImageType, string> = {
+  png: "image/png",
+  webp: "image/webp",
+  jpeg: "image/jpeg",
+  exr: "image/x-exr",
+  png16: "image/x-png16",
+};
+
+export function captureStillExporterMimeType(type: CaptureStillImageType): string {
+  return (
+    CAPTURE_STILL_EXPORTER_MIME_TYPES[type] ??
+    CAPTURE_STILL_EXPORTER_MIME_TYPES.png
+  );
+}
 
 export function captureStillMimeType(type: CaptureStillImageType): string {
   return CAPTURE_STILL_MIME_TYPES[type] ?? CAPTURE_STILL_MIME_TYPES.png;
@@ -63,7 +85,8 @@ export function normalizeCaptureStillQuality(
   type: CaptureStillImageType,
   quality: number | undefined,
 ): number | undefined {
-  if (type === "png") return undefined;
+  // PNG, EXR, and 16-bit PNG are lossless / float; they ignore the quality factor.
+  if (type === "png" || type === "exr" || type === "png16") return undefined;
   const fallback = type === "jpeg" ? 0.92 : 0.9;
   const candidate =
     typeof quality === "number" && Number.isFinite(quality) ? quality : fallback;
@@ -77,12 +100,16 @@ export function validateCaptureStillSaveOptions(
   if (
     options.type !== "png" &&
     options.type !== "webp" &&
-    options.type !== "jpeg"
+    options.type !== "jpeg" &&
+    options.type !== "exr" &&
+    options.type !== "png16"
   ) {
-    errors.push("Screen Capture type must be PNG, WebP, or JPEG.");
+    errors.push("Screen Capture type must be PNG, WebP, JPEG, EXR, or 16-bit PNG.");
   }
   if (
     options.type !== "png" &&
+    options.type !== "exr" &&
+    options.type !== "png16" &&
     (typeof options.quality !== "number" ||
       !Number.isFinite(options.quality) ||
       options.quality < 0.01 ||

@@ -25,6 +25,10 @@ export interface CaptureVideoRunStatusInput {
   // Set true once the run's diagnostics file has been read and folded into the
   // record; absent/false means diagnostics were never enriched.
   diagnosticsEnriched?: boolean;
+  // Whether the output file is present on disk RIGHT NOW. The caller supplies
+  // this (e.g. existsSync(outputPath)) so this module stays dependency-free;
+  // absent/undefined means "unknown" and never raises the missing warning.
+  outputExists?: boolean;
 }
 
 export interface CaptureVideoRunPublicStatus {
@@ -48,6 +52,10 @@ export interface CaptureVideoRunPublicStatus {
   masterPath: string | null;
   frameSequenceDir: string | null;
   diagnosticsMissing: boolean;
+  // A run reported "complete" but its output file is gone from disk (deleted or
+  // moved after completion). Lets the UI flag a completed job whose media no
+  // longer exists instead of presenting it as a valid download.
+  outputMissing: boolean;
 }
 
 export function captureVideoRunElapsedSeconds(
@@ -83,5 +91,6 @@ export function captureVideoRunPublicStatus(
     masterPath: run.masterPath ?? null,
     frameSequenceDir: run.frameSequenceDir ?? null,
     diagnosticsMissing: run.diagnosticsEnriched !== true,
+    outputMissing: run.status === "complete" && run.outputExists === false,
   };
 }

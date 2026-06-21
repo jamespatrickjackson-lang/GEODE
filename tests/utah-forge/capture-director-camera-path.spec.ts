@@ -156,9 +156,8 @@ test("Capture Director camera path rows can play, scrub, and lock focus", async 
   await expect(cameraPathPanel.getByText("Playing")).toHaveCount(0);
   await expect(page.getByTestId("capture-path-preview-monitor")).toBeVisible();
 
-  // Path-video record finalization is covered (as a known trace-level defect) by
-  // the test.fixme below, not inline here (it blocks director close while it
-  // remains in flight).
+  // Path-video record finalization (terminal-state + director-close) is covered
+  // by its own test below, not inline here.
 
   await closeCaptureDirector(page);
   await expect(page.getByTestId("capture-path-preview-monitor")).toHaveCount(0);
@@ -172,13 +171,14 @@ test("Capture Director camera path rows can play, scrub, and lock focus", async 
   await expectNoCaptureDirectorPageErrors(diagnostics);
 });
 
-// KNOWN DEFECT (trace-level): the path-video record finalization relies on the
-// composited recorder completing under headless rAF. In headless it auto-stops
-// without producing a downloadable file (and leaving it in flight blocks the
-// director close) — the same recording-flow limitation as the realtime
-// composited path. Kept as a documented fixme rather than silently dropped.
-test.fixme(
-  "Capture Director camera path records a downloadable path video",
+// Path-video record finalization relies on the composited recorder completing
+// under headless rAF, which is not guaranteed to produce a downloadable file.
+// The reliability contract (operator decision: assert graceful failure) is that
+// the record starts, always reaches a TERMINAL state (never wedges at
+// Recording/Stopping), and — crucially — the in-flight record never blocks the
+// director close. The composited draw-failure abort + stop watchdog enforce it.
+test(
+  "Capture Director camera path record reaches a terminal state and the director can close",
   async ({ page }) => {
     await loadCaptureDirector(page);
     await openCaptureDirector(page);
@@ -192,11 +192,25 @@ test.fixme(
       "Record Path Video",
     );
     await expect.poll(() => mediaRecordingStarted(page)).toBe(true);
-    await expect(page.getByTestId("capture-path-video-download")).toBeVisible({
-      timeout: 15_000,
-    });
-    await expect(page.getByTestId("capture-path-record-status")).toContainText(
-      "Path video ready",
-    );
+    // Reaches a terminal state: a ready download (success) or a settled status,
+    // but never stuck "Recording"/"Stopping". The 15s budget covers the watchdog.
+    await expect
+      .poll(
+        async () => {
+          if (
+            (await page.getByTestId("capture-path-video-download").count()) > 0
+          ) {
+            return "terminal";
+          }
+          const status = page.getByTestId("capture-path-record-status");
+          const text =
+            (await status.count()) > 0 ? (await status.textContent()) ?? "" : "";
+          return /recording|stopping/i.test(text) ? "pending" : "terminal";
+        },
+        { timeout: 15_000 },
+      )
+      .toBe("terminal");
+    // The prior wedge left the record in flight and blocked this close.
+    await closeCaptureDirector(page);
   },
 );

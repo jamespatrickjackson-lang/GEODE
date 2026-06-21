@@ -128,6 +128,37 @@ export interface CaptureRenderResolutionValidationInput {
   maxRenderbufferSize?: number | null;
 }
 
+export interface CaptureCapabilityLimits {
+  maxTextureSize?: number | null;
+  maxRenderbufferSize?: number | null;
+}
+
+// Combine capability sources into the STRICTER limit per dimension so a
+// caller-supplied (preflight) budget can never be relaxed by a more permissive
+// raw GL report inside an exporter. A non-finite value means "no limit from this
+// source" and yields to the other. This keeps the exporter's in-browser render
+// gate identical to the provider preflight, so a device that cannot render the
+// requested size never starts a doomed render that churns the main thread.
+export function resolveEffectiveCaptureCapabilities(
+  ...sources: Array<CaptureCapabilityLimits | null | undefined>
+): { maxTextureSize: number | null; maxRenderbufferSize: number | null } {
+  const stricter = (a: number | null, b: number | null | undefined): number | null => {
+    const av = typeof a === "number" && Number.isFinite(a) ? a : null;
+    const bv = typeof b === "number" && Number.isFinite(b) ? b : null;
+    if (av === null) return bv;
+    if (bv === null) return av;
+    return Math.min(av, bv);
+  };
+  let maxTextureSize: number | null = null;
+  let maxRenderbufferSize: number | null = null;
+  for (const source of sources) {
+    if (!source) continue;
+    maxTextureSize = stricter(maxTextureSize, source.maxTextureSize);
+    maxRenderbufferSize = stricter(maxRenderbufferSize, source.maxRenderbufferSize);
+  }
+  return { maxTextureSize, maxRenderbufferSize };
+}
+
 export interface CaptureRenderResolutionValidationResult {
   valid: boolean;
   errors: string[];

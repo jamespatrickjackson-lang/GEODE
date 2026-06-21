@@ -13,7 +13,9 @@ import { sampleCaptureCameraPathV2 } from "./captureCameraPathV2";
 import { sampleCaptureCameraPathV3 } from "./captureCameraPathV3";
 import {
   clampCaptureSupersampleScale,
+  resolveEffectiveCaptureCapabilities,
   validateRenderResolutionRequest,
+  type CaptureCapabilityLimits,
 } from "./captureResolution";
 import { renderCaptureOverlay } from "./captureOverlayRenderer";
 import { captureVisibilityProfileForMode } from "./captureProfiles";
@@ -54,6 +56,10 @@ export interface DeterministicFrameSequenceExportOptions {
   filenamePrefix?: string;
   timeOffsetSeconds?: number;
   signal?: AbortSignal;
+  // Resolved capability budget from the caller (combined as the STRICTER limit
+  // with the raw GL caps), so the frame render gate matches the provider
+  // preflight. See exportDeterministicStill for rationale.
+  capabilities?: CaptureCapabilityLimits | null;
   overlayContext?: (
     frame: Pick<DeterministicFrameSequenceFrame, "frameIndex" | "timeSeconds">,
   ) => Partial<CaptureOverlayFrameContext>;
@@ -302,6 +308,7 @@ export async function exportDeterministicFrameSequence({
   filenamePrefix = "geosee-capture",
   signal,
   timeOffsetSeconds = 0,
+  capabilities,
   overlayContext,
   onFrame,
 }: DeterministicFrameSequenceExportOptions): Promise<DeterministicFrameSequenceResult> {
@@ -335,7 +342,10 @@ export async function exportDeterministicFrameSequence({
   const capabilityValidation = validateRenderResolutionRequest({
     resolution: recipe.resolution,
     supersampleScale,
-    ...sceneHandle.getCaptureCapabilities(),
+    ...resolveEffectiveCaptureCapabilities(
+      sceneHandle.getCaptureCapabilities(),
+      capabilities,
+    ),
   });
   if (!capabilityValidation.valid) {
     throw new Error(

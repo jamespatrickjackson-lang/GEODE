@@ -195,6 +195,29 @@ export function createMediaStreamRecorder(
       }
       return resultPromise;
     },
+    abort(error?: Error) {
+      // Terminal failure that is NOT user-requested: do NOT set stopRequested,
+      // so finish()/fail() still notify onUnexpectedStop/onRecorderError and the
+      // owner can drive a terminal state transition. Settle the result here
+      // rather than waiting for a "stop" event that may never arrive (e.g. the
+      // source tracks were already stopped).
+      stopCalled = true;
+      if (recorder.state !== "inactive") {
+        try {
+          recorder.stop();
+        } catch {
+          // The recorder is already ending; the result is settled below.
+        }
+      }
+      if (!finished) {
+        if (error) {
+          fail(error);
+        } else {
+          finish();
+        }
+      }
+      return resultPromise;
+    },
   };
 }
 
