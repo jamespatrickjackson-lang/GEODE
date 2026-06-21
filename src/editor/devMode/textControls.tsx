@@ -12,6 +12,7 @@ import {
   DevSelect,
   DevTextField,
 } from "./controls";
+import { recordOriginal } from "./domEditSnapshot";
 import { controlPanelMetaStyle, untaggedTextNoteStyle } from "./styles";
 import type { DevTextOverride } from "./overrideStore";
 import {
@@ -41,6 +42,7 @@ export function DevTextControls({
   if (!target) return null;
 
   const updateText = (value: string) => {
+    recordOriginal(target);
     writeEditableText(target, value);
     setDraft((current) => ({ ...current, text: value }));
     if (overrideKey) onPersist({ text: value });
@@ -49,6 +51,7 @@ export function DevTextControls({
     key: K,
     value: TextDraft[K],
   ) => {
+    recordOriginal(target);
     applyTextStyle(target, key, value);
     setDraft((current) => ({ ...current, [key]: value }));
     if (overrideKey) onPersist({ [key]: value } as DevTextOverride);

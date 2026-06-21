@@ -29,6 +29,35 @@ export function DevModeReorderRegistration() {
           reorderArray(commit.orderedIds, commit.fromIndex, commit.toIndex),
         ),
     });
+    // Phase 6: sidebar structure is JSX + manifest ordered; runtime cannot mutate
+    // it. Emit a proposal (manifestId order) for a dev/agent to apply as a
+    // manifest + source change. devModeReorderGuard.
+    registerReorderGroup({
+      key: "sidebar-structure",
+      kind: "manifest-guarded",
+      label: "Sidebar structure",
+      propose: (commit) => {
+        const order = reorderArray(
+          commit.orderedIds,
+          commit.fromIndex,
+          commit.toIndex,
+        );
+        if (typeof console !== "undefined") {
+          console.info("[dev-mode reorder] sidebar-structure proposal", {
+            apply:
+              "reorder editor-control-manifest.json entries + EditorRoot " +
+              "<CollapsibleSection> JSX to this manifestId order; run " +
+              "npm run check:editor-controls",
+            order,
+          });
+        }
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(
+            new CustomEvent("devmode:reorder-proposal", { detail: { order } }),
+          );
+        }
+      },
+    });
   }, [reorderLayer, reorderSceneOverlay]);
 
   return null;

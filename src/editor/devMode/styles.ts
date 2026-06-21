@@ -450,3 +450,29 @@ export const reorderDropIndicatorStyle: CSSProperties = {
   background: "rgba(255, 214, 102, 0.95)",
   pointerEvents: "none",
 };
+
+// Phase 6: sidebar-structure reorder proposal toast (no runtime mutation).
+export const proposalToastStyle: CSSProperties = {
+  position: "fixed",
+  left: "50%",
+  top: 14,
+  transform: "translateX(-50%)",
+  zIndex: 2147483647,
+  maxWidth: 540,
+  padding: "10px 14px",
+  borderRadius: 12,
+  border: FROSTED_HAIRLINE,
+  color: vibrancyLabel,
+  fontFamily: TECHNICAL_MONO_FONT,
+  fontSize: 11,
+  lineHeight: 1.4,
+  pointerEvents: "auto",
+  display: "grid",
+  gap: 6,
+  ...regularLightMaterial,
+};
+
+export const proposalOrderStyle: CSSProperties = {
+  color: vibrancySecondaryLabel,
+  wordBreak: "break-word",
+};

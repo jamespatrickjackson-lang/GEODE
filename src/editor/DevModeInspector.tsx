@@ -7,6 +7,10 @@ import {
   ContainerOutlinesLayer,
   collectContainerOutlines,
 } from "./devMode/containerOutlines";
+import {
+  clearDomEditSnapshots,
+  restoreAllDomEdits,
+} from "./devMode/domEditSnapshot";
 import { inspectAtPoint, inspectElement } from "./devMode/inspect";
 import { applyOverridesToDocument } from "./devMode/overrideStore";
 import { DevModeReorderRegistration } from "./devMode/ReorderRegistration";
@@ -23,6 +27,8 @@ import {
   devSaveBarStyle,
   devSaveButtonStyle,
   highlightStyle,
+  proposalOrderStyle,
+  proposalToastStyle,
   tooltipKickerStyle,
   tooltipNoteStyle,
   tooltipPaddingStyle,
@@ -37,6 +43,7 @@ interface DevModeInspectorProps {
   editorSettings: EditorChromeSettings;
   onEditorSettingsChange: (patch: EditorChromeSettings) => void;
   onDevCommit?: () => void;
+  selectedPageId?: string;
 }
 
 export function DevModeInspector({
@@ -45,11 +52,13 @@ export function DevModeInspector({
   editorSettings,
   onEditorSettingsChange,
   onDevCommit,
+  selectedPageId,
 }: DevModeInspectorProps) {
   const [hover, setHover] = useState<HoverInfo | null>(null);
   const [locked, setLocked] = useState<HoverInfo | null>(null);
   const [outlines, setOutlines] = useState<ContainerOutlineInfo[]>([]);
   const [hasDevEdits, setHasDevEdits] = useState(false);
+  const [proposal, setProposal] = useState<string[] | null>(null);
   const snapshotRef = useRef<EditorChromeSettings | null>(null);
 
   useEffect(() => {
@@ -68,6 +77,8 @@ export function DevModeInspector({
       if (!next) {
         setHover(null);
         setLocked(null);
+        setProposal(null);
+        clearDomEditSnapshots();
       }
       onEnabledChange(next);
       setHover(null);
@@ -149,7 +160,20 @@ export function DevModeInspector({
     applyOverridesToDocument(overrides);
     const retry = window.setTimeout(() => applyOverridesToDocument(overrides), 400);
     return () => window.clearTimeout(retry);
-  }, [editorSettings.devTextOverrides]);
+  }, [editorSettings.devTextOverrides, selectedPageId]);
+
+  // Phase 6: a manifest-guarded structure reorder emits a window event with the
+  // proposed manifestId order (no runtime mutation). Surface it as a toast.
+  useEffect(() => {
+    if (!enabled) return;
+    const onProposal = (event: Event) => {
+      const detail = (event as CustomEvent<{ order?: string[] }>).detail;
+      if (detail?.order) setProposal(detail.order);
+    };
+    window.addEventListener("devmode:reorder-proposal", onProposal);
+    return () =>
+      window.removeEventListener("devmode:reorder-proposal", onProposal);
+  }, [enabled]);
 
   if (!enabled) return null;
 
@@ -175,11 +199,13 @@ export function DevModeInspector({
     onEditorSettingsChange(patch);
   };
   const saveDevEdits = () => {
+    clearDomEditSnapshots();
     snapshotRef.current = null;
     setHasDevEdits(false);
     onDevCommit?.();
   };
   const discardDevEdits = () => {
+    restoreAllDomEdits();
     if (snapshotRef.current) {
       onEditorSettingsChange(
         buildRestorePatch(editorSettings, snapshotRef.current),
@@ -267,6 +293,24 @@ export function DevModeInspector({
             onClick={discardDevEdits}
           >
             Discard
+          </button>
+        </div>
+      )}
+      {proposal && (
+        <div style={proposalToastStyle} data-dev-mode-control="true">
+          <strong>Structure reorder proposal (no runtime change)</strong>
+          <div style={proposalOrderStyle}>{proposal.join("  >  ")}</div>
+          <div style={proposalOrderStyle}>
+            Apply by reordering editor-control-manifest.json entries + the
+            EditorRoot CollapsibleSection JSX to this order, then run npm run
+            check:editor-controls. Full payload logged to console.
+          </div>
+          <button
+            type="button"
+            style={devDiscardButtonStyle}
+            onClick={() => setProposal(null)}
+          >
+            Dismiss
           </button>
         </div>
       )}

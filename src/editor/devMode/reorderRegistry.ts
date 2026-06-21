@@ -21,6 +21,9 @@ export interface ReorderGroupDef {
   // have no dispatch — see Editor-Control-Manifest-Policy.md > Dev-Mode Reorder
   // Guard.
   commit?: (commit: ReorderCommit) => void;
+  // Manifest-guarded groups may emit a reorder PROPOSAL instead of mutating
+  // runtime (Phase 6): the dev/agent applies it as a manifest + source change.
+  propose?: (commit: ReorderCommit) => void;
 }
 
 const registry = new Map<string, ReorderGroupDef>();
@@ -51,7 +54,10 @@ export function commitReorder(commit: ReorderCommit): boolean {
   const def = registry.get(baseGroupKey(commit.groupKey));
   if (!def) return false;
   if (def.kind === "manifest-guarded" || !def.commit) {
-    if (typeof console !== "undefined") {
+    // No runtime mutation. Emit a proposal if one is registered; otherwise warn.
+    if (commit.fromIndex !== commit.toIndex && def.propose) {
+      def.propose(commit);
+    } else if (typeof console !== "undefined") {
       console.warn(
         `[dev-mode reorder] "${commit.groupKey}" is manifest-governed structure. ` +
           "Per devModeReorderGuard, confirm with the operator and rewrite " +

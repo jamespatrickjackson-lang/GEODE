@@ -105,6 +105,7 @@ const requiredDevModeModules = [
   "reorderRegistry.ts",
   "reorderDrag.tsx",
   "ReorderRegistration.tsx",
+  "domEditSnapshot.ts",
 ];
 
 test("phase 0: dev-mode helpers are extracted into src/editor/devMode", () => {
@@ -237,4 +238,46 @@ test("reorder closeout: editor dispatches, registration, and drag guards (UI-onl
   assert.match(devModeInspectorSource, /isReorderDragging\(\)/);
   assert.match(devModeInspectorSource, /isReorderClickSuppressed\(\)/);
   assert.match(devModeInspectorSource, /<DevModeReorderRegistration\s*\/>/);
+});
+
+test("phase 6: sidebar-structure reorder is a guard-routed proposal emitter", () => {
+  const registry = readDevMode("reorderRegistry.ts");
+  assert.match(registry, /propose\?:/);
+  assert.match(registry, /def\.propose\(commit\)/);
+
+  const reg = readDevMode("ReorderRegistration.tsx");
+  assert.match(reg, /key: "sidebar-structure"/);
+  assert.match(reg, /kind: "manifest-guarded"/);
+  assert.match(reg, /devmode:reorder-proposal/);
+
+  const collapsible = readFileSync(
+    join(repoRoot, "src", "editor", "CollapsibleSection.tsx"),
+    "utf8",
+  );
+  assert.match(collapsible, /data-dev-order-group=\{manifestId \? "sidebar-structure"/);
+  assert.match(collapsible, /data-dev-order-id=\{manifestId\}/);
+
+  assert.match(devModeInspectorSource, /devmode:reorder-proposal/);
+  assert.match(devModeInspectorSource, /proposalToastStyle/);
+});
+
+test("polish: discard accumulates per-element DOM snapshots; overrides re-apply on page change", () => {
+  const snap = readDevMode("domEditSnapshot.ts");
+  assert.match(snap, /export function recordOriginal/);
+  assert.match(snap, /export function restoreAllDomEdits/);
+  assert.match(snap, /export function clearDomEditSnapshots/);
+
+  const text = readDevMode("textControls.tsx");
+  assert.match(text, /recordOriginal\(target\)/);
+
+  // Discard restores DOM edits; save clears; override effect re-applies on page change.
+  assert.match(devModeInspectorSource, /restoreAllDomEdits\(\)/);
+  assert.match(devModeInspectorSource, /clearDomEditSnapshots\(\)/);
+  assert.match(devModeInspectorSource, /selectedPageId/);
+  assert.match(
+    devModeInspectorSource,
+    /\[editorSettings\.devTextOverrides, selectedPageId\]/,
+  );
+
+  assert.match(editorRootSource, /selectedPageId=\{String\(state\.selectedPageId\)\}/);
 });

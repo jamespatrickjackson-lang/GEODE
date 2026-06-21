@@ -145,10 +145,14 @@ test("commitReorder applies data groups and blocks manifest-guarded groups", () 
       applied = c;
     },
   });
+  let proposed = null;
   registerReorderGroup({
     key: "sidebar-structure",
     kind: "manifest-guarded",
     label: "Sidebar structure",
+    propose: (c) => {
+      proposed = c;
+    },
   });
 
   const ok = commitReorder({
@@ -168,7 +172,9 @@ test("commitReorder applies data groups and blocks manifest-guarded groups", () 
     itemId: "bar",
     orderedIds: ["bar", "bar2"],
   });
+  // Manifest-guarded: no runtime mutation (false) but a proposal is emitted.
   assert.equal(blocked, false);
+  assert.equal(proposed.itemId, "bar");
 
   assert.equal(
     commitReorder({
