@@ -171,7 +171,7 @@ interface EditorContextValue {
   // Dev Mode Inspector UI-only sidebar reorder (no scene/transition effect).
   // orderedIds is the new desired order of the affected sidebar group's members.
   reorderLayer: (orderedIds: string[]) => void;
-  reorderSceneOverlay: (pageId: string, orderedIds: string[]) => void;
+  reorderSceneOverlay: (orderedIds: string[]) => void;
   archivePage: (
     pageId: string,
     targetPageId?: string,
@@ -1084,25 +1084,24 @@ function reducer(state: EditorState, action: EditorAction): EditorState {
       );
       return { ...state, manifest, dirty: withDirty(state.dirty, "project") };
     }
-    case "REORDER_PAGE_SCENE_OVERLAY": {
-      const { pages, archivedPages } = mapEditablePages(state, (p) => {
-        if (p.id !== action.pageId) return p;
-        const refs = p.sceneOverlays ?? [];
-        const byId = new Map(refs.map((r) => [r.id, r]));
-        const ordered = action.orderedIds
-          .map((id) => byId.get(id))
-          .filter((r): r is NonNullable<typeof r> => Boolean(r));
-        if (ordered.length < 2) return p;
-        const set = new Set(ordered.map((r) => r.id));
-        let gi = 0;
-        const next = refs.map((r) => (set.has(r.id) ? ordered[gi++] : r));
-        return { ...p, sceneOverlays: next };
-      });
+    case "REORDER_SCENE_OVERLAY": {
+      // UI-only: reorder the global scene-overlay registry key order, which is
+      // what the sidebar lists (Object.keys). The scene resolves overlays by id,
+      // so this has no render effect. Tolerates ids not in the registry.
+      const overlays = state.environment.sceneOverlays;
+      if (!overlays) return state;
+      const keys = Object.keys(overlays);
+      const present = action.orderedIds.filter((id) => id in overlays);
+      if (present.length < 2) return state;
+      const set = new Set(present);
+      let gi = 0;
+      const newKeys = keys.map((k) => (set.has(k) ? present[gi++] : k));
+      const rebuilt: typeof overlays = {};
+      for (const k of newKeys) rebuilt[k] = overlays[k];
       return {
         ...state,
-        pages,
-        archivedPages,
-        dirty: withDirty(state.dirty, `page:${action.pageId}`),
+        environment: { ...state.environment, sceneOverlays: rebuilt },
+        dirty: withDirty(state.dirty, "environment"),
       };
     }
 
@@ -3607,8 +3606,7 @@ export function EditorProvider({
   const reorderSceneOverlay = useCallback<
     EditorContextValue["reorderSceneOverlay"]
   >(
-    (pageId, orderedIds) =>
-      dispatch({ type: "REORDER_PAGE_SCENE_OVERLAY", pageId, orderedIds }),
+    (orderedIds) => dispatch({ type: "REORDER_SCENE_OVERLAY", orderedIds }),
     [],
   );
 

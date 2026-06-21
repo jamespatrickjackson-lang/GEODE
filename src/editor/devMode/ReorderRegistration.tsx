@@ -8,9 +8,7 @@ import { registerReorderGroup } from "./reorderRegistry";
 // runtime resolves layers and overlays by id, so there is no render effect.
 // Rendered only while dev mode is enabled (mounted inside the inspector portal).
 export function DevModeReorderRegistration() {
-  const { reorderLayer, reorderSceneOverlay, state } = useEditor();
-  const selectedPageId =
-    typeof state.selectedPageId === "string" ? state.selectedPageId : null;
+  const { reorderLayer, reorderSceneOverlay } = useEditor();
 
   useEffect(() => {
     registerReorderGroup({
@@ -26,15 +24,12 @@ export function DevModeReorderRegistration() {
       key: "scene-overlays",
       kind: "data",
       label: "Scene overlays",
-      commit: (commit) => {
-        if (!selectedPageId) return;
+      commit: (commit) =>
         reorderSceneOverlay(
-          selectedPageId,
           reorderArray(commit.orderedIds, commit.fromIndex, commit.toIndex),
-        );
-      },
+        ),
     });
-  }, [reorderLayer, reorderSceneOverlay, selectedPageId]);
+  }, [reorderLayer, reorderSceneOverlay]);
 
   return null;
 }

@@ -44,7 +44,11 @@ export function SceneOverlayRow({
   const effTint = ref?.tint ?? envTint;
 
   return (
-    <div style={panelStyles.section}>
+    <div
+      style={panelStyles.section}
+      data-dev-order-group="scene-overlays"
+      data-dev-order-id={id}
+    >
       <div style={panelStyles.sectionHeader}>
         <span style={panelStyles.layerLabel}>{def.label}</span>
         <span style={panelStyles.layerType}>

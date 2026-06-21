@@ -226,11 +226,7 @@ export type EditorAction =
   // layer category, or a page's overlays). Reordering by id set is robust to the
   // sidebar's category grouping, where a row index != the catalog array index.
   | { type: "REORDER_LAYER"; orderedIds: string[] }
-  | {
-      type: "REORDER_PAGE_SCENE_OVERLAY";
-      pageId: string;
-      orderedIds: string[];
-    }
+  | { type: "REORDER_SCENE_OVERLAY"; orderedIds: string[] }
   | {
       type: "MOVE_PAGE_BLOCK";
       pageId: string;

@@ -221,9 +221,9 @@ test("reorder closeout: editor dispatches, registration, and drag guards (UI-onl
     "utf8",
   );
   assert.match(editorContext, /case "REORDER_LAYER"/);
-  assert.match(editorContext, /case "REORDER_PAGE_SCENE_OVERLAY"/);
+  assert.match(editorContext, /case "REORDER_SCENE_OVERLAY"/);
   assert.match(editorContext, /reorderLayer: \(orderedIds/);
-  assert.match(editorContext, /reorderSceneOverlay: \(pageId/);
+  assert.match(editorContext, /reorderSceneOverlay: \(orderedIds/);
 
   const reg = readDevMode("ReorderRegistration.tsx");
   assert.match(reg, /key: "layers"/);
