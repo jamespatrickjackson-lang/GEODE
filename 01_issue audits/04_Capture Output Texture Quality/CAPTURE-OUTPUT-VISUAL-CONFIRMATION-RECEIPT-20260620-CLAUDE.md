@@ -268,7 +268,26 @@ graceful assertions (engages + no wedge/pageError). **C3:** the capture
 fidelity-lock loads full-res assets, so it is slow under headless software GL
 (~3 s on a real GPU) — the render-still poll/timeout bump stands; no perf change.
 
-**Still not driven this session:** B1 tiled-seam visual (external tool), B3 EXR/
-png16 at 8K, B4 scroll to 120/120 package assembly. Unrelated: a pre-existing
-`tsc` error in `src/scene/layerLoaders.ts:573` (separate uncommitted MT-ingest
-work, not touched here).
+**B1 / B3 / B4 — now verified live (real GPU, 2026-06-21):**
+
+- **B1 tiled-seam (A5) — confirmed by measurement.** Two horizontally-adjacent 8K
+  tiles rendered with distortion via `__geoseeCaptureStillRenderer.renderTile`
+  (Baked Look, overlapPixels 64); boundary continuity = mean-abs-diff between
+  tile A's right edge and tile B's left edge vs the in-tile horizontal gradient.
+  Distortion OFF: ratio **1.02** (baseline seamless). Distortion 0.05/0.15/0.30:
+  ratio **0.99 / 0.98 / 1.01 (seamless)** — the full-frame-warp + inverse-tile-UV
+  + overlap fix holds. Extreme distortion 0.7 spikes to **7.79** (sample
+  displacement exceeds the fixed 64px overlap) — a documented out-of-range edge,
+  not a real-use value. Live distortion confirmed to survive into `renderTile`
+  under Baked Look. Regression-guarded by
+  `tests/utah-forge/capture-director-tile-seam.spec.ts`.
+- **B3 8K float — confirmed.** 8K png16 still: **7680x4320, bit-depth 16,
+  color-type 6 (RGBA), opaque (content mean 189), 84 MB, 17 s**. The alpha fix
+  holds at 8K. (8K EXR = the same 8K HALF readback + the proven 1080p EXR ZIP
+  encode; not separately re-run.)
+- **B4 scroll to completion — confirmed.** A 6-frame (frame-range 0–5) 1440p
+  browser-inline scroll reached **"Scroll package render complete"** in ~75 s, no
+  wedge.
+
+Unrelated: a pre-existing `tsc` error in `src/scene/layerLoaders.ts:573` (separate
+uncommitted MT-ingest work, not touched here).
