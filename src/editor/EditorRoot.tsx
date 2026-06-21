@@ -1558,6 +1558,8 @@ export function EditorRoot({
           onEnabledChange={setDevModeEnabled}
           editorSettings={editorChromeSettings}
           onEditorSettingsChange={patchEditorChrome}
+          onDevCommit={() => void commitPending()}
+          selectedPageId={String(state.selectedPageId)}
         />
       </div>
       <FloatingPreviewToggle

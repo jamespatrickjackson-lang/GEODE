@@ -38,8 +38,18 @@ Smaller (safe to read whole):
 
 - `EditorRoot.tsx`, `EditorChrome.tsx`, `OverlayPanel.tsx`,
   `SiteDetailsPanel.tsx`, `CollapsibleSection.tsx`,
-  `InlineEditableTitle.tsx`, `DevModeInspector.tsx`, `styleControls.tsx`,
+  `InlineEditableTitle.tsx`, `styleControls.tsx`,
   `styles.ts`, `types.ts`, `save.ts`.
+
+Dev Mode Inspector (`d` key) lives in `DevModeInspector.tsx` (thin entry:
+state, effects, control panel) plus the `devMode/` folder. `devMode/` holds
+the extracted, individually small modules: `constants.ts`, `types.ts`,
+`util.ts`, `text.ts`, `boxModel.ts`, `inspect.ts`, `styles.ts`,
+`controls.tsx`, `textControls.tsx`, `labelLayout.ts` (pure label-collision
+packing), and `containerOutlines.tsx` (clickable, non-stacking container
+labels). Pure modules (`inspect`, `boxModel`, `labelLayout`, `util`, `text`)
+carry no React and are unit-testable directly. `DevModeInspector.tsx` is NOT
+in the editor-control manifest `protectedSourceFiles` list.
 
 ## Editing Discipline
 

@@ -82,6 +82,8 @@ export function CollapsibleSection({
       data-dev-container-scope="CollapsibleSection / panelStyles.collapsibleHeader"
       data-dev-note="CollapsibleSection renders top-level sidebar sections; visual styles come from panelStyles in styles.ts."
       data-editor-section-id={manifestId}
+      data-dev-order-group={manifestId ? "sidebar-structure" : undefined}
+      data-dev-order-id={manifestId}
     >
       <div
         style={headerStyle}

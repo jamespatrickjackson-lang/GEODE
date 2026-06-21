@@ -25,6 +25,15 @@ const devModeInspector = readSource(
   "editor",
   "DevModeInspector.tsx",
 );
+// The dev-mode control panel + slider primitives were split out of
+// DevModeInspector.tsx into devMode/ (refactor); read them at their new homes.
+const devControlPanel = readSource(
+  "src",
+  "editor",
+  "devMode",
+  "ControlPanel.tsx",
+);
+const devControls = readSource("src", "editor", "devMode", "controls.tsx");
 const styleControls = readSource("src", "editor", "styleControls.tsx");
 const sceneOverlayControls = readSource(
   "src",
@@ -77,9 +86,9 @@ test("save button is icon-only chrome with active count and configurable icon si
     "Cinematics Editor controls should expose Save icon size.",
   );
   assert.match(
-    devModeInspector,
+    devControlPanel,
     /label="Save icon"[\s\S]*saveIconSizePx/,
-    "DevModeInspector should expose Save icon size.",
+    "Dev control panel should expose Save icon size.",
   );
 });
 
@@ -165,7 +174,7 @@ test("sliders use a transient cursor pill instead of persistent trailing numbers
     "Layer style sliders should not render persistent trailing numbers.",
   );
   assert.doesNotMatch(
-    devModeInspector,
+    devControls,
     /<span style=\{devControlValueStyle\}>\{format\(value\)\}<\/span>/,
     "Dev inspector sliders should not render persistent trailing numbers.",
   );

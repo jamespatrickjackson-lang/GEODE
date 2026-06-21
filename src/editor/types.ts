@@ -219,6 +219,14 @@ export type EditorAction =
     }
   | { type: "DELETE_PAGE"; pageId: string }
   | { type: "REORDER_PAGE"; pageId: string; direction: "up" | "down" }
+  // Dev Mode Inspector UI-only arrangement (key "d"). Reorders the editor-side
+  // catalog arrays for sidebar display. The scene/transition runtime resolves
+  // layers and overlays by id (Maps), so this has no render/transition effect.
+  // orderedIds is the new desired order of a sidebar group's members (e.g. a
+  // layer category, or a page's overlays). Reordering by id set is robust to the
+  // sidebar's category grouping, where a row index != the catalog array index.
+  | { type: "REORDER_LAYER"; orderedIds: string[] }
+  | { type: "REORDER_SCENE_OVERLAY"; orderedIds: string[] }
   | {
       type: "MOVE_PAGE_BLOCK";
       pageId: string;

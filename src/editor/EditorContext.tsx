@@ -168,6 +168,10 @@ interface EditorContextValue {
     targetPageId: string,
     insertPosition?: "before" | "after",
   ) => void;
+  // Dev Mode Inspector UI-only sidebar reorder (no scene/transition effect).
+  // orderedIds is the new desired order of the affected sidebar group's members.
+  reorderLayer: (orderedIds: string[]) => void;
+  reorderSceneOverlay: (orderedIds: string[]) => void;
   archivePage: (
     pageId: string,
     targetPageId?: string,
@@ -1058,6 +1062,46 @@ function reducer(state: EditorState, action: EditorAction): EditorState {
         pages,
         archivedPages,
         dirty: withDirty(state.dirty, `page:${action.pageId}`),
+      };
+    }
+    case "REORDER_LAYER": {
+      // UI-only sidebar arrangement. orderedIds is one sidebar group's members
+      // in their new order; re-thread them into manifest.layers slot-for-slot so
+      // non-group layers keep their positions. Scene/transition is id/Map-based.
+      // Tolerate virtual/derived rows whose id is not a real catalog layer:
+      // reorder only the manifest layers among themselves, preserving their
+      // relative order from orderedIds.
+      const byId = new Map(state.manifest.layers.map((l) => [l.id, l]));
+      const ordered = action.orderedIds
+        .map((id) => byId.get(id))
+        .filter((l): l is NonNullable<typeof l> => Boolean(l));
+      if (ordered.length < 2) return state;
+      const set = new Set(ordered.map((l) => l.id));
+      const manifest = clone(state.manifest);
+      let gi = 0;
+      manifest.layers = manifest.layers.map((l) =>
+        set.has(l.id) ? ordered[gi++] : l,
+      );
+      return { ...state, manifest, dirty: withDirty(state.dirty, "project") };
+    }
+    case "REORDER_SCENE_OVERLAY": {
+      // UI-only: reorder the global scene-overlay registry key order, which is
+      // what the sidebar lists (Object.keys). The scene resolves overlays by id,
+      // so this has no render effect. Tolerates ids not in the registry.
+      const overlays = state.environment.sceneOverlays;
+      if (!overlays) return state;
+      const keys = Object.keys(overlays);
+      const present = action.orderedIds.filter((id) => id in overlays);
+      if (present.length < 2) return state;
+      const set = new Set(present);
+      let gi = 0;
+      const newKeys = keys.map((k) => (set.has(k) ? present[gi++] : k));
+      const rebuilt: typeof overlays = {};
+      for (const k of newKeys) rebuilt[k] = overlays[k];
+      return {
+        ...state,
+        environment: { ...state.environment, sceneOverlays: rebuilt },
+        dirty: withDirty(state.dirty, "environment"),
       };
     }
 
@@ -3554,6 +3598,18 @@ export function EditorProvider({
     [],
   );
 
+  const reorderLayer = useCallback<EditorContextValue["reorderLayer"]>(
+    (orderedIds) => dispatch({ type: "REORDER_LAYER", orderedIds }),
+    [],
+  );
+
+  const reorderSceneOverlay = useCallback<
+    EditorContextValue["reorderSceneOverlay"]
+  >(
+    (orderedIds) => dispatch({ type: "REORDER_SCENE_OVERLAY", orderedIds }),
+    [],
+  );
+
   const archivePage = useCallback<EditorContextValue["archivePage"]>(
     (pageId, targetPageId, insertPosition) =>
       dispatch({ type: "ARCHIVE_PAGE", pageId, targetPageId, insertPosition }),
@@ -3784,6 +3840,8 @@ export function EditorProvider({
       deletePageById,
       reorderPage,
       movePageBlock,
+      reorderLayer,
+      reorderSceneOverlay,
       archivePage,
       restoreArchivedPage,
       moveArchivedPage,
@@ -3842,6 +3900,8 @@ export function EditorProvider({
       deletePageById,
       reorderPage,
       movePageBlock,
+      reorderLayer,
+      reorderSceneOverlay,
       archivePage,
       restoreArchivedPage,
       moveArchivedPage,

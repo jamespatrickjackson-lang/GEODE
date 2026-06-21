@@ -528,6 +528,8 @@ export function LayerPanel({
         data-editor-target-level="layer"
         data-dev-source="src/editor/LayerPanel.tsx:937"
         data-dev-note="layerItemStyle controls spacing and separators for individual layer rows."
+        data-dev-order-group={`layers:${section}`}
+        data-dev-order-id={layer.id}
         style={{
           ...layerItemStyle,
           ...(index === 0 ? firstLayerItemStyle : {}),
