@@ -104,6 +104,7 @@ const requiredDevModeModules = [
   "reorder.ts",
   "reorderRegistry.ts",
   "reorderDrag.tsx",
+  "ReorderRegistration.tsx",
 ];
 
 test("phase 0: dev-mode helpers are extracted into src/editor/devMode", () => {
@@ -212,4 +213,28 @@ test("phase 6: manifest-governed reorder is guard-blocked", () => {
     "utf8",
   );
   assert.match(manifest, /devModeReorderGuard/);
+});
+
+test("reorder closeout: editor dispatches, registration, and drag guards (UI-only)", () => {
+  const editorContext = readFileSync(
+    join(repoRoot, "src", "editor", "EditorContext.tsx"),
+    "utf8",
+  );
+  assert.match(editorContext, /case "REORDER_LAYER"/);
+  assert.match(editorContext, /case "REORDER_PAGE_SCENE_OVERLAY"/);
+  assert.match(editorContext, /reorderLayer: \(orderedIds/);
+  assert.match(editorContext, /reorderSceneOverlay: \(pageId/);
+
+  const reg = readDevMode("ReorderRegistration.tsx");
+  assert.match(reg, /key: "layers"/);
+  assert.match(reg, /key: "scene-overlays"/);
+  assert.match(reg, /reorderArray\(/);
+
+  const drag = readDevMode("reorderDrag.tsx");
+  assert.match(drag, /export function isReorderDragging/);
+  assert.match(drag, /export function isReorderClickSuppressed/);
+
+  assert.match(devModeInspectorSource, /isReorderDragging\(\)/);
+  assert.match(devModeInspectorSource, /isReorderClickSuppressed\(\)/);
+  assert.match(devModeInspectorSource, /<DevModeReorderRegistration\s*\/>/);
 });

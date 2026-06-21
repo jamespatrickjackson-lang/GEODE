@@ -168,6 +168,10 @@ interface EditorContextValue {
     targetPageId: string,
     insertPosition?: "before" | "after",
   ) => void;
+  // Dev Mode Inspector UI-only sidebar reorder (no scene/transition effect).
+  // orderedIds is the new desired order of the affected sidebar group's members.
+  reorderLayer: (orderedIds: string[]) => void;
+  reorderSceneOverlay: (pageId: string, orderedIds: string[]) => void;
   archivePage: (
     pageId: string,
     targetPageId?: string,
@@ -1052,6 +1056,43 @@ function reducer(state: EditorState, action: EditorAction): EditorState {
           delete next.sceneOverlays;
         }
         return next;
+      });
+      return {
+        ...state,
+        pages,
+        archivedPages,
+        dirty: withDirty(state.dirty, `page:${action.pageId}`),
+      };
+    }
+    case "REORDER_LAYER": {
+      // UI-only sidebar arrangement. orderedIds is one sidebar group's members
+      // in their new order; re-thread them into manifest.layers slot-for-slot so
+      // non-group layers keep their positions. Scene/transition is id/Map-based.
+      const set = new Set(action.orderedIds);
+      const byId = new Map(state.manifest.layers.map((l) => [l.id, l]));
+      const ordered = action.orderedIds
+        .map((id) => byId.get(id))
+        .filter((l): l is NonNullable<typeof l> => Boolean(l));
+      if (ordered.length === 0 || ordered.length !== action.orderedIds.length) {
+        return state;
+      }
+      const manifest = clone(state.manifest);
+      let gi = 0;
+      manifest.layers = manifest.layers.map((l) =>
+        set.has(l.id) ? ordered[gi++] : l,
+      );
+      return { ...state, manifest, dirty: withDirty(state.dirty, "project") };
+    }
+    case "REORDER_PAGE_SCENE_OVERLAY": {
+      const { pages, archivedPages } = mapEditablePages(state, (p) => {
+        if (p.id !== action.pageId) return p;
+        const refs = p.sceneOverlays ?? [];
+        const byId = new Map(refs.map((r) => [r.id, r]));
+        const ordered = action.orderedIds
+          .map((id) => byId.get(id))
+          .filter((r): r is NonNullable<typeof r> => Boolean(r));
+        if (ordered.length !== refs.length) return p;
+        return { ...p, sceneOverlays: ordered };
       });
       return {
         ...state,
@@ -3554,6 +3595,19 @@ export function EditorProvider({
     [],
   );
 
+  const reorderLayer = useCallback<EditorContextValue["reorderLayer"]>(
+    (orderedIds) => dispatch({ type: "REORDER_LAYER", orderedIds }),
+    [],
+  );
+
+  const reorderSceneOverlay = useCallback<
+    EditorContextValue["reorderSceneOverlay"]
+  >(
+    (pageId, orderedIds) =>
+      dispatch({ type: "REORDER_PAGE_SCENE_OVERLAY", pageId, orderedIds }),
+    [],
+  );
+
   const archivePage = useCallback<EditorContextValue["archivePage"]>(
     (pageId, targetPageId, insertPosition) =>
       dispatch({ type: "ARCHIVE_PAGE", pageId, targetPageId, insertPosition }),
@@ -3784,6 +3838,8 @@ export function EditorProvider({
       deletePageById,
       reorderPage,
       movePageBlock,
+      reorderLayer,
+      reorderSceneOverlay,
       archivePage,
       restoreArchivedPage,
       moveArchivedPage,
@@ -3842,6 +3898,8 @@ export function EditorProvider({
       deletePageById,
       reorderPage,
       movePageBlock,
+      reorderLayer,
+      reorderSceneOverlay,
       archivePage,
       restoreArchivedPage,
       moveArchivedPage,

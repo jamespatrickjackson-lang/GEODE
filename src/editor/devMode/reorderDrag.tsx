@@ -44,6 +44,20 @@ function groupBoxes(groupKey: string): ItemBox[] {
   });
 }
 
+// F4: while a reorder drag is active, the dev-mode hover/lock handlers must
+// stand down so a drag never selects or locks the row. A short post-drag window
+// also swallows the synthetic click that fires after pointerup.
+let activeReorderDrag = false;
+let suppressClickUntil = 0;
+
+export function isReorderDragging(): boolean {
+  return activeReorderDrag;
+}
+
+export function isReorderClickSuppressed(): boolean {
+  return Date.now() < suppressClickUntil;
+}
+
 // Phase 5 (D3): press-and-hold drag reorder over any element tagged with
 // data-dev-order-group + data-dev-order-id. Inert until a collection is tagged;
 // the index math lives in the pure, tested reorder helpers.
@@ -93,6 +107,7 @@ export function ReorderDragLayer({ enabled }: { enabled: boolean }) {
       const sorted = [...boxes].sort((a, b) => a.top - b.top);
       const toIndex = computeDropIndex(sorted, event.clientY);
       draggingRef.current = { candidate, toIndex };
+      activeReorderDrag = true;
 
       const startRect = candidate.element.getBoundingClientRect();
       const anchor =
@@ -126,7 +141,9 @@ export function ReorderDragLayer({ enabled }: { enabled: boolean }) {
           itemId: dragging.candidate.itemId,
           orderedIds: boxes.map((box) => box.id),
         });
+        suppressClickUntil = Date.now() + 280;
       }
+      activeReorderDrag = false;
       candidateRef.current = null;
       draggingRef.current = null;
       setRender(null);

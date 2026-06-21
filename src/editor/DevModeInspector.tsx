@@ -9,7 +9,12 @@ import {
 } from "./devMode/containerOutlines";
 import { inspectAtPoint, inspectElement } from "./devMode/inspect";
 import { applyOverridesToDocument } from "./devMode/overrideStore";
-import { ReorderDragLayer } from "./devMode/reorderDrag";
+import { DevModeReorderRegistration } from "./devMode/ReorderRegistration";
+import {
+  ReorderDragLayer,
+  isReorderClickSuppressed,
+  isReorderDragging,
+} from "./devMode/reorderDrag";
 import { buildRestorePatch, captureSnapshot } from "./devMode/session";
 import {
   devModeBadgeStyle,
@@ -77,6 +82,7 @@ export function DevModeInspector({
 
     const onPointerMove = (event: PointerEvent) => {
       if (locked) return;
+      if (isReorderDragging()) return;
       if (isDevModeControlTarget(event.target)) return;
       const next = inspectAtPoint(event);
       if (next) setHover(next);
@@ -84,6 +90,7 @@ export function DevModeInspector({
 
     const onPointerLeave = () => setHover(null);
     const onClick = (event: MouseEvent) => {
+      if (isReorderClickSuppressed()) return;
       if (isDevModeControlTarget(event.target)) return;
       const next = inspectAtPoint(event, { lock: true });
       if (!next) return;
@@ -191,6 +198,7 @@ export function DevModeInspector({
         selectedElement={locked?.element}
         onSelect={selectContainer}
       />
+      <DevModeReorderRegistration />
       <ReorderDragLayer enabled={enabled} />
       {info?.box && <BoxModelOverlay box={info.box} />}
       {info?.rect && (
