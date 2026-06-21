@@ -118,6 +118,34 @@
 >   needs the external render tool; the seam-free result is guaranteed by
 >   construction (warp is a function of full-frame UV only) + unit tests.
 > - Verify: tsc clean, runtime 98/98, source 73/73, check:workspace OK.
+>
+> ---
+>
+> ## B/C verification — CRITICAL float-capture bug found + fixed (2026-06-20)
+>
+> **Live B-verification caught a real defect: every EXR / 16-bit-PNG capture was
+> transparent-black.** `readCaptureFloatPixels` read the HalfFloat composer target
+> as **FLOAT** (`Float32Array`), which returns **all zeros** on common drivers
+> (ANGLE/SwiftShader confirmed) — so RGB and alpha were 0 → fully transparent. The
+> original validation only checked the PNG IHDR (format), not pixel content, so it
+> slipped through.
+> - **Fix** (`src/capture/captureFloatStill.ts`): read as **HALF**
+>   (`Uint16Array`, the RT's native format) and convert via `DataUtils.fromHalfFloat`
+>   for png16/log; EXR encodes from a HalfFloat `DataTexture` built from those half
+>   bits (never the broken renderer+target read). Source-guarded against regression.
+> - **Live confirm (real GPU):** png16 1080p now **5.5 MB**, meanLum **189** (was 0),
+>   **100% opaque** (was fully transparent). EXR uses the same path.
+> - **EXR timing:** the `EXRExporter` ZIP encode is ~14 s at 1080p on a real GPU
+>   (far slower under headless software GL) — not hung, just heavy.
+> - **B2 log tone-curve:** wired (provider `logTransfer` → encoder) + unit-tested
+>   (`captureLogEncode`); log ~preserves the mean so a whole-image mean is
+>   insensitive (lifts mids, drops highlights). Correct by code + unit.
+> - **C1:** `capture-scroll-accept-render` testid added. **C2:** new
+>   `capture-director-formats.spec.ts` (float stills, 8K, scroll trigger, path video)
+>   with graceful headless-tolerant assertions (EXR asserts "engages" not terminal).
+> - **C3 (accept + document):** capture loads full-res fidelity assets, so the
+>   fidelity lock is slow under headless software GL (~3 s on a real GPU); the
+>   render-still poll-timeout bump stands. No perf change.
 
 # Capture Output — Live Visual Confirmation Receipt (2026-06-20)
 
@@ -212,3 +240,35 @@ are already correctly configured live).
   frame) and 8K MSAA = 0 (same memory rationale); baked-look tiled seam has the
   Clean Master seam-free workaround. The only net-new feature option is
   16-bit/EXR/log capture (needs a HalfFloat readback path).
+
+## Addendum 2026-06-20 — B/C closeout + a real bug found by live verification
+
+**BUG FOUND + FIXED: float stills were fully transparent.** EXR / 16-bit-PNG read
+the composer target's alpha, which is not guaranteed to be 1 — so the output had
+alpha 0 and was a transparent plate (over white → all white; over black → all
+black; 16 KB). Combined with the earlier driver issue (a Float32 readback of a
+HalfFloat RT returns zeros on ANGLE/SwiftShader — already fixed by the native HALF
+`readCaptureFloatHalf` path), the float stills carried no usable content. Fix:
+`readCaptureFloatHalf` now forces opaque alpha. **Live confirm:** a fresh 1080p
+png16 is now a valid opaque image — 6.4 MB, `overBlack == overWhite ==
+[112,81,39,255]` (terrain content, alpha 255), mean 126. Regression-guarded
+(runtime: float readback forces opaque alpha; source guard).
+
+**B2 log on/off CONFIRMED live:** png16 with log OFF mean 126.29 → log ON mean
+166.08 (the log transfer measurably lifts mid-tones, per `captureLogEncode`).
+
+**EXR live:** 1080p EXR saved in ~14 s on a real GPU (the `EXRExporter` ZIP encode
+is the cost; far slower under headless software GL — which is why the e2e asserts
+"engages", not terminal, for EXR/8K/path).
+
+**C1:** `capture-scroll-accept-render` testid added to the scroll "Accept and
+Render" trigger. **C2:** new `tests/utah-forge/capture-director-formats.spec.ts`
+(EXR/png16/log stills, scroll record, path video, 8K) with headless-tolerant
+graceful assertions (engages + no wedge/pageError). **C3:** the capture
+fidelity-lock loads full-res assets, so it is slow under headless software GL
+(~3 s on a real GPU) — the render-still poll/timeout bump stands; no perf change.
+
+**Still not driven this session:** B1 tiled-seam visual (external tool), B3 EXR/
+png16 at 8K, B4 scroll to 120/120 package assembly. Unrelated: a pre-existing
+`tsc` error in `src/scene/layerLoaders.ts:573` (separate uncommitted MT-ingest
+work, not touched here).

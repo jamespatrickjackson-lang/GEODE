@@ -3941,6 +3941,16 @@ test("16-bit PNG + log transfer are wired end to end", () => {
   assert.match(still, /logTransfer/);
   assert.match(still, /encodeCapturePng16/);
 
+  // Regression: the HalfFloat target MUST be read as HALF (Uint16) and converted,
+  // not as FLOAT (Float32) — reading a HalfFloat RT as FLOAT returns zeros on
+  // common drivers, which produced transparent-black EXR/PNG output. EXR encodes
+  // from a HalfFloat DataTexture, never the broken renderer+target read.
+  assert.match(float, /readCaptureFloatHalf/);
+  assert.match(float, /new Uint16Array\(/);
+  assert.match(float, /DataUtils\.fromHalfFloat/);
+  assert.doesNotMatch(float, /exporter\.parse\(\s*renderer\s*,\s*renderTarget/);
+  assert.match(float, /new THREE\.DataTexture\(\s*half/);
+
   // A2: float stills force supersample 1x (native resolution; no downscale).
   assert.match(still, /isFloatStillMimeType\(mimeType\)[\s\S]*?\?\s*1/);
   const toolbar2 = readSource("src", "capture", "CaptureDirectorToolbar.tsx");
@@ -3958,6 +3968,10 @@ test("16-bit PNG + log transfer are wired end to end", () => {
 
   // A3: float readback has a typed memory guard.
   assert.match(float, /class CaptureFloatMemoryError/);
+
+  // Float stills must be opaque: the readback forces alpha (composer alpha may be 0).
+  assert.match(float, /Force opaque alpha/);
+  assert.match(float, /HALF_ONE/);
 
   // A4: the in-browser frame-sequence exporter (scroll/video) engages the same
   // capture fidelity lock as stills, so video frames get full sample steps.

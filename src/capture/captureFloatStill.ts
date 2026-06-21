@@ -1,4 +1,5 @@
 import type { WebGLRenderer, WebGLRenderTarget } from "three";
+import { DataUtils } from "three";
 
 // Float / high-bit-depth still encoders for the capture pipeline. The capture
 // composer renders to a HalfFloat target (see scene.ts renderCaptureFloatTarget);
@@ -50,36 +51,68 @@ export class CaptureFloatMemoryError extends Error {
 // supersample forced to 1x for float, the worst case is native 8K.
 const CAPTURE_FLOAT_PIXEL_WARN_BUDGET = 7680 * 4320;
 
-// Read the HalfFloat capture target back as linear float RGBA, row-flipped from
-// WebGL bottom-left origin to top-down image order.
-export function readCaptureFloatPixels(
+// Read the HalfFloat capture target back as raw HALF bits (Uint16), row-flipped
+// from WebGL bottom-left origin to top-down image order. Reading a HalfFloat RT as
+// FLOAT (Float32Array) returns all zeros on common drivers (incl. ANGLE/SwiftShader)
+// — which silently produced transparent-black EXR/PNG output — so the readback uses
+// the RT's native HALF format. EXR consumes these half bits directly; png16 / log
+// convert to float.
+export function readCaptureFloatHalf(
   renderer: WebGLRenderer,
   renderTarget: WebGLRenderTarget,
-): { data: Float32Array; width: number; height: number } {
+): { half: Uint16Array<ArrayBuffer>; width: number; height: number } {
   const width = renderTarget.width;
   const height = renderTarget.height;
   if (width * height > CAPTURE_FLOAT_PIXEL_WARN_BUDGET) {
     console.warn(
       `[captureFloatStill] large float readback (${width}x${height}); ` +
-        `this allocates ~${Math.round((width * height * 4 * 4) / 1e6)} MB.`,
+        `this allocates ~${Math.round((width * height * 4 * 2) / 1e6)} MB.`,
     );
   }
   try {
-    const raw = new Float32Array(width * height * 4);
-    renderer.readRenderTargetPixels(renderTarget, 0, 0, width, height, raw);
-    const data = new Float32Array(width * height * 4);
+    const raw = new Uint16Array(width * height * 4);
+    // The RT is HalfFloat: a Uint16Array reads the native HALF bits. three types
+    // the buffer param as BufferSource, so cast to the exact param type (runtime
+    // behaviour is driven by the array's element type, which is correct here).
+    renderer.readRenderTargetPixels(
+      renderTarget,
+      0,
+      0,
+      width,
+      height,
+      raw as unknown as Parameters<WebGLRenderer["readRenderTargetPixels"]>[5],
+    );
+    const half = new Uint16Array(width * height * 4);
     const rowLen = width * 4;
     for (let y = 0; y < height; y += 1) {
       const src = (height - y - 1) * rowLen;
-      data.set(raw.subarray(src, src + rowLen), y * rowLen);
+      half.set(raw.subarray(src, src + rowLen), y * rowLen);
     }
-    return { data, width, height };
+    // Force opaque alpha. The composer target's alpha is not guaranteed to be 1,
+    // and a 0 alpha makes the float still fully transparent (the 8-bit path uses
+    // an alpha:false canvas, so it is always opaque). Stills are opaque plates.
+    const HALF_ONE = DataUtils.toHalfFloat(1);
+    for (let i = 3; i < half.length; i += 4) {
+      half[i] = HALF_ONE;
+    }
+    return { half, width, height };
   } catch (error) {
-    if (error instanceof RangeError || error instanceof Error) {
-      throw new CaptureFloatMemoryError(width, height, error);
-    }
-    throw error;
+    throw new CaptureFloatMemoryError(width, height, error);
   }
+}
+
+// Read the HalfFloat capture target back as linear float RGBA (via the HALF read +
+// half->float conversion), row-flipped to top-down image order.
+export function readCaptureFloatPixels(
+  renderer: WebGLRenderer,
+  renderTarget: WebGLRenderTarget,
+): { data: Float32Array; width: number; height: number } {
+  const { half, width, height } = readCaptureFloatHalf(renderer, renderTarget);
+  const data = new Float32Array(half.length);
+  for (let i = 0; i < half.length; i += 1) {
+    data[i] = DataUtils.fromHalfFloat(half[i]);
+  }
+  return { data, width, height };
 }
 
 function toUint8ArrayBlobPart(bytes: Uint8Array): Uint8Array<ArrayBuffer> {
@@ -91,9 +124,10 @@ function toUint8ArrayBlobPart(bytes: Uint8Array): Uint8Array<ArrayBuffer> {
   return new Uint8Array(bytes) as Uint8Array<ArrayBuffer>;
 }
 
-// EXR (HalfFloat). Linear path uses EXRExporter's renderer+target form (it reads
-// the target back internally). The log path reads the pixels, transforms, and
-// re-encodes from a HalfFloat DataTexture.
+// EXR (HalfFloat). Encodes from a HalfFloat DataTexture built from the native HALF
+// readback (the renderer+target form reads the RT as FLOAT, which returns zeros on
+// common drivers). For the log path the half bits are converted to float, log-
+// encoded, and re-quantized to half.
 export async function encodeCaptureExr(
   renderer: WebGLRenderer,
   renderTarget: WebGLRenderTarget,
@@ -102,17 +136,17 @@ export async function encodeCaptureExr(
   const { EXRExporter } = await import(
     "three/examples/jsm/exporters/EXRExporter.js"
   );
-  const exporter = new EXRExporter();
-  if (!options.log) {
-    const data = await exporter.parse(renderer, renderTarget);
-    return new Blob([toUint8ArrayBlobPart(data)], { type: "image/x-exr" });
-  }
   const THREE = await import("three");
-  const { data, width, height } = readCaptureFloatPixels(renderer, renderTarget);
-  applyCaptureLogTransfer(data);
-  const half = new Uint16Array(width * height * 4);
-  for (let i = 0; i < data.length; i += 1) {
-    half[i] = THREE.DataUtils.toHalfFloat(data[i]);
+  const { half, width, height } = readCaptureFloatHalf(renderer, renderTarget);
+  if (options.log) {
+    for (let i = 0; i < half.length; i += 1) {
+      // RGB only (channel 3 = alpha, left as-is).
+      if (i % 4 !== 3) {
+        half[i] = DataUtils.toHalfFloat(
+          captureLogEncode(DataUtils.fromHalfFloat(half[i])),
+        );
+      }
+    }
   }
   const texture = new THREE.DataTexture(
     half,
@@ -122,6 +156,7 @@ export async function encodeCaptureExr(
     THREE.HalfFloatType,
   );
   texture.needsUpdate = true;
+  const exporter = new EXRExporter();
   const out = await exporter.parse(texture, { type: THREE.HalfFloatType });
   texture.dispose();
   return new Blob([toUint8ArrayBlobPart(out)], { type: "image/x-exr" });

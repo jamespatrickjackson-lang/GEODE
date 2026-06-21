@@ -5515,6 +5515,24 @@ test("png16 overlay composite blends; float readback surfaces a typed memory err
   );
 });
 
+test("float readback forces opaque alpha (the composer target alpha is not 1)", async () => {
+  const { readCaptureFloatPixels } = await importBundled(
+    "src/capture/captureFloatStill.ts",
+  );
+  // Drivers can return alpha 0 (which made float stills fully transparent). The
+  // readback must force opaque alpha while leaving RGB intact.
+  const filler = {
+    readRenderTargetPixels(_rt, _x, _y, _w, _h, buffer) {
+      buffer.fill(0); // RGBA all zero, incl. alpha
+    },
+  };
+  const { data } = readCaptureFloatPixels(filler, { width: 2, height: 2 });
+  for (let i = 0; i < data.length; i += 4) {
+    assert.equal(data[i], 0, "RGB stays as read (0 here)");
+    assert.equal(data[i + 3], 1, "alpha is forced opaque");
+  }
+});
+
 test("16-bit PNG encodes/decodes at depth 16 via fast-png", async () => {
   const fp = await import("fast-png");
   const data = new Uint16Array([
