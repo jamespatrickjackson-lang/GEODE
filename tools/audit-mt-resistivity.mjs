@@ -316,7 +316,12 @@ function validateVolumesAndSurfaces(stats) {
       surface.vertexWelding?.weldedVertexCount,
       `${surface.meshId} welded vertices`,
     );
-    assert.equal(surface.normalPolicy, "runtime-computed-smooth-vertex-normals");
+    assert.equal(surface.normalPolicy, "precomputed-field-gradient-normals");
+    assert.equal(
+      surface.marchingCubes?.normalSource,
+      "field-gradient",
+      `${surface.meshId} normal source`,
+    );
     assert.equal(surface.decimation, "none");
     assert.equal(surface.candidateBoundaryFaceCount, undefined);
     assert.equal(surface.decimationStride, undefined);
@@ -327,6 +332,26 @@ function validateVolumesAndSurfaces(stats) {
       surface.marchingCubes?.subdivision?.subdividedTriangleCount,
       surface.marchingCubes?.subdivision?.inputTriangleCount,
       `${surface.meshId} subdivided`,
+    );
+  }
+  // Deep-check one boundary asset: precomputed gradient normals are present and
+  // match the vertex count (full per-asset read would stream ~hundreds of MB).
+  const probeSurface = thresholdMesh.processing.thresholdSurfaces.find(
+    (surface) => surface.id === "conductive-le-10-ohm-m",
+  );
+  if (probeSurface) {
+    const probe = readJson(
+      manifestRelativePath(VOLUME_MANIFEST_PATH, probeSurface.assetFile),
+    );
+    assertGreaterThan(
+      (probe.normals ?? []).length,
+      0,
+      "boundary asset normals present",
+    );
+    assert.equal(
+      probe.normals.length,
+      probe.vertices.length,
+      "boundary asset normals length matches vertices",
     );
   }
   assert.equal(

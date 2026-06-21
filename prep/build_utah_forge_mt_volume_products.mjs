@@ -698,6 +698,8 @@ function appendMarchingCubesSurface(mesh, accumulator, threshold) {
     mesh.vertices.push(extracted.vertices[i]);
   for (let i = 0; i < extracted.colors.length; i += 1)
     mesh.colors.push(extracted.colors[i]);
+  for (let i = 0; i < extracted.normals.length; i += 1)
+    mesh.normals.push(extracted.normals[i]);
   for (let i = 0; i < extracted.scalarValues.length; i += 1)
     mesh.scalarValues.push(extracted.scalarValues[i]);
   for (let i = 0; i < extracted.indices.length; i += 1)
@@ -724,7 +726,7 @@ function appendMarchingCubesSurface(mesh, accumulator, threshold) {
     extractionMethod: "mask-aware-marching-cubes",
     smoothing: extracted.stats.smoothing,
     vertexWelding: extracted.stats.welding,
-    normalPolicy: "runtime-computed-smooth-vertex-normals",
+    normalPolicy: "precomputed-field-gradient-normals",
     decimation: "none",
     dimensions: accumulator.dimensions,
     voxelSpacingM: voxelSpacing(accumulator.bounds, accumulator.dimensions),
@@ -746,6 +748,7 @@ function appendMarchingCubesSurface(mesh, accumulator, threshold) {
 function buildThresholdMesh(accumulators, options) {
   const mesh = {
     vertices: [],
+    normals: [],
     colors: [],
     scalarValues: [],
     indices: [],
@@ -828,6 +831,7 @@ function buildThresholdMesh(accumulators, options) {
       ],
     },
     vertices: mesh.vertices,
+    normals: mesh.normals,
     colors: mesh.colors,
     indices: mesh.indices,
   };
@@ -847,6 +851,7 @@ async function writeThresholdBoundaryAssets(thresholdMesh, thresholdDir) {
     const indexStart = range.indexStart;
     const indexEnd = range.indexStart + range.indexCount;
     const vertices = thresholdMesh.vertices.slice(vertexStart * 3, vertexEnd * 3);
+    const normals = thresholdMesh.normals.slice(vertexStart * 3, vertexEnd * 3);
     const colors = thresholdMesh.colors.slice(vertexStart * 3, vertexEnd * 3);
     const scalarValues = thresholdMesh.attributes.scalarValues.slice(
       vertexStart,
@@ -879,6 +884,7 @@ async function writeThresholdBoundaryAssets(thresholdMesh, thresholdDir) {
         thresholdSurfaces: [assetSurface],
       },
       vertices,
+      normals,
       colors,
       indices,
     };
@@ -1049,6 +1055,7 @@ async function main() {
     ...thresholdMesh,
     lazyBoundaries: true,
     vertices: [],
+    normals: [],
     colors: [],
     indices: [],
     attributes: { scalar: thresholdMesh.attributes.scalar, scalarValues: [] },

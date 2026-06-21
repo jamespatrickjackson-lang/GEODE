@@ -260,6 +260,103 @@ function subdivideMesh({ vertices, indices, color, scalarValue, round }) {
   };
 }
 
+// Trilinear sample of the scalar field at continuous voxel coords, ignoring
+// NaN/empty corners (renormalizing over valid weight). Returns NaN if no valid
+// corner contributes.
+function sampleFieldTrilinear(values, dimensions, fx, fy, fz) {
+  const [nx, ny, nz] = dimensions;
+  const cx = Math.max(0, Math.min(nx - 1, fx));
+  const cy = Math.max(0, Math.min(ny - 1, fy));
+  const cz = Math.max(0, Math.min(nz - 1, fz));
+  const x0 = Math.floor(cx);
+  const y0 = Math.floor(cy);
+  const z0 = Math.floor(cz);
+  const x1 = Math.min(x0 + 1, nx - 1);
+  const y1 = Math.min(y0 + 1, ny - 1);
+  const z1 = Math.min(z0 + 1, nz - 1);
+  const tx = cx - x0;
+  const ty = cy - y0;
+  const tz = cz - z0;
+  const slab = nx * ny;
+  const corners = [
+    [x0, y0, z0, (1 - tx) * (1 - ty) * (1 - tz)],
+    [x1, y0, z0, tx * (1 - ty) * (1 - tz)],
+    [x0, y1, z0, (1 - tx) * ty * (1 - tz)],
+    [x1, y1, z0, tx * ty * (1 - tz)],
+    [x0, y0, z1, (1 - tx) * (1 - ty) * tz],
+    [x1, y0, z1, tx * (1 - ty) * tz],
+    [x0, y1, z1, (1 - tx) * ty * tz],
+    [x1, y1, z1, tx * ty * tz],
+  ];
+  let sum = 0;
+  let weight = 0;
+  for (const [x, y, z, w] of corners) {
+    const v = values[z * slab + y * nx + x];
+    if (Number.isFinite(v)) {
+      sum += v * w;
+      weight += w;
+    }
+  }
+  return weight > 1e-6 ? sum / weight : Number.NaN;
+}
+
+// Best-practice isosurface normals: the exact normal is the gradient of the
+// scalar field, ∇f, sampled at each (final, smoothed) vertex. This is grid-
+// independent and removes the lattice-aligned shading striation that
+// geometry-derived (computeVertexNormals) normals bake in. Oriented outward by
+// comparison: +∇f for `<=` shells, -∇f for `>=` shells.
+function computeFieldGradientNormals({
+  vertices,
+  values,
+  dimensions,
+  bounds,
+  comparison,
+  round,
+}) {
+  const [nx, ny, nz] = dimensions;
+  const spanX = Math.max(1e-9, bounds.maxX - bounds.minX);
+  const spanY = Math.max(1e-9, bounds.maxY - bounds.minY);
+  const spanZ = Math.max(1e-9, bounds.maxZ - bounds.minZ);
+  const spacingX = spanX / nx;
+  const spacingY = spanY / ny;
+  const spacingZ = spanZ / nz;
+  const sign = comparison === ">=" ? -1 : 1;
+  const h = 0.75; // central-difference offset in voxel units
+  const count = vertices.length / 3;
+  const normals = new Array(vertices.length);
+  for (let i = 0; i < count; i += 1) {
+    const fx = ((vertices[i * 3] - bounds.minX) / spanX) * nx - 0.5;
+    const fy = ((vertices[i * 3 + 1] - bounds.minY) / spanY) * ny - 0.5;
+    const fz = ((vertices[i * 3 + 2] - bounds.minZ) / spanZ) * nz - 0.5;
+    const gx =
+      (sampleFieldTrilinear(values, dimensions, fx + h, fy, fz) -
+        sampleFieldTrilinear(values, dimensions, fx - h, fy, fz)) /
+      (2 * h * spacingX);
+    const gy =
+      (sampleFieldTrilinear(values, dimensions, fx, fy + h, fz) -
+        sampleFieldTrilinear(values, dimensions, fx, fy - h, fz)) /
+      (2 * h * spacingY);
+    const gz =
+      (sampleFieldTrilinear(values, dimensions, fx, fy, fz + h) -
+        sampleFieldTrilinear(values, dimensions, fx, fy, fz - h)) /
+      (2 * h * spacingZ);
+    let nxv = sign * gx;
+    let nyv = sign * gy;
+    let nzv = sign * gz;
+    let len = Math.hypot(nxv, nyv, nzv);
+    if (!Number.isFinite(len) || len < 1e-9) {
+      nxv = 0;
+      nyv = 0;
+      nzv = 1;
+      len = 1;
+    }
+    normals[i * 3] = round(nxv / len, 4);
+    normals[i * 3 + 1] = round(nyv / len, 4);
+    normals[i * 3 + 2] = round(nzv / len, 4);
+  }
+  return normals;
+}
+
 export function extractMaskAwareMarchingCubes({
   values,
   mask,
@@ -371,9 +468,18 @@ export function extractMaskAwareMarchingCubes({
     iterations: 8,
     pinBoundary: false,
   });
+  const normals = computeFieldGradientNormals({
+    vertices: smoothed.vertices,
+    values,
+    dimensions,
+    bounds,
+    comparison,
+    round,
+  });
 
   return {
     vertices: smoothed.vertices,
+    normals,
     colors: subdivided.colors,
     scalarValues: subdivided.scalarValues,
     indices: subdivided.indices,
@@ -386,6 +492,7 @@ export function extractMaskAwareMarchingCubes({
       welding: welded.stats,
       subdivision: subdivided.stats,
       smoothing: smoothed.stats,
+      normalSource: "field-gradient",
     },
   };
 }

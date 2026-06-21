@@ -405,7 +405,7 @@ function validateMtProducts() {
     assertGreaterThan(surface.marchingCubes?.triangleCount, 0, `${surface.meshId} triangles`);
     assertGreaterThan(surface.marchingCubes?.vertexCount, 0, `${surface.meshId} vertices`);
     assert.equal(surface.smoothing?.method, "taubin-laplacian");
-    assert.equal(surface.normalPolicy, "runtime-computed-smooth-vertex-normals");
+    assert.equal(surface.normalPolicy, "precomputed-field-gradient-normals");
   }
   // Slim lazy preview: geometry is fetched per boundary at runtime, so the
   // preview itself carries no concatenated geometry.

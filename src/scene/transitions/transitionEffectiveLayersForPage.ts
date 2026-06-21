@@ -10,6 +10,7 @@ import { CASE_STUDY_B_DEMO_LAYER_ALIASES } from "../../projectModules/caseStudyB
 import {
   UTAH_FORGE_MT_RESISTIVITY_FULL_DENSITY_LAYER_ID,
   UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID,
+  UTAH_FORGE_MT_THRESHOLD_SURFACES_LAYER_ID,
   UTAH_FORGE_SCENE_SECTION_LAYER_ID,
   UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID,
 } from "../../projectModules/utahForge/layerIds";
@@ -786,7 +787,7 @@ export function transitionEffectiveLayersForPage(
     const representationKey = layerRepresentationKey(layerSpec);
     const sourceState = sourceLayers.get(id);
     const sourceLoaded = !!sourceState;
-    const targetLoaded = this.layers.has(id);
+    let targetLoaded = this.layers.has(id);
     const group = this.layers.get(id);
     const seismicRuntimeIndex =
       id === UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID &&
@@ -802,6 +803,19 @@ export function transitionEffectiveLayersForPage(
     const fromStyle =
       sourceState?.style ?? effectiveStyle(fromEnvironment, fromPage, id);
     const targetStyle = effectiveStyle(toEnvironment, toPage, id);
+    if (
+      targetLoaded &&
+      targetAuthoredVisible &&
+      id === UTAH_FORGE_MT_THRESHOLD_SURFACES_LAYER_ID &&
+      group?.userData?.mtThresholdSurfaceLazy === true &&
+      typeof this.mtThresholdLayerGeometryReady === "function"
+    ) {
+      // Lazy MT surfaces: the group exists immediately, but boundary geometry is
+      // fetched on demand. Report "loading" until the target's visible
+      // boundaries are attached so the transition holds source / enters target
+      // on the transition clock instead of popping in at full opacity.
+      targetLoaded = this.mtThresholdLayerGeometryReady(id, targetStyle);
+    }
     const sourceOwnerKey = sourceLoaded ? "live-runtime" : "persisted-effective";
     const sourceOwnerPriority = sourceLoaded ? 100 : 10;
     const targetOwnerKey = "target-effective";

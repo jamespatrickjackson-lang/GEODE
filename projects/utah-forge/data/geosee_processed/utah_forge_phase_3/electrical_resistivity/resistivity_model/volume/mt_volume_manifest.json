@@ -175,7 +175,7 @@
           "weldedTriangleCount": 1360,
           "removedDegenerateTriangleCount": 0
         },
-        "normalPolicy": "runtime-computed-smooth-vertex-normals",
+        "normalPolicy": "precomputed-field-gradient-normals",
         "decimation": "none",
         "dimensions": [
           383,
@@ -214,7 +214,8 @@
             "pinBoundary": false,
             "boundaryVertexCount": 176,
             "smoothedVertexCount": 2809
-          }
+          },
+          "normalSource": "field-gradient"
         },
         "matchingVoxelCount": 1312,
         "meanLog10Resistivity": -0.015257,
@@ -261,7 +262,7 @@
           "weldedTriangleCount": 3990,
           "removedDegenerateTriangleCount": 0
         },
-        "normalPolicy": "runtime-computed-smooth-vertex-normals",
+        "normalPolicy": "precomputed-field-gradient-normals",
         "decimation": "none",
         "dimensions": [
           383,
@@ -300,7 +301,8 @@
             "pinBoundary": false,
             "boundaryVertexCount": 680,
             "smoothedVertexCount": 8326
-          }
+          },
+          "normalSource": "field-gradient"
         },
         "matchingVoxelCount": 3774,
         "meanLog10Resistivity": 0.166904,
@@ -347,7 +349,7 @@
           "weldedTriangleCount": 7269,
           "removedDegenerateTriangleCount": 0
         },
-        "normalPolicy": "runtime-computed-smooth-vertex-normals",
+        "normalPolicy": "precomputed-field-gradient-normals",
         "decimation": "none",
         "dimensions": [
           383,
@@ -386,7 +388,8 @@
             "pinBoundary": false,
             "boundaryVertexCount": 1298,
             "smoothedVertexCount": 15188
-          }
+          },
+          "normalSource": "field-gradient"
         },
         "matchingVoxelCount": 8399,
         "meanLog10Resistivity": 0.317814,
@@ -433,7 +436,7 @@
           "weldedTriangleCount": 9867,
           "removedDegenerateTriangleCount": 0
         },
-        "normalPolicy": "runtime-computed-smooth-vertex-normals",
+        "normalPolicy": "precomputed-field-gradient-normals",
         "decimation": "none",
         "dimensions": [
           383,
@@ -472,7 +475,8 @@
             "pinBoundary": false,
             "boundaryVertexCount": 1724,
             "smoothedVertexCount": 20600
-          }
+          },
+          "normalSource": "field-gradient"
         },
         "matchingVoxelCount": 13203,
         "meanLog10Resistivity": 0.435559,
@@ -519,7 +523,7 @@
           "weldedTriangleCount": 14097,
           "removedDegenerateTriangleCount": 0
         },
-        "normalPolicy": "runtime-computed-smooth-vertex-normals",
+        "normalPolicy": "precomputed-field-gradient-normals",
         "decimation": "none",
         "dimensions": [
           383,
@@ -558,7 +562,8 @@
             "pinBoundary": false,
             "boundaryVertexCount": 2233,
             "smoothedVertexCount": 29324
-          }
+          },
+          "normalSource": "field-gradient"
         },
         "matchingVoxelCount": 19688,
         "meanLog10Resistivity": 0.571174,
@@ -605,7 +610,7 @@
           "weldedTriangleCount": 19725,
           "removedDegenerateTriangleCount": 0
         },
-        "normalPolicy": "runtime-computed-smooth-vertex-normals",
+        "normalPolicy": "precomputed-field-gradient-normals",
         "decimation": "none",
         "dimensions": [
           383,
@@ -644,7 +649,8 @@
             "pinBoundary": false,
             "boundaryVertexCount": 2734,
             "smoothedVertexCount": 40828
-          }
+          },
+          "normalSource": "field-gradient"
         },
         "matchingVoxelCount": 29926,
         "meanLog10Resistivity": 0.733425,
@@ -691,7 +697,7 @@
           "weldedTriangleCount": 25716,
           "removedDegenerateTriangleCount": 0
         },
-        "normalPolicy": "runtime-computed-smooth-vertex-normals",
+        "normalPolicy": "precomputed-field-gradient-normals",
         "decimation": "none",
         "dimensions": [
           383,
@@ -730,7 +736,8 @@
             "pinBoundary": false,
             "boundaryVertexCount": 3432,
             "smoothedVertexCount": 53161
-          }
+          },
+          "normalSource": "field-gradient"
         },
         "matchingVoxelCount": 44836,
         "meanLog10Resistivity": 0.901902,
@@ -777,7 +784,7 @@
           "weldedTriangleCount": 34637,
           "removedDegenerateTriangleCount": 0
         },
-        "normalPolicy": "runtime-computed-smooth-vertex-normals",
+        "normalPolicy": "precomputed-field-gradient-normals",
         "decimation": "none",
         "dimensions": [
           383,
@@ -816,7 +823,8 @@
             "pinBoundary": false,
             "boundaryVertexCount": 4198,
             "smoothedVertexCount": 71385
-          }
+          },
+          "normalSource": "field-gradient"
         },
         "matchingVoxelCount": 714216,
         "meanLog10Resistivity": 2.596092,
@@ -863,7 +871,7 @@
           "weldedTriangleCount": 43636,
           "removedDegenerateTriangleCount": 0
         },
-        "normalPolicy": "runtime-computed-smooth-vertex-normals",
+        "normalPolicy": "precomputed-field-gradient-normals",
         "decimation": "none",
         "dimensions": [
           383,
@@ -902,7 +910,8 @@
             "pinBoundary": false,
             "boundaryVertexCount": 5089,
             "smoothedVertexCount": 89843
-          }
+          },
+          "normalSource": "field-gradient"
         },
         "matchingVoxelCount": 683752,
         "meanLog10Resistivity": 2.638574,
@@ -949,7 +958,7 @@
           "weldedTriangleCount": 54749,
           "removedDegenerateTriangleCount": 0
         },
-        "normalPolicy": "runtime-computed-smooth-vertex-normals",
+        "normalPolicy": "precomputed-field-gradient-normals",
         "decimation": "none",
         "dimensions": [
           383,
@@ -988,7 +997,8 @@
             "pinBoundary": false,
             "boundaryVertexCount": 5538,
             "smoothedVertexCount": 112274
-          }
+          },
+          "normalSource": "field-gradient"
         },
         "matchingVoxelCount": 628096,
         "meanLog10Resistivity": 2.709203,
@@ -1035,7 +1045,7 @@
           "weldedTriangleCount": 65839,
           "removedDegenerateTriangleCount": 0
         },
-        "normalPolicy": "runtime-computed-smooth-vertex-normals",
+        "normalPolicy": "precomputed-field-gradient-normals",
         "decimation": "none",
         "dimensions": [
           383,
@@ -1074,7 +1084,8 @@
             "pinBoundary": false,
             "boundaryVertexCount": 7503,
             "smoothedVertexCount": 135448
-          }
+          },
+          "normalSource": "field-gradient"
         },
         "matchingVoxelCount": 567390,
         "meanLog10Resistivity": 2.779732,
@@ -1121,7 +1132,7 @@
           "weldedTriangleCount": 71358,
           "removedDegenerateTriangleCount": 0
         },
-        "normalPolicy": "runtime-computed-smooth-vertex-normals",
+        "normalPolicy": "precomputed-field-gradient-normals",
         "decimation": "none",
         "dimensions": [
           383,
@@ -1160,7 +1171,8 @@
             "pinBoundary": false,
             "boundaryVertexCount": 7753,
             "smoothedVertexCount": 146602
-          }
+          },
+          "normalSource": "field-gradient"
         },
         "matchingVoxelCount": 473666,
         "meanLog10Resistivity": 2.887056,
@@ -1207,7 +1219,7 @@
           "weldedTriangleCount": 74901,
           "removedDegenerateTriangleCount": 0
         },
-        "normalPolicy": "runtime-computed-smooth-vertex-normals",
+        "normalPolicy": "precomputed-field-gradient-normals",
         "decimation": "none",
         "dimensions": [
           383,
@@ -1246,7 +1258,8 @@
             "pinBoundary": false,
             "boundaryVertexCount": 7094,
             "smoothedVertexCount": 153376
-          }
+          },
+          "normalSource": "field-gradient"
         },
         "matchingVoxelCount": 372123,
         "meanLog10Resistivity": 3.009488,
@@ -1293,7 +1306,7 @@
           "weldedTriangleCount": 78141,
           "removedDegenerateTriangleCount": 2
         },
-        "normalPolicy": "runtime-computed-smooth-vertex-normals",
+        "normalPolicy": "precomputed-field-gradient-normals",
         "decimation": "none",
         "dimensions": [
           383,
@@ -1332,7 +1345,8 @@
             "pinBoundary": false,
             "boundaryVertexCount": 6769,
             "smoothedVertexCount": 159685
-          }
+          },
+          "normalSource": "field-gradient"
         },
         "matchingVoxelCount": 277104,
         "meanLog10Resistivity": 3.135602,
@@ -1379,7 +1393,7 @@
           "weldedTriangleCount": 65916,
           "removedDegenerateTriangleCount": 0
         },
-        "normalPolicy": "runtime-computed-smooth-vertex-normals",
+        "normalPolicy": "precomputed-field-gradient-normals",
         "decimation": "none",
         "dimensions": [
           383,
@@ -1418,7 +1432,8 @@
             "pinBoundary": false,
             "boundaryVertexCount": 4226,
             "smoothedVertexCount": 133941
-          }
+          },
+          "normalSource": "field-gradient"
         },
         "matchingVoxelCount": 176480,
         "meanLog10Resistivity": 3.308387,
@@ -1465,7 +1480,7 @@
           "weldedTriangleCount": 45620,
           "removedDegenerateTriangleCount": 0
         },
-        "normalPolicy": "runtime-computed-smooth-vertex-normals",
+        "normalPolicy": "precomputed-field-gradient-normals",
         "decimation": "none",
         "dimensions": [
           383,
@@ -1504,7 +1519,8 @@
             "pinBoundary": false,
             "boundaryVertexCount": 2140,
             "smoothedVertexCount": 92311
-          }
+          },
+          "normalSource": "field-gradient"
         },
         "matchingVoxelCount": 112267,
         "meanLog10Resistivity": 3.468205,
@@ -1551,7 +1567,7 @@
           "weldedTriangleCount": 32805,
           "removedDegenerateTriangleCount": 0
         },
-        "normalPolicy": "runtime-computed-smooth-vertex-normals",
+        "normalPolicy": "precomputed-field-gradient-normals",
         "decimation": "none",
         "dimensions": [
           383,
@@ -1590,7 +1606,8 @@
             "pinBoundary": false,
             "boundaryVertexCount": 1522,
             "smoothedVertexCount": 66372
-          }
+          },
+          "normalSource": "field-gradient"
         },
         "matchingVoxelCount": 72263,
         "meanLog10Resistivity": 3.599716,
@@ -1637,7 +1654,7 @@
           "weldedTriangleCount": 26256,
           "removedDegenerateTriangleCount": 0
         },
-        "normalPolicy": "runtime-computed-smooth-vertex-normals",
+        "normalPolicy": "precomputed-field-gradient-normals",
         "decimation": "none",
         "dimensions": [
           383,
@@ -1676,7 +1693,8 @@
             "pinBoundary": false,
             "boundaryVertexCount": 1232,
             "smoothedVertexCount": 53126
-          }
+          },
+          "normalSource": "field-gradient"
         },
         "matchingVoxelCount": 40950,
         "meanLog10Resistivity": 3.72464,
@@ -1723,7 +1741,7 @@
           "weldedTriangleCount": 14290,
           "removedDegenerateTriangleCount": 0
         },
-        "normalPolicy": "runtime-computed-smooth-vertex-normals",
+        "normalPolicy": "precomputed-field-gradient-normals",
         "decimation": "none",
         "dimensions": [
           383,
@@ -1762,7 +1780,8 @@
             "pinBoundary": false,
             "boundaryVertexCount": 340,
             "smoothedVertexCount": 28755
-          }
+          },
+          "normalSource": "field-gradient"
         },
         "matchingVoxelCount": 15004,
         "meanLog10Resistivity": 3.891749,
@@ -1809,7 +1828,7 @@
           "weldedTriangleCount": 5800,
           "removedDegenerateTriangleCount": 0
         },
-        "normalPolicy": "runtime-computed-smooth-vertex-normals",
+        "normalPolicy": "precomputed-field-gradient-normals",
         "decimation": "none",
         "dimensions": [
           383,
@@ -1848,7 +1867,8 @@
             "pinBoundary": false,
             "boundaryVertexCount": 0,
             "smoothedVertexCount": 11602
-          }
+          },
+          "normalSource": "field-gradient"
         },
         "matchingVoxelCount": 4533,
         "meanLog10Resistivity": 4.054466,
@@ -1895,7 +1915,7 @@
           "weldedTriangleCount": 15756,
           "removedDegenerateTriangleCount": 0
         },
-        "normalPolicy": "runtime-computed-smooth-vertex-normals",
+        "normalPolicy": "precomputed-field-gradient-normals",
         "decimation": "none",
         "dimensions": [
           383,
@@ -1934,7 +1954,8 @@
             "pinBoundary": false,
             "boundaryVertexCount": 2299,
             "smoothedVertexCount": 32674
-          }
+          },
+          "normalSource": "field-gradient"
         },
         "matchingVoxelCount": 22387,
         "meanLog10Resistivity": 0.619321,
@@ -1981,7 +2002,7 @@
           "weldedTriangleCount": 31778,
           "removedDegenerateTriangleCount": 0
         },
-        "normalPolicy": "runtime-computed-smooth-vertex-normals",
+        "normalPolicy": "precomputed-field-gradient-normals",
         "decimation": "none",
         "dimensions": [
           383,
@@ -2020,7 +2041,8 @@
             "pinBoundary": false,
             "boundaryVertexCount": 3988,
             "smoothedVertexCount": 65566
-          }
+          },
+          "normalSource": "field-gradient"
         },
         "matchingVoxelCount": 58896,
         "meanLog10Resistivity": 1.023382,
@@ -2067,7 +2089,7 @@
           "weldedTriangleCount": 58629,
           "removedDegenerateTriangleCount": 0
         },
-        "normalPolicy": "runtime-computed-smooth-vertex-normals",
+        "normalPolicy": "precomputed-field-gradient-normals",
         "decimation": "none",
         "dimensions": [
           383,
@@ -2106,7 +2128,8 @@
             "pinBoundary": false,
             "boundaryVertexCount": 3502,
             "smoothedVertexCount": 119006
-          }
+          },
+          "normalSource": "field-gradient"
         },
         "matchingVoxelCount": 153035,
         "meanLog10Resistivity": 3.360644,

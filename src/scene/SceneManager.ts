@@ -44,6 +44,7 @@ import {
 } from "../projectModules/utahForge/layerIds";
 import {
   DEFAULT_MT_SURFACE_BOUNDARIES,
+  resolveMtSurfaceBoundaries,
   type MtSurfaceBoundaryDefinition,
   type ResolvedMtSurfaceBoundary,
 } from "../projectModules/utahForge/mtSurfaceBoundaries";
@@ -3563,7 +3564,18 @@ export class SceneManager {
     const transition = this.activeSceneTransitionContext;
     if (!transition || transition.targetNotReadyLayerIds.size === 0) return;
     for (const layerId of Array.from(transition.targetNotReadyLayerIds)) {
-      if (!this.layers.has(layerId)) continue;
+      if (this.mtThresholdLayerIsLazy(layerId)) {
+        // Lazy MT surfaces are "ready" only when the target's visible boundary
+        // meshes are actually attached; keep fetching until then so they enter
+        // on the transition clock rather than popping in at full opacity.
+        const targetStyle = effectiveStyle(environment, page, layerId);
+        if (!this.mtThresholdLayerGeometryReady(layerId, targetStyle)) {
+          this.prefetchMtThresholdTargetBoundaries(layerId, targetStyle);
+          continue;
+        }
+      } else if (!this.layers.has(layerId)) {
+        continue;
+      }
       transition.targetNotReadyLayerIds.delete(layerId);
       transition.readinessAttachedLayerIds.add(layerId);
       if (!transition.targetVisibleLayerIds.has(layerId)) continue;
@@ -4359,11 +4371,77 @@ export class SceneManager {
     }
   }
 
-  // Lazy precomputed boundaries (DEC supersede): the single uncropped product
-  // carries 23 source-derived surfaces at full fineness, far too large to load
-  // at once. Each boundaries/<product>/<id>.json is a self-contained
-  // single-surface mesh-preview payload; fetch only the surfaces that should be
-  // visible for the selected product, on demand, and cache them on the group.
+  // Lazy precomputed boundaries (DEC-180): the single uncropped product carries
+  // 23 source-derived surfaces at full fineness, far too large to load at once.
+  // Each boundaries/<product>/<id>.json is a self-contained single-surface
+  // payload; fetch only visible surfaces on demand.
+  private mtThresholdLayerIsLazy(layerId: string): boolean {
+    return (
+      layerId === UTAH_FORGE_MT_THRESHOLD_SURFACES_LAYER_ID &&
+      this.layers.get(layerId)?.userData?.mtThresholdSurfaceLazy === true
+    );
+  }
+
+  private mtThresholdBoundaryMeshPresent(
+    group: THREE.Group,
+    productId: string,
+    boundaryId: string,
+  ): boolean {
+    return group.children.some(
+      (child) =>
+        child.userData?.mtThresholdSurfacePreview === true &&
+        child.userData?.mtSurfaceBoundaryLive !== true &&
+        child.userData?.mtThresholdSurfaceId === boundaryId &&
+        child.userData?.mtIsosurfaceProductId === productId,
+    );
+  }
+
+  private mtThresholdSelectedProductId(style: EditableStyle): string {
+    return typeof style.mtIsosurfaceProductId === "string"
+      ? style.mtIsosurfaceProductId
+      : "mt-isosurface-full-extent";
+  }
+
+  private mtThresholdVisiblePrecomputedBoundaries(
+    group: THREE.Group,
+    style: EditableStyle,
+  ): ResolvedMtSurfaceBoundary[] {
+    return resolveMtSurfaceBoundaries(
+      style,
+      this.mtSurfaceBoundaryDefinitionsFromGroup(group),
+    ).filter((boundary) => boundary.visible && boundary.source !== "live");
+  }
+
+  // Geometry readiness for the lazy threshold layer: true only when every
+  // visible precomputed boundary mesh for the selected product is attached.
+  // The transition engine consults this so the layer stays "loading" until the
+  // actual surfaces arrive, instead of treating group existence as ready.
+  mtThresholdLayerGeometryReady(layerId: string, style: EditableStyle): boolean {
+    const group = this.layers.get(layerId);
+    if (!group) return false;
+    if (group.userData?.mtThresholdSurfaceRegistry === undefined) return true;
+    const productId = this.mtThresholdSelectedProductId(style);
+    const boundaries = this.mtThresholdVisiblePrecomputedBoundaries(group, style);
+    if (boundaries.length === 0) return true;
+    return boundaries.every((boundary) =>
+      this.mtThresholdBoundaryMeshPresent(group, productId, boundary.id),
+    );
+  }
+
+  // Kick off lazy fetches for the target style's visible boundaries without
+  // styling them, so geometry becomes ready during a transition. Idempotent.
+  prefetchMtThresholdTargetBoundaries(layerId: string, style: EditableStyle): void {
+    const group = this.layers.get(layerId);
+    if (!group) return;
+    this.ensurePrecomputedMtSurfaceBoundaries(
+      group,
+      layerId,
+      this.mtThresholdSelectedProductId(style),
+      this.mtThresholdVisiblePrecomputedBoundaries(group, style),
+      style,
+    );
+  }
+
   ensurePrecomputedMtSurfaceBoundaries(
     group: THREE.Group,
     layerId: string,
@@ -4384,21 +4462,24 @@ export class SceneManager {
       const meshId = `${selectedProductId}:${boundary.id}`;
       const entry = registry[meshId];
       if (!entry) continue;
-      const present = group.children.some(
-        (child) =>
-          child.userData?.mtThresholdSurfacePreview === true &&
-          child.userData?.mtSurfaceBoundaryLive !== true &&
-          child.userData?.mtThresholdSurfaceId === boundary.id &&
-          child.userData?.mtIsosurfaceProductId === selectedProductId,
-      );
-      if (present || inFlight.has(meshId)) continue;
+      if (
+        this.mtThresholdBoundaryMeshPresent(group, selectedProductId, boundary.id) ||
+        inFlight.has(meshId)
+      ) {
+        continue;
+      }
       inFlight.add(meshId);
       loadMeshPreview(entry.assetUrl)
         .then((loaded) => {
           if (this.layers.get(layerId) !== group) return;
+          // During an active transition, attach hidden; the readiness/attach
+          // path enters the surface on the transition clock (spec: no late
+          // full-opacity pop). Otherwise the completion reapply styles it.
+          const duringTransition = this.activeSceneTransitionContext !== null;
           for (const child of [...loaded.children]) {
             if (child.userData?.mtThresholdSurfacePreview === true) {
               child.userData.mtSurfaceBoundaryPrecomputedLazy = true;
+              if (duringTransition) child.visible = false;
               loaded.remove(child);
               group.add(child);
             }
@@ -4413,12 +4494,14 @@ export class SceneManager {
         )
         .finally(() => {
           inFlight.delete(meshId);
-          if (this.layers.get(layerId) === group) {
-            // Re-apply so freshly attached surfaces receive visibility/material
-            // and working-area focus patching (DEC-173 rehydration).
-            this.applyMtThresholdSurfaceStyle(layerId, style);
-            this.reapplyWorkingAreaFocus();
-          }
+          if (this.layers.get(layerId) !== group) return;
+          // Never full-restyle during a transition: that would own opacity and
+          // break final-commit idempotency. The per-frame readiness/attach path
+          // (attachReadyTargetLayersDuringActiveTransition) styles and fades the
+          // surface in on the transition clock instead.
+          if (this.activeSceneTransitionContext !== null) return;
+          this.applyMtThresholdSurfaceStyle(layerId, style);
+          this.reapplyWorkingAreaFocus();
         });
     }
   }

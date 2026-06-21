@@ -40,6 +40,7 @@ interface MeshPreviewPayload {
   };
   vertices: number[];
   colors?: number[];
+  normals?: number[];
   indices: number[];
 }
 
@@ -114,6 +115,7 @@ function buildPreviewGeometry(
   colors: Float32Array,
   scalarValues: Float32Array | null,
   scalar: ScalarMetadata,
+  normals: Float32Array | null = null,
 ): THREE.BufferGeometry {
   const geometry = new THREE.BufferGeometry();
   geometry.setAttribute("position", new THREE.BufferAttribute(vertices, 3));
@@ -124,7 +126,14 @@ function buildPreviewGeometry(
     geometry.userData.scalar = scalar;
     geometry.userData.scalarColorMode = "scalar";
   }
-  geometry.computeVertexNormals();
+  if (normals && normals.length === vertices.length) {
+    // Precomputed field-gradient normals (best practice for isosurfaces):
+    // grid-independent, removes lattice-aligned shading striation. Use them
+    // instead of geometry-derived normals.
+    geometry.setAttribute("normal", new THREE.BufferAttribute(normals, 3));
+  } else {
+    geometry.computeVertexNormals();
+  }
   geometry.computeBoundingBox();
   geometry.computeBoundingSphere();
   return geometry;
@@ -288,6 +297,10 @@ export async function loadMeshPreview(
   const payloadColors = payload.colors
     ? new Float32Array(payload.colors)
     : null;
+  const payloadNormals =
+    payload.normals && payload.normals.length === payload.vertices.length
+      ? new Float32Array(payload.normals)
+      : null;
   const payloadScalarValues =
     payload.attributes?.scalarValues &&
     payload.attributes.scalarValues.length === payload.vertices.length / 3
@@ -339,6 +352,12 @@ export async function loadMeshPreview(
         vertexStart * 3,
         (vertexStart + vertexCount) * 3,
       );
+      const subNormals = payloadNormals
+        ? payloadNormals.slice(
+            vertexStart * 3,
+            (vertexStart + vertexCount) * 3,
+          )
+        : null;
       const subScalars = payloadScalarValues.slice(
         vertexStart,
         vertexStart + vertexCount,
@@ -353,6 +372,7 @@ export async function loadMeshPreview(
         subColors,
         subScalars,
         payload.attributes?.scalar,
+        subNormals,
       );
       const label = slice.label ?? slice.id ?? payload.label ?? "Mesh preview";
       const mesh = createPreviewMesh(
@@ -399,6 +419,7 @@ export async function loadMeshPreview(
       colors,
       payloadScalarValues,
       payload.attributes?.scalar,
+      payloadNormals,
     );
     const mesh = createPreviewMesh(
       geometry,
