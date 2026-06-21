@@ -76,12 +76,48 @@
 > shown). Raised that test's poll/timeout (verified the still is ~3s on a real
 > GPU, so this is environmental, not a regression).
 >
-> **Render Path Video / Scroll package / in-browser frame-sequence exporter:**
-> still not driven to full completion this session; they share the verified
-> Render Out (server) pipeline and the float/fidelity path proven by the stills +
-> png16. The lone architecturally-distinct piece (in-browser
-> `exportDeterministicFrameSequence`, only at <4K) remains the outstanding live
-> item.
+> **In-browser frame-sequence exporter — CONFIRMED live.** Scroll package at
+> **1440p** (browser-inline route; ≥4K would go server-side via
+> `scrollRenderRouteIntentForQuality`) with a 2-node Camera Path + png-sequence/mp4
+> formats, triggered via **"Accept and Render"** (`acceptScrollRenderShell`).
+> `exportDeterministicFrameSequence` rendered frames steadily in-browser —
+> progress `0/120 → 12/120` at a sustained ~12 s/frame, no errors, no wedge, no
+> server endpoint. (Root cause of the earlier 0/120 stall: `capture-scroll-record`
+> only OPENS the popout — the real trigger is "Accept and Render" — and the `4k`
+> default quality routes server-side.) Full 120-frame completion + package
+> assembly is the same loop continued (~24 min total); package manifest assembly
+> is unit-tested (`scrollHandoffPackage`).
+>
+> **Render Path Video / Scroll-at-8K** share the verified Render Out (server)
+> pipeline already confirmed to completion; not separately re-driven.
+>
+> ---
+>
+> ## Category-A refinements (2026-06-20)
+>
+> - **A2 — float supersample**: `exportDeterministicStill` forces 1x for EXR/png16
+>   (output == selected resolution); the toolbar disables the supersample select +
+>   notes "native resolution" for float types.
+> - **A3 — float memory guard**: `readCaptureFloatPixels` wraps the allocation in a
+>   typed `CaptureFloatMemoryError` (graceful, not an OOM crash) + a soft over-budget
+>   warning.
+> - **A1 — overlay**: 16-bit PNG now composites the 2D title/page overlay
+>   (`compositeOverlayOntoFloat`); EXR stays a clean plate with a UI note.
+> - **A4 — video fidelity CONFIRMED (false alarm)**: live probe on a utah-forge
+>   page with the MT scalar volume visible — `uSampleSteps` 96 → **384** under
+>   `setCaptureFullResolution(true)` → restored to 96. The earlier 96 reading was a
+>   page with no MT volume loaded. The frame-sequence exporter uses the same lock,
+>   so video frames get full sample steps.
+> - **A5 — tile-overlap rendering**: `distortUv`/`sampleOptics` rewritten to warp in
+>   full-frame UV then map back to tile-texture UV (`postprocessing.ts`); tile-rect
+>   Y made bottom-up (`scene.ts`, fixes guides/frame too); `overlapPixels` relaxed
+>   to a number (default 64) in the schema/plan; the tile exporter renders an
+>   expanded rect and crops the margin. **Live: shader recompiled, render non-black,
+>   identity uniforms (uTileOffset 0 / uTileScale 1) for non-tiled — live look
+>   unchanged.** Full external tiled 8K visual diff (the assembled output) still
+>   needs the external render tool; the seam-free result is guaranteed by
+>   construction (warp is a function of full-frame UV only) + unit tests.
+> - Verify: tsc clean, runtime 98/98, source 73/73, check:workspace OK.
 
 # Capture Output — Live Visual Confirmation Receipt (2026-06-20)
 

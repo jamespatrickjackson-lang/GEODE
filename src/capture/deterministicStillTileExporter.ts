@@ -106,14 +106,27 @@ export async function exportDeterministicStillTile({
     sceneHandle.setCaptureNativeAnnotationsVisible?.(
       captureVisibilityProfileForMode(recipe.mode).captureNativeAnnotations,
     );
+    // Overlap-rendered tile: render `overlapPixels` extra on each side (clamped to
+    // the full bounds) and crop them off. This gives the sampling-based lens FX
+    // (distortion / chromatic aberration) neighbour pixels so tiles join
+    // seamlessly. The grade pass computes those FX in full-frame UV via the
+    // uTileOffset/uTileScale set from the expanded rect in beginCaptureFidelityLock.
+    const overlap = Math.max(0, Math.trunc(job.tile.overlapPixels ?? 0));
+    const renderX = Math.max(0, tile.x - overlap);
+    const renderY = Math.max(0, tile.y - overlap);
+    const renderWidth = Math.min(fullWidth, tile.x + tile.width + overlap) - renderX;
+    const renderHeight = Math.min(fullHeight, tile.y + tile.height + overlap) - renderY;
+    const cropX = tile.x - renderX; // nominal tile offset within the expanded render
+    const cropY = tile.y - renderY;
+
     fidelitySnapshot = sceneHandle.beginCaptureFidelityLock({
       reason: "external-still",
-      width: tile.width,
-      height: tile.height,
+      width: renderWidth,
+      height: renderHeight,
       fullOutputWidth: fullWidth,
       fullOutputHeight: fullHeight,
-      tileX: tile.x,
-      tileY: tile.y,
+      tileX: renderX,
+      tileY: renderY,
       tileId: tile.id,
       gradeMode: recipe.captureGradeMode,
       mode: "max-detail-render",
@@ -127,10 +140,10 @@ export async function exportDeterministicStillTile({
     sceneHandle.camera.setViewOffset(
       fullWidth,
       fullHeight,
-      tile.x,
-      tile.y,
-      tile.width,
-      tile.height,
+      renderX,
+      renderY,
+      renderWidth,
+      renderHeight,
     );
     sceneHandle.camera.updateProjectionMatrix();
 
@@ -142,7 +155,18 @@ export async function exportDeterministicStillTile({
     if (!ctx) {
       throw new Error("External still tile canvas could not be created.");
     }
-    ctx.drawImage(sceneHandle.getCanvas(), 0, 0, tile.width, tile.height);
+    // Crop the overlap margin: extract the nominal tile from the expanded render.
+    ctx.drawImage(
+      sceneHandle.getCanvas(),
+      cropX,
+      cropY,
+      tile.width,
+      tile.height,
+      0,
+      0,
+      tile.width,
+      tile.height,
+    );
     const overlayMode =
       recipe.mode === "scene-annotations" || recipe.mode === "presentation-ui"
         ? recipe.mode

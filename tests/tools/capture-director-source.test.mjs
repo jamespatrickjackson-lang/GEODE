@@ -2247,7 +2247,8 @@ test("external still render jobs preserve 8K recipe state for out-of-browser ren
     "recipe",
     "still",
     "tile",
-    "overlapPixels: 0",
+    "overlapPixels: number",
+    "DEFAULT_STILL_TILE_OVERLAP_PIXELS",
     "fidelity",
     "max-detail-render",
   ]) {
@@ -2381,6 +2382,34 @@ test("browser still tile bridge is local-only and projection-offset based", () =
   ]) {
     assert.ok(tileSource.includes(expected), `tile exporter should include ${expected}`);
   }
+});
+
+test("A5: tiled lens FX render with overlap + full-frame warp (distortion/CA seam fix)", () => {
+  const post = readSource("src", "scene", "postprocessing.ts");
+  // Distortion/CA computed in full-frame UV, then mapped back to tile-texture UV.
+  assert.match(post, /vec2 tileToFrame\(vec2 uv\)/);
+  assert.match(post, /vec2 frameToTile\(vec2 frameUv\)/);
+  assert.match(post, /vec2 distortFrame\(/);
+  assert.match(post, /distortFrame\(tileToFrame\(uv\), distortion\)/);
+  assert.match(post, /frameToTile\(warpedFrame\)/);
+
+  // The tile-rect Y offset is bottom-up (vUv) so the warp is oriented correctly.
+  const scene = readSource("src", "scene.ts");
+  assert.match(
+    scene,
+    /options\.fullOutputHeight - \(options\.tileY \?\? 0\) - options\.height/,
+  );
+
+  // Schema + plan accept overlap; the tile exporter renders expanded then crops.
+  const job = readSource("src", "capture", "externalStillRenderJob.ts");
+  assert.match(job, /overlapPixels: number/);
+  assert.match(job, /DEFAULT_STILL_TILE_OVERLAP_PIXELS/);
+  const tile = readSource("src", "capture", "deterministicStillTileExporter.ts");
+  assert.match(tile, /overlapPixels/);
+  assert.match(tile, /renderWidth/);
+  assert.match(tile, /cropX/);
+  const plan = readSource("tools", "render-capture-still-job.mjs");
+  assert.doesNotMatch(plan, /tile\.overlapPixels must be 0/);
 });
 
 test("scene handle exposes capture sizing and after-render hooks", () => {
@@ -3911,6 +3940,30 @@ test("16-bit PNG + log transfer are wired end to end", () => {
   assert.match(still, /isFloatStillMimeType/);
   assert.match(still, /logTransfer/);
   assert.match(still, /encodeCapturePng16/);
+
+  // A2: float stills force supersample 1x (native resolution; no downscale).
+  assert.match(still, /isFloatStillMimeType\(mimeType\)[\s\S]*?\?\s*1/);
+  const toolbar2 = readSource("src", "capture", "CaptureDirectorToolbar.tsx");
+  assert.match(toolbar2, /floatStillType/);
+  assert.match(
+    toolbar2,
+    /disabled=\{screenCaptureStatus === "rendering" \|\| floatStillType\}/,
+  );
+
+  // A1: png16 composites the 2D overlay; EXR stays clean.
+  assert.match(float, /compositeOverlayOntoFloat/);
+  assert.match(float, /options\.overlay/);
+  assert.match(still, /renderCaptureOverlay/);
+  assert.match(still, /overlay,/);
+
+  // A3: float readback has a typed memory guard.
+  assert.match(float, /class CaptureFloatMemoryError/);
+
+  // A4: the in-browser frame-sequence exporter (scroll/video) engages the same
+  // capture fidelity lock as stills, so video frames get full sample steps.
+  const frameSeq = readSource("src", "capture", "deterministicFrameSequenceExporter.ts");
+  assert.match(frameSeq, /beginCaptureFidelityLock/);
+  assert.match(frameSeq, /waitForCaptureFidelityReady/);
 
   const save = readSource("src", "capture", "screenCaptureSaveOptions.ts");
   assert.match(save, /"exr"\s*\|\s*"png16"/);

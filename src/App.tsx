@@ -715,6 +715,15 @@ function GearIcon() {
 const TECHNICAL_MONO_FONT =
   '"SFMono-Regular", Consolas, "Liberation Mono", monospace';
 const LANDING_OVERLAY_TEXT = "#f4f0e8";
+// Fine SVG noise (~5% alpha) layered over the dark landing gradients to dither
+// out 8-bit banding — without it the near-black radial gradients show concentric
+// "cheap vignette" band arcs. Tiles seamlessly (stitched fractal noise).
+const LANDING_GRADIENT_DITHER =
+  "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' " +
+  "width='160' height='160'%3E%3Cfilter id='gd'%3E%3CfeTurbulence " +
+  "type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E" +
+  "%3CfeColorMatrix values='1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 0 0.05'/%3E" +
+  "%3C/filter%3E%3Crect width='160' height='160' filter='url(%23gd)'/%3E%3C/svg%3E\")";
 const LANDING_IMAGE_STORAGE_KEY = "geosee.landingImageProfile.v1";
 
 const DEFAULT_LANDING_IMAGE_SETTINGS: LandingImageSettings = {
@@ -773,6 +782,7 @@ function landingImageEffectStyle(
     zIndex: 0,
     pointerEvents: "none",
     background: [
+      LANDING_GRADIENT_DITHER,
       `linear-gradient(rgba(0, 0, 0, ${settings.darkness / 100}), rgba(0, 0, 0, ${settings.darkness / 100}))`,
       `radial-gradient(circle at 55% 58%, rgba(255, 255, 255, 0) 0%, rgba(0, 0, 0, ${settings.vignette / 100}) 100%)`,
     ].join(", "),
@@ -799,8 +809,10 @@ const landingRootStyle = {
   overflow: "hidden",
   padding: 24,
   color: LANDING_OVERLAY_TEXT,
-  background:
+  background: [
+    LANDING_GRADIENT_DITHER,
     "radial-gradient(circle at 55% 58%, rgba(46, 48, 47, 0.95) 0%, rgba(31, 32, 31, 0.98) 46%, #151819 100%)",
+  ].join(", "),
   fontFamily:
     'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
 } satisfies React.CSSProperties;

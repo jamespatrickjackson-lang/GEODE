@@ -1268,8 +1268,12 @@ export function CaptureDirectorToolbar() {
   ].filter((link): link is { label: string; url: string } => Boolean(link.url));
   const scrollRenderProgressLabel =
     scrollPackageProgressLabel ?? `Ready 0/${scrollEstimatedFrameCount} frames`;
+  // Float plates (EXR / 16-bit PNG) are lossless and render at native resolution:
+  // no JPEG/WebP quality, and the supersample downscale is skipped.
+  const floatStillType =
+    screenCaptureType === "exr" || screenCaptureType === "png16";
   const stillQualityDisabled =
-    screenCaptureType === "png" || screenCaptureType === "exr";
+    screenCaptureType === "png" || floatStillType;
   const cameraPathTimeline = useMemo(
     () => resolveCaptureCameraPathV3Timeline(captureCameraPathV3),
     [captureCameraPathV3],
@@ -2112,8 +2116,8 @@ export function CaptureDirectorToolbar() {
                   <span>Supersample</span>
                   <select
                     data-testid="capture-still-supersample-select"
-                    value={supersampleScale}
-                    disabled={screenCaptureStatus === "rendering"}
+                    value={floatStillType ? 1 : supersampleScale}
+                    disabled={screenCaptureStatus === "rendering" || floatStillType}
                     onChange={(event) =>
                       setSupersampleScale(Number(event.currentTarget.value))
                     }
@@ -2142,6 +2146,11 @@ export function CaptureDirectorToolbar() {
                 </label>
                 <span style={statusStyle}>
                   {(() => {
+                    if (floatStillType) {
+                      return screenCaptureType === "exr"
+                        ? "Max Detail: On. EXR is a clean scene-linear plate at native resolution (no supersample, overlays omitted)."
+                        : "Max Detail: On. 16-bit PNG renders at native resolution (no supersample).";
+                    }
                     const eff = clampCaptureSupersampleScale(
                       supersampleScale,
                       renderResolution.width,
@@ -3640,6 +3649,7 @@ export function CaptureDirectorToolbar() {
                     </span>
                   )}
                   <button
+                    data-testid="capture-scroll-accept-render"
                     type="button"
                     onClick={acceptScrollRenderShell}
                     style={primaryButtonStyle}

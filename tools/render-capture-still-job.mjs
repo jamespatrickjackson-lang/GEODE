@@ -64,9 +64,12 @@ function normalizeJob(rawJob, outputPath = "") {
   if (recipe.supersampleScale !== 1) {
     recipe.supersampleScale = 1;
   }
-  if (tile.overlapPixels !== 0) {
-    throw new Error("tile.overlapPixels must be 0");
-  }
+  // Per-tile render overlap: extra pixels rendered on each side then cropped, so
+  // sampling-based lens FX (distortion / chromatic aberration) tile seamlessly.
+  const overlapPixels =
+    Number.isInteger(tile.overlapPixels) && tile.overlapPixels >= 0
+      ? tile.overlapPixels
+      : 64;
 
   return {
     schema: JOB_SCHEMA,
@@ -106,7 +109,7 @@ function normalizeJob(rawJob, outputPath = "") {
     tile: {
       width: positiveInteger(tile.width, "tile.width"),
       height: positiveInteger(tile.height, "tile.height"),
-      overlapPixels: 0,
+      overlapPixels,
     },
     fidelity: rawJob.fidelity,
     failureReason:

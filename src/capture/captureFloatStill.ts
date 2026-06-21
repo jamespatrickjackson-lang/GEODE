@@ -32,6 +32,24 @@ export function applyCaptureLogTransfer(rgba: Float32Array): void {
   }
 }
 
+// Thrown when the float readback/encode cannot allocate (e.g. 8K RGBA float is
+// ~530 MB before the Uint16 copy + encode). Surfaced to the user as a clean error
+// instead of an OOM crash.
+export class CaptureFloatMemoryError extends Error {
+  constructor(width: number, height: number, cause?: unknown) {
+    super(
+      `16-bit/EXR capture ran out of memory at ${width}x${height}. ` +
+        `Use 8-bit PNG/WebP for very large sizes.`,
+    );
+    this.name = "CaptureFloatMemoryError";
+    if (cause !== undefined) (this as { cause?: unknown }).cause = cause;
+  }
+}
+
+// Soft budget: above this the readback + Uint16 copy + JS encode get heavy. With
+// supersample forced to 1x for float, the worst case is native 8K.
+const CAPTURE_FLOAT_PIXEL_WARN_BUDGET = 7680 * 4320;
+
 // Read the HalfFloat capture target back as linear float RGBA, row-flipped from
 // WebGL bottom-left origin to top-down image order.
 export function readCaptureFloatPixels(
@@ -40,15 +58,28 @@ export function readCaptureFloatPixels(
 ): { data: Float32Array; width: number; height: number } {
   const width = renderTarget.width;
   const height = renderTarget.height;
-  const raw = new Float32Array(width * height * 4);
-  renderer.readRenderTargetPixels(renderTarget, 0, 0, width, height, raw);
-  const data = new Float32Array(width * height * 4);
-  const rowLen = width * 4;
-  for (let y = 0; y < height; y += 1) {
-    const src = (height - y - 1) * rowLen;
-    data.set(raw.subarray(src, src + rowLen), y * rowLen);
+  if (width * height > CAPTURE_FLOAT_PIXEL_WARN_BUDGET) {
+    console.warn(
+      `[captureFloatStill] large float readback (${width}x${height}); ` +
+        `this allocates ~${Math.round((width * height * 4 * 4) / 1e6)} MB.`,
+    );
   }
-  return { data, width, height };
+  try {
+    const raw = new Float32Array(width * height * 4);
+    renderer.readRenderTargetPixels(renderTarget, 0, 0, width, height, raw);
+    const data = new Float32Array(width * height * 4);
+    const rowLen = width * 4;
+    for (let y = 0; y < height; y += 1) {
+      const src = (height - y - 1) * rowLen;
+      data.set(raw.subarray(src, src + rowLen), y * rowLen);
+    }
+    return { data, width, height };
+  } catch (error) {
+    if (error instanceof RangeError || error instanceof Error) {
+      throw new CaptureFloatMemoryError(width, height, error);
+    }
+    throw error;
+  }
 }
 
 function toUint8ArrayBlobPart(bytes: Uint8Array): Uint8Array<ArrayBuffer> {
@@ -96,16 +127,48 @@ export async function encodeCaptureExr(
   return new Blob([toUint8ArrayBlobPart(out)], { type: "image/x-exr" });
 }
 
-// 16-bit PNG via fast-png. Reads the float target, optional log transfer, then
-// quantizes to 16-bit integer RGBA.
+export interface CaptureFloatOverlay {
+  data: ArrayLike<number>; // RGBA8, top-down, length width*height*4
+  width: number;
+  height: number;
+}
+
+// Straight alpha-composite an 8-bit display overlay (title/page chrome) over the
+// display-referred float pixels. 16-bit PNG is a display deliverable, so it
+// carries the overlay; EXR stays clean. No-op if dimensions mismatch.
+export function compositeOverlayOntoFloat(
+  rgba: Float32Array,
+  width: number,
+  height: number,
+  overlay: CaptureFloatOverlay,
+): void {
+  if (overlay.width !== width || overlay.height !== height) return;
+  const o = overlay.data;
+  const count = width * height;
+  for (let i = 0; i < count; i += 1) {
+    const a = (Number(o[i * 4 + 3]) || 0) / 255;
+    if (a <= 0) continue;
+    const ia = 1 - a;
+    rgba[i * 4] = rgba[i * 4] * ia + (Number(o[i * 4]) / 255) * a;
+    rgba[i * 4 + 1] = rgba[i * 4 + 1] * ia + (Number(o[i * 4 + 1]) / 255) * a;
+    rgba[i * 4 + 2] = rgba[i * 4 + 2] * ia + (Number(o[i * 4 + 2]) / 255) * a;
+    // Output alpha stays opaque.
+  }
+}
+
+// 16-bit PNG via fast-png. Reads the float target, optional log transfer, optional
+// overlay composite, then quantizes to 16-bit integer RGBA.
 export async function encodeCapturePng16(
   renderer: WebGLRenderer,
   renderTarget: WebGLRenderTarget,
-  options: { log?: boolean } = {},
+  options: { log?: boolean; overlay?: CaptureFloatOverlay } = {},
 ): Promise<Blob> {
   const { encode } = await import("fast-png");
   const { data, width, height } = readCaptureFloatPixels(renderer, renderTarget);
   if (options.log) applyCaptureLogTransfer(data);
+  if (options.overlay) {
+    compositeOverlayOntoFloat(data, width, height, options.overlay);
+  }
   const u16 = quantizeFloatToUint16(data);
   const png = encode({ width, height, depth: 16, channels: 4, data: u16 });
   return new Blob([toUint8ArrayBlobPart(png)], { type: "image/png" });

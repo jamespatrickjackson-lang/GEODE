@@ -1079,9 +1079,13 @@ export function mountScene(
       typeof options.fullOutputHeight === "number" &&
       options.fullOutputHeight > 0
     ) {
+      // tileY is top-based (camera.setViewOffset); shader vUv is bottom-up, so the
+      // full-frame Y offset is measured from the bottom. (Symmetric for the
+      // vignette; required for the non-symmetric distortion warp + guides/frame.)
       post.setCaptureTileRect(
         (options.tileX ?? 0) / options.fullOutputWidth,
-        (options.tileY ?? 0) / options.fullOutputHeight,
+        (options.fullOutputHeight - (options.tileY ?? 0) - options.height) /
+          options.fullOutputHeight,
         options.width / options.fullOutputWidth,
         options.height / options.fullOutputHeight,
       );

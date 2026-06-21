@@ -14,6 +14,9 @@ import {
 export const CAPTURE_STILL_RENDER_JOB_SCHEMA = "CaptureStillRenderJobV1";
 export const CAPTURE_STILL_TILE_RESULT_SCHEMA = "CaptureStillTileRenderResultV1";
 
+// Per-tile render overlap (px each side) so sampling-based lens FX tile seamlessly.
+export const DEFAULT_STILL_TILE_OVERLAP_PIXELS = 64;
+
 export interface CaptureStillTileSpec {
   id: string;
   row: number;
@@ -45,7 +48,11 @@ export interface CaptureStillRenderJobV1 {
   tile: {
     width: number;
     height: number;
-    overlapPixels: 0;
+    // Each tile renders this many extra pixels on every side (clamped to the full
+    // bounds) and crops them off, so sampling-based screen-space FX (distortion /
+    // chromatic aberration) have neighbour pixels and tile seamlessly. 0 = legacy
+    // exact tiles.
+    overlapPixels: number;
   };
   fidelity: "max-detail-render";
   failureReason: string;
@@ -205,7 +212,7 @@ export function createExternalStillRenderJob({
     tile: {
       width: normalizeTileDimension(tileWidth, 1920),
       height: normalizeTileDimension(tileHeight, 1080),
-      overlapPixels: 0,
+      overlapPixels: DEFAULT_STILL_TILE_OVERLAP_PIXELS,
     },
     fidelity: "max-detail-render",
     failureReason,
@@ -286,8 +293,11 @@ export function validateExternalStillRenderJob(
   } else {
     positiveInteger(candidate.tile.width, "tile.width", errors);
     positiveInteger(candidate.tile.height, "tile.height", errors);
-    if (candidate.tile.overlapPixels !== 0) {
-      errors.push("tile.overlapPixels must be 0.");
+    if (
+      !Number.isInteger(candidate.tile.overlapPixels) ||
+      candidate.tile.overlapPixels < 0
+    ) {
+      errors.push("tile.overlapPixels must be a non-negative integer.");
     }
   }
   return { valid: errors.length === 0, errors };

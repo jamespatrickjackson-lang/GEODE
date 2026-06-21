@@ -188,17 +188,32 @@ const lensGradeShader = {
     uniform float time;
     varying vec2 vUv;
 
-    vec2 distortUv(vec2 uv, float amount) {
-      vec2 p = uv * 2.0 - 1.0;
+    vec2 tileToFrame(vec2 uv) {
+      return uv * uTileScale + uTileOffset;
+    }
+    vec2 frameToTile(vec2 frameUv) {
+      return (frameUv - uTileOffset) / uTileScale;
+    }
+
+    // Barrel/pincushion warp computed in FULL-FRAME space so the lens field is one
+    // global distortion across tiles. Returns the warped full-frame coordinate.
+    vec2 distortFrame(vec2 frameUv, float amount) {
+      vec2 p = frameUv * 2.0 - 1.0;
       float r2 = dot(p, p);
       p *= 1.0 + amount * 0.18 * r2;
-      return clamp(p * 0.5 + 0.5, vec2(0.001), vec2(0.999));
+      return p * 0.5 + 0.5;
     }
 
     vec3 sampleOptics(vec2 uv) {
-      vec2 duv = distortUv(uv, distortion);
-      vec2 radial = normalize((duv - 0.5) + vec2(0.0001));
-      vec2 ca = radial * chromaticAberration * 0.006;
+      // Warp in full-frame UV, then map the warped coordinate back to tile-texture
+      // UV for the actual sample. Identity tile (offset 0, scale 1) reproduces the
+      // original single-surface behaviour; under tiled capture the rendered overlap
+      // margin keeps the warped sample inside the tile texture. CA offset is scaled
+      // into tile UV by 1/uTileScale.
+      vec2 warpedFrame = distortFrame(tileToFrame(uv), distortion);
+      vec2 duv = clamp(frameToTile(warpedFrame), vec2(0.001), vec2(0.999));
+      vec2 radial = normalize((warpedFrame - 0.5) + vec2(0.0001));
+      vec2 ca = (radial * chromaticAberration * 0.006) / uTileScale;
       float r = texture2D(tDiffuse, clamp(duv + ca, vec2(0.001), vec2(0.999))).r;
       float g = texture2D(tDiffuse, duv).g;
       float b = texture2D(tDiffuse, clamp(duv - ca, vec2(0.001), vec2(0.999))).b;

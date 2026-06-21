@@ -2135,7 +2135,8 @@ test("external still render job schema roundtrips exact 8K tile state", async ()
   assert.equal(job.still.quality, 0.8);
   assert.equal(job.tile.width, 1920);
   assert.equal(job.tile.height, 1080);
-  assert.equal(job.tile.overlapPixels, 0);
+  // Tiles now render with an overlap margin (cropped) so lens FX tile seamlessly.
+  assert.equal(job.tile.overlapPixels, 64);
   assert.equal(job.fidelity, "max-detail-render");
   assert.equal(validateExternalStillRenderJob(job).valid, true);
 
@@ -2144,11 +2145,16 @@ test("external still render job schema roundtrips exact 8K tile state", async ()
   assert.equal(parsed.job.still.width, 7680);
   assert.equal(parsed.job.recipe.mode, "scene-annotations");
 
+  // A positive overlap is now valid; a negative one is rejected.
+  assert.equal(
+    validateExternalStillRenderJob({ ...job, tile: { ...job.tile, overlapPixels: 128 } }).valid,
+    true,
+  );
   const invalid = validateExternalStillRenderJob({
     ...job,
     recipe: { ...job.recipe, mode: "full-ui" },
     still: { ...job.still, type: "gif", width: 0 },
-    tile: { ...job.tile, overlapPixels: 4 },
+    tile: { ...job.tile, overlapPixels: -4 },
   });
   assert.equal(invalid.valid, false);
   assert.match(invalid.errors.join("\n"), /full-ui/);
@@ -2233,7 +2239,7 @@ test("external still render jobs serialize requested 8K output for out-of-browse
   assert.equal(job.still.type, "webp");
   assert.equal(job.still.quality, 0.82);
   assert.equal(job.fidelity, "max-detail-render");
-  assert.equal(job.tile.overlapPixels, 0);
+  assert.equal(job.tile.overlapPixels, 64);
   assert.match(job.failureReason, /browser limit/);
   assert.match(
     externalStillRenderJobFilename(job),
@@ -5471,6 +5477,41 @@ test("capture log transfer + 16-bit quantize are correct and monotonic", async (
   assert.deepEqual(
     Array.from(quantizeFloatToUint16(new Float32Array([0, 0.5, 1, 2]))),
     [0, Math.round(0.5 * 65535), 65535, 65535],
+  );
+});
+
+test("png16 overlay composite blends; float readback surfaces a typed memory error", async () => {
+  const { compositeOverlayOntoFloat, readCaptureFloatPixels, CaptureFloatMemoryError } =
+    await importBundled("src/capture/captureFloatStill.ts");
+
+  // Two pixels: opaque-white overlay over black; transparent overlay over grey.
+  const rgba = new Float32Array([0, 0, 0, 1, 0.2, 0.2, 0.2, 1]);
+  compositeOverlayOntoFloat(rgba, 2, 1, {
+    width: 2,
+    height: 1,
+    data: new Uint8ClampedArray([255, 255, 255, 255, 0, 0, 0, 0]),
+  });
+  assert.ok(Math.abs(rgba[0] - 1) < 1e-6, "opaque overlay overwrites");
+  assert.ok(Math.abs(rgba[4] - 0.2) < 1e-6, "transparent overlay is a no-op");
+
+  // Dimension mismatch is a no-op (never corrupts the plate).
+  const px = new Float32Array([0.5, 0.5, 0.5, 1]);
+  compositeOverlayOntoFloat(px, 1, 1, {
+    width: 2,
+    height: 2,
+    data: new Uint8ClampedArray(16),
+  });
+  assert.equal(px[0], 0.5);
+
+  // A throwing readback (OOM proxy) surfaces CaptureFloatMemoryError, not a crash.
+  const renderer = {
+    readRenderTargetPixels() {
+      throw new RangeError("array buffer allocation failed");
+    },
+  };
+  assert.throws(
+    () => readCaptureFloatPixels(renderer, { width: 4, height: 4 }),
+    (error) => error instanceof CaptureFloatMemoryError,
   );
 });
 

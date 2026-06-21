@@ -1,4 +1,8 @@
-import { encodeCaptureExr, encodeCapturePng16 } from "./captureFloatStill";
+import {
+  encodeCaptureExr,
+  encodeCapturePng16,
+  type CaptureFloatOverlay,
+} from "./captureFloatStill";
 import type { SceneHandle } from "../scene";
 import { applyPose, capturePose } from "../pages/capturePose";
 import type { Pose } from "../pages/types";
@@ -147,11 +151,17 @@ export async function exportDeterministicStill({
   // The output is never upscaled; scale 1 is the exact-size path. The scale is
   // clamped so the internal render stays within the safe budget (e.g. 8K is
   // forced to 1x), avoiding the black-frame GPU-memory blowup.
-  const supersampleScale = clampCaptureSupersampleScale(
-    typeof recipe.supersampleScale === "number" ? recipe.supersampleScale : 1,
-    width,
-    height,
-  );
+  // Float plates (EXR / 16-bit PNG) read the HalfFloat composer buffer directly
+  // and skip the supersample downscale, so they would otherwise emit at the
+  // supersampled render size (a dimension surprise). Force 1x for float so the
+  // output dimensions equal the selected resolution.
+  const supersampleScale = isFloatStillMimeType(mimeType)
+    ? 1
+    : clampCaptureSupersampleScale(
+        typeof recipe.supersampleScale === "number" ? recipe.supersampleScale : 1,
+        width,
+        height,
+      );
   const capabilityValidation = validateRenderResolutionRequest({
     resolution: recipe.resolution,
     supersampleScale,
@@ -230,8 +240,9 @@ export async function exportDeterministicStill({
     let blob: Blob;
     if (isFloatStillMimeType(mimeType)) {
       // EXR / 16-bit PNG: keep the full HalfFloat composed range (no 8-bit blit,
-      // no banding). The 2D overlay + supersample downscale are skipped; these are
-      // clean, render-resolution float plates.
+      // no banding) at native resolution (supersample forced to 1x above). 16-bit
+      // PNG is a display deliverable so it composites the 2D overlay; EXR stays a
+      // clean plate (overlay omitted).
       if (typeof sceneHandle.renderCaptureFloatTarget !== "function") {
         throw new Error(
           "Float capture requires the float render path, which this renderer does not expose.",
@@ -244,14 +255,42 @@ export async function exportDeterministicStill({
       if (!floatTarget) {
         throw new Error("Float capture produced no float render target.");
       }
-      blob =
-        mimeType === "image/x-png16"
-          ? await encodeCapturePng16(sceneHandle.renderer, floatTarget, {
-              log: logTransfer,
-            })
-          : await encodeCaptureExr(sceneHandle.renderer, floatTarget, {
-              log: logTransfer,
+      if (mimeType === "image/x-png16") {
+        let overlay: CaptureFloatOverlay | undefined;
+        if (recipe.mode === "scene-annotations" || recipe.mode === "presentation-ui") {
+          const overlayCanvas = document.createElement("canvas");
+          overlayCanvas.width = width;
+          overlayCanvas.height = height;
+          const overlayCtx = overlayCanvas.getContext("2d");
+          if (overlayCtx) {
+            renderCaptureOverlay(overlayCtx, {
+              mode: recipe.mode,
+              title: recipe.pageId ?? recipe.projectSlug,
+              projectName: recipe.projectSlug,
+              pageLabel: recipe.pageId,
+              ...(overlayContext?.({
+                frameIndex: resolvedFrameIndex,
+                timeSeconds: resolvedTimeSeconds,
+              }) ?? {}),
+              width,
+              height,
             });
+            overlay = {
+              data: overlayCtx.getImageData(0, 0, width, height).data,
+              width,
+              height,
+            };
+          }
+        }
+        blob = await encodeCapturePng16(sceneHandle.renderer, floatTarget, {
+          log: logTransfer,
+          overlay,
+        });
+      } else {
+        blob = await encodeCaptureExr(sceneHandle.renderer, floatTarget, {
+          log: logTransfer,
+        });
+      }
     } else {
       sceneHandle.renderCaptureFrame({
         timeSeconds: resolvedTimeSeconds,
