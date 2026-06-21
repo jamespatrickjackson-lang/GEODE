@@ -29,8 +29,16 @@ export function registerReorderGroup(def: ReorderGroupDef): void {
   registry.set(def.key, def);
 }
 
+// A group key may carry a per-instance suffix (e.g. "layers:Topo",
+// "scene-overlays:<pageId>") so the drag groups rows within one sidebar section
+// while a single base group ("layers") owns the dispatch. Lookup uses the base.
+function baseGroupKey(key: string): string {
+  const sep = key.indexOf(":");
+  return sep >= 0 ? key.slice(0, sep) : key;
+}
+
 export function getReorderGroup(key: string): ReorderGroupDef | undefined {
-  return registry.get(key);
+  return registry.get(baseGroupKey(key));
 }
 
 export function clearReorderGroups(): void {
@@ -40,7 +48,7 @@ export function clearReorderGroups(): void {
 // Returns true when the reorder was applied; false when blocked (e.g. a
 // manifest-guarded group or an unknown key), with a console note for the guard.
 export function commitReorder(commit: ReorderCommit): boolean {
-  const def = registry.get(commit.groupKey);
+  const def = registry.get(baseGroupKey(commit.groupKey));
   if (!def) return false;
   if (def.kind === "manifest-guarded" || !def.commit) {
     if (typeof console !== "undefined") {

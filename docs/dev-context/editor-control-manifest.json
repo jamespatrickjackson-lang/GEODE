@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "status": "active-guard",
-  "lastReviewedAt": "2026-06-18",
-  "lastReviewNote": "Dev Mode Inspector phases 2-6: EditorRoot.tsx gains an onDevCommit hook for the dev-mode Save/Discard bar (no sidebar control added). Dev-mode inspector controls (scoped panel, save/discard, reorder) are dev tooling and remain outside the sidebar manifest, consistent with the prior dev-mode control panel. devTextOverrides is dev-authored persisted state, not a sidebar control. Earlier note: SceneSectionPlanesContainer.tsx keeps representation-specific seismic section targets, SectionVisualsPanel exposes generic Section Visuals controls, and BoreholeLogsControls.tsx registers source-derived Utah FORGE borehole-log controls under FORGE Data > Bore Holes.",
+  "lastReviewedAt": "2026-06-20",
+  "lastReviewNote": "Dev Mode Inspector reorder: LayerPanel.tsx layer rows gain data-dev-order-group/-id (per-section group 'layers:<section>') for UI-only sidebar reorder. No new sidebar control or persisted variable; reorder rearranges the editor catalog order only (scene/transition resolve by id). Earlier: phases 2-6 added an EditorRoot.tsx onDevCommit hook for the Save/Discard bar; dev-mode inspector controls remain outside the sidebar manifest; devTextOverrides is dev-authored state. Earlier still: SceneSectionPlanesContainer.tsx keeps representation-specific seismic section targets, SectionVisualsPanel exposes generic Section Visuals controls, and BoreholeLogsControls.tsx registers source-derived Utah FORGE borehole-log controls under FORGE Data > Bore Holes.",
   "description": "Canonical editor sidebar control manifest. Any user-facing editor sidebar control, command, section, or persisted variable must be represented here before editor-bar source changes are accepted.",
   "devModeReorderGuard": {
     "status": "active-guard",
