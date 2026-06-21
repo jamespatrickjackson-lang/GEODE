@@ -149,13 +149,26 @@ export function ReorderDragLayer({ enabled }: { enabled: boolean }) {
       setRender(null);
     };
 
+    // Swallow the click that fires right after a drag-release so the dragged
+    // element's own onClick (e.g. a section header toggle, a layer visibility
+    // toggle) does not fire. Capture phase + stopPropagation beats React's root
+    // bubble handler.
+    const onClickCapture = (event: MouseEvent) => {
+      if (isReorderClickSuppressed()) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+    };
+
     document.addEventListener("pointerdown", onPointerDown, true);
     document.addEventListener("pointermove", onPointerMove, true);
     document.addEventListener("pointerup", onPointerUp, true);
+    document.addEventListener("click", onClickCapture, true);
     return () => {
       document.removeEventListener("pointerdown", onPointerDown, true);
       document.removeEventListener("pointermove", onPointerMove, true);
       document.removeEventListener("pointerup", onPointerUp, true);
+      document.removeEventListener("click", onClickCapture, true);
       candidateRef.current = null;
       draggingRef.current = null;
     };
