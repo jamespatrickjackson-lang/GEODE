@@ -3754,3 +3754,39 @@ re-verify the behaviour in current source and either rewrite as a behaviour test
 update the assertion to the current source shape, or retire it. The
 `finalizePageTransitionCommit` / MT-cells-transition entries touch the
 CLAUDE.md-protected full-density scalar/transition path and rank highest.
+
+## DEC-185 - MT threshold surface depth-write is gated on settled opacity, not always-on (refines DEC-183)
+
+Status: implemented 2026-06-22. **Refines** the DEC-183 render-policy line that
+made solid-shell `depthWrite = !wireframe` unconditionally.
+
+**Problem:** the DEC-183 always-on depth-write fixed "front shell masked by back
+during load" but produced the black surface the trade-off note predicted. During
+a page transition the fade runs through `applyRenderOpacityToTree` →
+`applyMtThresholdSurfaceMaterialOpacity` (`SceneManager.ts:1676`), which kept
+`depthWrite=true` while attenuating opacity. A transparent depth-writing shell
+occludes the volume / the shell behind it and then vanishes → the occluded region
+shows the dark clear colour = a black surface shape on enter/leave.
+
+**Decision:** `applyMtThresholdSurfaceMaterialOpacity`
+(`src/loaders/surfaceRenderPolicy.ts`) now writes depth only when the surface is a
+**settled solid shell** — `depthWrite = !wireframe && (preserveBase || next >=
+base * MT_THRESHOLD_SURFACE_POLICY.depthWriteFadeFactor)` (`depthWriteFadeFactor =
+0.98`). The `preserveBase` flag already distinguishes settled/creation/live
+restyle (always writes depth → DEC-183 front-over-back preserved, load + steady
+unchanged) from the transition-fade application (the only `preserveBase = false`
+caller), so a surface being faded below ~base opacity stops writing depth and
+blends instead of punching a black hole. A surface held at/near base through a
+transition (`layerFactor ≈ 1`) still occludes.
+
+**Why robust:** removes the false coupling between transient transition opacity
+and depth occlusion at its source; no transition-runtime change (opacity values
+untouched — only `depthWrite` is derived); mirrors the existing terrain
+depth-write gate (`SceneManager.ts:1693`); affects only
+`surfaceRenderPolicy === MT_THRESHOLD_SURFACE_POLICY.name` materials, so the
+reverse-Z / gravel-pit preview surfaces (`SURFACE_PREVIEW_DEPTH_POLICY`,
+`depthWrite=false`) and Section ISO overlays are untouched.
+
+**Verification:** `test:utah:mt` extended to assert `depthWrite` true at settle +
+false mid-fade; confirmed live (mid-fade `depthWrite=false`, settle
+`depthWrite=true`); guards green; `test:tools` 679/679.
