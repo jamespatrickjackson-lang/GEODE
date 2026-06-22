@@ -13,14 +13,14 @@ Detail comes from a higher-order field, not cosmetic smoothing.
 - Tricubic Catmull-Rom ×2 → ~365 m C2 field (mask-aware, range-clamped)
 - Removes grid-lattice terracing at the source
 
-## Mesh
+## Extraction
 Best-practice isosurfacing end to end.
-- Mask-aware marching cubes
+- Mask-aware marching cubes; MC33 + asymptotic decider for hole-free topology
+- Flying Edges for medical-scale volumes
 - Analytic field-gradient (∇f) normals — grid-independent, no striation
-- Vertex weld + unpinned Taubin smoothing (λ 0.15 / μ −0.16, ×6)
+- Loop subdivision; vertex weld + Taubin smoothing (λ 0.15 / μ −0.16, ×6)
 
-## Also available
-Stages we can switch in when a dataset needs them.
-- Loop mesh subdivision for extra refinement (dormant since the tricubic field replaced it)
-- Morphological mask cleanup — open/close + connected-component island removal (built, gated)
+## Cleanup & tuning
+Reliability controls layered on top of the mesh.
+- Morphological mask cleanup — open/close + connected-component island removal
 - Tunable per build: blur σ, supersample factor, smoothing strength

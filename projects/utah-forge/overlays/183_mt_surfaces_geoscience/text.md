@@ -13,13 +13,13 @@ Every shell is an iso-resistivity contour with a clear physical meaning.
 - Conductive (≤10–30 Ω·m): clay, alteration, fluids
 - Resistive (≥1000 Ω·m): crystalline basement
 
+## Authoring & variants
+Surfaces flex to the question being asked.
+- On-the-fly extraction at arbitrary thresholds (live boundary mode)
+- Per-boundary visibility, colour, opacity and draw order
+- Focused and full-extent crops, or a single uncropped product
+
 ## Limits
 Honest about what an inversion can and can't say.
 - Communication surfaces — not interpreted contacts, faults, or resource
-- Resolution decays with depth (skin-depth); margins are data-support-limited
-
-## Also available
-Modes the surface product can flex into, on or off.
-- On-the-fly extraction at arbitrary thresholds (live boundary mode)
-- Per-boundary visibility, colour, opacity and draw order — all authorable
-- Previously shipped as focused + full-extent crops (consolidated to one, DEC-180)
+- Resolution decays with depth (skin-depth); margins are data-support-aware

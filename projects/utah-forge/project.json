@@ -8553,7 +8553,8 @@
     "184_segmentation_surface_capabilities",
     "185_surface_data_pipeline",
     "186_clinical_imaging_transfer",
-    "187_medical_suitability"
+    "187_medical_suitability",
+    "188_clinical_engine"
   ],
   "presentationDefaults": {
     "transitionDuration": 1400,
