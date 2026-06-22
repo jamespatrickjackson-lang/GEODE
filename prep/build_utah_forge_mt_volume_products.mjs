@@ -900,6 +900,26 @@ function buildThresholdMesh(accumulators, options) {
   };
 }
 
+// R4 quantization helpers. Positions → per-tile uint16 over the tile bbox;
+// normals → octahedral snorm16 (2x int16). Both decode in the runtime tile
+// loader. Visual-grade precision: position step = bboxExtent/65535 (sub-metre
+// on these tiles); oct-snorm16 normal error is ~0.1deg (negligible for shading).
+const clamp01 = (t) => (t < 0 ? 0 : t > 1 ? 1 : t);
+const clampSnorm = (t) => (t < -1 ? -1 : t > 1 ? 1 : t);
+
+function octEncodeNormal(x, y, z) {
+  const sum = Math.abs(x) + Math.abs(y) + Math.abs(z) || 1;
+  let u = x / sum;
+  let v = y / sum;
+  if (z < 0) {
+    const ou = u;
+    const ov = v;
+    u = (1 - Math.abs(ov)) * (ou >= 0 ? 1 : -1);
+    v = (1 - Math.abs(ou)) * (ov >= 0 ? 1 : -1);
+  }
+  return [u, v];
+}
+
 async function writeThresholdBoundaryAssets(thresholdMesh, thresholdDir) {
   const boundaryRoot = path.join(thresholdDir, "boundaries");
   await mkdir(boundaryRoot, { recursive: true });
@@ -913,52 +933,88 @@ async function writeThresholdBoundaryAssets(thresholdMesh, thresholdDir) {
     const vertexEnd = range.vertexStart + range.vertexCount;
     const indexStart = range.indexStart;
     const indexEnd = range.indexStart + range.indexCount;
-    const vertices = thresholdMesh.vertices.slice(vertexStart * 3, vertexEnd * 3);
-    const normals = thresholdMesh.normals.slice(vertexStart * 3, vertexEnd * 3);
-    const colors = thresholdMesh.colors.slice(vertexStart * 3, vertexEnd * 3);
-    const alpha = thresholdMesh.alpha?.length
-      ? thresholdMesh.alpha.slice(vertexStart, vertexEnd)
-      : [];
-    const scalarValues = thresholdMesh.attributes.scalarValues.slice(
-      vertexStart,
-      vertexEnd,
+    const vertexCount = range.vertexCount;
+    const indexCount = range.indexCount;
+    // R4: pack geometry into a binary tile (positions f32, normals f32,
+    // indices u32, optional feather alpha f32). Per-vertex RGB and the constant
+    // per-surface scalarValues array are dropped — both redundant (surface
+    // color comes from the layer style; scalar is the constant threshold value
+    // carried in metadata). ~5-10x smaller than the prior JSON arrays.
+    const rawPos = thresholdMesh.vertices.slice(vertexStart * 3, vertexEnd * 3);
+    const rawNrm = thresholdMesh.normals.slice(vertexStart * 3, vertexEnd * 3);
+    const indices = Uint32Array.from(
+      thresholdMesh.indices
+        .slice(indexStart, indexEnd)
+        .map((index) => index - vertexStart),
     );
-    const indices = thresholdMesh.indices
-      .slice(indexStart, indexEnd)
-      .map((index) => index - vertexStart);
+    // Position bbox for per-tile uint16 quantization.
+    let minX = Infinity, minY = Infinity, minZ = Infinity;
+    let maxX = -Infinity, maxY = -Infinity, maxZ = -Infinity;
+    for (let i = 0; i < rawPos.length; i += 3) {
+      const x = rawPos[i], y = rawPos[i + 1], z = rawPos[i + 2];
+      if (x < minX) minX = x; if (x > maxX) maxX = x;
+      if (y < minY) minY = y; if (y > maxY) maxY = y;
+      if (z < minZ) minZ = z; if (z > maxZ) maxZ = z;
+    }
+    const extX = Math.max(1e-6, maxX - minX);
+    const extY = Math.max(1e-6, maxY - minY);
+    const extZ = Math.max(1e-6, maxZ - minZ);
+    const qpos = new Uint16Array(vertexCount * 3);
+    const qnrm = new Int16Array(vertexCount * 2);
+    for (let v = 0; v < vertexCount; v += 1) {
+      qpos[v * 3] = Math.round(clamp01((rawPos[v * 3] - minX) / extX) * 65535);
+      qpos[v * 3 + 1] = Math.round(clamp01((rawPos[v * 3 + 1] - minY) / extY) * 65535);
+      qpos[v * 3 + 2] = Math.round(clamp01((rawPos[v * 3 + 2] - minZ) / extZ) * 65535);
+      const [ou, ov] = octEncodeNormal(rawNrm[v * 3], rawNrm[v * 3 + 1], rawNrm[v * 3 + 2]);
+      qnrm[v * 2] = Math.round(clampSnorm(ou) * 32767);
+      qnrm[v * 2 + 1] = Math.round(clampSnorm(ov) * 32767);
+    }
+    // Layout: indices (u32) first for 4-byte alignment, then positions (u16),
+    // then oct-encoded normals (i16).
+    const binName = `${surface.id}.bin`;
+    await writeFile(
+      path.join(productDir, binName),
+      Buffer.concat([
+        Buffer.from(indices.buffer, indices.byteOffset, indices.byteLength),
+        Buffer.from(qpos.buffer, qpos.byteOffset, qpos.byteLength),
+        Buffer.from(qnrm.buffer, qnrm.byteOffset, qnrm.byteLength),
+      ]),
+    );
     const assetSurface = {
       ...surface,
-      meshRange: {
-        vertexStart: 0,
-        vertexCount: range.vertexCount,
-        indexStart: 0,
-        indexCount: range.indexCount,
-      },
+      meshRange: { vertexStart: 0, vertexCount, indexStart: 0, indexCount },
     };
-    const payload = {
-      schema: thresholdMesh.schema,
+    const sidecar = {
+      schema: "geosee.iso-surface-tile.v1",
       label: `${surface.isoProductLabel} ${surface.label}`,
       source: thresholdMesh.source,
       sceneBounds: thresholdMesh.sceneBounds,
-      material: thresholdMesh.material,
-      attributes: {
-        scalarValues,
-        scalar: thresholdMesh.attributes.scalar,
-      },
+      material: { side: "double", color: surface.color },
+      attributes: { scalar: thresholdMesh.attributes.scalar },
       processing: {
         ...thresholdMesh.processing,
         thresholdSurfaces: [assetSurface],
       },
-      vertices,
-      normals,
-      colors,
-      alpha,
-      indices,
+      geometry: {
+        format: "binary-tile-quant-v1",
+        file: binName,
+        vertexCount,
+        indexCount,
+        hasNormals: true,
+        hasAlpha: false,
+        positionQuantization: {
+          bits: 16,
+          min: [round(minX, 3), round(minY, 3), round(minZ, 3)],
+          extent: [round(extX, 3), round(extY, 3), round(extZ, 3)],
+        },
+        normalEncoding: "oct-snorm16",
+        layout: "indices:u32x(3T), positions:u16x3V, normals:oct-snorm16x2V",
+      },
     };
     const relativeFile = `threshold_surfaces/boundaries/${surface.isoProductId}/${surface.id}.json`;
     await writeFile(
       path.join(productDir, `${surface.id}.json`),
-      `${JSON.stringify(payload)}\n`,
+      `${JSON.stringify(sidecar)}\n`,
       "utf8",
     );
     surface.assetFile = relativeFile;

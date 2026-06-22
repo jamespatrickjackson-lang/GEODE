@@ -1,7 +1,7 @@
 {
   "id": "184_segmentation_surface_capabilities",
-  "title": "Segmentation & Surface Extraction",
-  "subtitle": "Platform capabilities",
+  "title": "Field Reconstruction & Mesh Extraction",
+  "subtitle": "Gaussian-blend · tricubic C2 · mask-aware MC · ∇f normals",
   "camera": {
     "position": [
       149443.87186949464,

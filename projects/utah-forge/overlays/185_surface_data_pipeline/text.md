@@ -1,22 +1,26 @@
-# From Inversion Volume to Surface
+# Encoding, Streaming & Rendering
 
-## Data pipeline
-Source MT inversion (~1.09M cell-centres) → CRS → scene transform → **bounded
-continuity reconstruction** → **tricubic supersample (C2)** → **mask-aware
-marching cubes** → **analytic ∇f gradient normals** → **Taubin smoothing** →
-**lazy per-surface GPU streaming** → transition-safe cinematic render.
+Heavy science, light delivery — millions of triangles that load fast and composite cleanly.
 
-## Why each step
-- Reconstruction is clamped to the source range — the model is never shown
-  resistivities it does not contain (no overshoot); data gaps are bridged, not
-  faked.
-- Tricubic supersampling removes grid-lattice terracing at the source, not
-  cosmetically.
-- Normals are the field gradient, not the facets — grid-independent smooth
-  shading.
-- Every build passes automated fidelity gates; full provenance is retained.
+## Tiles
+Compact binary geometry instead of bloated JSON.
+- Positions per-bbox uint16, normals oct-snorm16, indices u32
+- JSON sidecar: counts, bbox, threshold, colour
+- 23 boundaries ≈ 67 MB — 4.6× smaller than JSON arrays
 
-## Also in the platform
-Co-registered seismic sections, borehole logs, TEM / DCIP / IP, topography &
-terrain draping, and point clouds; GPU volume raymarching, section-plane
-iso-contours, and 8K / EXR cinematic capture.
+## Streaming
+Only pay for what's on screen.
+- Metadata-only preview; visible boundaries fetched + dequantized on demand
+- Lazy per-boundary GPU upload
+
+## Rendering
+Correct depth and colour through every transition.
+- Double-sided MeshStandardMaterial; per-threshold colour from the layer style
+- Solid-shell depth writes — front-over-back occlusion holds through fades/loads
+- Transition-safe opacity on the page-transition clock
+
+## Also available
+Encoding and rendering modes beyond the default.
+- Per-vertex feather alpha (RGBA) for uncertainty falloff — built, gated
+- Wireframe mode + per-surface metalness / emissive / opacity
+- Inline JSON geometry path retained as a fallback to the binary tiles

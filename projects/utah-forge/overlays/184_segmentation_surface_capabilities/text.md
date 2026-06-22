@@ -1,21 +1,26 @@
-# Segmentation & Surface Extraction
+# Field Reconstruction & Mesh Extraction
 
-## From volume to geometry
-Any regular scalar volume becomes clean 3D surfaces: threshold /
-iso-classification (segmentation) of the volume into one or many regions, each a
-closed, smooth shell.
+Scattered inversion cells become smooth, watertight surfaces — without inventing data.
 
-## What we can produce
-- **Multi-region, multi-threshold** surface families, authored and toggled
-  independently (e.g. nested conductive → resistive shells).
-- **Confidence-masked** surfaces — clipped to reliable data; low-confidence /
-  low-SNR margins are excluded, not rendered as fact.
-- **Uncertainty feathering** — surfaces fade across the confidence falloff:
-  honest edges, not faked boundaries.
-- **Smooth, grid-independent geometry** (tricubic field + gradient-normal
-  shading), double-sided, per-surface colour/opacity, live section-plane cuts.
+## Reconstruction
+A continuity-first field that bridges gaps but never overshoots.
+- Cell-centres binned to a 730 m regular grid
+- Separable Gaussian blend (σ = 2.5 vox): gaps bridged, far voids left empty
+- Values hard-clamped to the source range — no fabricated extremes
 
-## In context
-Surfaces co-register with seismic, boreholes, topography, and point clouds, over
-GPU volume raymarching; lazy GPU streaming keeps many high-resolution surfaces
-interactive.
+## Supersample
+Detail comes from a higher-order field, not cosmetic smoothing.
+- Tricubic Catmull-Rom ×2 → ~365 m C2 field (mask-aware, range-clamped)
+- Removes grid-lattice terracing at the source
+
+## Mesh
+Best-practice isosurfacing end to end.
+- Mask-aware marching cubes
+- Analytic field-gradient (∇f) normals — grid-independent, no striation
+- Vertex weld + unpinned Taubin smoothing (λ 0.15 / μ −0.16, ×6)
+
+## Also available
+Stages we can switch in when a dataset needs them.
+- Loop mesh subdivision for extra refinement (dormant since the tricubic field replaced it)
+- Morphological mask cleanup — open/close + connected-component island removal (built, gated)
+- Tunable per build: blur σ, supersample factor, smoothing strength

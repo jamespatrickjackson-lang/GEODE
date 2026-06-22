@@ -1,21 +1,25 @@
 # MT Iso-Resistivity Surfaces
 
-## What they are
-3D iso-surfaces of electrical resistivity extracted from a magnetotelluric (MT)
-inversion model of the Utah FORGE enhanced-geothermal site. Each shell is the
-locus where modeled resistivity crosses a fixed threshold.
+A magnetotelluric inversion turned into 3D geometry you can navigate, slice, and integrate with everything else in the scene.
 
-## Reading them
-- **Conductive shells (≤10–30 Ω·m)** — clays, hydrothermal alteration, and
-  saline/fluid-bearing zones: the conductive cap.
-- **Resistive shells (≥1,000 Ω·m)** — crystalline granitic basement and
-  low-porosity rock.
+## Source
+Built straight from the published inversion — no hand-digitizing.
+- GDR 1255 model: ~1.09M cell-centres, EPSG:26912, log10 Ω·m
+- Smoothness-regularized; full lateral extent, depth to −20 km
+- 23 boundaries: semantic thresholds (≤10 / ≤30 / ≥1000 Ω·m) + log-spaced banks
 
-Together they frame the cap-versus-basement geometry that defines a geothermal
-reservoir.
+## Reading
+Every shell is an iso-resistivity contour with a clear physical meaning.
+- Conductive (≤10–30 Ω·m): clay, alteration, fluids
+- Resistive (≥1000 Ω·m): crystalline basement
 
-## Provenance & limits
-Source-derived from a smoothness-regularized MT inversion — communication
-surfaces, not interpreted contacts, faults, or resource estimates. MT resolution
-decays with depth (diffusive EM skin-depth), so the margins are shown as
-uncertain, not as hard boundaries.
+## Limits
+Honest about what an inversion can and can't say.
+- Communication surfaces — not interpreted contacts, faults, or resource
+- Resolution decays with depth (skin-depth); margins are data-support-limited
+
+## Also available
+Modes the surface product can flex into, on or off.
+- On-the-fly extraction at arbitrary thresholds (live boundary mode)
+- Per-boundary visibility, colour, opacity and draw order — all authorable
+- Previously shipped as focused + full-extent crops (consolidated to one, DEC-180)

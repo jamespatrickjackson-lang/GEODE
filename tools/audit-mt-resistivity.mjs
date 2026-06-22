@@ -369,39 +369,49 @@ function validateVolumesAndSurfaces(stats) {
       `${surface.meshId} supersample factor`,
     );
   }
-  // Deep-check one boundary asset: precomputed gradient normals are present and
-  // match the vertex count (full per-asset read would stream ~hundreds of MB).
+  // R4: deep-check one boundary asset — geometry is a binary tile referenced by
+  // a JSON sidecar (positions f32, normals f32, indices u32, optional alpha
+  // f32). The sidecar carries no inline geometry arrays, and the .bin byte size
+  // must match the declared vertex/index counts exactly.
   const probeSurface = thresholdMesh.processing.thresholdSurfaces.find(
     (surface) => surface.id === "conductive-le-10-ohm-m",
   );
   if (probeSurface) {
-    const probe = readJson(
-      manifestRelativePath(VOLUME_MANIFEST_PATH, probeSurface.assetFile),
+    const sidecarPath = manifestRelativePath(
+      VOLUME_MANIFEST_PATH,
+      probeSurface.assetFile,
     );
-    assertGreaterThan(
-      (probe.normals ?? []).length,
-      0,
-      "boundary asset normals present",
-    );
+    const probe = readJson(sidecarPath);
+    assert.equal(probe.schema, "geosee.iso-surface-tile.v1", "boundary sidecar schema");
     assert.equal(
-      probe.normals.length,
-      probe.vertices.length,
-      "boundary asset normals length matches vertices",
+      probe.geometry?.format,
+      "binary-tile-quant-v1",
+      "boundary geometry is a quantized binary tile",
     );
-    // R10: when feather is enabled, per-vertex alpha is present (one per vertex,
-    // in [0,1]); when disabled the alpha array is empty.
-    const probeAlpha = probe.alpha ?? [];
-    if (probeAlpha.length > 0) {
-      assert.equal(
-        probeAlpha.length,
-        probe.vertices.length / 3,
-        "boundary asset feather alpha one per vertex",
-      );
-      assert.ok(
-        probeAlpha.every((a) => a >= 0 && a <= 1),
-        "boundary asset feather alpha in [0,1]",
-      );
-    }
+    const v = probe.geometry.vertexCount;
+    const i = probe.geometry.indexCount;
+    assertGreaterThan(v, 0, "boundary tile vertex count");
+    assertGreaterThan(i, 0, "boundary tile index count");
+    // Redundant per-vertex channels are dropped (the size win).
+    assert.equal(probe.vertices, undefined, "boundary sidecar has no inline vertices");
+    assert.equal(probe.colors, undefined, "boundary sidecar drops per-vertex colors");
+    // Quantization metadata required to dequantize at runtime.
+    assert.equal(probe.geometry.normalEncoding, "oct-snorm16", "normal encoding recorded");
+    assert.equal(
+      Array.isArray(probe.geometry.positionQuantization?.min) &&
+        probe.geometry.positionQuantization.min.length === 3,
+      true,
+      "position quantization min recorded",
+    );
+    const binPath = manifestRelativePath(sidecarPath, probe.geometry.file);
+    assertFileExists(binPath, "boundary tile .bin");
+    // Layout: indices u32 (4B) + positions u16x3 (6B/vtx) + normals i16x2 (4B/vtx).
+    const expectedBytes = i * 4 + v * 6 + v * 4;
+    assert.equal(
+      fileSize(binPath),
+      expectedBytes,
+      "boundary tile .bin byte size matches quantized layout",
+    );
   }
   assert.equal(
     thresholdMesh.processing.thresholdSurfaces.filter(

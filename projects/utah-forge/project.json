@@ -8552,7 +8552,8 @@
     "183_mt_surfaces_geoscience",
     "184_segmentation_surface_capabilities",
     "185_surface_data_pipeline",
-    "186_clinical_imaging_transfer"
+    "186_clinical_imaging_transfer",
+    "187_medical_suitability"
   ],
   "presentationDefaults": {
     "transitionDuration": 1400,

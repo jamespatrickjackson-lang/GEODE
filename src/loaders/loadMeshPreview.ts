@@ -22,6 +22,21 @@ interface MeshPreviewPayload {
     side?: "front" | "back" | "double";
     flatShading?: boolean;
     note?: string;
+    color?: string;
+    feathered?: boolean;
+  };
+  // R4: binary iso-surface tile — geometry lives in a sibling .bin, referenced
+  // here instead of inline vertex/normal/index arrays.
+  geometry?: {
+    format: string;
+    file: string;
+    vertexCount: number;
+    indexCount: number;
+    hasNormals?: boolean;
+    hasAlpha?: boolean;
+    layout?: string;
+    positionQuantization?: { bits: number; min: number[]; extent: number[] };
+    normalEncoding?: string;
   };
   attributes?: {
     scalarValues?: number[];
@@ -296,6 +311,111 @@ function meshThresholdSurfaces(payload: MeshPreviewPayload): MeshSliceSummary[] 
   return Array.isArray(raw) ? (raw as MeshSliceSummary[]) : [];
 }
 
+// R4: octahedral snorm16 → unit normal (inverse of the prep oct-encode).
+function octDecodeNormal(u: number, w: number): [number, number, number] {
+  let x = u;
+  let y = w;
+  const z = 1 - Math.abs(u) - Math.abs(w);
+  if (z < 0) {
+    const ox = x;
+    const oy = y;
+    x = (1 - Math.abs(oy)) * (ox >= 0 ? 1 : -1);
+    y = (1 - Math.abs(ox)) * (oy >= 0 ? 1 : -1);
+  }
+  const len = Math.hypot(x, y, z) || 1;
+  return [x / len, y / len, z / len];
+}
+
+// R4: load a single MT threshold surface from a quantized binary tile
+// (indices u32, positions per-tile-bbox uint16, normals oct-snorm16) referenced
+// by a JSON sidecar. Per-vertex color is intentionally absent — the layer style drives
+// material.color (mtThresholdSurfaceStyle), so the surface renders with the
+// authored threshold color. Returns a group with one mt-threshold-surface mesh,
+// matching the structure the lazy boundary loader re-parents.
+async function loadBinaryIsoSurfaceTile(
+  url: string,
+  payload: MeshPreviewPayload,
+  options: LoadMeshPreviewOptions,
+): Promise<THREE.Group> {
+  const geom = payload.geometry;
+  if (!geom) throw new Error(`Binary tile missing geometry descriptor: ${url}`);
+  const v = geom.vertexCount;
+  const idxCount = geom.indexCount;
+  const binUrl = url.replace(/[^/]+$/, geom.file);
+  const binResponse = await fetch(binUrl);
+  if (!binResponse.ok) {
+    throw new Error(`Failed to fetch tile geometry ${binUrl}: ${binResponse.status}`);
+  }
+  const buffer = await binResponse.arrayBuffer();
+  // Layout: indices u32, positions u16 (per-tile bbox quantized), normals
+  // oct-snorm16. Dequantize to Float32 for the GPU buffers.
+  const indices = new Uint32Array(buffer, 0, idxCount);
+  const qpos = new Uint16Array(buffer, idxCount * 4, 3 * v);
+  const qnrm = new Int16Array(buffer, idxCount * 4 + 6 * v, 2 * v);
+  const min = geom.positionQuantization?.min ?? [0, 0, 0];
+  const ext = geom.positionQuantization?.extent ?? [1, 1, 1];
+  const positions = new Float32Array(3 * v);
+  const normals = new Float32Array(3 * v);
+  for (let i = 0; i < v; i += 1) {
+    positions[i * 3] = min[0] + (qpos[i * 3] / 65535) * ext[0];
+    positions[i * 3 + 1] = min[1] + (qpos[i * 3 + 1] / 65535) * ext[1];
+    positions[i * 3 + 2] = min[2] + (qpos[i * 3 + 2] / 65535) * ext[2];
+    const n = octDecodeNormal(qnrm[i * 2] / 32767, qnrm[i * 2 + 1] / 32767);
+    normals[i * 3] = n[0];
+    normals[i * 3 + 1] = n[1];
+    normals[i * 3 + 2] = n[2];
+  }
+
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+  geometry.setAttribute("normal", new THREE.BufferAttribute(normals, 3));
+  geometry.setIndex(new THREE.BufferAttribute(indices, 1));
+  geometry.computeBoundingBox();
+  geometry.computeBoundingSphere();
+
+  const material = createMtThresholdSurfaceMaterial();
+  // Binary tiles carry no per-vertex color attribute — drive color from
+  // material.color so the shader doesn't multiply by a default (0,0,0).
+  material.vertexColors = false;
+  applyMaterialSide(material, payload.material?.side);
+  if (typeof payload.material?.color === "string") {
+    material.color.set(payload.material.color);
+  }
+  if (geometry.userData.feathered === true) {
+    material.userData.mtThresholdSurfaceFeathered = true;
+    material.transparent = true;
+    material.depthWrite = true;
+    material.needsUpdate = true;
+  }
+
+  const surface = (meshThresholdSurfaces(payload)[0] ?? {}) as MeshSliceSummary;
+  const label = surface.label ?? payload.label ?? "MT threshold surface";
+  const mesh = new THREE.Mesh(geometry, material);
+  mesh.name = label;
+  mesh.renderOrder = options.renderOrder ?? SURFACE_RENDER_ORDER.meshPreview;
+  mesh.userData = {
+    displayName: label,
+    source: payload.source,
+    sceneBounds: payload.sceneBounds,
+    processing: payload.processing,
+    meshPreview: true,
+    scaleReferenceSurface: true,
+    surfaceRenderPolicy: SURFACE_PREVIEW_DEPTH_POLICY.name,
+    mtThresholdSurfacePreview: true,
+    mtThresholdSurfaceId: surface.id,
+    mtThresholdSurfaceKind: surface.kind,
+    mtIsosurfaceProductId: surface.isoProductId,
+    mtIsosurfaceSourceProductId: surface.sourceProductId,
+    mtIsosurfaceCropStatus: surface.cropStatus,
+    mtThresholdSurface: surface,
+  };
+
+  const group = new THREE.Group();
+  group.name = payload.label ?? "MT threshold surface";
+  group.add(mesh);
+  return group;
+}
+
 export async function loadMeshPreview(
   url: string,
   options: LoadMeshPreviewOptions = {},
@@ -306,6 +426,16 @@ export async function loadMeshPreview(
   }
 
   const payload = (await response.json()) as MeshPreviewPayload;
+
+  // R4: binary iso-surface tile (single boundary). Geometry is fetched from a
+  // sibling .bin rather than inline arrays.
+  if (
+    payload.schema === "geosee.iso-surface-tile.v1" &&
+    payload.geometry?.format === "binary-tile-quant-v1"
+  ) {
+    return await loadBinaryIsoSurfaceTile(url, payload, options);
+  }
+
   if (
     !["geosee.mesh-preview.v1", "geosee.scalar-grid-mesh-preview.v1"].includes(
       payload.schema,

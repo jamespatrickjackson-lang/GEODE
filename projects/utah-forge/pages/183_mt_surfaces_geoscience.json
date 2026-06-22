@@ -1,7 +1,7 @@
 {
   "id": "183_mt_surfaces_geoscience",
-  "title": "MT Iso-Resistivity Surfaces — Geoscience Context",
-  "subtitle": "What these surfaces represent",
+  "title": "MT Iso-Resistivity Surfaces",
+  "subtitle": "Utah FORGE MT inversion · 23 thresholds · −20 km",
   "camera": {
     "position": [
       149443.87186949464,

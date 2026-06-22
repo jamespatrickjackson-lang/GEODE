@@ -1,7 +1,7 @@
 {
   "id": "186_clinical_imaging_transfer",
-  "title": "The Same Engine for Clinical Imaging",
-  "subtitle": "CT / MRI / OCT transfer",
+  "title": "Modality-Generic Volume → Surface",
+  "subtitle": "CT / MRI / OCT · ITK / VTK",
   "camera": {
     "position": [
       149443.87186949464,

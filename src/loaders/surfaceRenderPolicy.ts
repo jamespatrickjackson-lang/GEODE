@@ -69,9 +69,13 @@ export function applyMtThresholdSurfaceMaterialOpacity(
   material.opacity = opaque ? 1 : next;
   material.transparent = !opaque;
   material.depthTest = true;
-  // Feathered surfaces are mostly opaque (only the sparsest rind fades), so keep
-  // depth writes on to avoid see-through ghosting of the solid bulk.
-  material.depthWrite = opaque || feathered;
+  // MT iso-surfaces are solid shells, so they ALWAYS write depth (except as
+  // wireframe). Tying depthWrite to the transient opacity broke inter-surface
+  // occlusion while fading/lazy-loading: a transparent surface with depthWrite
+  // off lets a BACK surface paint over a FRONT one (front masked except its
+  // non-overlapping sides) until the page settles. Writing depth regardless of
+  // the fade keeps front-over-back correct throughout the transition.
+  material.depthWrite = !wireframe;
   material.userData.preserveMaterialOpacity = true;
   material.userData.mtThresholdSurfaceEffectiveOpacity = material.opacity;
   material.userData.mtThresholdSurfaceOpaque = opaque;

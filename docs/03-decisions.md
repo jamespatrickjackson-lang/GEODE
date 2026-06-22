@@ -3571,6 +3571,10 @@ assets; a future optimization is binary (.bin) boundary encoding and dropping
 redundant per-vertex colors. The editor's single-option iso-surface selector is
 neutralized (one product) but not yet removed from the control manifest.
 
+> Update: the binary-encoding + drop-per-vertex-colors optimization shipped in
+> **DEC-183** (quantized tiles, ~67 MB). The size figure above reflects the
+> superseded JSON encoding. The selector-removal is still pending (R6).
+
 ## DEC-181 - Confidence-masked surfaces + uncertainty feathering (low-confidence data handling)
 
 Status: in rework 2026-06-21. First R10 attempt used a hard confidence clip
@@ -3662,3 +3666,48 @@ tuned values. Visual sign-off on `ISO_SURFACES_003` is the acceptance.
 **Trade-off:** further visual tuning (sigma / smoothing strength) remains
 available as an interactive sub-loop if a specific margin or structure defect is
 identified; absent a named defect, the signed-off values are the freeze.
+
+## DEC-183 - MT threshold-surface binary tile encoding + solid-shell render policy (R4)
+
+Status: implemented 2026-06-21. **Supersedes** the DEC-180 trade-off note that
+deferred binary encoding / per-vertex-colour removal as a future optimization.
+
+**Considered:** keep per-boundary JSON arrays (~309 MB); commit raw f32 binary
+(~97 MB); git-LFS; regenerate-on-build; quantized binary tiles.
+
+**Chose — quantized binary tiles per boundary:**
+- `prep/build_utah_forge_mt_volume_products.mjs` `writeThresholdBoundaryAssets`
+  writes a `<id>.bin` (layout: indices `u32`, positions per-tile-bbox `uint16`,
+  normals octahedral-`snorm16`) plus a JSON sidecar
+  (`geosee.iso-surface-tile.v1`, `geometry.format = binary-tile-quant-v1`,
+  counts, bbox, `positionQuantization`, threshold, colour).
+- Per-vertex RGB and the constant per-surface `scalarValues` array are dropped —
+  both redundant: colour comes from the layer style, scalar from threshold
+  metadata.
+- `src/loaders/loadMeshPreview.ts` gains a dual path: binary tiles are fetched +
+  dequantized (`octDecodeNormal`, bbox de-quant); JSON arrays still load for
+  other layers.
+- Result: 23 boundaries **309 MB → 67 MB (4.6×)**; position step ~1–3.4 m over a
+  tile bbox (sub-pixel at scene scale), normals ~0.1° (oct-snorm16).
+
+**Render policy (two fixes folded in):**
+- MT iso-surfaces carry **no per-vertex colour attribute**; `vertexColors` is
+  gated on the geometry having one (`mtThresholdSurfaceStyle.ts`) and binary
+  tiles set it `false`. Enabling vertexColors without the attribute made three
+  multiply by a default (0,0,0) → black surfaces.
+- MT iso-surfaces are solid shells, so `applyMtThresholdSurfaceMaterialOpacity`
+  now writes depth always (`depthWrite = !wireframe`), not tied to transient
+  opacity. Tying it to opacity broke front-over-back occlusion during fades /
+  lazy loads (a transparent surface with depthWrite off let the back surface
+  paint over the front).
+
+**Why:** the JSON assets were the merge-blocker; quantized tiles keep full
+fidelity at ~5× smaller and form the surface-tile schema the canonical volume
+model (R3) will adopt. The render fixes restore correct colour and depth that
+the colour-drop exposed.
+
+**Trade-off / deferred:** indices stay `u32` (dominant remaining cost); `u16`
+indices via tile-splitting (~44 MB) deferred. The `.bin` are committed to git
+(not LFS / regenerate-on-build) for now. A fading-in surface now also occludes
+the raymarched volume behind it (writes depth) — a minor transient, preferred
+over the masking bug. MC33 / Flying Edges extraction remains deferred to R5.

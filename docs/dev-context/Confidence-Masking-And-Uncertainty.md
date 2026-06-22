@@ -1,7 +1,23 @@
 # Confidence-Masked Surfaces and Uncertainty Feathering
 
-Status: specification (queued for implementation — roadmap R10). Decision:
+Status: partially implemented, then **disabled** (2026-06-21). Decision:
 `docs/03-decisions.md` DEC-181.
+
+> As-built note: the first cut used this spec's **hard clip** (`Mhard = C ≥
+> clipLow` + morphology) and removed ~57% of the MT model — data-support density
+> mislabels a smoothness-regularized inversion's resolved interior as
+> low-confidence. It was reworked to **feather-first** (no extent clip; only the
+> sparsest ~5% of occupied voxels by support feather opacity → 0, via
+> `prep/lib/confidence.mjs` `supportFeatherAlphaField`), then **gated off**
+> (`CONF_FEATHER_ENABLED = false`) pending a better confidence basis (e.g.
+> distance outside the station footprint, or true inversion sensitivity / DOI).
+> The morphology helpers in `confidence.mjs` (`buildCleanedSurfaceMask`,
+> erode/dilate/open/close, connected components) are built but currently
+> unreferenced. Per-vertex feather is carried as RGBA vertex alpha; note the
+> render policy moved to always-on `depthWrite` for solid shells (DEC-183), so
+> the opaque-fast-path detail in §3 below is superseded. The sections below
+> remain the design intent for the medical track; clip-based extent reduction is
+> NOT in the current build.
 
 This is the source-of-record spec for how iso-surfaces (and, later, any
 volumetric surface in this codebase) handle **low-confidence / unreliable data

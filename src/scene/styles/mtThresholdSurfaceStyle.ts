@@ -99,8 +99,13 @@ export function applyMtThresholdSurfaceStyle(this: any, id: string, style: Edita
         (m as THREE.Material & { wireframe: boolean }).wireframe = wireframe;
       }
       if ("vertexColors" in m) {
+        // R4: binary tiles carry no per-vertex color attribute (color comes
+        // from material.color below). Enabling vertexColors without a color
+        // attribute makes three multiply by a default (0,0,0) → black surface.
+        const hasVertexColor =
+          (obj as THREE.Mesh).geometry?.getAttribute?.("color") != null;
         (m as THREE.Material & { vertexColors: boolean }).vertexColors =
-          !wireframe;
+          hasVertexColor && !wireframe;
       }
       if ("roughness" in m) {
         (m as THREE.Material & { roughness: number }).roughness = roughness;

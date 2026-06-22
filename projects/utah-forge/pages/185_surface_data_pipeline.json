@@ -1,7 +1,7 @@
 {
   "id": "185_surface_data_pipeline",
-  "title": "The Data Pipeline — From Volume to Surface",
-  "subtitle": "How we generate them",
+  "title": "Encoding, Streaming & Rendering",
+  "subtitle": "Quantized binary tiles · lazy GPU streaming",
   "camera": {
     "position": [
       149443.87186949464,
