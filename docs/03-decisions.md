@@ -3757,7 +3757,11 @@ CLAUDE.md-protected full-density scalar/transition path and rank highest.
 
 ## DEC-185 - MT threshold surface depth-write is gated on settled opacity, not always-on (refines DEC-183)
 
-Status: implemented 2026-06-22. **Refines** the DEC-183 render-policy line that
+Status: implemented then **REVERTED same day, 2026-06-22** — see the reversal
+note at the end of this entry. DEC-183's unconditional `depthWrite = !wireframe`
+is restored.
+
+Status (original): implemented 2026-06-22. **Refines** the DEC-183 render-policy line that
 made solid-shell `depthWrite = !wireframe` unconditionally.
 
 **Problem:** the DEC-183 always-on depth-write fixed "front shell masked by back
@@ -3790,3 +3794,15 @@ reverse-Z / gravel-pit preview surfaces (`SURFACE_PREVIEW_DEPTH_POLICY`,
 **Verification:** `test:utah:mt` extended to assert `depthWrite` true at settle +
 false mid-fade; confirmed live (mid-fade `depthWrite=false`, settle
 `depthWrite=true`); guards green; `test:tools` 679/679.
+
+**Reversal note (2026-06-22):** dropping depth-write while fading removed the
+black but exposed the inverse artifact — with depth-write off, the nested
+transparent shells no longer occlude each other, so they over-blend and the
+surfaces went **white / washed-out** during transitions. The depth-write toggle
+is a symptom-relocator (on → black occlusion holes while fading; off → white
+over-blend), not a root fix. The real fix for nested transparent shells is
+deterministic draw ordering (explicit per-shell `renderOrder`, outer→inner) so
+they blend correctly during a fade — to be designed in a follow-up plan, along
+with a separate lazy-load issue (precomputed boundaries not appearing on initial
+page load until a manual toggle forces a style apply). Reverted to the DEC-183
+baseline to stabilise; the R6 lazy-unload revert (commit 07a6fc4) is kept.

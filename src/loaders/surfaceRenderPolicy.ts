@@ -37,11 +37,6 @@ export const PHOTO_OVERLAY_PREVIEW_POLICY = {
 export const MT_THRESHOLD_SURFACE_POLICY = {
   name: "solid-mt-threshold-surface-preview",
   opaqueOpacityThreshold: 0.999,
-  // A settled shell writes depth (front-over-back, DEC-183). While a transition
-  // attenuates it below this fraction of its authored opacity it stops writing
-  // depth, so a fading shell blends instead of occluding the volume / the shell
-  // behind it and leaving a black hole. Tunable.
-  depthWriteFadeFactor: 0.98,
   material: {
     opacity: 0.86,
     roughness: 0.64,
@@ -74,25 +69,13 @@ export function applyMtThresholdSurfaceMaterialOpacity(
   material.opacity = opaque ? 1 : next;
   material.transparent = !opaque;
   material.depthTest = true;
-  // MT iso-surfaces are solid shells: a SETTLED surface writes depth (except as
-  // wireframe) so a front shell occludes a back one (DEC-183 — fixes the
-  // "front masked by back during load" bug). But while a page transition
-  // ATTENUATES the surface below its authored opacity, depth-write makes the
-  // fading-transparent shell occlude the volume / the shell behind it and then
-  // vanish, leaving a black shape (the DEC-183 trade-off). So drop depth-write
-  // while fading: settled/creation/live restyle (preserveBase) and surfaces
-  // held at/near their authored base still occlude; only a surface being faded
-  // by a transition stops writing depth, so it blends instead of punching a
-  // black hole. Mirrors the terrain depth-write gate in applyRenderOpacityToTree.
-  const depthWriteBase =
-    typeof material.userData.preserveMaterialOpacityBase === "number" &&
-    Number.isFinite(material.userData.preserveMaterialOpacityBase)
-      ? (material.userData.preserveMaterialOpacityBase as number)
-      : next;
-  const settledOrNearBase =
-    preserveBase ||
-    next >= depthWriteBase * MT_THRESHOLD_SURFACE_POLICY.depthWriteFadeFactor;
-  material.depthWrite = !wireframe && settledOrNearBase;
+  // MT iso-surfaces are solid shells, so they ALWAYS write depth (except as
+  // wireframe). Tying depthWrite to the transient opacity broke inter-surface
+  // occlusion while fading/lazy-loading: a transparent surface with depthWrite
+  // off lets a BACK surface paint over a FRONT one (front masked except its
+  // non-overlapping sides) until the page settles. Writing depth regardless of
+  // the fade keeps front-over-back correct throughout the transition.
+  material.depthWrite = !wireframe;
   material.userData.preserveMaterialOpacity = true;
   material.userData.mtThresholdSurfaceEffectiveOpacity = material.opacity;
   material.userData.mtThresholdSurfaceOpaque = opaque;

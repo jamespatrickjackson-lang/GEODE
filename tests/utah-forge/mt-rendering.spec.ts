@@ -85,40 +85,6 @@ test("Utah FORGE MT threshold surfaces load from binary tiles with correct colou
     expect(m.depthWrite, `${id} depthWrite`).toBe(true);
   }
 
-  // Phase-1 black fix: while a transition attenuates the surface below its
-  // authored opacity, depth-write must drop so the fading shell blends instead
-  // of occluding the volume behind it and leaving a black hole. Simulate a
-  // mid-fade render opacity, assert depth-write is released, then confirm it
-  // returns once the layer is back at full render opacity (settled).
-  const setRenderOpacity = (factor: number) =>
-    page.evaluate(
-      ([layerId, value]) => {
-        const manager = (
-          window as unknown as {
-            __scene?: {
-              manager?: {
-                applyLayerRenderOpacity?: (id: string, opacity: number) => void;
-              };
-            };
-          }
-        ).__scene?.manager;
-        manager?.applyLayerRenderOpacity?.(layerId as string, value as number);
-      },
-      [THRESHOLD_LAYER_ID, factor] as const,
-    );
-
-  await setRenderOpacity(0.3);
-  const midFade = await mtVolumeSceneState(page);
-  expect(midFade.thresholdMaterial?.depthWrite, "depthWrite released mid-fade").toBe(
-    false,
-  );
-  await setRenderOpacity(1);
-  const resettled = await mtVolumeSceneState(page);
-  expect(
-    resettled.thresholdMaterial?.depthWrite,
-    "depthWrite restored at settle",
-  ).toBe(true);
-
   // Hiding a boundary removes it from the VISIBLE set but RETAINS its mesh
   // (no eviction): a boundary hidden on one page reappears on another via a
   // pure visibility toggle, with no async reload that could race a transition
