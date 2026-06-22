@@ -3450,6 +3450,22 @@ export class SceneManager {
         nextPage,
         this.sceneOverlayTransitionClock(),
       );
+      // Reveal lazy MT threshold boundaries that loaded HIDDEN during the
+      // transition. The lazy loader attaches surface meshes with visible=false
+      // mid-transition (to avoid a full-opacity pop) and the per-frame readiness
+      // path does not reliably flip them on, so without this they stay
+      // loaded-but-hidden after navigating to a page that shows them (only a
+      // manual toggle re-styled them). Narrow single-layer reveal at settle;
+      // respects per-boundary visibility (a page that hides them keeps the layer
+      // group hidden anyway), and is idempotent if they were already revealed.
+      this.applyMtThresholdSurfaceStyle(
+        UTAH_FORGE_MT_THRESHOLD_SURFACES_LAYER_ID,
+        effectiveStyle(
+          environment,
+          nextPage,
+          UTAH_FORGE_MT_THRESHOLD_SURFACES_LAYER_ID,
+        ),
+      );
     }
     this.recordTransitionCommitAttempt({
       phase: "post-commit-graph-check",
