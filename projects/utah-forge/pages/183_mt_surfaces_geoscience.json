@@ -224,44 +224,9 @@
       "color": "#47c299"
     },
     "utah-forge-mt-resistivity-volume": {
-      "sectionIsoEnabled": true,
-      "sectionIsoLinesVisible": true,
-      "sectionIsoBandsVisible": true,
-      "sectionIsoTargetIds": {
-        "utah-forge-mt-resistivity-volume:mt-resistivity-forge-focused-volume:x": true,
-        "utah-forge-mt-resistivity-volume:mt-resistivity-forge-focused-volume:y": true
-      },
-      "sectionIsoMin": -2,
-      "sectionIsoMax": 4.5,
-      "sectionIsoLevelCount": 19,
-      "sectionIsoLineWidth": 1.2,
-      "sectionIsoLineStyle": "dashed",
-      "sectionIsoBandOpacity": 0.32,
-      "sectionIsoFillOffset": 0,
-      "sectionIsoSourceOpacity": 1,
-      "scalarColorLow": "#2cc9ff",
-      "scalarColorMid": "#f8dd6d",
-      "scalarColorHigh": "#ff637a",
-      "scalarBlendMin": 0.139879,
-      "scalarBlendMax": 3.937122,
-      "scalarDisplayMin": 0.139879,
-      "scalarDisplayMax": 3.937122,
-      "scalarFocusMin": -2,
-      "scalarFocusMax": 4.5,
       "scalarInclusionMode": "all-valid",
-      "scalarMidpoint": 0.5,
-      "scalarContrast": 1.05,
-      "scalarVolumeProductId": "mt-resistivity-full-extent-volume",
-      "scalarVolumeRenderMode": "raymarch",
-      "scalarVolumeOpacity": 0.48,
-      "scalarVolumeDensity": 0.72,
-      "scalarVolumeSampleSteps": 112,
-      "scalarVolumeTransferMode": "soft",
-      "scalarVolumeThresholdMin": -2,
-      "scalarVolumeThresholdMax": 4.5,
-      "scalarVolumeMaskVisible": true,
-      "scalarLegendVisible": true,
-      "opacity": 0.48
+      "sectionIsoSourceOpacity": 0,
+      "sectionIsoEnabled": false
     }
   },
   "visibilityOverrides": {

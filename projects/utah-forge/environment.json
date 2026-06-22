@@ -628,14 +628,14 @@
       "sectionIsoEnabled": false
     },
     "utah-forge-scene-section-planes": {
-      "sceneSectionEnabled": false,
+      "sceneSectionEnabled": true,
       "sceneSectionMode": "cutaway",
       "sceneSectionTargetScope": "all-visible",
       "sceneSectionActiveAxis": "x",
       "sceneSectionPlanes": {
         "x": {
           "enabled": false,
-          "positionM": -5753.338077166321,
+          "positionM": 3756.1547941282483,
           "invert": false
         },
         "y": {
@@ -681,14 +681,15 @@
           "axis": "x",
           "plane": {
             "enabled": false,
-            "positionM": -5753.338077166321,
+            "positionM": 3756.1547941282483,
             "invert": false
           },
           "frame": {
             "axisAlignment": "cardinal",
             "axisAHeading": "Latitude (°)",
             "axisBHeading": "Elevation (km)",
-            "axisDatum": "latlon"
+            "axisDatum": "latlon",
+            "controlsVisible": true
           }
         },
         {
@@ -700,7 +701,9 @@
             "positionM": -14276.695748094688,
             "invert": false
           },
-          "frame": {}
+          "frame": {
+            "controlsVisible": true
+          }
         },
         {
           "id": "axis:z",
@@ -711,7 +714,9 @@
             "positionM": -2200,
             "invert": false
           },
-          "frame": {}
+          "frame": {
+            "controlsVisible": true
+          }
         }
       ],
       "sceneSectionActiveFrameId": "axis:x",
