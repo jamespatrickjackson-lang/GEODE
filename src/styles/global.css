@@ -12,10 +12,10 @@ body,
 }
 
 :root {
-  --editor-slider-filled: #c0c0c0;
-  --editor-slider-track: rgba(255, 255, 255, 0.72);
-  --editor-slider-track-border: rgba(255, 255, 255, 0.404);
-  --editor-slider-thumb: #929292;
+  --editor-slider-filled: #3a3f45;
+  --editor-slider-track: rgba(255, 255, 255, 0.08);
+  --editor-slider-track-border: rgba(255, 255, 255, 0.16);
+  --editor-slider-thumb: #565c63;
   --editor-slider-disabled-opacity: 0.4;
   --editor-control-height: 20px;
   --editor-slider-track-height: 8px;
