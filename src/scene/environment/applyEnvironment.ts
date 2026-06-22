@@ -517,6 +517,13 @@ export function applyCinematicPostProcessing(
     ? aspectRatioForMask(guides.aspectMask)
     : 0;
   gp.guideLineThickness.value = clampRange(guides.lineThickness ?? 0.25, 0.1, 2);
+
+  // Background gradient backdrop: repaint the empty void behind the scene with a
+  // landing-page-style gradient (after the grade, so it is not crushed/ringed).
+  // Dark-gradient look only; skipped in light mode.
+  this.postHandle.setBackdrop({
+    enabled: sp.gradientBackdrop === true && sp.lightMode !== true,
+  });
 }
 
 export function applyEnvironment(this: any, environment: EnvironmentSetup): void {

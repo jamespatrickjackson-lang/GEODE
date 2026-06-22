@@ -1160,6 +1160,11 @@ export interface SceneProperties {
   // Renderer clear color for light scene mode. When absent, light mode uses
   // its runtime neutral default.
   lightModeBackground?: string;
+  // When true, empty-background pixels are repainted (after the cinematic grade)
+  // with a smooth dithered radial gradient that mirrors the landing page, so the
+  // void sits behind the scene objects and is not crushed/ringed by the grade.
+  // Ignored in light mode. Defaults off (renderer clear color shows as before).
+  gradientBackdrop?: boolean;
 
   // Sun direction (still required -- drives the key light and terrain
   // hillshade). Sky-shader visuals are gone; this is purely geometric.

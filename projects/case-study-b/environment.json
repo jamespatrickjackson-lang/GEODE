@@ -270,6 +270,7 @@
   ],
   "scene": {
     "background": "#d8dde0",
+    "gradientBackdrop": true,
     "toneMapping": "aces",
     "exposure": 1.1,
     "shadows": false,

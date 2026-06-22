@@ -8,6 +8,7 @@ import { AfterimagePass } from "three/examples/jsm/postprocessing/AfterimagePass
 import { ShaderPass } from "three/examples/jsm/postprocessing/ShaderPass.js";
 import { SMAAPass } from "three/examples/jsm/postprocessing/SMAAPass.js";
 import { OutputPass } from "three/examples/jsm/postprocessing/OutputPass.js";
+import { Pass } from "three/examples/jsm/postprocessing/Pass.js";
 
 // Post-processing chain for the cinematic look. Order:
 //   RenderPass        -- main scene -> render target
@@ -413,6 +414,112 @@ const lensGradeShader = {
   `,
 };
 
+// Background backdrop. Runs as the FINAL pass (after OutputPass, so it writes
+// display/sRGB values straight to the canvas). The cinematic grade is a
+// fullscreen pass over the whole frame, so a dark scene background gets crushed
+// to black and the vignette bands it into rings. This pass instead repaints
+// ONLY the empty void with a smooth, dithered radial gradient mirroring the
+// landing page, and leaves every drawn pixel untouched. "Drawn vs void" comes
+// from an alpha coverage mask (tMask) — a cheap scene re-render cleared to
+// alpha 0, so ALL geometry (terrain meshes, but also overlay lines, telemetry
+// triangles, and markers that do not write depth) counts as drawn. Depth alone
+// would miss the depthWrite=false overlays and erase them over the void.
+// Disabled (passthrough) unless a project opts in; stays in the composer so
+// capture output matches live.
+const backdropShader = {
+  name: "BackdropPass",
+  uniforms: {
+    tDiffuse: { value: null as THREE.Texture | null },
+    tMask: { value: null as THREE.Texture | null },
+    resolution: { value: new THREE.Vector2(1, 1) },
+    enabled: { value: 0 },
+    colorInner: { value: new THREE.Vector3(46 / 255, 48 / 255, 47 / 255) },
+    colorMid: { value: new THREE.Vector3(31 / 255, 32 / 255, 31 / 255) },
+    colorOuter: { value: new THREE.Vector3(21 / 255, 24 / 255, 25 / 255) },
+    center: { value: new THREE.Vector2(0.55, 0.58) },
+  },
+  vertexShader,
+  fragmentShader: /* glsl */ `
+    uniform sampler2D tDiffuse;
+    uniform sampler2D tMask;
+    uniform vec2 resolution;
+    uniform float enabled;
+    uniform vec3 colorInner;
+    uniform vec3 colorMid;
+    uniform vec3 colorOuter;
+    uniform vec2 center;
+    varying vec2 vUv;
+
+    float rand(vec2 co) {
+      return fract(sin(dot(co, vec2(12.9898, 78.233))) * 43758.5453);
+    }
+
+    void main() {
+      vec4 scene = texture2D(tDiffuse, vUv);
+      if (enabled < 0.5) { gl_FragColor = scene; return; }
+      // Coverage: 0 where nothing was drawn (void), up to 1 on solid geometry.
+      float drawn = texture2D(tMask, vUv).a;
+      vec2 d = vUv - center;
+      d.x *= resolution.x / max(resolution.y, 1.0);
+      float r = clamp(length(d) / 0.85, 0.0, 1.0);
+      vec3 col = mix(colorInner, colorMid, smoothstep(0.0, 0.46, r));
+      col = mix(col, colorOuter, smoothstep(0.46, 1.0, r));
+      // Ordered-ish dither (~1.5/255) breaks up 8-bit banding so the radial
+      // gradient does not show concentric rings on near-black values.
+      col += (rand(vUv * resolution) - 0.5) * (1.5 / 255.0);
+      // Blend across the coverage edge so antialiased silhouettes / thin lines
+      // feather into the gradient instead of leaving a hard dark fringe.
+      float t = smoothstep(0.04, 0.6, drawn);
+      gl_FragColor = vec4(mix(col, scene.rgb, t), scene.a);
+    }
+  `,
+};
+
+// Renders the scene into an offscreen RGBA target cleared to alpha 0, producing
+// the coverage mask the backdrop pass reads. A full re-render (no override
+// material) so lines, points, sprites, and depthWrite=false overlays all stamp
+// alpha. Only runs when the backdrop is enabled, so non-opted-in projects pay
+// nothing. needsSwap=false: it does not touch the composer's color chain.
+class SceneCoverageMaskPass extends Pass {
+  scene: THREE.Scene;
+  camera: THREE.Camera;
+  target: THREE.WebGLRenderTarget;
+  constructor(
+    scene: THREE.Scene,
+    camera: THREE.Camera,
+    target: THREE.WebGLRenderTarget,
+  ) {
+    super();
+    this.scene = scene;
+    this.camera = camera;
+    this.target = target;
+    this.enabled = false;
+    this.needsSwap = false;
+  }
+  setSize(width: number, height: number): void {
+    this.target.setSize(width, height);
+  }
+  render(renderer: THREE.WebGLRenderer): void {
+    if (!this.enabled) return;
+    const prevTarget = renderer.getRenderTarget();
+    const prevAutoClear = renderer.autoClear;
+    const prevClearAlpha = renderer.getClearAlpha();
+    // scene.background would clear the mask to an opaque color (alpha 1) and
+    // hide the void; drop it so the void stays alpha 0. Restored immediately.
+    const prevBackground = this.scene.background;
+    this.scene.background = null;
+    renderer.setRenderTarget(this.target);
+    renderer.autoClear = false;
+    renderer.setClearAlpha(0);
+    renderer.clear(true, true, false);
+    renderer.render(this.scene, this.camera);
+    this.scene.background = prevBackground;
+    renderer.setClearAlpha(prevClearAlpha);
+    renderer.autoClear = prevAutoClear;
+    renderer.setRenderTarget(prevTarget);
+  }
+}
+
 export interface PostHandle {
   composer: EffectComposer;
   ssaoPass: SSAOPass;
@@ -423,6 +530,15 @@ export interface PostHandle {
   lensGradePass: ShaderPass;
   gradePass: ShaderPass;
   smaaPass: SMAAPass;
+  backdropPass: ShaderPass;
+  // Enable/disable the empty-background gradient backdrop. Optional colors are
+  // hex strings; defaults mirror the landing-page gradient.
+  setBackdrop(options: {
+    enabled: boolean;
+    innerColor?: string;
+    midColor?: string;
+    outerColor?: string;
+  }): void;
   setSize(w: number, h: number): void;
   setPixelRatio(pixelRatio: number): void;
   setCaptureMultisample(samples: number): void;
@@ -475,6 +591,20 @@ export function buildPostprocessing(
   const renderPass = new RenderPass(scene, camera);
   composer.addPass(renderPass);
 
+  // Coverage mask for the backdrop pass: an offscreen alpha-0-cleared render of
+  // the whole scene. Runs only when the backdrop is enabled.
+  const coverageMaskTarget = new THREE.WebGLRenderTarget(
+    initialSize.w,
+    initialSize.h,
+    { depthBuffer: true, stencilBuffer: false },
+  );
+  const coverageMaskPass = new SceneCoverageMaskPass(
+    scene,
+    camera,
+    coverageMaskTarget,
+  );
+  composer.addPass(coverageMaskPass);
+
   const ssaoPass = new SSAOPass(scene, camera, initialSize.w, initialSize.h);
   ssaoPass.output = SSAOPass.OUTPUT.Default;
   ssaoPass.kernelRadius = 7;
@@ -521,6 +651,15 @@ export function buildPostprocessing(
   const outputPass = new OutputPass();
   composer.addPass(outputPass);
 
+  // Final pass: repaint empty-void pixels with the gradient backdrop in display
+  // space, after OutputPass. Disabled by default (passthrough). Reads the
+  // coverage mask so every drawn pixel (including overlay lines/markers that
+  // skip depth) is preserved.
+  const backdropPass = new ShaderPass(backdropShader);
+  backdropPass.uniforms.resolution.value.set(initialSize.w, initialSize.h);
+  backdropPass.uniforms.tMask.value = coverageMaskTarget.texture;
+  composer.addPass(backdropPass);
+
   let baseBloomStrength = bloomPass.strength;
   let captureGradeSnapshot:
     | {
@@ -543,6 +682,27 @@ export function buildPostprocessing(
     lensGradePass,
     gradePass: lensGradePass,
     smaaPass,
+    backdropPass,
+    setBackdrop({ enabled, innerColor, midColor, outerColor }) {
+      backdropPass.uniforms.enabled.value = enabled ? 1 : 0;
+      // The coverage mask re-render only runs when the backdrop needs it.
+      coverageMaskPass.enabled = enabled;
+      // Parse hex to raw sRGB-normalized values: this pass runs after OutputPass
+      // in display space, so colors must NOT be linearized (THREE.Color would).
+      const applyColor = (name: string, hex: string | undefined) => {
+        if (!hex) return;
+        const h = hex.replace("#", "");
+        if (h.length < 6) return;
+        backdropPass.uniforms[name].value.set(
+          parseInt(h.slice(0, 2), 16) / 255,
+          parseInt(h.slice(2, 4), 16) / 255,
+          parseInt(h.slice(4, 6), 16) / 255,
+        );
+      };
+      applyColor("colorInner", innerColor);
+      applyColor("colorMid", midColor);
+      applyColor("colorOuter", outerColor);
+    },
     setSize(w, h) {
       currentWidth = w;
       currentHeight = h;
@@ -554,6 +714,7 @@ export function buildPostprocessing(
       afterimagePass.setSize(w, h);
       lensGradePass.uniforms.resolution.value.set(w, h);
       smaaPass.setSize(w * pixelRatio, h * pixelRatio);
+      backdropPass.uniforms.resolution.value.set(w, h);
     },
     setPixelRatio(nextPixelRatio) {
       pixelRatio = nextPixelRatio;
