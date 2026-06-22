@@ -11,9 +11,12 @@ Status: partially implemented, then **disabled** (2026-06-21). Decision:
 > `prep/lib/confidence.mjs` `supportFeatherAlphaField`), then **gated off**
 > (`CONF_FEATHER_ENABLED = false`) pending a better confidence basis (e.g.
 > distance outside the station footprint, or true inversion sensitivity / DOI).
-> The morphology helpers in `confidence.mjs` (`buildCleanedSurfaceMask`,
-> erode/dilate/open/close, connected components) are built but currently
-> unreferenced. Per-vertex feather is carried as RGBA vertex alpha; note the
+> Of the morphology helpers in `confidence.mjs`, **connected-component island
+> removal (`removeSmallComponents3d`) is now wired** as an always-on,
+> extent-preserving despeckle of the surface extraction mask (no confidence
+> clip; stats under `surfaceCleanup`; currently removes 0 on the fully-connected
+> MT mask). `buildCleanedSurfaceMask` and erode/dilate/open/close remain built
+> but unreferenced. Per-vertex feather is carried as RGBA vertex alpha; note the
 > render policy moved to always-on `depthWrite` for solid shells (DEC-183), so
 > the opaque-fast-path detail in §3 below is superseded. The sections below
 > remain the design intent for the medical track; clip-based extent reduction is

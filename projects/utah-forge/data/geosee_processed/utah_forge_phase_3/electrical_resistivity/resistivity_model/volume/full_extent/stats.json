@@ -27,6 +27,14 @@
     "mode": "disabled",
     "note": "Confidence feather disabled (CONF_FEATHER_ENABLED=false); surfaces render at full opacity."
   },
+  "surfaceCleanup": {
+    "method": "connected-component-island-removal",
+    "minIslandVoxels": 8,
+    "removedComponents": 0,
+    "removedVoxels": 0,
+    "removedFraction": 0,
+    "note": "Extent-preserving despeckle of the surface extraction mask; no confidence clip."
+  },
   "log10Resistivity": {
     "min": -0.304113,
     "p02": 0.824024,

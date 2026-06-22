@@ -13,7 +13,10 @@ import {
   extractMaskAwareMarchingCubes,
   supersampleFieldTricubic,
 } from "./lib/marchingCubes.mjs";
-import { supportFeatherAlphaField } from "./lib/confidence.mjs";
+import {
+  supportFeatherAlphaField,
+  removeSmallComponents3d,
+} from "./lib/confidence.mjs";
 
 const REPO_RELATIVE_INPUT_ZIP_REF =
   "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/electrical_resistivity/mt_model_cell_center_updated/FORGE_MT_mdl17_cellcenter.zip";
@@ -75,6 +78,10 @@ const SURFACE_SUPERSAMPLE = 2;
 // data-support density.
 const CONF_FEATHER_ENABLED = false;
 const CONF_FEATHER_PERCENTILE = 0.05;
+// Surface-mask despeckle: drop disconnected components smaller than this many
+// voxels before extraction. Extent-preserving (no confidence clip) — removes
+// only isolated noise islands, not real structure.
+const SURFACE_MIN_ISLAND_VOXELS = 8;
 
 const PRODUCTS = [
   {
@@ -591,6 +598,14 @@ function finalizeAccumulator(accumulator) {
       })
     : null;
   accumulator.confidence = feather ? feather.alpha : null;
+  // Surface-mask despeckle: drop tiny disconnected components before extraction.
+  // Extent-preserving (no confidence clip) — only isolated noise islands go.
+  const surfaceCleanup = removeSmallComponents3d(
+    mask,
+    dimensions,
+    SURFACE_MIN_ISLAND_VOXELS,
+  );
+  accumulator.surfaceMask = surfaceCleanup.mask;
   const stats = {
     productId: accumulator.id,
     label: accumulator.label,
@@ -631,6 +646,17 @@ function finalizeAccumulator(accumulator) {
           mode: "disabled",
           note: "Confidence feather disabled (CONF_FEATHER_ENABLED=false); surfaces render at full opacity.",
         },
+    surfaceCleanup: {
+      method: "connected-component-island-removal",
+      minIslandVoxels: SURFACE_MIN_ISLAND_VOXELS,
+      removedComponents: surfaceCleanup.removedComponents,
+      removedVoxels: surfaceCleanup.removedVoxels,
+      removedFraction: round(
+        surfaceCleanup.removedVoxels / Math.max(1, occupiedVoxelCount),
+        6,
+      ),
+      note: "Extent-preserving despeckle of the surface extraction mask; no confidence clip.",
+    },
     log10Resistivity: {
       min: round(Number.isFinite(logMin) ? logMin : scalarRange.min, 6),
       p02: round(percentile(occupiedValues, 0.02) ?? scalarRange.min, 6),
@@ -1126,11 +1152,12 @@ async function main() {
     finalizeAccumulator(accumulator);
     // R1: tricubic-supersampled field used only for surface extraction (volume
     // render assets stay at the coarse grid written by writeProduct).
-    // R10 (feather-first): full occupied mask — no extent clip. Uncertainty is
-    // communicated by per-vertex opacity feather, not by removing geometry.
+    // Surface extraction uses the despeckled surface mask (tiny disconnected
+    // islands removed; extent otherwise preserved — no confidence clip). The
+    // volume-render products above keep the full occupied mask.
     const hi = supersampleFieldTricubic({
       values: accumulator.values,
-      mask: accumulator.mask,
+      mask: accumulator.surfaceMask,
       dimensions: accumulator.dimensions,
       factor: SURFACE_SUPERSAMPLE,
       valueMin: accumulator.scalarRange.min,
