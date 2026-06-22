@@ -173,6 +173,25 @@ export function tickLayerTweensImpl(this: any, nowMs: number): void {
       };
       return;
     }
+    // Drive lazy target-layer readiness every transition frame. Without this the
+    // prefetch + enter for lazy MT threshold surfaces only fired when some OTHER
+    // layer's async load happened to trigger an "async-layer-resolve" reapply —
+    // so navigating between pages with nothing else loading left the surfaces
+    // unloaded until a manual style change forced applyMtThresholdSurfaceStyle.
+    // attachReady self-guards on an active transition + remaining not-ready layers
+    // and is idempotent (in-flight fetch guard, one style apply per layer when it
+    // becomes ready), so a per-frame call is its intended cadence.
+    if (
+      this.activeSceneTransitionContext &&
+      this.lastEffectiveEnv &&
+      this.lastEffectivePage
+    ) {
+      this.attachReadyTargetLayersDuringActiveTransition(
+        this.lastEffectiveEnv,
+        this.lastEffectivePage,
+        nowMs,
+      );
+    }
     let stageStart = performance.now();
     let sceneSectionApplyMode:
       | "none"
