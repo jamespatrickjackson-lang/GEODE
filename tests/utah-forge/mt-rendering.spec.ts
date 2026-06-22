@@ -238,3 +238,139 @@ test("3D MT resistivity volume opacity is independent of the Section ISO toggle"
   expect(withSectionOn).toBe(0);
   expect(withSectionOff).toBe(withSectionOn);
 });
+
+// DEC-186: the MT threshold iso-surfaces are ALWAYS a scene-section cut target,
+// independent of the per-page sceneSectionTargetScope. Enabling a section whose
+// selected-targets list does NOT include the threshold layer must still clip the
+// surfaces — the program-level replacement for per-page scope authoring.
+test("3D MT threshold surfaces are section-clipped even when not in the target list", async ({
+  page,
+}) => {
+  await page.goto("/?project=utah-forge", { waitUntil: "networkidle" });
+  await hidePublicContextLayers(page);
+
+  // Show the threshold surfaces; their binary tiles stream in asynchronously.
+  await page.evaluate((layerId) => {
+    const manager = (
+      window as unknown as {
+        __scene?: {
+          manager?: {
+            getLayer?: (id: string) => { visible: boolean } | undefined;
+            applyStyle?: (id: string, style: Record<string, unknown>) => void;
+          };
+        };
+      }
+    ).__scene?.manager;
+    const layer = manager?.getLayer?.(layerId);
+    if (layer) layer.visible = true;
+    manager?.applyStyle?.(layerId, {
+      opacity: 1,
+      mtIsosurfaceProductId: "mt-isosurface-full-extent",
+      mtThresholdSurfaceVisibility: {
+        "conductive-le-30-ohm-m": true,
+        "resistive-ge-1000-ohm-m": true,
+      },
+      mtThresholdSurfaceWireframe: false,
+      mtThresholdSurfaceSide: "double",
+    });
+  }, THRESHOLD_LAYER_ID);
+
+  await expect
+    .poll(
+      () =>
+        mtVolumeSceneState(page).then(
+          (state) => state.visibleThresholdSurfaceIds.length,
+        ),
+      { timeout: 120_000 },
+    )
+    .toBeGreaterThanOrEqual(2);
+
+  // Max section-clip-plane count across visible threshold surface materials.
+  const surfaceClip = () =>
+    page.evaluate(() => {
+      const manager = (
+        window as unknown as {
+          __scene?: {
+            manager?: {
+              getLayer?: (
+                id: string,
+              ) =>
+                | {
+                    traverse: (
+                      fn: (o: {
+                        visible?: boolean;
+                        userData?: Record<string, unknown>;
+                        material?: unknown;
+                      }) => void,
+                    ) => void;
+                  }
+                | undefined;
+            };
+          };
+        }
+      ).__scene?.manager;
+      let total = 0;
+      let maxClip = 0;
+      manager
+        ?.getLayer?.("utah-forge-mt-resistivity-threshold-surfaces")
+        ?.traverse((o) => {
+          if (o.userData?.mtThresholdSurfacePreview !== true) return;
+          if (o.visible !== true) return;
+          const mats = (
+            Array.isArray(o.material)
+              ? o.material
+              : o.material
+                ? [o.material]
+                : []
+          ) as Array<{ clippingPlanes?: unknown }>;
+          for (const mat of mats) {
+            total += 1;
+            if (Array.isArray(mat.clippingPlanes)) {
+              maxClip = Math.max(maxClip, mat.clippingPlanes.length);
+            }
+          }
+        });
+      return { total, maxClip };
+    });
+
+  const before = await surfaceClip();
+  expect(before.total).toBeGreaterThan(0);
+
+  // Enable a scene section whose selected-targets list contains ONLY the volume —
+  // NOT the threshold-surfaces layer.
+  await page.evaluate(() => {
+    const manager = (
+      window as unknown as {
+        __scene?: {
+          manager?: {
+            getLayer?: (id: string) => { visible: boolean } | undefined;
+            applyStyle?: (id: string, style: Record<string, unknown>) => void;
+          };
+        };
+      }
+    ).__scene?.manager;
+    const volume = manager?.getLayer?.("utah-forge-mt-resistivity-volume");
+    if (volume) volume.visible = true;
+    manager?.applyStyle?.("utah-forge-scene-section-planes", {
+      sceneSectionEnabled: true,
+      sceneSectionMode: "cutaway",
+      sceneSectionTargetScope: "selected-targets",
+      sceneSectionTargetLayerIds: ["utah-forge-mt-resistivity-volume"],
+      sceneSectionTargetProductIds: [],
+      sceneSectionActiveAxis: "z",
+      sceneSectionPlanes: {
+        x: { enabled: true, positionM: -6000, invert: false },
+        y: { enabled: true, positionM: 0, invert: false },
+        z: { enabled: true, positionM: -6000, invert: false },
+      },
+      sceneSectionHelperVisible: true,
+    });
+  });
+
+  // The section's hard clip planes must be applied to the surfaces (the clip-plane
+  // count rises above the pre-section baseline) even though the threshold layer is
+  // not in sceneSectionTargetLayerIds.
+  await expect
+    .poll(() => surfaceClip().then((s) => s.maxClip), { timeout: 30_000 })
+    .toBeGreaterThan(before.maxClip);
+});

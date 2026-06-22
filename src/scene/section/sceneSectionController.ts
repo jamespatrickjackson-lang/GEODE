@@ -852,27 +852,30 @@ export function sceneSectionProductIds(this: any, style: EditableStyle): Set<str
 }
 
 export function sceneSectionLayerIds(this: any, style: EditableStyle): Set<string> {
+  let ids: Set<string>;
   if (style.sceneSectionTargetScope === "all-visible") {
-    const ids = new Set<string>();
+    ids = new Set<string>();
     for (const [id, group] of this.layers) {
       if (group.visible) ids.add(id);
     }
-    return ids;
+  } else {
+    const configured = Array.isArray(style.sceneSectionTargetLayerIds)
+      ? style.sceneSectionTargetLayerIds.filter((id) => typeof id === "string")
+      : [];
+    if (style.sceneSectionTargetScope === "active-selection") {
+      ids = new Set(configured);
+    } else {
+      ids = new Set(
+        configured.length > 0
+          ? configured
+          : [
+              UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID,
+              UTAH_FORGE_MT_RESISTIVITY_FULL_DENSITY_LAYER_ID,
+            ],
+      );
+    }
   }
-  const configured = Array.isArray(style.sceneSectionTargetLayerIds)
-    ? style.sceneSectionTargetLayerIds.filter((id) => typeof id === "string")
-    : [];
-  if (style.sceneSectionTargetScope === "active-selection") {
-    return new Set(configured);
-  }
-  return new Set(
-    configured.length > 0
-      ? configured
-      : [
-          UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID,
-          UTAH_FORGE_MT_RESISTIVITY_FULL_DENSITY_LAYER_ID,
-      ],
-  );
+  return ids;
 }
 
 const SCENE_SECTION_OBJECT_AXES: SceneSectionAxis[] = ["x", "y", "z"];
@@ -1078,6 +1081,11 @@ function sceneSectionLegacyObjectTargeted(
   productTargets: Set<string>,
 ): boolean {
   if (obj.userData?.sceneSectionHelper === true) return false;
+  // The MT threshold iso-surfaces are ALWAYS section-cut when a section is active,
+  // independent of the per-page target scope (DEC-186). Scoped to per-object
+  // clip-eligibility here (NOT sceneSectionLayerIds) so the section BOUNDS — which
+  // are derived from the target-layer set — are unchanged by the always-cut rule.
+  if (layerId === UTAH_FORGE_MT_THRESHOLD_SURFACES_LAYER_ID) return true;
   if (style.sceneSectionTargetScope === "all-visible") return true;
   if (layerId === UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID) {
     const productId = obj.userData?.seismicProductId;
@@ -1345,6 +1353,11 @@ function sceneSectionStyleLayerTargeted(
   style: EditableStyle,
   layerId: string,
 ): boolean {
+  // The MT threshold iso-surfaces are part of the MT model and are ALWAYS a scene
+  // section cut target whenever a section is active, independent of the per-page
+  // target scope — program-level so the cut holds on every page with no per-page
+  // authoring (DEC-186).
+  if (layerId === UTAH_FORGE_MT_THRESHOLD_SURFACES_LAYER_ID) return true;
   if (style.sceneSectionTargetScope === "all-visible") return true;
   const configured = Array.isArray(style.sceneSectionTargetLayerIds)
     ? style.sceneSectionTargetLayerIds.filter(
@@ -2716,8 +2729,40 @@ export function applySceneSectionMaterial(this: any,
       visibility,
       maskTransition,
     );
+    // Geometric backstop: a section plane/frame whose OUTSIDE is fully hidden
+    // (opacity <= 0.001) keeps HARD clipping even in shader-visibility mode, so a
+    // shader-hide hiccup (recompile timing, a settled state left in shader mode, or
+    // a transition mix) can never reveal a should-be-hidden region. During a mask
+    // transition the plane must be fully hidden in BOTH source and target so a
+    // fading region still fades through the shader instead of popping (DEC-186).
+    const sectionFullyHidden = (
+      frameId: string,
+      axis: SceneSectionAxis,
+    ): boolean => {
+      const hiddenIn = (v?: SceneSectionObjectVisibility): boolean =>
+        (v?.outsideOpacityByFrameId[frameId] ??
+          v?.outsideOpacityByAxis[axis] ??
+          1) <= 0.001;
+      if (!maskTransition) return hiddenIn(visibility);
+      return (
+        hiddenIn(maskTransition.source.visibility) &&
+        hiddenIn(maskTransition.target.visibility)
+      );
+    };
+    const backstopClipPlanes = [
+      ...this.sceneSectionClippingPlanes(
+        planes.filter((plane) => sectionFullyHidden(plane.frameId, plane.axis)),
+      ),
+      ...frames
+        .filter((frame) => sectionFullyHidden(frame.frameId, frame.axis))
+        .flatMap((frame) => this.sceneSectionFrameClippingPlanes(frame)),
+    ];
+    const shaderModeClipPlanes = [
+      ...publicSurfaceClipPlanes,
+      ...backstopClipPlanes,
+    ];
     material.clippingPlanes =
-      publicSurfaceClipPlanes.length > 0 ? publicSurfaceClipPlanes : null;
+      shaderModeClipPlanes.length > 0 ? shaderModeClipPlanes : null;
     material.clipIntersection = false;
     material.needsUpdate = true;
     return;

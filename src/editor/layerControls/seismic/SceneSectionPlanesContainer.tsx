@@ -607,7 +607,6 @@ export function SceneSectionPlanesContainer({
         ? [defaultProductId]
         : [],
   );
-  const legendVisible = styleBoolean(style, "sceneSectionLegendVisible", true);
   const legacyFrameEnabled = styleBoolean(
     style,
     "sceneSectionFrameEnabled",
@@ -1075,18 +1074,6 @@ export function SceneSectionPlanesContainer({
                 sceneSectionEnabled: e.target.checked,
                 sceneSectionMode: "cutaway",
               })
-            }
-          />
-        </label>
-        <label style={{ ...nestedControlRowStyle, cursor: "pointer" }}>
-          <span style={nestedFieldLabelStyle}>Legend</span>
-          <input
-            data-testid="scene-section-legend-visible"
-            type="checkbox"
-            disabled={disabled}
-            checked={legendVisible}
-            onChange={(e) =>
-              commit({ sceneSectionLegendVisible: e.target.checked })
             }
           />
         </label>

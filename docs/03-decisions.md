@@ -3806,3 +3806,59 @@ they blend correctly during a fade — to be designed in a follow-up plan, along
 with a separate lazy-load issue (precomputed boundaries not appearing on initial
 page load until a manual toggle forces a style apply). Reverted to the DEC-183
 baseline to stabilise; the R6 lazy-unload revert (commit 07a6fc4) is kept.
+
+## DEC-186 - MT threshold-surface sectioning is program-level: always-eligible + geometric backstop + program-level section legend
+
+Status: implemented 2026-06-22. Supersedes the rejected per-page authoring
+patches (page 183 `sceneSectionTargetScope: all-visible`; 14 pages'
+`sceneSectionLegendVisible: true`), which were reverted.
+
+**Problem:** surface sectioning was being controlled by per-page authoring — a
+`selected-targets` scope had to list the threshold-surfaces layer, and a per-page
+`sceneSectionLegendVisible` flag gated the legend. Per-page state needs a full app
+reload to load, only covers the pages touched, and the disposable-page rule bans
+page-coupled fixes. Worse, the surface cut would **vanish on a section change**
+("the sectioned area that should have stayed hidden returned"): in
+`applySceneSectionMaterial` (`sceneSectionController.ts`), when
+`requiresShaderVisibility` is true — soft outside-opacity, **or any section mask
+transition** (turning on the Y axis) — the hard clipping planes are dropped and
+hiding rests entirely on the `onBeforeCompile` alpha-discard shader patch
+(`sceneSectionObjectVisibilityShader.ts`). Any shader-path hiccup (recompile
+timing, a settled state left in shader mode, or the transition alpha mix) then
+reveals the fully-hidden region. No guard covered surface section-clipping across
+a multi-axis/transition change.
+
+**Decisions (program-level, no per-page authoring):**
+1. **Always-eligible:** the MT threshold iso-surfaces are ALWAYS section-cut
+   whenever a section is active, independent of `sceneSectionTargetScope`.
+   `sceneSectionLegacyObjectTargeted` returns true for the threshold layer (the
+   per-object clip-eligibility that drives the mesh cut), and
+   `sceneSectionStyleLayerTargeted` returns true for it (default-opacity /
+   transition-interpolation path). Deliberately NOT added to
+   `sceneSectionLayerIds`, so the section BOUNDS — derived from the target-layer
+   set — are unchanged by the always-cut rule (no shift to the section window or
+   ISO geometry).
+2. **Geometric backstop:** in shader-visibility mode, section planes/frames whose
+   OUTSIDE is fully hidden (opacity ≤ 0.001) — in steady state, or in BOTH source
+   and target of a mask transition — keep HARD clipping planes, so a shader-hide
+   hiccup can never reveal a should-be-hidden region. Fading regions (not fully
+   hidden in both endpoints) stay shader-only, so transition fades are not
+   regressed. Near-zero blast radius: steady-state fully-hidden planes already use
+   hard clip, so the backstop only engages mid-transition for stably-hidden
+   regions.
+3. **Program-level section legend:** `SceneSectionLegend` renders whenever
+   `sceneSectionEnabled === true`; the per-page `sceneSectionLegendVisible` gate is
+   removed and its editor control retired (manifest id
+   `sections.scene-section.legend-visible` → status `removed`). Legend visibility
+   is never authored per page.
+
+**Files:** `src/scene/section/sceneSectionController.ts` (`sceneSectionLegacyObjectTargeted`,
+`sceneSectionStyleLayerTargeted`, `applySceneSectionMaterial` shader branch),
+`src/ui/SceneSectionLegend.tsx`, `src/editor/layerControls/seismic/SceneSectionPlanesContainer.tsx`,
+`docs/dev-context/editor-control-manifest.json`.
+
+**Verification:** `tsc -b`; `check:editor-controls` (control retired cleanly);
+new page-deck-independent guard in `tests/utah-forge/mt-rendering.spec.ts`
+asserting the surfaces are section-clipped under a `selected-targets` scope that
+does NOT list them (eligibility) and stay clipped when a second axis is enabled;
+transition behaviour confirmed visually (agent is blind on this WebGL scene).

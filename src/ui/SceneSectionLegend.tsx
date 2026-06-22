@@ -596,7 +596,8 @@ export function SceneSectionLegend({
       ? effectiveStyle(pageEnvironment, page, SEISMIC_LAYER_ID)
       : pageEnvironment.layerStyles[SEISMIC_LAYER_ID] ?? {};
   if (style.sceneSectionEnabled !== true) return null;
-  if (!styleBoolean(style, "sceneSectionLegendVisible", true)) return null;
+  // The section legend shows whenever a scene section is enabled — program-level,
+  // not gated by any per-page flag (DEC-186).
 
   const styleForLayer = (targetLayerId: string): EditableStyle => {
     if (targetLayerId === SCENE_SECTION_LAYER_ID) return style;

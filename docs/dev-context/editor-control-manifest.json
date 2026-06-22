@@ -286,12 +286,16 @@
       "label": "Legend",
       "kind": "control",
       "parentId": "sections.scene-section",
-      "sourceFile": "src/editor/layerControls/seismic/SceneSectionPlanesContainer.tsx",
-      "sourceAnchor": "data-testid=\"scene-section-legend-visible\"",
       "scope": "scene-section layers",
-      "backedBy": "EditableStyle.sceneSectionLegendVisible",
-      "setterRoute": "SceneSectionPlanesContainer commit",
-      "status": "active"
+      "backedBy": "legacy EditableStyle.sceneSectionLegendVisible",
+      "setterRoute": "retired by DEC-186",
+      "status": "removed",
+      "approval": {
+        "status": "approved",
+        "approvedBy": "James via Claude Code",
+        "approvedAt": "2026-06-22",
+        "reason": "DEC-186: the scene-section legend is program-level (shown whenever a scene section is enabled); the per-page legend-visibility control is retired so legend visibility is never authored per page."
+      }
     },
     {
       "id": "sections.scene-section.axis-show",
