@@ -62,10 +62,23 @@ export function applyScalarVolumeStyle(this: any, id: string, style: EditableSty
     0,
     1,
   );
-  const isoSourceOpacity =
-    style.sectionIsoEnabled === true
-      ? styleNumber(style, "sectionIsoSourceOpacity", 0, 0, 1)
-      : 1;
+  // The 3D raymarch volume and the Section ISO overlay share this layer. The
+  // raymarch's visibility is its OWN control ("ISO Volume" → sectionIsoSourceOpacity)
+  // and must NOT be coupled to whether the Section ISO bands are enabled. The
+  // earlier `sectionIsoEnabled ? sourceOpacity : 1` forced the raymarch to full
+  // opacity whenever Section ISO was off, so toggling ISO Section turned the
+  // volume on. sectionIsoSourceOpacity now always applies; the per-sectionIso
+  // default only kicks in when the field is unauthored, preserving today's look
+  // for pages that show the volume without Section ISO (they relied on the old
+  // `: 1`). The first "ISO Volume" interaction writes the field explicitly and
+  // permanently decouples that page.
+  const isoSourceOpacity = styleNumber(
+    style,
+    "sectionIsoSourceOpacity",
+    style.sectionIsoEnabled === true ? 0 : 1,
+    0,
+    1,
+  );
   const renderOpacity = opacity * isoSourceOpacity;
   const density = styleNumber(style, "scalarVolumeDensity", 0.72, 0, 2);
   const sampleSteps = styleNumber(

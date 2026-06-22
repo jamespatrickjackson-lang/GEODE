@@ -11,6 +11,7 @@ import { hidePublicContextLayers, mtVolumeSceneState } from "./shared";
 //     through fades / lazy loads (and under reverse-Z; gravel-pit class).
 
 const THRESHOLD_LAYER_ID = "utah-forge-mt-resistivity-threshold-surfaces";
+const VOLUME_LAYER_ID = "utah-forge-mt-resistivity-volume";
 
 test.setTimeout(900_000);
 
@@ -156,4 +157,84 @@ test("Utah FORGE MT threshold surfaces load from binary tiles with correct colou
 
   // Lazy binary load + dequantization must not surface console/page errors.
   expect(consoleErrors, consoleErrors.join("\n")).toEqual([]);
+});
+
+// The 3D raymarch volume and the Section ISO overlay share one layer. The
+// raymarch's opacity must be driven by its own control (sectionIsoSourceOpacity),
+// NOT coupled to sectionIsoEnabled — toggling Section ISO used to force the
+// volume to full opacity ("turn off iso section -> volume turns on").
+test("3D MT resistivity volume opacity is independent of the Section ISO toggle", async ({
+  page,
+}) => {
+  await page.goto("/?project=utah-forge", { waitUntil: "networkidle" });
+
+  const volumeUOpacity = () =>
+    page.evaluate((layerId) => {
+      const manager = (
+        window as unknown as {
+          __scene?: {
+            manager?: {
+              getLayer?: (id: string) =>
+                | {
+                    traverse: (
+                      fn: (o: {
+                        userData?: Record<string, unknown>;
+                        material?: unknown;
+                      }) => void,
+                    ) => void;
+                  }
+                | undefined;
+            };
+          };
+        }
+      ).__scene?.manager;
+      let value: number | null = null;
+      manager?.getLayer?.(layerId)?.traverse((obj) => {
+        if (obj?.userData?.scalarVolume !== true || !obj.material) return;
+        const material = Array.isArray(obj.material) ? obj.material[0] : obj.material;
+        const uniforms = (material as { uniforms?: { uOpacity?: { value?: unknown } } })
+          .uniforms;
+        if (uniforms?.uOpacity && typeof uniforms.uOpacity.value === "number") {
+          value = uniforms.uOpacity.value;
+        }
+      });
+      return value;
+    }, VOLUME_LAYER_ID);
+
+  // Apply an explicit sectionIsoSourceOpacity (0 = volume hidden) over the
+  // current style, with sectionIsoEnabled either true or false.
+  const applyWithSection = (sectionEnabled: boolean) =>
+    page.evaluate(
+      ([layerId, enabled]) => {
+        const manager = (
+          window as unknown as {
+            __scene?: {
+              manager?: {
+                styleForLayer?: (id: string) => Record<string, unknown>;
+                applyStyle?: (id: string, style: Record<string, unknown>) => void;
+              };
+            };
+          }
+        ).__scene?.manager;
+        const current = manager?.styleForLayer?.(layerId as string) ?? {};
+        manager?.applyStyle?.(layerId as string, {
+          ...current,
+          sectionIsoSourceOpacity: 0,
+          sectionIsoEnabled: enabled as boolean,
+        });
+      },
+      [VOLUME_LAYER_ID, sectionEnabled] as const,
+    );
+
+  await expect.poll(volumeUOpacity, { timeout: 60_000 }).not.toBeNull();
+
+  await applyWithSection(true);
+  const withSectionOn = await volumeUOpacity();
+  await applyWithSection(false);
+  const withSectionOff = await volumeUOpacity();
+
+  // Explicit sectionIsoSourceOpacity=0 ⇒ raymarch hidden; toggling sectionIsoEnabled
+  // must NOT change it (before the fix it jumped to full opacity).
+  expect(withSectionOn).toBe(0);
+  expect(withSectionOff).toBe(withSectionOn);
 });
