@@ -9,7 +9,10 @@ import {
   UTAH_FORGE_PHASE3_MT_CLIENT_ROOT,
   UTAH_FORGE_PHASE3_MT_PROCESSED_ROOT,
 } from "./utah_forge_config.mjs";
-import { extractMaskAwareMarchingCubes } from "./lib/marchingCubes.mjs";
+import {
+  extractMaskAwareMarchingCubes,
+  supersampleFieldTricubic,
+} from "./lib/marchingCubes.mjs";
 
 const REPO_RELATIVE_INPUT_ZIP_REF =
   "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/electrical_resistivity/mt_model_cell_center_updated/FORGE_MT_mdl17_cellcenter.zip";
@@ -55,6 +58,9 @@ const TARGET_SPACING_M = 730;
 // weight bridge wider same-surface gaps; far unconstrained voids stay empty.
 const RECON_SIGMA_VOXELS = 2.5;
 const RECON_MIN_WEIGHT = 0.05;
+// R1: surfaces are extracted from a tricubic-supersampled field at this factor
+// (finer, smooth → no grid terracing). The volume render assets stay coarse.
+const SURFACE_SUPERSAMPLE = 2;
 
 const PRODUCTS = [
   {
@@ -682,9 +688,9 @@ function appendMarchingCubesSurface(mesh, accumulator, threshold) {
   }
 
   const extracted = extractMaskAwareMarchingCubes({
-    values: accumulator.values,
-    mask: accumulator.mask,
-    dimensions: accumulator.dimensions,
+    values: accumulator.valuesHi,
+    mask: accumulator.maskHi,
+    dimensions: accumulator.dimensionsHi,
     bounds: accumulator.bounds,
     thresholdLog10: Math.log10(threshold.thresholdOhmM),
     comparison: threshold.comparison,
@@ -728,8 +734,10 @@ function appendMarchingCubesSurface(mesh, accumulator, threshold) {
     vertexWelding: extracted.stats.welding,
     normalPolicy: "precomputed-field-gradient-normals",
     decimation: "none",
-    dimensions: accumulator.dimensions,
-    voxelSpacingM: voxelSpacing(accumulator.bounds, accumulator.dimensions),
+    reconstruction: "tricubic-supersample",
+    supersampleFactor: SURFACE_SUPERSAMPLE,
+    dimensions: accumulator.dimensionsHi,
+    voxelSpacingM: voxelSpacing(accumulator.bounds, accumulator.dimensionsHi),
     marchingCubes: extracted.stats,
     matchingVoxelCount: valueCount,
     meanLog10Resistivity: round(valueCount > 0 ? valueSum / valueCount : 0, 6),
@@ -756,9 +764,9 @@ function buildThresholdMesh(accumulators, options) {
   const isosurfaceProducts = accumulators.map((accumulator) => ({
     ...isosurfaceProductForAccumulator(accumulator),
     sourceProductId: accumulator.id,
-    dimensions: accumulator.dimensions,
+    dimensions: accumulator.dimensionsHi,
     sceneBounds: sceneBoundsTuple(accumulator.bounds),
-    voxelSpacingM: voxelSpacing(accumulator.bounds, accumulator.dimensions),
+    voxelSpacingM: voxelSpacing(accumulator.bounds, accumulator.dimensionsHi),
   }));
   const thresholds = thresholdDefinitions(accumulators[0].scalarRange);
   const thresholdSurfaces = accumulators.flatMap((accumulator) =>
@@ -1001,6 +1009,19 @@ async function main() {
   const productEntries = [];
   for (const accumulator of accumulators) {
     finalizeAccumulator(accumulator);
+    // R1: tricubic-supersampled field used only for surface extraction (volume
+    // render assets stay at the coarse grid written by writeProduct).
+    const hi = supersampleFieldTricubic({
+      values: accumulator.values,
+      mask: accumulator.mask,
+      dimensions: accumulator.dimensions,
+      factor: SURFACE_SUPERSAMPLE,
+      valueMin: accumulator.scalarRange.min,
+      valueMax: accumulator.scalarRange.max,
+    });
+    accumulator.valuesHi = hi.values;
+    accumulator.maskHi = hi.mask;
+    accumulator.dimensionsHi = hi.dimensions;
     await writeProduct(accumulator, options);
     productEntries.push({
       id: accumulator.id,

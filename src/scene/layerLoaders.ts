@@ -503,16 +503,24 @@ const layerLoaders: LayerLoaderHandler[] = [
       !!layerFiles(spec).meshPreview,
     load: (context) => {
       const { spec } = context;
+      // Reverse-Z interim fix (DEC-180 follow-up; tracked in the Gravel Pit
+      // Reverse-Z Surface Regression issue audit).
+      // The gravel-pit ground substrate previously rendered as a transparent
+      // surface backed by a polygon-offset depth occluder. The global reverse-Z
+      // depth buffer (enabled for the deep MT scenes) silently inverts the sign
+      // of polygonOffset, so the +8 occluder flipped in front of its own
+      // surface and erased it. An OPAQUE substrate writes its own depth and is
+      // depth-convention-agnostic, so no occluder and no load-bearing
+      // polygonOffset are needed. Scoped to this gravel-pit-only loader; the
+      // shared createSurfacePreviewMaterial and the Utah FORGE MT path are
+      // untouched. The general remediation (depth-mode-aware compositing policy
+      // + render tests) is tracked as future work in that issue folder.
       Promise.all([
         loadMeshPreview(
           layerDataPath(context, context.files.outerMeshPreview),
-          {
-            depthPolicy: "depth-occluding-preview",
-            renderOrder: SURFACE_RENDER_ORDER.outerMeshPreview,
-          },
+          { renderOrder: SURFACE_RENDER_ORDER.outerMeshPreview },
         ),
         loadMeshPreview(layerDataPath(context, context.files.meshPreview), {
-          depthPolicy: "depth-occluding-preview",
           renderOrder: SURFACE_RENDER_ORDER.meshPreview,
         }),
       ])
@@ -520,14 +528,30 @@ const layerLoaders: LayerLoaderHandler[] = [
           const combined = new THREE.Group();
           combined.name = "Shahbazi ground surface preview";
           combined.userData.displayName = "Shahbazi ground surface preview";
+          const makeOpaqueSubstrate = (mesh: THREE.Object3D) => {
+            const material = (mesh as THREE.Mesh).material;
+            const mats = Array.isArray(material) ? material : [material];
+            for (const m of mats) {
+              if (!m) continue;
+              m.transparent = false;
+              m.depthWrite = true;
+              m.depthTest = true;
+              m.opacity = 1;
+              m.polygonOffset = false;
+              m.userData.forceTransparent = false;
+              m.needsUpdate = true;
+            }
+          };
           outerSurface.traverse((obj) => {
             if (obj.userData?.meshPreview === true) {
               obj.renderOrder = SURFACE_RENDER_ORDER.outerMeshPreview;
+              makeOpaqueSubstrate(obj);
             }
           });
           tlsSurface.traverse((obj) => {
             if (obj.userData?.meshPreview === true) {
               obj.renderOrder = SURFACE_RENDER_ORDER.meshPreview;
+              makeOpaqueSubstrate(obj);
             }
           });
           combined.add(outerSurface, tlsSurface);

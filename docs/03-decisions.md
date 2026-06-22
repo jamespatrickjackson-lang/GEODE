@@ -3570,3 +3570,41 @@ subdivision-on.
 assets; a future optimization is binary (.bin) boundary encoding and dropping
 redundant per-vertex colors. The editor's single-option iso-surface selector is
 neutralized (one product) but not yet removed from the control manifest.
+
+## DEC-181 - Confidence-masked surfaces + uncertainty feathering (low-confidence data handling)
+
+Status: adopted as the standard approach; implementation queued (roadmap R10).
+Full spec: `docs/dev-context/Confidence-Masking-And-Uncertainty.md`.
+
+**Considered:** cosmetically smoothing the frayed low-confidence surface margins
+into clean edges; versus hard-clipping with a crisp boundary; versus a
+confidence-masked clip plus morphological cleanup plus a feathered
+uncertainty falloff.
+
+**Chose:** never surface into low-confidence voxels, clean the speckle, and
+communicate the falloff — the geophysics + medical-imaging standard:
+- A modality-generic per-voxel **confidence channel** (0..1) in the volume
+  model with pluggable providers — MT: data-support coverage now (swappable for
+  inversion sensitivity/DOI later); CT: HU-SNR × partial-volume; MRI: SNR and/or
+  segmentation probability/uncertainty; OCT: reflectivity SNR.
+- Prep: clip at `clipLow` → morphological OPEN + connected-component island
+  removal + optional CLOSE → marching cubes only in the reliable region (the
+  splotchy fringe never extracts).
+- Communicate uncertainty by **feathering surface opacity to zero** across the
+  confidence band via per-vertex alpha (RGBA vertex color), which composes with
+  the transition opacity envelope automatically (no new opacity owner).
+- Provenance labels surfaces as clipped-to-confidence with model-unconstrained,
+  feathered margins.
+
+**Why:** rendering the unreliable fringe as a clean surface manufactures
+certainty the data lacks — scientifically wrong and, for the incoming CT/MRI/OCT
+medical track, unsafe. The same machinery is built generic so the medical
+project reuses it (the confidence facet of the canonical volume model, DEC/R3;
+medical providers tie to R5 itk-wasm/vtk.js).
+
+**Trade-off accepted:** confidence is intrinsic to the volume so transition
+blast radius is low (feather composes; no cross-layer dependency); the main
+implementation care is disabling the opaque material fast-path for feathered
+surfaces and declaring any confidence control as a discrete transition channel.
+MT confidence is a data-support proxy until a true sensitivity/DOI source
+exists.

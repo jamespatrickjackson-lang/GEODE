@@ -8548,7 +8548,11 @@
     }
   ],
   "pageOrder": [
-    "156_page"
+    "156_page",
+    "183_mt_surfaces_geoscience",
+    "184_segmentation_surface_capabilities",
+    "185_surface_data_pipeline",
+    "186_clinical_imaging_transfer"
   ],
   "presentationDefaults": {
     "transitionDuration": 1400,

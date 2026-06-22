@@ -327,11 +327,22 @@ function validateVolumesAndSurfaces(stats) {
     assert.equal(surface.decimationStride, undefined);
     assertGreaterThan(surface.marchingCubes?.triangleCount, 0, `${surface.meshId} triangles`);
     assertGreaterThan(surface.marchingCubes?.vertexCount, 0, `${surface.meshId} vertices`);
-    // Subdivision delivers the finer mesh ("twice as fine"), geometry-only.
-    assertGreaterThan(
-      surface.marchingCubes?.subdivision?.subdividedTriangleCount,
-      surface.marchingCubes?.subdivision?.inputTriangleCount,
-      `${surface.meshId} subdivided`,
+    // R1: surfaces are extracted from a tricubic-supersampled field (smooth,
+    // grid-independent — no lattice terracing), replacing mesh subdivision.
+    assert.equal(
+      surface.reconstruction,
+      "tricubic-supersample",
+      `${surface.meshId} reconstruction`,
+    );
+    assert.equal(
+      surface.marchingCubes?.reconstruction,
+      "tricubic-supersample",
+      `${surface.meshId} marchingCubes reconstruction`,
+    );
+    assertGreaterThanOrEqual(
+      surface.supersampleFactor,
+      2,
+      `${surface.meshId} supersample factor`,
     );
   }
   // Deep-check one boundary asset: precomputed gradient normals are present and

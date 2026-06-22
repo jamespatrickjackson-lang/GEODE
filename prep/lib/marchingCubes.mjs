@@ -357,6 +357,122 @@ function computeFieldGradientNormals({
   return normals;
 }
 
+// R1: higher-order reconstruction. Tricubic (Catmull-Rom) upsample of the
+// reconstructed scalar field onto an N-times-finer grid, evaluated only where
+// the data supports it (mask). Marching cubes on this smooth finer field
+// removes the grid-aligned silhouette terracing of linear MC on the coarse grid
+// — it replaces mesh subdivision with a principled field upsample, and is the
+// reusable medical-grade resampling primitive. Catmull-Rom is clamped to the
+// source range so it cannot fabricate out-of-range values (no overshoot).
+export function supersampleFieldTricubic({
+  values,
+  mask,
+  dimensions,
+  factor,
+  valueMin,
+  valueMax,
+}) {
+  const [nx, ny, nz] = dimensions;
+  const slab = nx * ny;
+  const nxh = nx * factor;
+  const nyh = ny * factor;
+  const nzh = nz * factor;
+  const slabH = nxh * nyh;
+  const valuesHi = new Float32Array(nxh * nyh * nzh);
+  const maskHi = new Uint8Array(nxh * nyh * nzh);
+  let sum = 0;
+  let cnt = 0;
+  for (let i = 0; i < values.length; i += 1) {
+    const v = values[i];
+    if (Number.isFinite(v)) {
+      sum += v;
+      cnt += 1;
+    }
+  }
+  const fallback = cnt > 0 ? sum / cnt : (valueMin + valueMax) / 2;
+  const clampX = (k) => (k < 0 ? 0 : k >= nx ? nx - 1 : k);
+  const clampY = (k) => (k < 0 ? 0 : k >= ny ? ny - 1 : k);
+  const clampZ = (k) => (k < 0 ? 0 : k >= nz ? nz - 1 : k);
+  const coarse = (x, y, z) => {
+    const v = values[clampZ(z) * slab + clampY(y) * nx + clampX(x)];
+    return Number.isFinite(v) ? v : fallback;
+  };
+  const maskAt = (x, y, z) =>
+    mask[clampZ(z) * slab + clampY(y) * nx + clampX(x)] > 0 ? 1 : 0;
+  for (let iz = 0; iz < nzh; iz += 1) {
+    const pz = (iz + 0.5) / factor - 0.5;
+    const kz = Math.floor(pz);
+    const tz = pz - kz;
+    const wz0 = ((-0.5 * tz + 1.0) * tz - 0.5) * tz;
+    const wz1 = (1.5 * tz - 2.5) * tz * tz + 1.0;
+    const wz2 = ((-1.5 * tz + 2.0) * tz + 0.5) * tz;
+    const wz3 = (0.5 * tz - 0.5) * tz * tz;
+    for (let iy = 0; iy < nyh; iy += 1) {
+      const py = (iy + 0.5) / factor - 0.5;
+      const ky = Math.floor(py);
+      const ty = py - ky;
+      const wy0 = ((-0.5 * ty + 1.0) * ty - 0.5) * ty;
+      const wy1 = (1.5 * ty - 2.5) * ty * ty + 1.0;
+      const wy2 = ((-1.5 * ty + 2.0) * ty + 0.5) * ty;
+      const wy3 = (0.5 * ty - 0.5) * ty * ty;
+      for (let ix = 0; ix < nxh; ix += 1) {
+        const px = (ix + 0.5) / factor - 0.5;
+        const kx = Math.floor(px);
+        const tx = px - kx;
+        const hiIdx = iz * slabH + iy * nxh + ix;
+        // Trilinear mask support at p; below 0.5 means no real data nearby.
+        const m000 = maskAt(kx, ky, kz);
+        const m100 = maskAt(kx + 1, ky, kz);
+        const m010 = maskAt(kx, ky + 1, kz);
+        const m110 = maskAt(kx + 1, ky + 1, kz);
+        const m001 = maskAt(kx, ky, kz + 1);
+        const m101 = maskAt(kx + 1, ky, kz + 1);
+        const m011 = maskAt(kx, ky + 1, kz + 1);
+        const m111 = maskAt(kx + 1, ky + 1, kz + 1);
+        const mval =
+          m000 * (1 - tx) * (1 - ty) * (1 - tz) +
+          m100 * tx * (1 - ty) * (1 - tz) +
+          m010 * (1 - tx) * ty * (1 - tz) +
+          m110 * tx * ty * (1 - tz) +
+          m001 * (1 - tx) * (1 - ty) * tz +
+          m101 * tx * (1 - ty) * tz +
+          m011 * (1 - tx) * ty * tz +
+          m111 * tx * ty * tz;
+        if (mval < 0.5) {
+          valuesHi[hiIdx] = Number.NaN;
+          maskHi[hiIdx] = 0;
+          continue;
+        }
+        const wx0 = ((-0.5 * tx + 1.0) * tx - 0.5) * tx;
+        const wx1 = (1.5 * tx - 2.5) * tx * tx + 1.0;
+        const wx2 = ((-1.5 * tx + 2.0) * tx + 0.5) * tx;
+        const wx3 = (0.5 * tx - 0.5) * tx * tx;
+        let acc = 0;
+        for (let dz = -1; dz <= 2; dz += 1) {
+          const wz = dz === -1 ? wz0 : dz === 0 ? wz1 : dz === 1 ? wz2 : wz3;
+          const zz = kz + dz;
+          for (let dy = -1; dy <= 2; dy += 1) {
+            const wyz =
+              (dy === -1 ? wy0 : dy === 0 ? wy1 : dy === 1 ? wy2 : wy3) * wz;
+            const yy = ky + dy;
+            acc +=
+              (coarse(kx - 1, yy, zz) * wx0 +
+                coarse(kx, yy, zz) * wx1 +
+                coarse(kx + 1, yy, zz) * wx2 +
+                coarse(kx + 2, yy, zz) * wx3) *
+              wyz;
+          }
+        }
+        if (acc < valueMin) acc = valueMin;
+        else if (acc > valueMax) acc = valueMax;
+        valuesHi[hiIdx] = acc;
+        maskHi[hiIdx] = 255;
+      }
+    }
+  }
+  return { values: valuesHi, mask: maskHi, dimensions: [nxh, nyh, nzh] };
+}
+
 export function extractMaskAwareMarchingCubes({
   values,
   mask,
@@ -453,19 +569,15 @@ export function extractMaskAwareMarchingCubes({
     }
   }
 
+  // R1: marching on the tricubic-supersampled field already yields fine, smooth
+  // geometry, so mesh subdivision is no longer used; a light Taubin pass
+  // removes any remaining stair on near-tangent regions.
   const welded = weldMeshVertices({ vertices, colors, scalarValues, indices });
-  const subdivided = subdivideMesh({
+  const smoothed = smoothMeshVertices({
     vertices: welded.vertices,
     indices: welded.indices,
-    color,
-    scalarValue: thresholdLog10,
     round,
-  });
-  const smoothed = smoothMeshVertices({
-    vertices: subdivided.vertices,
-    indices: subdivided.indices,
-    round,
-    iterations: 8,
+    iterations: 6,
     pinBoundary: false,
   });
   const normals = computeFieldGradientNormals({
@@ -480,19 +592,19 @@ export function extractMaskAwareMarchingCubes({
   return {
     vertices: smoothed.vertices,
     normals,
-    colors: subdivided.colors,
-    scalarValues: subdivided.scalarValues,
-    indices: subdivided.indices,
+    colors: welded.colors,
+    scalarValues: welded.scalarValues,
+    indices: welded.indices,
     stats: {
       visitedCubeCount,
       skippedMaskedCubeCount,
       activeCubeCount,
-      triangleCount: subdivided.indices.length / 3,
-      vertexCount: subdivided.vertices.length / 3,
+      triangleCount: welded.indices.length / 3,
+      vertexCount: welded.vertices.length / 3,
       welding: welded.stats,
-      subdivision: subdivided.stats,
       smoothing: smoothed.stats,
       normalSource: "field-gradient",
+      reconstruction: "tricubic-supersample",
     },
   };
 }

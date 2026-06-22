@@ -14,14 +14,14 @@
       "sourceVolume": "full_extent/volume.u8",
       "sourceMask": "full_extent/mask.u8",
       "dimensions": [
-        383,
-        313,
-        33
+        766,
+        626,
+        66
       ],
       "voxelSpacingM": {
-        "x_m": 728.828,
-        "y_m": 728.08,
-        "z_m": 710.58
+        "x_m": 364.414,
+        "y_m": 364.04,
+        "z_m": 355.29
       }
     }
   ],
@@ -45,69 +45,66 @@
       "extractionMethod": "mask-aware-marching-cubes",
       "smoothing": {
         "method": "taubin-laplacian",
-        "iterations": 8,
+        "iterations": 6,
         "lambda": 0.15,
         "mu": -0.16,
         "pinBoundary": false,
-        "boundaryVertexCount": 176,
-        "smoothedVertexCount": 2809
+        "boundaryVertexCount": 345,
+        "smoothedVertexCount": 3572
       },
       "vertexWelding": {
-        "inputVertexCount": 4080,
-        "weldedVertexCount": 725,
-        "inputTriangleCount": 1360,
-        "weldedTriangleCount": 1360,
+        "inputVertexCount": 20109,
+        "weldedVertexCount": 3572,
+        "inputTriangleCount": 6703,
+        "weldedTriangleCount": 6703,
         "removedDegenerateTriangleCount": 0
       },
       "normalPolicy": "precomputed-field-gradient-normals",
       "decimation": "none",
+      "reconstruction": "tricubic-supersample",
+      "supersampleFactor": 2,
       "dimensions": [
-        383,
-        313,
-        33
+        766,
+        626,
+        66
       ],
       "voxelSpacingM": {
-        "x_m": 728.828,
-        "y_m": 728.08,
-        "z_m": 710.58
+        "x_m": 364.414,
+        "y_m": 364.04,
+        "z_m": 355.29
       },
       "marchingCubes": {
-        "visitedCubeCount": 3813888,
-        "skippedMaskedCubeCount": 3129935,
-        "activeCubeCount": 682,
-        "triangleCount": 5440,
-        "vertexCount": 2809,
+        "visitedCubeCount": 31078125,
+        "skippedMaskedCubeCount": 25230722,
+        "activeCubeCount": 3485,
+        "triangleCount": 6703,
+        "vertexCount": 3572,
         "welding": {
-          "inputVertexCount": 4080,
-          "weldedVertexCount": 725,
-          "inputTriangleCount": 1360,
-          "weldedTriangleCount": 1360,
+          "inputVertexCount": 20109,
+          "weldedVertexCount": 3572,
+          "inputTriangleCount": 6703,
+          "weldedTriangleCount": 6703,
           "removedDegenerateTriangleCount": 0
-        },
-        "subdivision": {
-          "inputVertexCount": 725,
-          "subdividedVertexCount": 2809,
-          "inputTriangleCount": 1360,
-          "subdividedTriangleCount": 5440
         },
         "smoothing": {
           "method": "taubin-laplacian",
-          "iterations": 8,
+          "iterations": 6,
           "lambda": 0.15,
           "mu": -0.16,
           "pinBoundary": false,
-          "boundaryVertexCount": 176,
-          "smoothedVertexCount": 2809
+          "boundaryVertexCount": 345,
+          "smoothedVertexCount": 3572
         },
-        "normalSource": "field-gradient"
+        "normalSource": "field-gradient",
+        "reconstruction": "tricubic-supersample"
       },
       "matchingVoxelCount": 1312,
       "meanLog10Resistivity": -0.015257,
       "meshRange": {
         "vertexStart": 0,
-        "vertexCount": 2809,
+        "vertexCount": 3572,
         "indexStart": 0,
-        "indexCount": 16320
+        "indexCount": 20109
       },
       "classification": "source-derived iso-resistivity communication surface",
       "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
@@ -132,69 +129,66 @@
       "extractionMethod": "mask-aware-marching-cubes",
       "smoothing": {
         "method": "taubin-laplacian",
-        "iterations": 8,
+        "iterations": 6,
         "lambda": 0.15,
         "mu": -0.16,
         "pinBoundary": false,
-        "boundaryVertexCount": 680,
-        "smoothedVertexCount": 8326
+        "boundaryVertexCount": 1184,
+        "smoothedVertexCount": 11370
       },
       "vertexWelding": {
-        "inputVertexCount": 11970,
-        "weldedVertexCount": 2171,
-        "inputTriangleCount": 3990,
-        "weldedTriangleCount": 3990,
+        "inputVertexCount": 64770,
+        "weldedVertexCount": 11370,
+        "inputTriangleCount": 21590,
+        "weldedTriangleCount": 21590,
         "removedDegenerateTriangleCount": 0
       },
       "normalPolicy": "precomputed-field-gradient-normals",
       "decimation": "none",
+      "reconstruction": "tricubic-supersample",
+      "supersampleFactor": 2,
       "dimensions": [
-        383,
-        313,
-        33
+        766,
+        626,
+        66
       ],
       "voxelSpacingM": {
-        "x_m": 728.828,
-        "y_m": 728.08,
-        "z_m": 710.58
+        "x_m": 364.414,
+        "y_m": 364.04,
+        "z_m": 355.29
       },
       "marchingCubes": {
-        "visitedCubeCount": 3813888,
-        "skippedMaskedCubeCount": 3129935,
-        "activeCubeCount": 1999,
-        "triangleCount": 15960,
-        "vertexCount": 8326,
+        "visitedCubeCount": 31078125,
+        "skippedMaskedCubeCount": 25230722,
+        "activeCubeCount": 10876,
+        "triangleCount": 21590,
+        "vertexCount": 11370,
         "welding": {
-          "inputVertexCount": 11970,
-          "weldedVertexCount": 2171,
-          "inputTriangleCount": 3990,
-          "weldedTriangleCount": 3990,
+          "inputVertexCount": 64770,
+          "weldedVertexCount": 11370,
+          "inputTriangleCount": 21590,
+          "weldedTriangleCount": 21590,
           "removedDegenerateTriangleCount": 0
-        },
-        "subdivision": {
-          "inputVertexCount": 2171,
-          "subdividedVertexCount": 8326,
-          "inputTriangleCount": 3990,
-          "subdividedTriangleCount": 15960
         },
         "smoothing": {
           "method": "taubin-laplacian",
-          "iterations": 8,
+          "iterations": 6,
           "lambda": 0.15,
           "mu": -0.16,
           "pinBoundary": false,
-          "boundaryVertexCount": 680,
-          "smoothedVertexCount": 8326
+          "boundaryVertexCount": 1184,
+          "smoothedVertexCount": 11370
         },
-        "normalSource": "field-gradient"
+        "normalSource": "field-gradient",
+        "reconstruction": "tricubic-supersample"
       },
       "matchingVoxelCount": 3774,
       "meanLog10Resistivity": 0.166904,
       "meshRange": {
-        "vertexStart": 2809,
-        "vertexCount": 8326,
-        "indexStart": 16320,
-        "indexCount": 47880
+        "vertexStart": 3572,
+        "vertexCount": 11370,
+        "indexStart": 20109,
+        "indexCount": 64770
       },
       "classification": "source-derived iso-resistivity communication surface",
       "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
@@ -219,69 +213,66 @@
       "extractionMethod": "mask-aware-marching-cubes",
       "smoothing": {
         "method": "taubin-laplacian",
-        "iterations": 8,
+        "iterations": 6,
         "lambda": 0.15,
         "mu": -0.16,
         "pinBoundary": false,
-        "boundaryVertexCount": 1298,
-        "smoothedVertexCount": 15188
+        "boundaryVertexCount": 2542,
+        "smoothedVertexCount": 19914
       },
       "vertexWelding": {
-        "inputVertexCount": 21807,
-        "weldedVertexCount": 3960,
-        "inputTriangleCount": 7269,
-        "weldedTriangleCount": 7269,
+        "inputVertexCount": 112410,
+        "weldedVertexCount": 19914,
+        "inputTriangleCount": 37470,
+        "weldedTriangleCount": 37470,
         "removedDegenerateTriangleCount": 0
       },
       "normalPolicy": "precomputed-field-gradient-normals",
       "decimation": "none",
+      "reconstruction": "tricubic-supersample",
+      "supersampleFactor": 2,
       "dimensions": [
-        383,
-        313,
-        33
+        766,
+        626,
+        66
       ],
       "voxelSpacingM": {
-        "x_m": 728.828,
-        "y_m": 728.08,
-        "z_m": 710.58
+        "x_m": 364.414,
+        "y_m": 364.04,
+        "z_m": 355.29
       },
       "marchingCubes": {
-        "visitedCubeCount": 3813888,
-        "skippedMaskedCubeCount": 3129935,
-        "activeCubeCount": 3638,
-        "triangleCount": 29076,
-        "vertexCount": 15188,
+        "visitedCubeCount": 31078125,
+        "skippedMaskedCubeCount": 25230722,
+        "activeCubeCount": 18808,
+        "triangleCount": 37470,
+        "vertexCount": 19914,
         "welding": {
-          "inputVertexCount": 21807,
-          "weldedVertexCount": 3960,
-          "inputTriangleCount": 7269,
-          "weldedTriangleCount": 7269,
+          "inputVertexCount": 112410,
+          "weldedVertexCount": 19914,
+          "inputTriangleCount": 37470,
+          "weldedTriangleCount": 37470,
           "removedDegenerateTriangleCount": 0
-        },
-        "subdivision": {
-          "inputVertexCount": 3960,
-          "subdividedVertexCount": 15188,
-          "inputTriangleCount": 7269,
-          "subdividedTriangleCount": 29076
         },
         "smoothing": {
           "method": "taubin-laplacian",
-          "iterations": 8,
+          "iterations": 6,
           "lambda": 0.15,
           "mu": -0.16,
           "pinBoundary": false,
-          "boundaryVertexCount": 1298,
-          "smoothedVertexCount": 15188
+          "boundaryVertexCount": 2542,
+          "smoothedVertexCount": 19914
         },
-        "normalSource": "field-gradient"
+        "normalSource": "field-gradient",
+        "reconstruction": "tricubic-supersample"
       },
       "matchingVoxelCount": 8399,
       "meanLog10Resistivity": 0.317814,
       "meshRange": {
-        "vertexStart": 11135,
-        "vertexCount": 15188,
-        "indexStart": 64200,
-        "indexCount": 87228
+        "vertexStart": 14942,
+        "vertexCount": 19914,
+        "indexStart": 84879,
+        "indexCount": 112410
       },
       "classification": "source-derived iso-resistivity communication surface",
       "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
@@ -306,69 +297,66 @@
       "extractionMethod": "mask-aware-marching-cubes",
       "smoothing": {
         "method": "taubin-laplacian",
-        "iterations": 8,
+        "iterations": 6,
         "lambda": 0.15,
         "mu": -0.16,
         "pinBoundary": false,
-        "boundaryVertexCount": 1724,
-        "smoothedVertexCount": 20600
+        "boundaryVertexCount": 4628,
+        "smoothedVertexCount": 28039
       },
       "vertexWelding": {
-        "inputVertexCount": 29601,
-        "weldedVertexCount": 5368,
-        "inputTriangleCount": 9867,
-        "weldedTriangleCount": 9867,
+        "inputVertexCount": 154434,
+        "weldedVertexCount": 28039,
+        "inputTriangleCount": 51478,
+        "weldedTriangleCount": 51478,
         "removedDegenerateTriangleCount": 0
       },
       "normalPolicy": "precomputed-field-gradient-normals",
       "decimation": "none",
+      "reconstruction": "tricubic-supersample",
+      "supersampleFactor": 2,
       "dimensions": [
-        383,
-        313,
-        33
+        766,
+        626,
+        66
       ],
       "voxelSpacingM": {
-        "x_m": 728.828,
-        "y_m": 728.08,
-        "z_m": 710.58
+        "x_m": 364.414,
+        "y_m": 364.04,
+        "z_m": 355.29
       },
       "marchingCubes": {
-        "visitedCubeCount": 3813888,
-        "skippedMaskedCubeCount": 3129935,
-        "activeCubeCount": 4940,
-        "triangleCount": 39468,
-        "vertexCount": 20600,
+        "visitedCubeCount": 31078125,
+        "skippedMaskedCubeCount": 25230722,
+        "activeCubeCount": 25721,
+        "triangleCount": 51478,
+        "vertexCount": 28039,
         "welding": {
-          "inputVertexCount": 29601,
-          "weldedVertexCount": 5368,
-          "inputTriangleCount": 9867,
-          "weldedTriangleCount": 9867,
+          "inputVertexCount": 154434,
+          "weldedVertexCount": 28039,
+          "inputTriangleCount": 51478,
+          "weldedTriangleCount": 51478,
           "removedDegenerateTriangleCount": 0
-        },
-        "subdivision": {
-          "inputVertexCount": 5368,
-          "subdividedVertexCount": 20600,
-          "inputTriangleCount": 9867,
-          "subdividedTriangleCount": 39468
         },
         "smoothing": {
           "method": "taubin-laplacian",
-          "iterations": 8,
+          "iterations": 6,
           "lambda": 0.15,
           "mu": -0.16,
           "pinBoundary": false,
-          "boundaryVertexCount": 1724,
-          "smoothedVertexCount": 20600
+          "boundaryVertexCount": 4628,
+          "smoothedVertexCount": 28039
         },
-        "normalSource": "field-gradient"
+        "normalSource": "field-gradient",
+        "reconstruction": "tricubic-supersample"
       },
       "matchingVoxelCount": 13203,
       "meanLog10Resistivity": 0.435559,
       "meshRange": {
-        "vertexStart": 26323,
-        "vertexCount": 20600,
-        "indexStart": 151428,
-        "indexCount": 118404
+        "vertexStart": 34856,
+        "vertexCount": 28039,
+        "indexStart": 197289,
+        "indexCount": 154434
       },
       "classification": "source-derived iso-resistivity communication surface",
       "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
@@ -393,69 +381,66 @@
       "extractionMethod": "mask-aware-marching-cubes",
       "smoothing": {
         "method": "taubin-laplacian",
-        "iterations": 8,
+        "iterations": 6,
         "lambda": 0.15,
         "mu": -0.16,
         "pinBoundary": false,
-        "boundaryVertexCount": 2233,
-        "smoothedVertexCount": 29324
+        "boundaryVertexCount": 6905,
+        "smoothedVertexCount": 38365
       },
       "vertexWelding": {
-        "inputVertexCount": 42291,
-        "weldedVertexCount": 7620,
-        "inputTriangleCount": 14097,
-        "weldedTriangleCount": 14097,
+        "inputVertexCount": 207456,
+        "weldedVertexCount": 38365,
+        "inputTriangleCount": 69152,
+        "weldedTriangleCount": 69152,
         "removedDegenerateTriangleCount": 0
       },
       "normalPolicy": "precomputed-field-gradient-normals",
       "decimation": "none",
+      "reconstruction": "tricubic-supersample",
+      "supersampleFactor": 2,
       "dimensions": [
-        383,
-        313,
-        33
+        766,
+        626,
+        66
       ],
       "voxelSpacingM": {
-        "x_m": 728.828,
-        "y_m": 728.08,
-        "z_m": 710.58
+        "x_m": 364.414,
+        "y_m": 364.04,
+        "z_m": 355.29
       },
       "marchingCubes": {
-        "visitedCubeCount": 3813888,
-        "skippedMaskedCubeCount": 3129935,
-        "activeCubeCount": 7056,
-        "triangleCount": 56388,
-        "vertexCount": 29324,
+        "visitedCubeCount": 31078125,
+        "skippedMaskedCubeCount": 25230722,
+        "activeCubeCount": 34836,
+        "triangleCount": 69152,
+        "vertexCount": 38365,
         "welding": {
-          "inputVertexCount": 42291,
-          "weldedVertexCount": 7620,
-          "inputTriangleCount": 14097,
-          "weldedTriangleCount": 14097,
+          "inputVertexCount": 207456,
+          "weldedVertexCount": 38365,
+          "inputTriangleCount": 69152,
+          "weldedTriangleCount": 69152,
           "removedDegenerateTriangleCount": 0
-        },
-        "subdivision": {
-          "inputVertexCount": 7620,
-          "subdividedVertexCount": 29324,
-          "inputTriangleCount": 14097,
-          "subdividedTriangleCount": 56388
         },
         "smoothing": {
           "method": "taubin-laplacian",
-          "iterations": 8,
+          "iterations": 6,
           "lambda": 0.15,
           "mu": -0.16,
           "pinBoundary": false,
-          "boundaryVertexCount": 2233,
-          "smoothedVertexCount": 29324
+          "boundaryVertexCount": 6905,
+          "smoothedVertexCount": 38365
         },
-        "normalSource": "field-gradient"
+        "normalSource": "field-gradient",
+        "reconstruction": "tricubic-supersample"
       },
       "matchingVoxelCount": 19688,
       "meanLog10Resistivity": 0.571174,
       "meshRange": {
-        "vertexStart": 46923,
-        "vertexCount": 29324,
-        "indexStart": 269832,
-        "indexCount": 169164
+        "vertexStart": 62895,
+        "vertexCount": 38365,
+        "indexStart": 351723,
+        "indexCount": 207456
       },
       "classification": "source-derived iso-resistivity communication surface",
       "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
@@ -480,69 +465,66 @@
       "extractionMethod": "mask-aware-marching-cubes",
       "smoothing": {
         "method": "taubin-laplacian",
-        "iterations": 8,
+        "iterations": 6,
         "lambda": 0.15,
         "mu": -0.16,
         "pinBoundary": false,
-        "boundaryVertexCount": 2734,
-        "smoothedVertexCount": 40828
+        "boundaryVertexCount": 9581,
+        "smoothedVertexCount": 55878
       },
       "vertexWelding": {
-        "inputVertexCount": 59175,
-        "weldedVertexCount": 10557,
-        "inputTriangleCount": 19725,
-        "weldedTriangleCount": 19725,
-        "removedDegenerateTriangleCount": 0
+        "inputVertexCount": 303486,
+        "weldedVertexCount": 55878,
+        "inputTriangleCount": 101162,
+        "weldedTriangleCount": 101160,
+        "removedDegenerateTriangleCount": 2
       },
       "normalPolicy": "precomputed-field-gradient-normals",
       "decimation": "none",
+      "reconstruction": "tricubic-supersample",
+      "supersampleFactor": 2,
       "dimensions": [
-        383,
-        313,
-        33
+        766,
+        626,
+        66
       ],
       "voxelSpacingM": {
-        "x_m": 728.828,
-        "y_m": 728.08,
-        "z_m": 710.58
+        "x_m": 364.414,
+        "y_m": 364.04,
+        "z_m": 355.29
       },
       "marchingCubes": {
-        "visitedCubeCount": 3813888,
-        "skippedMaskedCubeCount": 3129935,
-        "activeCubeCount": 9871,
-        "triangleCount": 78900,
-        "vertexCount": 40828,
+        "visitedCubeCount": 31078125,
+        "skippedMaskedCubeCount": 25230722,
+        "activeCubeCount": 50866,
+        "triangleCount": 101160,
+        "vertexCount": 55878,
         "welding": {
-          "inputVertexCount": 59175,
-          "weldedVertexCount": 10557,
-          "inputTriangleCount": 19725,
-          "weldedTriangleCount": 19725,
-          "removedDegenerateTriangleCount": 0
-        },
-        "subdivision": {
-          "inputVertexCount": 10557,
-          "subdividedVertexCount": 40828,
-          "inputTriangleCount": 19725,
-          "subdividedTriangleCount": 78900
+          "inputVertexCount": 303486,
+          "weldedVertexCount": 55878,
+          "inputTriangleCount": 101162,
+          "weldedTriangleCount": 101160,
+          "removedDegenerateTriangleCount": 2
         },
         "smoothing": {
           "method": "taubin-laplacian",
-          "iterations": 8,
+          "iterations": 6,
           "lambda": 0.15,
           "mu": -0.16,
           "pinBoundary": false,
-          "boundaryVertexCount": 2734,
-          "smoothedVertexCount": 40828
+          "boundaryVertexCount": 9581,
+          "smoothedVertexCount": 55878
         },
-        "normalSource": "field-gradient"
+        "normalSource": "field-gradient",
+        "reconstruction": "tricubic-supersample"
       },
       "matchingVoxelCount": 29926,
       "meanLog10Resistivity": 0.733425,
       "meshRange": {
-        "vertexStart": 76247,
-        "vertexCount": 40828,
-        "indexStart": 438996,
-        "indexCount": 236700
+        "vertexStart": 101260,
+        "vertexCount": 55878,
+        "indexStart": 559179,
+        "indexCount": 303480
       },
       "classification": "source-derived iso-resistivity communication surface",
       "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
@@ -567,69 +549,66 @@
       "extractionMethod": "mask-aware-marching-cubes",
       "smoothing": {
         "method": "taubin-laplacian",
-        "iterations": 8,
+        "iterations": 6,
         "lambda": 0.15,
         "mu": -0.16,
         "pinBoundary": false,
-        "boundaryVertexCount": 3432,
-        "smoothedVertexCount": 53161
+        "boundaryVertexCount": 14018,
+        "smoothedVertexCount": 73702
       },
       "vertexWelding": {
-        "inputVertexCount": 77148,
-        "weldedVertexCount": 13729,
-        "inputTriangleCount": 25716,
-        "weldedTriangleCount": 25716,
+        "inputVertexCount": 394278,
+        "weldedVertexCount": 73702,
+        "inputTriangleCount": 131426,
+        "weldedTriangleCount": 131426,
         "removedDegenerateTriangleCount": 0
       },
       "normalPolicy": "precomputed-field-gradient-normals",
       "decimation": "none",
+      "reconstruction": "tricubic-supersample",
+      "supersampleFactor": 2,
       "dimensions": [
-        383,
-        313,
-        33
+        766,
+        626,
+        66
       ],
       "voxelSpacingM": {
-        "x_m": 728.828,
-        "y_m": 728.08,
-        "z_m": 710.58
+        "x_m": 364.414,
+        "y_m": 364.04,
+        "z_m": 355.29
       },
       "marchingCubes": {
-        "visitedCubeCount": 3813888,
-        "skippedMaskedCubeCount": 3129935,
-        "activeCubeCount": 12873,
-        "triangleCount": 102864,
-        "vertexCount": 53161,
+        "visitedCubeCount": 31078125,
+        "skippedMaskedCubeCount": 25230722,
+        "activeCubeCount": 66359,
+        "triangleCount": 131426,
+        "vertexCount": 73702,
         "welding": {
-          "inputVertexCount": 77148,
-          "weldedVertexCount": 13729,
-          "inputTriangleCount": 25716,
-          "weldedTriangleCount": 25716,
+          "inputVertexCount": 394278,
+          "weldedVertexCount": 73702,
+          "inputTriangleCount": 131426,
+          "weldedTriangleCount": 131426,
           "removedDegenerateTriangleCount": 0
-        },
-        "subdivision": {
-          "inputVertexCount": 13729,
-          "subdividedVertexCount": 53161,
-          "inputTriangleCount": 25716,
-          "subdividedTriangleCount": 102864
         },
         "smoothing": {
           "method": "taubin-laplacian",
-          "iterations": 8,
+          "iterations": 6,
           "lambda": 0.15,
           "mu": -0.16,
           "pinBoundary": false,
-          "boundaryVertexCount": 3432,
-          "smoothedVertexCount": 53161
+          "boundaryVertexCount": 14018,
+          "smoothedVertexCount": 73702
         },
-        "normalSource": "field-gradient"
+        "normalSource": "field-gradient",
+        "reconstruction": "tricubic-supersample"
       },
       "matchingVoxelCount": 44836,
       "meanLog10Resistivity": 0.901902,
       "meshRange": {
-        "vertexStart": 117075,
-        "vertexCount": 53161,
-        "indexStart": 675696,
-        "indexCount": 308592
+        "vertexStart": 157138,
+        "vertexCount": 73702,
+        "indexStart": 862659,
+        "indexCount": 394278
       },
       "classification": "source-derived iso-resistivity communication surface",
       "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
@@ -654,69 +633,66 @@
       "extractionMethod": "mask-aware-marching-cubes",
       "smoothing": {
         "method": "taubin-laplacian",
-        "iterations": 8,
+        "iterations": 6,
         "lambda": 0.15,
         "mu": -0.16,
         "pinBoundary": false,
-        "boundaryVertexCount": 4198,
-        "smoothedVertexCount": 71385
+        "boundaryVertexCount": 20109,
+        "smoothedVertexCount": 101332
       },
       "vertexWelding": {
-        "inputVertexCount": 103911,
-        "weldedVertexCount": 18380,
-        "inputTriangleCount": 34637,
-        "weldedTriangleCount": 34637,
-        "removedDegenerateTriangleCount": 0
+        "inputVertexCount": 539511,
+        "weldedVertexCount": 101332,
+        "inputTriangleCount": 179837,
+        "weldedTriangleCount": 179832,
+        "removedDegenerateTriangleCount": 5
       },
       "normalPolicy": "precomputed-field-gradient-normals",
       "decimation": "none",
+      "reconstruction": "tricubic-supersample",
+      "supersampleFactor": 2,
       "dimensions": [
-        383,
-        313,
-        33
+        766,
+        626,
+        66
       ],
       "voxelSpacingM": {
-        "x_m": 728.828,
-        "y_m": 728.08,
-        "z_m": 710.58
+        "x_m": 364.414,
+        "y_m": 364.04,
+        "z_m": 355.29
       },
       "marchingCubes": {
-        "visitedCubeCount": 3813888,
-        "skippedMaskedCubeCount": 3129935,
-        "activeCubeCount": 17321,
-        "triangleCount": 138548,
-        "vertexCount": 71385,
+        "visitedCubeCount": 31078125,
+        "skippedMaskedCubeCount": 25230722,
+        "activeCubeCount": 90905,
+        "triangleCount": 179832,
+        "vertexCount": 101332,
         "welding": {
-          "inputVertexCount": 103911,
-          "weldedVertexCount": 18380,
-          "inputTriangleCount": 34637,
-          "weldedTriangleCount": 34637,
-          "removedDegenerateTriangleCount": 0
-        },
-        "subdivision": {
-          "inputVertexCount": 18380,
-          "subdividedVertexCount": 71385,
-          "inputTriangleCount": 34637,
-          "subdividedTriangleCount": 138548
+          "inputVertexCount": 539511,
+          "weldedVertexCount": 101332,
+          "inputTriangleCount": 179837,
+          "weldedTriangleCount": 179832,
+          "removedDegenerateTriangleCount": 5
         },
         "smoothing": {
           "method": "taubin-laplacian",
-          "iterations": 8,
+          "iterations": 6,
           "lambda": 0.15,
           "mu": -0.16,
           "pinBoundary": false,
-          "boundaryVertexCount": 4198,
-          "smoothedVertexCount": 71385
+          "boundaryVertexCount": 20109,
+          "smoothedVertexCount": 101332
         },
-        "normalSource": "field-gradient"
+        "normalSource": "field-gradient",
+        "reconstruction": "tricubic-supersample"
       },
       "matchingVoxelCount": 714216,
       "meanLog10Resistivity": 2.596092,
       "meshRange": {
-        "vertexStart": 170236,
-        "vertexCount": 71385,
-        "indexStart": 984288,
-        "indexCount": 415644
+        "vertexStart": 230840,
+        "vertexCount": 101332,
+        "indexStart": 1256937,
+        "indexCount": 539496
       },
       "classification": "source-derived iso-resistivity communication surface",
       "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
@@ -741,69 +717,66 @@
       "extractionMethod": "mask-aware-marching-cubes",
       "smoothing": {
         "method": "taubin-laplacian",
-        "iterations": 8,
+        "iterations": 6,
         "lambda": 0.15,
         "mu": -0.16,
         "pinBoundary": false,
-        "boundaryVertexCount": 5089,
-        "smoothedVertexCount": 89843
+        "boundaryVertexCount": 33352,
+        "smoothedVertexCount": 144199
       },
       "vertexWelding": {
-        "inputVertexCount": 130908,
-        "weldedVertexCount": 23116,
-        "inputTriangleCount": 43636,
-        "weldedTriangleCount": 43636,
-        "removedDegenerateTriangleCount": 0
+        "inputVertexCount": 750108,
+        "weldedVertexCount": 144199,
+        "inputTriangleCount": 250036,
+        "weldedTriangleCount": 250026,
+        "removedDegenerateTriangleCount": 10
       },
       "normalPolicy": "precomputed-field-gradient-normals",
       "decimation": "none",
+      "reconstruction": "tricubic-supersample",
+      "supersampleFactor": 2,
       "dimensions": [
-        383,
-        313,
-        33
+        766,
+        626,
+        66
       ],
       "voxelSpacingM": {
-        "x_m": 728.828,
-        "y_m": 728.08,
-        "z_m": 710.58
+        "x_m": 364.414,
+        "y_m": 364.04,
+        "z_m": 355.29
       },
       "marchingCubes": {
-        "visitedCubeCount": 3813888,
-        "skippedMaskedCubeCount": 3129935,
-        "activeCubeCount": 21821,
-        "triangleCount": 174544,
-        "vertexCount": 89843,
+        "visitedCubeCount": 31078125,
+        "skippedMaskedCubeCount": 25230722,
+        "activeCubeCount": 127067,
+        "triangleCount": 250026,
+        "vertexCount": 144199,
         "welding": {
-          "inputVertexCount": 130908,
-          "weldedVertexCount": 23116,
-          "inputTriangleCount": 43636,
-          "weldedTriangleCount": 43636,
-          "removedDegenerateTriangleCount": 0
-        },
-        "subdivision": {
-          "inputVertexCount": 23116,
-          "subdividedVertexCount": 89843,
-          "inputTriangleCount": 43636,
-          "subdividedTriangleCount": 174544
+          "inputVertexCount": 750108,
+          "weldedVertexCount": 144199,
+          "inputTriangleCount": 250036,
+          "weldedTriangleCount": 250026,
+          "removedDegenerateTriangleCount": 10
         },
         "smoothing": {
           "method": "taubin-laplacian",
-          "iterations": 8,
+          "iterations": 6,
           "lambda": 0.15,
           "mu": -0.16,
           "pinBoundary": false,
-          "boundaryVertexCount": 5089,
-          "smoothedVertexCount": 89843
+          "boundaryVertexCount": 33352,
+          "smoothedVertexCount": 144199
         },
-        "normalSource": "field-gradient"
+        "normalSource": "field-gradient",
+        "reconstruction": "tricubic-supersample"
       },
       "matchingVoxelCount": 683752,
       "meanLog10Resistivity": 2.638574,
       "meshRange": {
-        "vertexStart": 241621,
-        "vertexCount": 89843,
-        "indexStart": 1399932,
-        "indexCount": 523632
+        "vertexStart": 332172,
+        "vertexCount": 144199,
+        "indexStart": 1796433,
+        "indexCount": 750078
       },
       "classification": "source-derived iso-resistivity communication surface",
       "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
@@ -828,69 +801,66 @@
       "extractionMethod": "mask-aware-marching-cubes",
       "smoothing": {
         "method": "taubin-laplacian",
-        "iterations": 8,
+        "iterations": 6,
         "lambda": 0.15,
         "mu": -0.16,
         "pinBoundary": false,
-        "boundaryVertexCount": 5538,
-        "smoothedVertexCount": 112274
+        "boundaryVertexCount": 51164,
+        "smoothedVertexCount": 178577
       },
       "vertexWelding": {
-        "inputVertexCount": 164247,
-        "weldedVertexCount": 28766,
-        "inputTriangleCount": 54749,
-        "weldedTriangleCount": 54749,
+        "inputVertexCount": 878466,
+        "weldedVertexCount": 178577,
+        "inputTriangleCount": 292822,
+        "weldedTriangleCount": 292822,
         "removedDegenerateTriangleCount": 0
       },
       "normalPolicy": "precomputed-field-gradient-normals",
       "decimation": "none",
+      "reconstruction": "tricubic-supersample",
+      "supersampleFactor": 2,
       "dimensions": [
-        383,
-        313,
-        33
+        766,
+        626,
+        66
       ],
       "voxelSpacingM": {
-        "x_m": 728.828,
-        "y_m": 728.08,
-        "z_m": 710.58
+        "x_m": 364.414,
+        "y_m": 364.04,
+        "z_m": 355.29
       },
       "marchingCubes": {
-        "visitedCubeCount": 3813888,
-        "skippedMaskedCubeCount": 3129935,
-        "activeCubeCount": 27369,
-        "triangleCount": 218996,
-        "vertexCount": 112274,
+        "visitedCubeCount": 31078125,
+        "skippedMaskedCubeCount": 25230722,
+        "activeCubeCount": 149796,
+        "triangleCount": 292822,
+        "vertexCount": 178577,
         "welding": {
-          "inputVertexCount": 164247,
-          "weldedVertexCount": 28766,
-          "inputTriangleCount": 54749,
-          "weldedTriangleCount": 54749,
+          "inputVertexCount": 878466,
+          "weldedVertexCount": 178577,
+          "inputTriangleCount": 292822,
+          "weldedTriangleCount": 292822,
           "removedDegenerateTriangleCount": 0
-        },
-        "subdivision": {
-          "inputVertexCount": 28766,
-          "subdividedVertexCount": 112274,
-          "inputTriangleCount": 54749,
-          "subdividedTriangleCount": 218996
         },
         "smoothing": {
           "method": "taubin-laplacian",
-          "iterations": 8,
+          "iterations": 6,
           "lambda": 0.15,
           "mu": -0.16,
           "pinBoundary": false,
-          "boundaryVertexCount": 5538,
-          "smoothedVertexCount": 112274
+          "boundaryVertexCount": 51164,
+          "smoothedVertexCount": 178577
         },
-        "normalSource": "field-gradient"
+        "normalSource": "field-gradient",
+        "reconstruction": "tricubic-supersample"
       },
       "matchingVoxelCount": 628096,
       "meanLog10Resistivity": 2.709203,
       "meshRange": {
-        "vertexStart": 331464,
-        "vertexCount": 112274,
-        "indexStart": 1923564,
-        "indexCount": 656988
+        "vertexStart": 476371,
+        "vertexCount": 178577,
+        "indexStart": 2546511,
+        "indexCount": 878466
       },
       "classification": "source-derived iso-resistivity communication surface",
       "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
@@ -915,69 +885,66 @@
       "extractionMethod": "mask-aware-marching-cubes",
       "smoothing": {
         "method": "taubin-laplacian",
-        "iterations": 8,
+        "iterations": 6,
         "lambda": 0.15,
         "mu": -0.16,
         "pinBoundary": false,
-        "boundaryVertexCount": 7503,
-        "smoothedVertexCount": 135448
+        "boundaryVertexCount": 48917,
+        "smoothedVertexCount": 210093
       },
       "vertexWelding": {
-        "inputVertexCount": 197517,
-        "weldedVertexCount": 34813,
-        "inputTriangleCount": 65839,
-        "weldedTriangleCount": 65839,
-        "removedDegenerateTriangleCount": 0
+        "inputVertexCount": 1090071,
+        "weldedVertexCount": 210093,
+        "inputTriangleCount": 363357,
+        "weldedTriangleCount": 363353,
+        "removedDegenerateTriangleCount": 4
       },
       "normalPolicy": "precomputed-field-gradient-normals",
       "decimation": "none",
+      "reconstruction": "tricubic-supersample",
+      "supersampleFactor": 2,
       "dimensions": [
-        383,
-        313,
-        33
+        766,
+        626,
+        66
       ],
       "voxelSpacingM": {
-        "x_m": 728.828,
-        "y_m": 728.08,
-        "z_m": 710.58
+        "x_m": 364.414,
+        "y_m": 364.04,
+        "z_m": 355.29
       },
       "marchingCubes": {
-        "visitedCubeCount": 3813888,
-        "skippedMaskedCubeCount": 3129935,
-        "activeCubeCount": 32898,
-        "triangleCount": 263356,
-        "vertexCount": 135448,
+        "visitedCubeCount": 31078125,
+        "skippedMaskedCubeCount": 25230722,
+        "activeCubeCount": 183373,
+        "triangleCount": 363353,
+        "vertexCount": 210093,
         "welding": {
-          "inputVertexCount": 197517,
-          "weldedVertexCount": 34813,
-          "inputTriangleCount": 65839,
-          "weldedTriangleCount": 65839,
-          "removedDegenerateTriangleCount": 0
-        },
-        "subdivision": {
-          "inputVertexCount": 34813,
-          "subdividedVertexCount": 135448,
-          "inputTriangleCount": 65839,
-          "subdividedTriangleCount": 263356
+          "inputVertexCount": 1090071,
+          "weldedVertexCount": 210093,
+          "inputTriangleCount": 363357,
+          "weldedTriangleCount": 363353,
+          "removedDegenerateTriangleCount": 4
         },
         "smoothing": {
           "method": "taubin-laplacian",
-          "iterations": 8,
+          "iterations": 6,
           "lambda": 0.15,
           "mu": -0.16,
           "pinBoundary": false,
-          "boundaryVertexCount": 7503,
-          "smoothedVertexCount": 135448
+          "boundaryVertexCount": 48917,
+          "smoothedVertexCount": 210093
         },
-        "normalSource": "field-gradient"
+        "normalSource": "field-gradient",
+        "reconstruction": "tricubic-supersample"
       },
       "matchingVoxelCount": 567390,
       "meanLog10Resistivity": 2.779732,
       "meshRange": {
-        "vertexStart": 443738,
-        "vertexCount": 135448,
-        "indexStart": 2580552,
-        "indexCount": 790068
+        "vertexStart": 654948,
+        "vertexCount": 210093,
+        "indexStart": 3424977,
+        "indexCount": 1090059
       },
       "classification": "source-derived iso-resistivity communication surface",
       "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
@@ -1002,69 +969,66 @@
       "extractionMethod": "mask-aware-marching-cubes",
       "smoothing": {
         "method": "taubin-laplacian",
-        "iterations": 8,
+        "iterations": 6,
         "lambda": 0.15,
         "mu": -0.16,
         "pinBoundary": false,
-        "boundaryVertexCount": 7753,
-        "smoothedVertexCount": 146602
+        "boundaryVertexCount": 29675,
+        "smoothedVertexCount": 183042
       },
       "vertexWelding": {
-        "inputVertexCount": 214074,
-        "weldedVertexCount": 37626,
-        "inputTriangleCount": 71358,
-        "weldedTriangleCount": 71358,
-        "removedDegenerateTriangleCount": 0
+        "inputVertexCount": 991278,
+        "weldedVertexCount": 183042,
+        "inputTriangleCount": 330426,
+        "weldedTriangleCount": 330421,
+        "removedDegenerateTriangleCount": 5
       },
       "normalPolicy": "precomputed-field-gradient-normals",
       "decimation": "none",
+      "reconstruction": "tricubic-supersample",
+      "supersampleFactor": 2,
       "dimensions": [
-        383,
-        313,
-        33
+        766,
+        626,
+        66
       ],
       "voxelSpacingM": {
-        "x_m": 728.828,
-        "y_m": 728.08,
-        "z_m": 710.58
+        "x_m": 364.414,
+        "y_m": 364.04,
+        "z_m": 355.29
       },
       "marchingCubes": {
-        "visitedCubeCount": 3813888,
-        "skippedMaskedCubeCount": 3129935,
-        "activeCubeCount": 35665,
-        "triangleCount": 285432,
-        "vertexCount": 146602,
+        "visitedCubeCount": 31078125,
+        "skippedMaskedCubeCount": 25230722,
+        "activeCubeCount": 166593,
+        "triangleCount": 330421,
+        "vertexCount": 183042,
         "welding": {
-          "inputVertexCount": 214074,
-          "weldedVertexCount": 37626,
-          "inputTriangleCount": 71358,
-          "weldedTriangleCount": 71358,
-          "removedDegenerateTriangleCount": 0
-        },
-        "subdivision": {
-          "inputVertexCount": 37626,
-          "subdividedVertexCount": 146602,
-          "inputTriangleCount": 71358,
-          "subdividedTriangleCount": 285432
+          "inputVertexCount": 991278,
+          "weldedVertexCount": 183042,
+          "inputTriangleCount": 330426,
+          "weldedTriangleCount": 330421,
+          "removedDegenerateTriangleCount": 5
         },
         "smoothing": {
           "method": "taubin-laplacian",
-          "iterations": 8,
+          "iterations": 6,
           "lambda": 0.15,
           "mu": -0.16,
           "pinBoundary": false,
-          "boundaryVertexCount": 7753,
-          "smoothedVertexCount": 146602
+          "boundaryVertexCount": 29675,
+          "smoothedVertexCount": 183042
         },
-        "normalSource": "field-gradient"
+        "normalSource": "field-gradient",
+        "reconstruction": "tricubic-supersample"
       },
       "matchingVoxelCount": 473666,
       "meanLog10Resistivity": 2.887056,
       "meshRange": {
-        "vertexStart": 579186,
-        "vertexCount": 146602,
-        "indexStart": 3370620,
-        "indexCount": 856296
+        "vertexStart": 865041,
+        "vertexCount": 183042,
+        "indexStart": 4515036,
+        "indexCount": 991263
       },
       "classification": "source-derived iso-resistivity communication surface",
       "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
@@ -1089,69 +1053,66 @@
       "extractionMethod": "mask-aware-marching-cubes",
       "smoothing": {
         "method": "taubin-laplacian",
-        "iterations": 8,
+        "iterations": 6,
         "lambda": 0.15,
         "mu": -0.16,
         "pinBoundary": false,
-        "boundaryVertexCount": 7094,
-        "smoothedVertexCount": 153376
+        "boundaryVertexCount": 16032,
+        "smoothedVertexCount": 169559
       },
       "vertexWelding": {
-        "inputVertexCount": 224703,
-        "weldedVertexCount": 39249,
-        "inputTriangleCount": 74901,
-        "weldedTriangleCount": 74901,
-        "removedDegenerateTriangleCount": 0
+        "inputVertexCount": 961515,
+        "weldedVertexCount": 169559,
+        "inputTriangleCount": 320505,
+        "weldedTriangleCount": 320501,
+        "removedDegenerateTriangleCount": 4
       },
       "normalPolicy": "precomputed-field-gradient-normals",
       "decimation": "none",
+      "reconstruction": "tricubic-supersample",
+      "supersampleFactor": 2,
       "dimensions": [
-        383,
-        313,
-        33
+        766,
+        626,
+        66
       ],
       "voxelSpacingM": {
-        "x_m": 728.828,
-        "y_m": 728.08,
-        "z_m": 710.58
+        "x_m": 364.414,
+        "y_m": 364.04,
+        "z_m": 355.29
       },
       "marchingCubes": {
-        "visitedCubeCount": 3813888,
-        "skippedMaskedCubeCount": 3129935,
-        "activeCubeCount": 37435,
-        "triangleCount": 299604,
-        "vertexCount": 153376,
+        "visitedCubeCount": 31078125,
+        "skippedMaskedCubeCount": 25230722,
+        "activeCubeCount": 160756,
+        "triangleCount": 320501,
+        "vertexCount": 169559,
         "welding": {
-          "inputVertexCount": 224703,
-          "weldedVertexCount": 39249,
-          "inputTriangleCount": 74901,
-          "weldedTriangleCount": 74901,
-          "removedDegenerateTriangleCount": 0
-        },
-        "subdivision": {
-          "inputVertexCount": 39249,
-          "subdividedVertexCount": 153376,
-          "inputTriangleCount": 74901,
-          "subdividedTriangleCount": 299604
+          "inputVertexCount": 961515,
+          "weldedVertexCount": 169559,
+          "inputTriangleCount": 320505,
+          "weldedTriangleCount": 320501,
+          "removedDegenerateTriangleCount": 4
         },
         "smoothing": {
           "method": "taubin-laplacian",
-          "iterations": 8,
+          "iterations": 6,
           "lambda": 0.15,
           "mu": -0.16,
           "pinBoundary": false,
-          "boundaryVertexCount": 7094,
-          "smoothedVertexCount": 153376
+          "boundaryVertexCount": 16032,
+          "smoothedVertexCount": 169559
         },
-        "normalSource": "field-gradient"
+        "normalSource": "field-gradient",
+        "reconstruction": "tricubic-supersample"
       },
       "matchingVoxelCount": 372123,
       "meanLog10Resistivity": 3.009488,
       "meshRange": {
-        "vertexStart": 725788,
-        "vertexCount": 153376,
-        "indexStart": 4226916,
-        "indexCount": 898812
+        "vertexStart": 1048083,
+        "vertexCount": 169559,
+        "indexStart": 5506299,
+        "indexCount": 961503
       },
       "classification": "source-derived iso-resistivity communication surface",
       "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
@@ -1176,69 +1137,66 @@
       "extractionMethod": "mask-aware-marching-cubes",
       "smoothing": {
         "method": "taubin-laplacian",
-        "iterations": 8,
+        "iterations": 6,
         "lambda": 0.15,
         "mu": -0.16,
         "pinBoundary": false,
-        "boundaryVertexCount": 6769,
-        "smoothedVertexCount": 159685
+        "boundaryVertexCount": 41987,
+        "smoothedVertexCount": 216909
       },
       "vertexWelding": {
-        "inputVertexCount": 234429,
-        "weldedVertexCount": 40778,
-        "inputTriangleCount": 78143,
-        "weldedTriangleCount": 78141,
-        "removedDegenerateTriangleCount": 2
+        "inputVertexCount": 1152063,
+        "weldedVertexCount": 216909,
+        "inputTriangleCount": 384021,
+        "weldedTriangleCount": 384021,
+        "removedDegenerateTriangleCount": 0
       },
       "normalPolicy": "precomputed-field-gradient-normals",
       "decimation": "none",
+      "reconstruction": "tricubic-supersample",
+      "supersampleFactor": 2,
       "dimensions": [
-        383,
-        313,
-        33
+        766,
+        626,
+        66
       ],
       "voxelSpacingM": {
-        "x_m": 728.828,
-        "y_m": 728.08,
-        "z_m": 710.58
+        "x_m": 364.414,
+        "y_m": 364.04,
+        "z_m": 355.29
       },
       "marchingCubes": {
-        "visitedCubeCount": 3813888,
-        "skippedMaskedCubeCount": 3129935,
-        "activeCubeCount": 39055,
-        "triangleCount": 312564,
-        "vertexCount": 159685,
+        "visitedCubeCount": 31078125,
+        "skippedMaskedCubeCount": 25230722,
+        "activeCubeCount": 193542,
+        "triangleCount": 384021,
+        "vertexCount": 216909,
         "welding": {
-          "inputVertexCount": 234429,
-          "weldedVertexCount": 40778,
-          "inputTriangleCount": 78143,
-          "weldedTriangleCount": 78141,
-          "removedDegenerateTriangleCount": 2
-        },
-        "subdivision": {
-          "inputVertexCount": 40778,
-          "subdividedVertexCount": 159685,
-          "inputTriangleCount": 78141,
-          "subdividedTriangleCount": 312564
+          "inputVertexCount": 1152063,
+          "weldedVertexCount": 216909,
+          "inputTriangleCount": 384021,
+          "weldedTriangleCount": 384021,
+          "removedDegenerateTriangleCount": 0
         },
         "smoothing": {
           "method": "taubin-laplacian",
-          "iterations": 8,
+          "iterations": 6,
           "lambda": 0.15,
           "mu": -0.16,
           "pinBoundary": false,
-          "boundaryVertexCount": 6769,
-          "smoothedVertexCount": 159685
+          "boundaryVertexCount": 41987,
+          "smoothedVertexCount": 216909
         },
-        "normalSource": "field-gradient"
+        "normalSource": "field-gradient",
+        "reconstruction": "tricubic-supersample"
       },
       "matchingVoxelCount": 277104,
       "meanLog10Resistivity": 3.135602,
       "meshRange": {
-        "vertexStart": 879164,
-        "vertexCount": 159685,
-        "indexStart": 5125728,
-        "indexCount": 937692
+        "vertexStart": 1217642,
+        "vertexCount": 216909,
+        "indexStart": 6467802,
+        "indexCount": 1152063
       },
       "classification": "source-derived iso-resistivity communication surface",
       "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
@@ -1263,69 +1221,66 @@
       "extractionMethod": "mask-aware-marching-cubes",
       "smoothing": {
         "method": "taubin-laplacian",
-        "iterations": 8,
+        "iterations": 6,
         "lambda": 0.15,
         "mu": -0.16,
         "pinBoundary": false,
-        "boundaryVertexCount": 4226,
-        "smoothedVertexCount": 133941
+        "boundaryVertexCount": 23303,
+        "smoothedVertexCount": 169170
       },
       "vertexWelding": {
-        "inputVertexCount": 197748,
-        "weldedVertexCount": 34010,
-        "inputTriangleCount": 65916,
-        "weldedTriangleCount": 65916,
-        "removedDegenerateTriangleCount": 0
+        "inputVertexCount": 935319,
+        "weldedVertexCount": 169170,
+        "inputTriangleCount": 311773,
+        "weldedTriangleCount": 311767,
+        "removedDegenerateTriangleCount": 6
       },
       "normalPolicy": "precomputed-field-gradient-normals",
       "decimation": "none",
+      "reconstruction": "tricubic-supersample",
+      "supersampleFactor": 2,
       "dimensions": [
-        383,
-        313,
-        33
+        766,
+        626,
+        66
       ],
       "voxelSpacingM": {
-        "x_m": 728.828,
-        "y_m": 728.08,
-        "z_m": 710.58
+        "x_m": 364.414,
+        "y_m": 364.04,
+        "z_m": 355.29
       },
       "marchingCubes": {
-        "visitedCubeCount": 3813888,
-        "skippedMaskedCubeCount": 3129935,
-        "activeCubeCount": 32949,
-        "triangleCount": 263664,
-        "vertexCount": 133941,
+        "visitedCubeCount": 31078125,
+        "skippedMaskedCubeCount": 25230722,
+        "activeCubeCount": 156866,
+        "triangleCount": 311767,
+        "vertexCount": 169170,
         "welding": {
-          "inputVertexCount": 197748,
-          "weldedVertexCount": 34010,
-          "inputTriangleCount": 65916,
-          "weldedTriangleCount": 65916,
-          "removedDegenerateTriangleCount": 0
-        },
-        "subdivision": {
-          "inputVertexCount": 34010,
-          "subdividedVertexCount": 133941,
-          "inputTriangleCount": 65916,
-          "subdividedTriangleCount": 263664
+          "inputVertexCount": 935319,
+          "weldedVertexCount": 169170,
+          "inputTriangleCount": 311773,
+          "weldedTriangleCount": 311767,
+          "removedDegenerateTriangleCount": 6
         },
         "smoothing": {
           "method": "taubin-laplacian",
-          "iterations": 8,
+          "iterations": 6,
           "lambda": 0.15,
           "mu": -0.16,
           "pinBoundary": false,
-          "boundaryVertexCount": 4226,
-          "smoothedVertexCount": 133941
+          "boundaryVertexCount": 23303,
+          "smoothedVertexCount": 169170
         },
-        "normalSource": "field-gradient"
+        "normalSource": "field-gradient",
+        "reconstruction": "tricubic-supersample"
       },
       "matchingVoxelCount": 176480,
       "meanLog10Resistivity": 3.308387,
       "meshRange": {
-        "vertexStart": 1038849,
-        "vertexCount": 133941,
-        "indexStart": 6063420,
-        "indexCount": 790992
+        "vertexStart": 1434551,
+        "vertexCount": 169170,
+        "indexStart": 7619865,
+        "indexCount": 935301
       },
       "classification": "source-derived iso-resistivity communication surface",
       "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
@@ -1350,69 +1305,66 @@
       "extractionMethod": "mask-aware-marching-cubes",
       "smoothing": {
         "method": "taubin-laplacian",
-        "iterations": 8,
+        "iterations": 6,
         "lambda": 0.15,
         "mu": -0.16,
         "pinBoundary": false,
-        "boundaryVertexCount": 2140,
-        "smoothedVertexCount": 92311
+        "boundaryVertexCount": 14755,
+        "smoothedVertexCount": 115250
       },
       "vertexWelding": {
-        "inputVertexCount": 136860,
-        "weldedVertexCount": 23346,
-        "inputTriangleCount": 45620,
-        "weldedTriangleCount": 45620,
-        "removedDegenerateTriangleCount": 0
+        "inputVertexCount": 637569,
+        "weldedVertexCount": 115250,
+        "inputTriangleCount": 212523,
+        "weldedTriangleCount": 212515,
+        "removedDegenerateTriangleCount": 8
       },
       "normalPolicy": "precomputed-field-gradient-normals",
       "decimation": "none",
+      "reconstruction": "tricubic-supersample",
+      "supersampleFactor": 2,
       "dimensions": [
-        383,
-        313,
-        33
+        766,
+        626,
+        66
       ],
       "voxelSpacingM": {
-        "x_m": 728.828,
-        "y_m": 728.08,
-        "z_m": 710.58
+        "x_m": 364.414,
+        "y_m": 364.04,
+        "z_m": 355.29
       },
       "marchingCubes": {
-        "visitedCubeCount": 3813888,
-        "skippedMaskedCubeCount": 3129935,
-        "activeCubeCount": 22809,
-        "triangleCount": 182480,
-        "vertexCount": 92311,
+        "visitedCubeCount": 31078125,
+        "skippedMaskedCubeCount": 25230722,
+        "activeCubeCount": 107371,
+        "triangleCount": 212515,
+        "vertexCount": 115250,
         "welding": {
-          "inputVertexCount": 136860,
-          "weldedVertexCount": 23346,
-          "inputTriangleCount": 45620,
-          "weldedTriangleCount": 45620,
-          "removedDegenerateTriangleCount": 0
-        },
-        "subdivision": {
-          "inputVertexCount": 23346,
-          "subdividedVertexCount": 92311,
-          "inputTriangleCount": 45620,
-          "subdividedTriangleCount": 182480
+          "inputVertexCount": 637569,
+          "weldedVertexCount": 115250,
+          "inputTriangleCount": 212523,
+          "weldedTriangleCount": 212515,
+          "removedDegenerateTriangleCount": 8
         },
         "smoothing": {
           "method": "taubin-laplacian",
-          "iterations": 8,
+          "iterations": 6,
           "lambda": 0.15,
           "mu": -0.16,
           "pinBoundary": false,
-          "boundaryVertexCount": 2140,
-          "smoothedVertexCount": 92311
+          "boundaryVertexCount": 14755,
+          "smoothedVertexCount": 115250
         },
-        "normalSource": "field-gradient"
+        "normalSource": "field-gradient",
+        "reconstruction": "tricubic-supersample"
       },
       "matchingVoxelCount": 112267,
       "meanLog10Resistivity": 3.468205,
       "meshRange": {
-        "vertexStart": 1172790,
-        "vertexCount": 92311,
-        "indexStart": 6854412,
-        "indexCount": 547440
+        "vertexStart": 1603721,
+        "vertexCount": 115250,
+        "indexStart": 8555166,
+        "indexCount": 637545
       },
       "classification": "source-derived iso-resistivity communication surface",
       "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
@@ -1437,69 +1389,66 @@
       "extractionMethod": "mask-aware-marching-cubes",
       "smoothing": {
         "method": "taubin-laplacian",
-        "iterations": 8,
+        "iterations": 6,
         "lambda": 0.15,
         "mu": -0.16,
         "pinBoundary": false,
-        "boundaryVertexCount": 1522,
-        "smoothedVertexCount": 66372
+        "boundaryVertexCount": 13185,
+        "smoothedVertexCount": 88914
       },
       "vertexWelding": {
-        "inputVertexCount": 98415,
-        "weldedVertexCount": 16784,
-        "inputTriangleCount": 32805,
-        "weldedTriangleCount": 32805,
-        "removedDegenerateTriangleCount": 0
+        "inputVertexCount": 486843,
+        "weldedVertexCount": 88914,
+        "inputTriangleCount": 162281,
+        "weldedTriangleCount": 162279,
+        "removedDegenerateTriangleCount": 2
       },
       "normalPolicy": "precomputed-field-gradient-normals",
       "decimation": "none",
+      "reconstruction": "tricubic-supersample",
+      "supersampleFactor": 2,
       "dimensions": [
-        383,
-        313,
-        33
+        766,
+        626,
+        66
       ],
       "voxelSpacingM": {
-        "x_m": 728.828,
-        "y_m": 728.08,
-        "z_m": 710.58
+        "x_m": 364.414,
+        "y_m": 364.04,
+        "z_m": 355.29
       },
       "marchingCubes": {
-        "visitedCubeCount": 3813888,
-        "skippedMaskedCubeCount": 3129935,
-        "activeCubeCount": 16401,
-        "triangleCount": 131220,
-        "vertexCount": 66372,
+        "visitedCubeCount": 31078125,
+        "skippedMaskedCubeCount": 25230722,
+        "activeCubeCount": 81743,
+        "triangleCount": 162279,
+        "vertexCount": 88914,
         "welding": {
-          "inputVertexCount": 98415,
-          "weldedVertexCount": 16784,
-          "inputTriangleCount": 32805,
-          "weldedTriangleCount": 32805,
-          "removedDegenerateTriangleCount": 0
-        },
-        "subdivision": {
-          "inputVertexCount": 16784,
-          "subdividedVertexCount": 66372,
-          "inputTriangleCount": 32805,
-          "subdividedTriangleCount": 131220
+          "inputVertexCount": 486843,
+          "weldedVertexCount": 88914,
+          "inputTriangleCount": 162281,
+          "weldedTriangleCount": 162279,
+          "removedDegenerateTriangleCount": 2
         },
         "smoothing": {
           "method": "taubin-laplacian",
-          "iterations": 8,
+          "iterations": 6,
           "lambda": 0.15,
           "mu": -0.16,
           "pinBoundary": false,
-          "boundaryVertexCount": 1522,
-          "smoothedVertexCount": 66372
+          "boundaryVertexCount": 13185,
+          "smoothedVertexCount": 88914
         },
-        "normalSource": "field-gradient"
+        "normalSource": "field-gradient",
+        "reconstruction": "tricubic-supersample"
       },
       "matchingVoxelCount": 72263,
       "meanLog10Resistivity": 3.599716,
       "meshRange": {
-        "vertexStart": 1265101,
-        "vertexCount": 66372,
-        "indexStart": 7401852,
-        "indexCount": 393660
+        "vertexStart": 1718971,
+        "vertexCount": 88914,
+        "indexStart": 9192711,
+        "indexCount": 486837
       },
       "classification": "source-derived iso-resistivity communication surface",
       "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
@@ -1524,69 +1473,66 @@
       "extractionMethod": "mask-aware-marching-cubes",
       "smoothing": {
         "method": "taubin-laplacian",
-        "iterations": 8,
+        "iterations": 6,
         "lambda": 0.15,
         "mu": -0.16,
         "pinBoundary": false,
-        "boundaryVertexCount": 1232,
-        "smoothedVertexCount": 53126
+        "boundaryVertexCount": 7720,
+        "smoothedVertexCount": 69702
       },
       "vertexWelding": {
-        "inputVertexCount": 78768,
-        "weldedVertexCount": 13434,
-        "inputTriangleCount": 26256,
-        "weldedTriangleCount": 26256,
+        "inputVertexCount": 393666,
+        "weldedVertexCount": 69702,
+        "inputTriangleCount": 131222,
+        "weldedTriangleCount": 131222,
         "removedDegenerateTriangleCount": 0
       },
       "normalPolicy": "precomputed-field-gradient-normals",
       "decimation": "none",
+      "reconstruction": "tricubic-supersample",
+      "supersampleFactor": 2,
       "dimensions": [
-        383,
-        313,
-        33
+        766,
+        626,
+        66
       ],
       "voxelSpacingM": {
-        "x_m": 728.828,
-        "y_m": 728.08,
-        "z_m": 710.58
+        "x_m": 364.414,
+        "y_m": 364.04,
+        "z_m": 355.29
       },
       "marchingCubes": {
-        "visitedCubeCount": 3813888,
-        "skippedMaskedCubeCount": 3129935,
-        "activeCubeCount": 13127,
-        "triangleCount": 105024,
-        "vertexCount": 53126,
+        "visitedCubeCount": 31078125,
+        "skippedMaskedCubeCount": 25230722,
+        "activeCubeCount": 65746,
+        "triangleCount": 131222,
+        "vertexCount": 69702,
         "welding": {
-          "inputVertexCount": 78768,
-          "weldedVertexCount": 13434,
-          "inputTriangleCount": 26256,
-          "weldedTriangleCount": 26256,
+          "inputVertexCount": 393666,
+          "weldedVertexCount": 69702,
+          "inputTriangleCount": 131222,
+          "weldedTriangleCount": 131222,
           "removedDegenerateTriangleCount": 0
-        },
-        "subdivision": {
-          "inputVertexCount": 13434,
-          "subdividedVertexCount": 53126,
-          "inputTriangleCount": 26256,
-          "subdividedTriangleCount": 105024
         },
         "smoothing": {
           "method": "taubin-laplacian",
-          "iterations": 8,
+          "iterations": 6,
           "lambda": 0.15,
           "mu": -0.16,
           "pinBoundary": false,
-          "boundaryVertexCount": 1232,
-          "smoothedVertexCount": 53126
+          "boundaryVertexCount": 7720,
+          "smoothedVertexCount": 69702
         },
-        "normalSource": "field-gradient"
+        "normalSource": "field-gradient",
+        "reconstruction": "tricubic-supersample"
       },
       "matchingVoxelCount": 40950,
       "meanLog10Resistivity": 3.72464,
       "meshRange": {
-        "vertexStart": 1331473,
-        "vertexCount": 53126,
-        "indexStart": 7795512,
-        "indexCount": 315072
+        "vertexStart": 1807885,
+        "vertexCount": 69702,
+        "indexStart": 9679548,
+        "indexCount": 393666
       },
       "classification": "source-derived iso-resistivity communication surface",
       "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
@@ -1611,69 +1557,66 @@
       "extractionMethod": "mask-aware-marching-cubes",
       "smoothing": {
         "method": "taubin-laplacian",
-        "iterations": 8,
+        "iterations": 6,
         "lambda": 0.15,
         "mu": -0.16,
         "pinBoundary": false,
-        "boundaryVertexCount": 340,
-        "smoothedVertexCount": 28755
+        "boundaryVertexCount": 1788,
+        "smoothedVertexCount": 35633
       },
       "vertexWelding": {
-        "inputVertexCount": 42870,
-        "weldedVertexCount": 7235,
-        "inputTriangleCount": 14290,
-        "weldedTriangleCount": 14290,
+        "inputVertexCount": 209130,
+        "weldedVertexCount": 35633,
+        "inputTriangleCount": 69710,
+        "weldedTriangleCount": 69710,
         "removedDegenerateTriangleCount": 0
       },
       "normalPolicy": "precomputed-field-gradient-normals",
       "decimation": "none",
+      "reconstruction": "tricubic-supersample",
+      "supersampleFactor": 2,
       "dimensions": [
-        383,
-        313,
-        33
+        766,
+        626,
+        66
       ],
       "voxelSpacingM": {
-        "x_m": 728.828,
-        "y_m": 728.08,
-        "z_m": 710.58
+        "x_m": 364.414,
+        "y_m": 364.04,
+        "z_m": 355.29
       },
       "marchingCubes": {
-        "visitedCubeCount": 3813888,
-        "skippedMaskedCubeCount": 3129935,
-        "activeCubeCount": 7152,
-        "triangleCount": 57160,
-        "vertexCount": 28755,
+        "visitedCubeCount": 31078125,
+        "skippedMaskedCubeCount": 25230722,
+        "activeCubeCount": 35090,
+        "triangleCount": 69710,
+        "vertexCount": 35633,
         "welding": {
-          "inputVertexCount": 42870,
-          "weldedVertexCount": 7235,
-          "inputTriangleCount": 14290,
-          "weldedTriangleCount": 14290,
+          "inputVertexCount": 209130,
+          "weldedVertexCount": 35633,
+          "inputTriangleCount": 69710,
+          "weldedTriangleCount": 69710,
           "removedDegenerateTriangleCount": 0
-        },
-        "subdivision": {
-          "inputVertexCount": 7235,
-          "subdividedVertexCount": 28755,
-          "inputTriangleCount": 14290,
-          "subdividedTriangleCount": 57160
         },
         "smoothing": {
           "method": "taubin-laplacian",
-          "iterations": 8,
+          "iterations": 6,
           "lambda": 0.15,
           "mu": -0.16,
           "pinBoundary": false,
-          "boundaryVertexCount": 340,
-          "smoothedVertexCount": 28755
+          "boundaryVertexCount": 1788,
+          "smoothedVertexCount": 35633
         },
-        "normalSource": "field-gradient"
+        "normalSource": "field-gradient",
+        "reconstruction": "tricubic-supersample"
       },
       "matchingVoxelCount": 15004,
       "meanLog10Resistivity": 3.891749,
       "meshRange": {
-        "vertexStart": 1384599,
-        "vertexCount": 28755,
-        "indexStart": 8110584,
-        "indexCount": 171480
+        "vertexStart": 1877587,
+        "vertexCount": 35633,
+        "indexStart": 10073214,
+        "indexCount": 209130
       },
       "classification": "source-derived iso-resistivity communication surface",
       "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
@@ -1698,69 +1641,66 @@
       "extractionMethod": "mask-aware-marching-cubes",
       "smoothing": {
         "method": "taubin-laplacian",
-        "iterations": 8,
+        "iterations": 6,
         "lambda": 0.15,
         "mu": -0.16,
         "pinBoundary": false,
-        "boundaryVertexCount": 0,
-        "smoothedVertexCount": 11602
+        "boundaryVertexCount": 165,
+        "smoothedVertexCount": 12022
       },
       "vertexWelding": {
-        "inputVertexCount": 17400,
-        "weldedVertexCount": 2902,
-        "inputTriangleCount": 5800,
-        "weldedTriangleCount": 5800,
+        "inputVertexCount": 71367,
+        "weldedVertexCount": 12022,
+        "inputTriangleCount": 23789,
+        "weldedTriangleCount": 23789,
         "removedDegenerateTriangleCount": 0
       },
       "normalPolicy": "precomputed-field-gradient-normals",
       "decimation": "none",
+      "reconstruction": "tricubic-supersample",
+      "supersampleFactor": 2,
       "dimensions": [
-        383,
-        313,
-        33
+        766,
+        626,
+        66
       ],
       "voxelSpacingM": {
-        "x_m": 728.828,
-        "y_m": 728.08,
-        "z_m": 710.58
+        "x_m": 364.414,
+        "y_m": 364.04,
+        "z_m": 355.29
       },
       "marchingCubes": {
-        "visitedCubeCount": 3813888,
-        "skippedMaskedCubeCount": 3129935,
-        "activeCubeCount": 2904,
-        "triangleCount": 23200,
-        "vertexCount": 11602,
+        "visitedCubeCount": 31078125,
+        "skippedMaskedCubeCount": 25230722,
+        "activeCubeCount": 12066,
+        "triangleCount": 23789,
+        "vertexCount": 12022,
         "welding": {
-          "inputVertexCount": 17400,
-          "weldedVertexCount": 2902,
-          "inputTriangleCount": 5800,
-          "weldedTriangleCount": 5800,
+          "inputVertexCount": 71367,
+          "weldedVertexCount": 12022,
+          "inputTriangleCount": 23789,
+          "weldedTriangleCount": 23789,
           "removedDegenerateTriangleCount": 0
-        },
-        "subdivision": {
-          "inputVertexCount": 2902,
-          "subdividedVertexCount": 11602,
-          "inputTriangleCount": 5800,
-          "subdividedTriangleCount": 23200
         },
         "smoothing": {
           "method": "taubin-laplacian",
-          "iterations": 8,
+          "iterations": 6,
           "lambda": 0.15,
           "mu": -0.16,
           "pinBoundary": false,
-          "boundaryVertexCount": 0,
-          "smoothedVertexCount": 11602
+          "boundaryVertexCount": 165,
+          "smoothedVertexCount": 12022
         },
-        "normalSource": "field-gradient"
+        "normalSource": "field-gradient",
+        "reconstruction": "tricubic-supersample"
       },
       "matchingVoxelCount": 4533,
       "meanLog10Resistivity": 4.054466,
       "meshRange": {
-        "vertexStart": 1413354,
-        "vertexCount": 11602,
-        "indexStart": 8282064,
-        "indexCount": 69600
+        "vertexStart": 1913220,
+        "vertexCount": 12022,
+        "indexStart": 10282344,
+        "indexCount": 71367
       },
       "classification": "source-derived iso-resistivity communication surface",
       "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
@@ -1785,69 +1725,66 @@
       "extractionMethod": "mask-aware-marching-cubes",
       "smoothing": {
         "method": "taubin-laplacian",
-        "iterations": 8,
+        "iterations": 6,
         "lambda": 0.15,
         "mu": -0.16,
         "pinBoundary": false,
-        "boundaryVertexCount": 2299,
-        "smoothedVertexCount": 32674
+        "boundaryVertexCount": 7624,
+        "smoothedVertexCount": 42849
       },
       "vertexWelding": {
-        "inputVertexCount": 47268,
-        "weldedVertexCount": 8465,
-        "inputTriangleCount": 15756,
-        "weldedTriangleCount": 15756,
+        "inputVertexCount": 230826,
+        "weldedVertexCount": 42849,
+        "inputTriangleCount": 76942,
+        "weldedTriangleCount": 76942,
         "removedDegenerateTriangleCount": 0
       },
       "normalPolicy": "precomputed-field-gradient-normals",
       "decimation": "none",
+      "reconstruction": "tricubic-supersample",
+      "supersampleFactor": 2,
       "dimensions": [
-        383,
-        313,
-        33
+        766,
+        626,
+        66
       ],
       "voxelSpacingM": {
-        "x_m": 728.828,
-        "y_m": 728.08,
-        "z_m": 710.58
+        "x_m": 364.414,
+        "y_m": 364.04,
+        "z_m": 355.29
       },
       "marchingCubes": {
-        "visitedCubeCount": 3813888,
-        "skippedMaskedCubeCount": 3129935,
-        "activeCubeCount": 7888,
-        "triangleCount": 63024,
-        "vertexCount": 32674,
+        "visitedCubeCount": 31078125,
+        "skippedMaskedCubeCount": 25230722,
+        "activeCubeCount": 39072,
+        "triangleCount": 76942,
+        "vertexCount": 42849,
         "welding": {
-          "inputVertexCount": 47268,
-          "weldedVertexCount": 8465,
-          "inputTriangleCount": 15756,
-          "weldedTriangleCount": 15756,
+          "inputVertexCount": 230826,
+          "weldedVertexCount": 42849,
+          "inputTriangleCount": 76942,
+          "weldedTriangleCount": 76942,
           "removedDegenerateTriangleCount": 0
-        },
-        "subdivision": {
-          "inputVertexCount": 8465,
-          "subdividedVertexCount": 32674,
-          "inputTriangleCount": 15756,
-          "subdividedTriangleCount": 63024
         },
         "smoothing": {
           "method": "taubin-laplacian",
-          "iterations": 8,
+          "iterations": 6,
           "lambda": 0.15,
           "mu": -0.16,
           "pinBoundary": false,
-          "boundaryVertexCount": 2299,
-          "smoothedVertexCount": 32674
+          "boundaryVertexCount": 7624,
+          "smoothedVertexCount": 42849
         },
-        "normalSource": "field-gradient"
+        "normalSource": "field-gradient",
+        "reconstruction": "tricubic-supersample"
       },
       "matchingVoxelCount": 22387,
       "meanLog10Resistivity": 0.619321,
       "meshRange": {
-        "vertexStart": 1424956,
-        "vertexCount": 32674,
-        "indexStart": 8351664,
-        "indexCount": 189072
+        "vertexStart": 1925242,
+        "vertexCount": 42849,
+        "indexStart": 10353711,
+        "indexCount": 230826
       },
       "classification": "source-derived iso-resistivity communication surface",
       "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
@@ -1872,69 +1809,66 @@
       "extractionMethod": "mask-aware-marching-cubes",
       "smoothing": {
         "method": "taubin-laplacian",
-        "iterations": 8,
+        "iterations": 6,
         "lambda": 0.15,
         "mu": -0.16,
         "pinBoundary": false,
-        "boundaryVertexCount": 3988,
-        "smoothedVertexCount": 65566
+        "boundaryVertexCount": 17865,
+        "smoothedVertexCount": 91347
       },
       "vertexWelding": {
-        "inputVertexCount": 95334,
-        "weldedVertexCount": 16902,
-        "inputTriangleCount": 31778,
-        "weldedTriangleCount": 31778,
-        "removedDegenerateTriangleCount": 0
+        "inputVertexCount": 486390,
+        "weldedVertexCount": 91347,
+        "inputTriangleCount": 162130,
+        "weldedTriangleCount": 162128,
+        "removedDegenerateTriangleCount": 2
       },
       "normalPolicy": "precomputed-field-gradient-normals",
       "decimation": "none",
+      "reconstruction": "tricubic-supersample",
+      "supersampleFactor": 2,
       "dimensions": [
-        383,
-        313,
-        33
+        766,
+        626,
+        66
       ],
       "voxelSpacingM": {
-        "x_m": 728.828,
-        "y_m": 728.08,
-        "z_m": 710.58
+        "x_m": 364.414,
+        "y_m": 364.04,
+        "z_m": 355.29
       },
       "marchingCubes": {
-        "visitedCubeCount": 3813888,
-        "skippedMaskedCubeCount": 3129935,
-        "activeCubeCount": 15899,
-        "triangleCount": 127112,
-        "vertexCount": 65566,
+        "visitedCubeCount": 31078125,
+        "skippedMaskedCubeCount": 25230722,
+        "activeCubeCount": 82077,
+        "triangleCount": 162128,
+        "vertexCount": 91347,
         "welding": {
-          "inputVertexCount": 95334,
-          "weldedVertexCount": 16902,
-          "inputTriangleCount": 31778,
-          "weldedTriangleCount": 31778,
-          "removedDegenerateTriangleCount": 0
-        },
-        "subdivision": {
-          "inputVertexCount": 16902,
-          "subdividedVertexCount": 65566,
-          "inputTriangleCount": 31778,
-          "subdividedTriangleCount": 127112
+          "inputVertexCount": 486390,
+          "weldedVertexCount": 91347,
+          "inputTriangleCount": 162130,
+          "weldedTriangleCount": 162128,
+          "removedDegenerateTriangleCount": 2
         },
         "smoothing": {
           "method": "taubin-laplacian",
-          "iterations": 8,
+          "iterations": 6,
           "lambda": 0.15,
           "mu": -0.16,
           "pinBoundary": false,
-          "boundaryVertexCount": 3988,
-          "smoothedVertexCount": 65566
+          "boundaryVertexCount": 17865,
+          "smoothedVertexCount": 91347
         },
-        "normalSource": "field-gradient"
+        "normalSource": "field-gradient",
+        "reconstruction": "tricubic-supersample"
       },
       "matchingVoxelCount": 58896,
       "meanLog10Resistivity": 1.023382,
       "meshRange": {
-        "vertexStart": 1457630,
-        "vertexCount": 65566,
-        "indexStart": 8540736,
-        "indexCount": 381336
+        "vertexStart": 1968091,
+        "vertexCount": 91347,
+        "indexStart": 10584537,
+        "indexCount": 486384
       },
       "classification": "source-derived iso-resistivity communication surface",
       "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",
@@ -1959,69 +1893,66 @@
       "extractionMethod": "mask-aware-marching-cubes",
       "smoothing": {
         "method": "taubin-laplacian",
-        "iterations": 8,
+        "iterations": 6,
         "lambda": 0.15,
         "mu": -0.16,
         "pinBoundary": false,
-        "boundaryVertexCount": 3502,
-        "smoothedVertexCount": 119006
+        "boundaryVertexCount": 19077,
+        "smoothedVertexCount": 148946
       },
       "vertexWelding": {
-        "inputVertexCount": 175887,
-        "weldedVertexCount": 30187,
-        "inputTriangleCount": 58629,
-        "weldedTriangleCount": 58629,
+        "inputVertexCount": 828423,
+        "weldedVertexCount": 148946,
+        "inputTriangleCount": 276141,
+        "weldedTriangleCount": 276141,
         "removedDegenerateTriangleCount": 0
       },
       "normalPolicy": "precomputed-field-gradient-normals",
       "decimation": "none",
+      "reconstruction": "tricubic-supersample",
+      "supersampleFactor": 2,
       "dimensions": [
-        383,
-        313,
-        33
+        766,
+        626,
+        66
       ],
       "voxelSpacingM": {
-        "x_m": 728.828,
-        "y_m": 728.08,
-        "z_m": 710.58
+        "x_m": 364.414,
+        "y_m": 364.04,
+        "z_m": 355.29
       },
       "marchingCubes": {
-        "visitedCubeCount": 3813888,
-        "skippedMaskedCubeCount": 3129935,
-        "activeCubeCount": 29306,
-        "triangleCount": 234516,
-        "vertexCount": 119006,
+        "visitedCubeCount": 31078125,
+        "skippedMaskedCubeCount": 25230722,
+        "activeCubeCount": 138995,
+        "triangleCount": 276141,
+        "vertexCount": 148946,
         "welding": {
-          "inputVertexCount": 175887,
-          "weldedVertexCount": 30187,
-          "inputTriangleCount": 58629,
-          "weldedTriangleCount": 58629,
+          "inputVertexCount": 828423,
+          "weldedVertexCount": 148946,
+          "inputTriangleCount": 276141,
+          "weldedTriangleCount": 276141,
           "removedDegenerateTriangleCount": 0
-        },
-        "subdivision": {
-          "inputVertexCount": 30187,
-          "subdividedVertexCount": 119006,
-          "inputTriangleCount": 58629,
-          "subdividedTriangleCount": 234516
         },
         "smoothing": {
           "method": "taubin-laplacian",
-          "iterations": 8,
+          "iterations": 6,
           "lambda": 0.15,
           "mu": -0.16,
           "pinBoundary": false,
-          "boundaryVertexCount": 3502,
-          "smoothedVertexCount": 119006
+          "boundaryVertexCount": 19077,
+          "smoothedVertexCount": 148946
         },
-        "normalSource": "field-gradient"
+        "normalSource": "field-gradient",
+        "reconstruction": "tricubic-supersample"
       },
       "matchingVoxelCount": 153035,
       "meanLog10Resistivity": 3.360644,
       "meshRange": {
-        "vertexStart": 1523196,
-        "vertexCount": 119006,
-        "indexStart": 8922072,
-        "indexCount": 703548
+        "vertexStart": 2059438,
+        "vertexCount": 148946,
+        "indexStart": 11070921,
+        "indexCount": 828423
       },
       "classification": "source-derived iso-resistivity communication surface",
       "caveat": "Generated from a resampled MT inversion volume for visualization; not an interpreted geological contact, ore body, target, fault, or mineralization shell.",

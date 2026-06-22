@@ -28,10 +28,10 @@ export const SURFACE_PREVIEW_DEPTH_POLICY = {
 export const PHOTO_OVERLAY_PREVIEW_POLICY = {
   name: "projected-image-alignment-preview",
   frontFace: "uav-camera-facing",
+  // Geometric clearance lift above the substrate; the drape relies on this plus
+  // renderOrder + depthTest (no polygonOffset) so it is depth-convention-robust.
   surfaceClearanceM: 0.12,
   opacity: 0.58,
-  polygonOffsetFactor: -16,
-  polygonOffsetUnits: -16,
 } as const;
 
 export const MT_THRESHOLD_SURFACE_POLICY = {
@@ -161,6 +161,14 @@ export function createSurfaceDepthOccluderMaterial(): THREE.MeshBasicMaterial {
 export function createPhotoOverlayMaterial(
   texture: THREE.Texture,
 ): THREE.MeshBasicMaterial {
+  // Reverse-Z interim fix (Gravel Pit Reverse-Z Surface Regression issue
+  // audit): the projected image drape sits on the gravel-pit
+  // ground surface via its geometric clearance lift (surfaceClearanceM, applied
+  // in makePhotoGeometry) plus renderOrder, depth-tested against the now-opaque
+  // substrate. The previous load-bearing polygonOffset was silently inverted by
+  // the global reverse-Z depth buffer (pushing the image behind the surface and
+  // tearing it), so it is removed here. This function is gravel-pit-exclusive
+  // (only loadPhotoOverlayPreview uses it); Utah FORGE is unaffected.
   const material = new THREE.MeshBasicMaterial({
     map: texture,
     transparent: true,
@@ -168,9 +176,6 @@ export function createPhotoOverlayMaterial(
     depthTest: true,
     depthWrite: false,
     side: THREE.FrontSide,
-    polygonOffset: true,
-    polygonOffsetFactor: PHOTO_OVERLAY_PREVIEW_POLICY.polygonOffsetFactor,
-    polygonOffsetUnits: PHOTO_OVERLAY_PREVIEW_POLICY.polygonOffsetUnits,
     toneMapped: true,
   });
   material.userData.preserveMaterialColor = true;
