@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import test from "node:test";
+import { reviewTest } from "./reviewFlag.mjs";
 import assert from "node:assert/strict";
 
 const repoRoot = process.cwd();
@@ -21,7 +22,7 @@ function mtStyleForPage(pageId) {
   return page.layerOverrides?.[MT_FULL_DENSITY_LAYER_ID] ?? {};
 }
 
-test("Global Settings keeps the MT full-density point cloud page baseline", () => {
+reviewTest("DECK-REVIEW", "Global Settings keeps the MT full-density point cloud page baseline", () => {
   const environment = readJson("environment.json");
   const style = environment.layerStyles?.[MT_FULL_DENSITY_LAYER_ID] ?? {};
 

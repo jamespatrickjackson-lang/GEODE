@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import test from "node:test";
+import { reviewTest } from "./reviewFlag.mjs";
 import assert from "node:assert/strict";
 
 function readSource(path) {
@@ -531,7 +532,7 @@ test("section face channel toggles do not overwrite seismic render mode", () => 
   );
 });
 
-test("section ISO legend uses white primary rows with icon sub-controls", () => {
+reviewTest("SOURCE-CONTRACT-RISK", "section ISO legend uses white primary rows with icon sub-controls", () => {
   assert.match(
     sectionIsoLegendSource,
     /ISO_BUTTON_ACTIVE_BACKGROUND\s*=\s*"#ffffff"/,

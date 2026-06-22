@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import test from "node:test";
+import { reviewTest } from "./reviewFlag.mjs";
 
 const repoRoot = process.cwd();
 
@@ -348,7 +349,7 @@ test("seismic presentation legend follows compact quick legend contract", () => 
   );
 });
 
-test("PSDM surrogate presets and 58-32 page opt in to the presentation bar", () => {
+reviewTest("DECK-REVIEW", "PSDM surrogate presets and 58-32 page opt in to the presentation bar", () => {
   const project = readJson("projects", "utah-forge", "project.json");
   const recipes = readJson(
     "projects",

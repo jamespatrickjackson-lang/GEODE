@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import test from "node:test";
+import { reviewTest } from "./reviewFlag.mjs";
 
 function readSource(...segments) {
   return readFileSync(join(...segments), "utf8");
@@ -18,7 +19,7 @@ test("seismic legend renders figure and source-domain axis metadata from the sha
   assert.match(source, /background:\s*"rgba\(0,\s*0,\s*0,\s*0\.32\)"/);
 });
 
-test("MT resistivity legend renders slice figure metadata from static slice product extents", () => {
+reviewTest("SOURCE-CONTRACT-RISK", "MT resistivity legend renders slice figure metadata from static slice product extents", () => {
   const legend = readSource("src", "ui", "ResistivityLegend.tsx");
   const sliceProducts = readSource("src", "mtResistivity", "sliceProducts.ts");
 

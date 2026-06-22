@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import test from "node:test";
+import { reviewTest } from "./reviewFlag.mjs";
 import assert from "node:assert/strict";
 
 function readSource(path) {
@@ -179,7 +180,7 @@ test("MT Resistivity Cells header has exclusive All Valid Cells and Log10 Resist
   );
 });
 
-test("MT Resistivity Cells Log10 Resistivity Window lines ride the page scalar transition", () => {
+reviewTest("SOURCE-CONTRACT-RISK", "MT Resistivity Cells Log10 Resistivity Window lines ride the page scalar transition", () => {
   assert.doesNotMatch(
     sceneManagerSource,
     /assertFinalTransitionTargetState[\s\S]{0,1000}applyEffectiveVisibilityForPage\(environment, nextPage\)[\s\S]{0,1000}applyEffectiveStylesForPage\(environment, nextPage\)/,

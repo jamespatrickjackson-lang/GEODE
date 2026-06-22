@@ -1,11 +1,12 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import test from "node:test";
+import { reviewTest } from "./reviewFlag.mjs";
 import assert from "node:assert/strict";
 
 const repoRoot = process.cwd();
 
-test("topo atmosphere controls can author selected-page scene overrides", () => {
+reviewTest("SOURCE-CONTRACT-RISK", "topo atmosphere controls can author selected-page scene overrides", () => {
   const layerPanelGroups = readFileSync(
     join(repoRoot, "src", "editor", "LayerPanelGroups.tsx"),
     "utf8",

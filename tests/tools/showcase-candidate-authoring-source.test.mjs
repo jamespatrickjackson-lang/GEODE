@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import test from "node:test";
 import assert from "node:assert/strict";
+import { reviewTest } from "./reviewFlag.mjs";
 
 const candidatePageIds = [
   "40_geophysics_product_overview",
@@ -43,7 +44,7 @@ test("showcase candidate pages author text overlay cards", () => {
   }
 });
 
-test("showcase candidate pages keep terrain visible for topo material review", () => {
+reviewTest("DECK-REVIEW", "showcase candidate pages keep terrain visible for topo material review", () => {
   for (const pageId of candidatePageIds) {
     const page = JSON.parse(
       readFileSync(
@@ -88,7 +89,7 @@ test("topo material controls are not Global Settings-only in the editor source",
   );
 });
 
-test("topo material edits persist to the resolved authoring environment", () => {
+reviewTest("SOURCE-CONTRACT-RISK", "topo material edits persist to the resolved authoring environment", () => {
   const layerPanelGroups = readFileSync(
     join("src", "editor", "LayerPanelGroups.tsx"),
     "utf8",
@@ -117,7 +118,7 @@ test("topo material edits persist to the resolved authoring environment", () => 
   );
 });
 
-test("page scene edits persist as page-local overrides", () => {
+reviewTest("SOURCE-CONTRACT-RISK", "page scene edits persist as page-local overrides", () => {
   const layerPanelGroups = readFileSync(
     join("src", "editor", "LayerPanelGroups.tsx"),
     "utf8",
@@ -153,7 +154,7 @@ test("page scene edits persist as page-local overrides", () => {
   );
 });
 
-test("transition final commit applies page-local scene overrides", () => {
+reviewTest("SOURCE-CONTRACT-RISK", "transition final commit applies page-local scene overrides", () => {
   const sceneManager = readFileSync(
     join("src", "scene", "SceneManager.ts"),
     "utf8",

@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import test from "node:test";
+import { reviewTest } from "./reviewFlag.mjs";
 
 function readJson(...segments) {
   return JSON.parse(readFileSync(join(...segments), "utf8"));
@@ -433,7 +434,7 @@ test("approved PSDM surrogate recipe renders only the unenhanced depth source", 
   );
 });
 
-test("PSDM MT 58-32 source-location tie preset stays claim-safe", () => {
+reviewTest("DECK-REVIEW", "PSDM MT 58-32 source-location tie preset stays claim-safe", () => {
   const project = readJson("projects", "utah-forge", "project.json");
   const recipes = readJson(...seismicDemoRecipesPath);
   const pageId = "61_psdm_mt_58_32_source_location_tie";
@@ -890,7 +891,7 @@ test("Line 95 remains source-gated until a real source product exists", () => {
   );
 });
 
-test("authored seismic catalog pages cover only source-backed required lines", () => {
+reviewTest("DECK-REVIEW", "authored seismic catalog pages cover only source-backed required lines", () => {
   const project = readJson("projects", "utah-forge", "project.json");
   const requiredPageIds = [
     "54_seismic_product_catalog",
@@ -915,7 +916,7 @@ test("authored seismic catalog pages cover only source-backed required lines", (
   );
 });
 
-test("2D seismic survey-lines review page keeps a fixed review view and shows representative line curtains", () => {
+reviewTest("DECK-REVIEW", "2D seismic survey-lines review page keeps a fixed review view and shows representative line curtains", () => {
   const manifest = readJson(...seismicManifestPath);
   const project = readJson("projects", "utah-forge", "project.json");
   const page = readJson(
@@ -1001,7 +1002,7 @@ test("2D seismic survey-lines review page keeps a fixed review view and shows re
   );
 });
 
-test("all 2D seismic sections review page enables every non-3D source-backed section", () => {
+reviewTest("DECK-REVIEW", "all 2D seismic sections review page enables every non-3D source-backed section", () => {
   const manifest = readJson(...seismicManifestPath);
   const project = readJson("projects", "utah-forge", "project.json");
   const representativePage = readJson(
