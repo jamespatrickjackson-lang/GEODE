@@ -357,6 +357,31 @@ function computeFieldGradientNormals({
   return normals;
 }
 
+// R10 (feather-first): per-vertex uncertainty feather. Sample the precomputed
+// per-voxel feather alpha field (coarse grid, 0..1; 1 over the well-supported
+// bulk, ramping to 0 across the sparsest support rind) at each final vertex.
+// Grid-independent; the field shares the world bounds and carries 0 (not NaN)
+// outside support so the trilinear sample is always finite. Uncertainty is
+// communicated by fading opacity — geometry is never removed.
+function computeVertexFeatherAlpha({ vertices, alphaField, dimensions, bounds, round }) {
+  const [nx, ny, nz] = dimensions;
+  const spanX = Math.max(1e-9, bounds.maxX - bounds.minX);
+  const spanY = Math.max(1e-9, bounds.maxY - bounds.minY);
+  const spanZ = Math.max(1e-9, bounds.maxZ - bounds.minZ);
+  const count = vertices.length / 3;
+  const alpha = new Array(count);
+  for (let i = 0; i < count; i += 1) {
+    const fx = ((vertices[i * 3] - bounds.minX) / spanX) * nx - 0.5;
+    const fy = ((vertices[i * 3 + 1] - bounds.minY) / spanY) * ny - 0.5;
+    const fz = ((vertices[i * 3 + 2] - bounds.minZ) / spanZ) * nz - 0.5;
+    let a = sampleFieldTrilinear(alphaField, dimensions, fx, fy, fz);
+    if (!Number.isFinite(a) || a < 0) a = 0;
+    else if (a > 1) a = 1;
+    alpha[i] = round(a, 3);
+  }
+  return alpha;
+}
+
 // R1: higher-order reconstruction. Tricubic (Catmull-Rom) upsample of the
 // reconstructed scalar field onto an N-times-finer grid, evaluated only where
 // the data supports it (mask). Marching cubes on this smooth finer field
@@ -482,6 +507,8 @@ export function extractMaskAwareMarchingCubes({
   comparison,
   color,
   round,
+  featherAlphaField = null,
+  featherDimensions = null,
 }) {
   const [nx, ny, nz] = dimensions;
   const isoValue = comparison === ">=" ? -thresholdLog10 : thresholdLog10;
@@ -588,10 +615,23 @@ export function extractMaskAwareMarchingCubes({
     comparison,
     round,
   });
+  // R10: per-vertex feather alpha sampled from the coarse alpha field (null when
+  // not supplied → fully opaque downstream).
+  const alpha =
+    featherAlphaField && featherDimensions
+      ? computeVertexFeatherAlpha({
+          vertices: smoothed.vertices,
+          alphaField: featherAlphaField,
+          dimensions: featherDimensions,
+          bounds,
+          round,
+        })
+      : null;
 
   return {
     vertices: smoothed.vertices,
     normals,
+    alpha,
     colors: welded.colors,
     scalarValues: welded.scalarValues,
     indices: welded.indices,
@@ -605,6 +645,7 @@ export function extractMaskAwareMarchingCubes({
       smoothing: smoothed.stats,
       normalSource: "field-gradient",
       reconstruction: "tricubic-supersample",
+      featherSource: alpha ? "per-vertex-confidence-smoothstep" : "none",
     },
   };
 }

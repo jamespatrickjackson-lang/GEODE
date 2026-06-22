@@ -248,6 +248,30 @@ function validateVolumesAndSurfaces(stats) {
     "continuity extrapolation occurred",
   );
 
+  // R10 (feather-first): confidence metadata recorded in both states. When the
+  // feather is enabled it must stay a minority (no extent clip / no runaway like
+  // the reverted hard clip that ate >50% of the model); when disabled, surfaces
+  // render at full opacity.
+  assert.equal(
+    productStats.confidence?.provider,
+    "mt-data-support-percentile-feather",
+    "confidence provider recorded",
+  );
+  if (productStats.confidence?.mode === "feather-only-no-extent-clip") {
+    assertGreaterThan(
+      productStats.confidence.featheredVoxelCount,
+      0,
+      "some voxels are feathered",
+    );
+    assert.equal(
+      productStats.confidence.featheredFraction < 0.2,
+      true,
+      `feathered fraction ${productStats.confidence.featheredFraction} must stay < 0.2 (bulk solid)`,
+    );
+  } else {
+    assert.equal(productStats.confidence?.mode, "disabled", "confidence feather disabled");
+  }
+
   // Slim, lazy preview: geometry is fetched per boundary at runtime.
   assert.equal(thresholdMesh.schema, "geosee.scalar-grid-mesh-preview.v1");
   assert.equal(thresholdMesh.lazyBoundaries, true, "slim lazy preview");
@@ -364,6 +388,20 @@ function validateVolumesAndSurfaces(stats) {
       probe.vertices.length,
       "boundary asset normals length matches vertices",
     );
+    // R10: when feather is enabled, per-vertex alpha is present (one per vertex,
+    // in [0,1]); when disabled the alpha array is empty.
+    const probeAlpha = probe.alpha ?? [];
+    if (probeAlpha.length > 0) {
+      assert.equal(
+        probeAlpha.length,
+        probe.vertices.length / 3,
+        "boundary asset feather alpha one per vertex",
+      );
+      assert.ok(
+        probeAlpha.every((a) => a >= 0 && a <= 1),
+        "boundary asset feather alpha in [0,1]",
+      );
+    }
   }
   assert.equal(
     thresholdMesh.processing.thresholdSurfaces.filter(

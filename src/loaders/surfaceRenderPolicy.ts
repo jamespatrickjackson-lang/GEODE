@@ -58,12 +58,20 @@ export function applyMtThresholdSurfaceMaterialOpacity(
     0,
     1,
   );
+  // R10: a feathered surface carries per-vertex alpha that the opaque fast-path
+  // would discard (transparent=false drops vertex alpha), so it must stay
+  // transparent regardless of the layer opacity.
+  const feathered = material.userData.mtThresholdSurfaceFeathered === true;
   const opaque =
-    !wireframe && next >= MT_THRESHOLD_SURFACE_POLICY.opaqueOpacityThreshold;
+    !feathered &&
+    !wireframe &&
+    next >= MT_THRESHOLD_SURFACE_POLICY.opaqueOpacityThreshold;
   material.opacity = opaque ? 1 : next;
   material.transparent = !opaque;
   material.depthTest = true;
-  material.depthWrite = opaque;
+  // Feathered surfaces are mostly opaque (only the sparsest rind fades), so keep
+  // depth writes on to avoid see-through ghosting of the solid bulk.
+  material.depthWrite = opaque || feathered;
   material.userData.preserveMaterialOpacity = true;
   material.userData.mtThresholdSurfaceEffectiveOpacity = material.opacity;
   material.userData.mtThresholdSurfaceOpaque = opaque;

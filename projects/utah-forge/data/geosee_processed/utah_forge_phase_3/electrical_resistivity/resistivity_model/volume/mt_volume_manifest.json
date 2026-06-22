@@ -212,7 +212,8 @@
             "smoothedVertexCount": 3572
           },
           "normalSource": "field-gradient",
-          "reconstruction": "tricubic-supersample"
+          "reconstruction": "tricubic-supersample",
+          "featherSource": "none"
         },
         "matchingVoxelCount": 1312,
         "meanLog10Resistivity": -0.015257,
@@ -296,7 +297,8 @@
             "smoothedVertexCount": 11370
           },
           "normalSource": "field-gradient",
-          "reconstruction": "tricubic-supersample"
+          "reconstruction": "tricubic-supersample",
+          "featherSource": "none"
         },
         "matchingVoxelCount": 3774,
         "meanLog10Resistivity": 0.166904,
@@ -380,7 +382,8 @@
             "smoothedVertexCount": 19914
           },
           "normalSource": "field-gradient",
-          "reconstruction": "tricubic-supersample"
+          "reconstruction": "tricubic-supersample",
+          "featherSource": "none"
         },
         "matchingVoxelCount": 8399,
         "meanLog10Resistivity": 0.317814,
@@ -464,7 +467,8 @@
             "smoothedVertexCount": 28039
           },
           "normalSource": "field-gradient",
-          "reconstruction": "tricubic-supersample"
+          "reconstruction": "tricubic-supersample",
+          "featherSource": "none"
         },
         "matchingVoxelCount": 13203,
         "meanLog10Resistivity": 0.435559,
@@ -548,7 +552,8 @@
             "smoothedVertexCount": 38365
           },
           "normalSource": "field-gradient",
-          "reconstruction": "tricubic-supersample"
+          "reconstruction": "tricubic-supersample",
+          "featherSource": "none"
         },
         "matchingVoxelCount": 19688,
         "meanLog10Resistivity": 0.571174,
@@ -632,7 +637,8 @@
             "smoothedVertexCount": 55878
           },
           "normalSource": "field-gradient",
-          "reconstruction": "tricubic-supersample"
+          "reconstruction": "tricubic-supersample",
+          "featherSource": "none"
         },
         "matchingVoxelCount": 29926,
         "meanLog10Resistivity": 0.733425,
@@ -716,7 +722,8 @@
             "smoothedVertexCount": 73702
           },
           "normalSource": "field-gradient",
-          "reconstruction": "tricubic-supersample"
+          "reconstruction": "tricubic-supersample",
+          "featherSource": "none"
         },
         "matchingVoxelCount": 44836,
         "meanLog10Resistivity": 0.901902,
@@ -800,7 +807,8 @@
             "smoothedVertexCount": 101332
           },
           "normalSource": "field-gradient",
-          "reconstruction": "tricubic-supersample"
+          "reconstruction": "tricubic-supersample",
+          "featherSource": "none"
         },
         "matchingVoxelCount": 714216,
         "meanLog10Resistivity": 2.596092,
@@ -884,7 +892,8 @@
             "smoothedVertexCount": 144199
           },
           "normalSource": "field-gradient",
-          "reconstruction": "tricubic-supersample"
+          "reconstruction": "tricubic-supersample",
+          "featherSource": "none"
         },
         "matchingVoxelCount": 683752,
         "meanLog10Resistivity": 2.638574,
@@ -968,7 +977,8 @@
             "smoothedVertexCount": 178577
           },
           "normalSource": "field-gradient",
-          "reconstruction": "tricubic-supersample"
+          "reconstruction": "tricubic-supersample",
+          "featherSource": "none"
         },
         "matchingVoxelCount": 628096,
         "meanLog10Resistivity": 2.709203,
@@ -1052,7 +1062,8 @@
             "smoothedVertexCount": 210093
           },
           "normalSource": "field-gradient",
-          "reconstruction": "tricubic-supersample"
+          "reconstruction": "tricubic-supersample",
+          "featherSource": "none"
         },
         "matchingVoxelCount": 567390,
         "meanLog10Resistivity": 2.779732,
@@ -1136,7 +1147,8 @@
             "smoothedVertexCount": 183042
           },
           "normalSource": "field-gradient",
-          "reconstruction": "tricubic-supersample"
+          "reconstruction": "tricubic-supersample",
+          "featherSource": "none"
         },
         "matchingVoxelCount": 473666,
         "meanLog10Resistivity": 2.887056,
@@ -1220,7 +1232,8 @@
             "smoothedVertexCount": 169559
           },
           "normalSource": "field-gradient",
-          "reconstruction": "tricubic-supersample"
+          "reconstruction": "tricubic-supersample",
+          "featherSource": "none"
         },
         "matchingVoxelCount": 372123,
         "meanLog10Resistivity": 3.009488,
@@ -1304,7 +1317,8 @@
             "smoothedVertexCount": 216909
           },
           "normalSource": "field-gradient",
-          "reconstruction": "tricubic-supersample"
+          "reconstruction": "tricubic-supersample",
+          "featherSource": "none"
         },
         "matchingVoxelCount": 277104,
         "meanLog10Resistivity": 3.135602,
@@ -1388,7 +1402,8 @@
             "smoothedVertexCount": 169170
           },
           "normalSource": "field-gradient",
-          "reconstruction": "tricubic-supersample"
+          "reconstruction": "tricubic-supersample",
+          "featherSource": "none"
         },
         "matchingVoxelCount": 176480,
         "meanLog10Resistivity": 3.308387,
@@ -1472,7 +1487,8 @@
             "smoothedVertexCount": 115250
           },
           "normalSource": "field-gradient",
-          "reconstruction": "tricubic-supersample"
+          "reconstruction": "tricubic-supersample",
+          "featherSource": "none"
         },
         "matchingVoxelCount": 112267,
         "meanLog10Resistivity": 3.468205,
@@ -1556,7 +1572,8 @@
             "smoothedVertexCount": 88914
           },
           "normalSource": "field-gradient",
-          "reconstruction": "tricubic-supersample"
+          "reconstruction": "tricubic-supersample",
+          "featherSource": "none"
         },
         "matchingVoxelCount": 72263,
         "meanLog10Resistivity": 3.599716,
@@ -1640,7 +1657,8 @@
             "smoothedVertexCount": 69702
           },
           "normalSource": "field-gradient",
-          "reconstruction": "tricubic-supersample"
+          "reconstruction": "tricubic-supersample",
+          "featherSource": "none"
         },
         "matchingVoxelCount": 40950,
         "meanLog10Resistivity": 3.72464,
@@ -1724,7 +1742,8 @@
             "smoothedVertexCount": 35633
           },
           "normalSource": "field-gradient",
-          "reconstruction": "tricubic-supersample"
+          "reconstruction": "tricubic-supersample",
+          "featherSource": "none"
         },
         "matchingVoxelCount": 15004,
         "meanLog10Resistivity": 3.891749,
@@ -1808,7 +1827,8 @@
             "smoothedVertexCount": 12022
           },
           "normalSource": "field-gradient",
-          "reconstruction": "tricubic-supersample"
+          "reconstruction": "tricubic-supersample",
+          "featherSource": "none"
         },
         "matchingVoxelCount": 4533,
         "meanLog10Resistivity": 4.054466,
@@ -1892,7 +1912,8 @@
             "smoothedVertexCount": 42849
           },
           "normalSource": "field-gradient",
-          "reconstruction": "tricubic-supersample"
+          "reconstruction": "tricubic-supersample",
+          "featherSource": "none"
         },
         "matchingVoxelCount": 22387,
         "meanLog10Resistivity": 0.619321,
@@ -1976,7 +1997,8 @@
             "smoothedVertexCount": 91347
           },
           "normalSource": "field-gradient",
-          "reconstruction": "tricubic-supersample"
+          "reconstruction": "tricubic-supersample",
+          "featherSource": "none"
         },
         "matchingVoxelCount": 58896,
         "meanLog10Resistivity": 1.023382,
@@ -2060,7 +2082,8 @@
             "smoothedVertexCount": 148946
           },
           "normalSource": "field-gradient",
-          "reconstruction": "tricubic-supersample"
+          "reconstruction": "tricubic-supersample",
+          "featherSource": "none"
         },
         "matchingVoxelCount": 153035,
         "meanLog10Resistivity": 3.360644,

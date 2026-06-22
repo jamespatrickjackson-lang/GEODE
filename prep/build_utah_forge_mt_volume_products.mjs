@@ -13,6 +13,7 @@ import {
   extractMaskAwareMarchingCubes,
   supersampleFieldTricubic,
 } from "./lib/marchingCubes.mjs";
+import { supportFeatherAlphaField } from "./lib/confidence.mjs";
 
 const REPO_RELATIVE_INPUT_ZIP_REF =
   "projects/utah-forge/data/client_preprocessed/utah_forge_phase_3/electrical_resistivity/mt_model_cell_center_updated/FORGE_MT_mdl17_cellcenter.zip";
@@ -61,6 +62,19 @@ const RECON_MIN_WEIGHT = 0.05;
 // R1: surfaces are extracted from a tricubic-supersampled field at this factor
 // (finer, smooth → no grid terracing). The volume render assets stay coarse.
 const SURFACE_SUPERSAMPLE = 2;
+// R10 (DEC-181, feather-first): uncertainty feathering only — NO extent clip.
+// The full model is kept; only the sparsest CONF_FEATHER_PERCENTILE of occupied
+// voxels by MT data support fade their opacity toward zero (the genuine
+// unreliable outer rind). 95% of the model stays fully solid. Surfaces only;
+// the volume-render mask/values are untouched. Tunable; recorded in provenance.
+//
+// DISABLED for now (2026-06-21) per user: the data-support proxy is not the
+// right confidence signal yet. Surfaces render at full opacity. Flip
+// CONF_FEATHER_ENABLED back to true to re-enable (the full feather path is
+// retained). When revisiting, prefer a better confidence basis than raw
+// data-support density.
+const CONF_FEATHER_ENABLED = false;
+const CONF_FEATHER_PERCENTILE = 0.05;
 
 const PRODUCTS = [
   {
@@ -565,6 +579,18 @@ function finalizeAccumulator(accumulator) {
     mask[index] = 255;
   }
   occupiedValues.sort((a, b) => a - b);
+  // R10 (feather-first): per-voxel feather alpha field. Full extent is kept;
+  // only the sparsest CONF_FEATHER_PERCENTILE of occupied voxels fade. The field
+  // is sampled per surface vertex at extraction time. Disabled by flag for now.
+  const feather = CONF_FEATHER_ENABLED
+    ? supportFeatherAlphaField({
+        blurredCounts,
+        occupiedMask: mask,
+        minWeight: RECON_MIN_WEIGHT,
+        featherPercentile: CONF_FEATHER_PERCENTILE,
+      })
+    : null;
+  accumulator.confidence = feather ? feather.alpha : null;
   const stats = {
     productId: accumulator.id,
     label: accumulator.label,
@@ -585,6 +611,26 @@ function finalizeAccumulator(accumulator) {
       directlySampledVoxelCount: occupiedVoxelCount - extrapolatedVoxelCount,
       inRangeClamped: true,
     },
+    confidence: feather
+      ? {
+          provider: "mt-data-support-percentile-feather",
+          metric: "Gaussian-blurred MT sample density",
+          mode: "feather-only-no-extent-clip",
+          featherPercentile: CONF_FEATHER_PERCENTILE,
+          supportThreshold: round(feather.supportThreshold, 6),
+          supportFloor: round(feather.supportFloor, 6),
+          featheredVoxelCount: feather.featheredVoxelCount,
+          featheredFraction: round(
+            feather.featheredVoxelCount / Math.max(1, occupiedVoxelCount),
+            4,
+          ),
+          note: "Full model kept; only the sparsest 5% of occupied voxels by MT data support feather opacity toward zero. No extent clip; volume-render mask unaffected.",
+        }
+      : {
+          provider: "mt-data-support-percentile-feather",
+          mode: "disabled",
+          note: "Confidence feather disabled (CONF_FEATHER_ENABLED=false); surfaces render at full opacity.",
+        },
     log10Resistivity: {
       min: round(Number.isFinite(logMin) ? logMin : scalarRange.min, 6),
       p02: round(percentile(occupiedValues, 0.02) ?? scalarRange.min, 6),
@@ -696,6 +742,8 @@ function appendMarchingCubesSurface(mesh, accumulator, threshold) {
     comparison: threshold.comparison,
     color,
     round,
+    featherAlphaField: accumulator.confidence,
+    featherDimensions: accumulator.dimensions,
   });
   const vertexOffset = mesh.vertices.length / 3;
   // Append element-by-element: spread (push(...arr)) overflows the argument
@@ -706,6 +754,10 @@ function appendMarchingCubesSurface(mesh, accumulator, threshold) {
     mesh.colors.push(extracted.colors[i]);
   for (let i = 0; i < extracted.normals.length; i += 1)
     mesh.normals.push(extracted.normals[i]);
+  if (extracted.alpha) {
+    for (let i = 0; i < extracted.alpha.length; i += 1)
+      mesh.alpha.push(extracted.alpha[i]);
+  }
   for (let i = 0; i < extracted.scalarValues.length; i += 1)
     mesh.scalarValues.push(extracted.scalarValues[i]);
   for (let i = 0; i < extracted.indices.length; i += 1)
@@ -758,6 +810,7 @@ function buildThresholdMesh(accumulators, options) {
     vertices: [],
     normals: [],
     colors: [],
+    alpha: [],
     scalarValues: [],
     indices: [],
   };
@@ -805,7 +858,8 @@ function buildThresholdMesh(accumulators, options) {
     sceneBounds: sceneBoundsTuple(sceneBounds),
     material: {
       side: "double",
-      note: "Vertex colors distinguish source-derived threshold surfaces.",
+      note: "Vertex colors distinguish source-derived threshold surfaces; per-vertex alpha feathers opacity across the low-confidence falloff (R10).",
+      feathered: mesh.alpha.length === mesh.vertices.length / 3 && mesh.alpha.length > 0,
     },
     attributes: {
       scalarValues: mesh.scalarValues,
@@ -841,6 +895,7 @@ function buildThresholdMesh(accumulators, options) {
     vertices: mesh.vertices,
     normals: mesh.normals,
     colors: mesh.colors,
+    alpha: mesh.alpha,
     indices: mesh.indices,
   };
 }
@@ -861,6 +916,9 @@ async function writeThresholdBoundaryAssets(thresholdMesh, thresholdDir) {
     const vertices = thresholdMesh.vertices.slice(vertexStart * 3, vertexEnd * 3);
     const normals = thresholdMesh.normals.slice(vertexStart * 3, vertexEnd * 3);
     const colors = thresholdMesh.colors.slice(vertexStart * 3, vertexEnd * 3);
+    const alpha = thresholdMesh.alpha?.length
+      ? thresholdMesh.alpha.slice(vertexStart, vertexEnd)
+      : [];
     const scalarValues = thresholdMesh.attributes.scalarValues.slice(
       vertexStart,
       vertexEnd,
@@ -894,6 +952,7 @@ async function writeThresholdBoundaryAssets(thresholdMesh, thresholdDir) {
       vertices,
       normals,
       colors,
+      alpha,
       indices,
     };
     const relativeFile = `threshold_surfaces/boundaries/${surface.isoProductId}/${surface.id}.json`;
@@ -1011,6 +1070,8 @@ async function main() {
     finalizeAccumulator(accumulator);
     // R1: tricubic-supersampled field used only for surface extraction (volume
     // render assets stay at the coarse grid written by writeProduct).
+    // R10 (feather-first): full occupied mask — no extent clip. Uncertainty is
+    // communicated by per-vertex opacity feather, not by removing geometry.
     const hi = supersampleFieldTricubic({
       values: accumulator.values,
       mask: accumulator.mask,
@@ -1078,6 +1139,7 @@ async function main() {
     vertices: [],
     normals: [],
     colors: [],
+    alpha: [],
     indices: [],
     attributes: { scalar: thresholdMesh.attributes.scalar, scalarValues: [] },
   };

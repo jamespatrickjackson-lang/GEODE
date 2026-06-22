@@ -411,6 +411,12 @@ function validateMtProducts() {
   // preview itself carries no concatenated geometry.
   assert.equal(thresholdMesh.lazyBoundaries, true, "slim lazy preview");
   assert.equal(thresholdMesh.vertices.length, 0, "preview geometry is lazy");
+  // R10: feather flag present (true when enabled, false when disabled).
+  assert.equal(
+    typeof thresholdMesh.material?.feathered,
+    "boolean",
+    "threshold surface feather flag present (R10)",
+  );
 
   const stationQc = readJson(MT_STATION_QC_PATH);
   assert.equal(stationQc.schema, "geosee.mt-station-qc.v1");

@@ -268,6 +268,7 @@
     "utah-forge-mt-resistivity-threshold-surfaces": true,
     "utah-forge-phase3-seismic-browser": false,
     "utah-forge-mt-resistivity-full-density": false,
+    "utah-forge-mt-resistivity-preview": false,
     "utah-forge-topo-graticule": false,
     "utah-forge-mt-top-surface": false,
     "utah-forge-mt-resistivity-volume": true

@@ -41,6 +41,7 @@ interface MeshPreviewPayload {
   vertices: number[];
   colors?: number[];
   normals?: number[];
+  alpha?: number[];
   indices: number[];
 }
 
@@ -116,10 +117,28 @@ function buildPreviewGeometry(
   scalarValues: Float32Array | null,
   scalar: ScalarMetadata,
   normals: Float32Array | null = null,
+  alpha: Float32Array | null = null,
 ): THREE.BufferGeometry {
   const geometry = new THREE.BufferGeometry();
   geometry.setAttribute("position", new THREE.BufferAttribute(vertices, 3));
-  geometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+  const vertexCount = vertices.length / 3;
+  if (alpha && alpha.length === vertexCount) {
+    // R10: pack RGB + per-vertex feather alpha into an itemSize-4 color
+    // attribute. three multiplies vertex alpha into fragment alpha on a
+    // transparent vertexColors material, so the feather composes with the
+    // transition opacity envelope automatically (no new opacity owner).
+    const rgba = new Float32Array(vertexCount * 4);
+    for (let i = 0; i < vertexCount; i += 1) {
+      rgba[i * 4] = colors[i * 3];
+      rgba[i * 4 + 1] = colors[i * 3 + 1];
+      rgba[i * 4 + 2] = colors[i * 3 + 2];
+      rgba[i * 4 + 3] = alpha[i];
+    }
+    geometry.setAttribute("color", new THREE.BufferAttribute(rgba, 4));
+    geometry.userData.feathered = true;
+  } else {
+    geometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+  }
   geometry.setIndex(new THREE.BufferAttribute(indices, 1));
   if (scalarValues && scalarValues.length === vertices.length / 3) {
     geometry.userData.scalarValues = scalarValues;
@@ -153,6 +172,16 @@ function createPreviewMesh(
   applyMaterialSide(material, payload.material?.side);
   if (payload.material?.flatShading === true) {
     material.flatShading = true;
+    material.needsUpdate = true;
+  }
+  // R10: a feathered surface carries per-vertex alpha (RGBA color attribute).
+  // Flag the material so the opaque fast-path never drops that alpha. The bulk
+  // is fully opaque (alpha 1; only the sparsest rind fades), so keep depthWrite
+  // on — otherwise the solid surface renders see-through/ghosted.
+  if (geometry.userData.feathered === true) {
+    material.userData.mtThresholdSurfaceFeathered = true;
+    material.transparent = true;
+    material.depthWrite = true;
     material.needsUpdate = true;
   }
   const mesh = new THREE.Mesh(geometry, material);
@@ -306,6 +335,11 @@ export async function loadMeshPreview(
     payload.attributes.scalarValues.length === payload.vertices.length / 3
       ? new Float32Array(payload.attributes.scalarValues)
       : null;
+  // R10: per-vertex uncertainty feather alpha (0..1), one per vertex.
+  const payloadAlpha =
+    payload.alpha && payload.alpha.length === payload.vertices.length / 3
+      ? new Float32Array(payload.alpha)
+      : null;
   const minZ = payload.sceneBounds?.min?.[2] ?? 0;
   const maxZ = payload.sceneBounds?.max?.[2] ?? minZ + 1;
   const colors = payloadColors ?? colorBuffer(vertices, minZ, maxZ);
@@ -358,6 +392,9 @@ export async function loadMeshPreview(
             (vertexStart + vertexCount) * 3,
           )
         : null;
+      const subAlpha = payloadAlpha
+        ? payloadAlpha.slice(vertexStart, vertexStart + vertexCount)
+        : null;
       const subScalars = payloadScalarValues.slice(
         vertexStart,
         vertexStart + vertexCount,
@@ -373,6 +410,7 @@ export async function loadMeshPreview(
         subScalars,
         payload.attributes?.scalar,
         subNormals,
+        subAlpha,
       );
       const label = slice.label ?? slice.id ?? payload.label ?? "Mesh preview";
       const mesh = createPreviewMesh(
@@ -420,6 +458,7 @@ export async function loadMeshPreview(
       payloadScalarValues,
       payload.attributes?.scalar,
       payloadNormals,
+      payloadAlpha,
     );
     const mesh = createPreviewMesh(
       geometry,

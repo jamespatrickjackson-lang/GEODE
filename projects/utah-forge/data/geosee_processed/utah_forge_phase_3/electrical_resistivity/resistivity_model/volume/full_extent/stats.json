@@ -22,6 +22,11 @@
     "directlySampledVoxelCount": 139850,
     "inRangeClamped": true
   },
+  "confidence": {
+    "provider": "mt-data-support-percentile-feather",
+    "mode": "disabled",
+    "note": "Confidence feather disabled (CONF_FEATHER_ENABLED=false); surfaces render at full opacity."
+  },
   "log10Resistivity": {
     "min": -0.304113,
     "p02": 0.824024,

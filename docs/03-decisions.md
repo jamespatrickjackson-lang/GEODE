@@ -3573,8 +3573,29 @@ neutralized (one product) but not yet removed from the control manifest.
 
 ## DEC-181 - Confidence-masked surfaces + uncertainty feathering (low-confidence data handling)
 
-Status: adopted as the standard approach; implementation queued (roadmap R10).
-Full spec: `docs/dev-context/Confidence-Masking-And-Uncertainty.md`.
+Status: in rework 2026-06-21. First R10 attempt used a hard confidence clip
+(`clipLow=0.12` over data-support density normalized to [minWeight, p90]); it
+removed 56.8% of occupied voxels (780,503 → 337,458) because data-support
+density mislabels the smoothness-regularized inversion *interior* as
+low-confidence — a regularized MT inversion resolves the interior even where MT
+station sample density is modest. Reverted to `ISO_SURFACES_003`.
+
+Re-implemented 2026-06-21 as **feather-first, no extent clip**: the full model is
+kept; only the **sparsest 5% of occupied voxels by MT data support** feather
+opacity toward zero (the genuine unreliable outer rind), via per-vertex RGBA
+alpha (`CONF_FEATHER_PERCENTILE`, `supportFeatherAlphaField`). Feathered surfaces
+keep `depthWrite` on (95% solid bulk) to avoid see-through ghosting. The guard
+asserts the feathered fraction stays < 0.2 so a runaway clip cannot recur. No
+morphological extent clipping (the `confidence.mjs` morphology helpers remain as
+generic primitives for the medical track but are unused in this mode).
+
+**Disabled 2026-06-21** per user ("not working … keep it off, come back to it"):
+the data-support density is not the right confidence signal. `CONF_FEATHER_ENABLED
+= false` makes the feather a no-op (surfaces render at full opacity, full model);
+the entire R10 path (prep `supportFeatherAlphaField` + per-vertex RGBA alpha +
+runtime feather material) is retained behind the flag for a future revisit with a
+better confidence basis. Guards validate feather only when present. Full spec:
+`docs/dev-context/Confidence-Masking-And-Uncertainty.md`.
 
 **Considered:** cosmetically smoothing the frayed low-confidence surface margins
 into clean edges; versus hard-clipping with a crisp boundary; versus a
@@ -3608,3 +3629,36 @@ implementation care is disabling the opaque material fast-path for feathered
 surfaces and declaring any confidence control as a discrete transition channel.
 MT confidence is a data-support proxy until a true sensitivity/DOI source
 exists.
+
+## DEC-182 - MT surface reconstruction parameters frozen (R8)
+
+Status: parameters frozen 2026-06-21 after visual sign-off on `ISO_SURFACES_003`
+(R1 tricubic supersample + field-gradient normals). **Supersedes** the "fineness
+via Loop subdivision" framing in DEC-180.
+
+**Frozen values** (`prep/build_utah_forge_mt_volume_products.mjs` +
+`prep/lib/marchingCubes.mjs`):
+- Grid: `TARGET_SPACING_M` = 730 m (source-core density);
+  `DEPTH_FLOOR_M` = −20,000 m.
+- Surface fineness: `SURFACE_SUPERSAMPLE` = 2 → tricubic (Catmull-Rom)
+  supersampled field at ~365 m (`supersampleFieldTricubic`), C2. This — not mesh
+  subdivision — is the fineness mechanism (R1). `subdivideMesh` is dormant/unused.
+- Reconstruction: `RECON_SIGMA_VOXELS` = 2.5, `RECON_MIN_WEIGHT` = 0.05
+  (continuity Gaussian-blend, bounded in-range, no overshoot).
+- Smoothing: Taubin λ = 0.15 / μ = −0.16, 6 iterations, unpinned.
+- Normals: precomputed field-gradient (∇f), oriented by comparison.
+
+**Decisions resolved:**
+- `DEPTH_FLOOR_M` stays −20 km: the halfspace below is a large unconstrained
+  void, not resolved structure; extending to the literal −122 km source extent
+  would add empty volume and coarsen the grid budget.
+- Subdivision: superseded by tricubic supersample (R1) in practice; `subdivideMesh`
+  retained dormant, slated for deletion in R6 hygiene.
+
+**Why:** R8 freezes geometry/reconstruction parameters before the irreversible
+binary packing (R4) and the topology change (R2), so packed assets reflect final
+tuned values. Visual sign-off on `ISO_SURFACES_003` is the acceptance.
+
+**Trade-off:** further visual tuning (sigma / smoothing strength) remains
+available as an interactive sub-loop if a specific margin or structure defect is
+identified; absent a named defect, the signed-off values are the freeze.
