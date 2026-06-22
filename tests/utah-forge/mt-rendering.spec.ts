@@ -85,6 +85,65 @@ test("Utah FORGE MT threshold surfaces load from binary tiles with correct colou
     expect(m.depthWrite, `${id} depthWrite`).toBe(true);
   }
 
-  // Lazy binary load + dequantization must not surface any console/page errors.
+  // R6 lazy unload: hiding a boundary evicts (disposes) its mesh, not just hides
+  // it — bounding GPU memory as pages cycle through boundary subsets.
+  const attachedThresholdIds = () =>
+    page.evaluate(() => {
+      const scene = (
+        window as unknown as {
+          __scene?: {
+            scene?: {
+              traverse: (
+                fn: (o: { isMesh?: boolean; userData?: Record<string, unknown> }) => void,
+              ) => void;
+            };
+          };
+        }
+      ).__scene?.scene;
+      const ids: string[] = [];
+      scene?.traverse((o) => {
+        if (o.isMesh && typeof o.userData?.mtThresholdSurfaceId === "string") {
+          ids.push(o.userData.mtThresholdSurfaceId as string);
+        }
+      });
+      return ids.sort();
+    });
+
+  expect(await attachedThresholdIds()).toContain("resistive-ge-1000-ohm-m");
+
+  // Hide one boundary via the canonical per-boundary map (it takes precedence
+  // over the legacy visibility map in resolveMtSurfaceBoundaries).
+  await page.evaluate((layerId) => {
+    const sceneHandle = (
+      window as unknown as {
+        __scene?: {
+          manager?: {
+            getLayer?: (id: string) => { visible: boolean } | undefined;
+            applyStyle?: (id: string, style: Record<string, unknown>) => void;
+          };
+        };
+      }
+    ).__scene;
+    const layer = sceneHandle?.manager?.getLayer?.(layerId);
+    if (layer) layer.visible = true;
+    sceneHandle?.manager?.applyStyle?.(layerId, {
+      opacity: 1,
+      mtIsosurfaceProductId: "mt-isosurface-full-extent",
+      mtSurfaceBoundariesById: {
+        "conductive-le-30-ohm-m": { visible: true },
+        "resistive-ge-1000-ohm-m": { visible: false },
+      },
+      mtThresholdSurfaceWireframe: false,
+      mtThresholdSurfaceSide: "double",
+    });
+  }, THRESHOLD_LAYER_ID);
+
+  // The hidden boundary's mesh is evicted; the visible one stays attached.
+  await expect
+    .poll(attachedThresholdIds, { timeout: 30_000 })
+    .not.toContain("resistive-ge-1000-ohm-m");
+  expect(await attachedThresholdIds()).toContain("conductive-le-30-ohm-m");
+
+  // Lazy binary load + dequantization + unload must not surface console/page errors.
   expect(consoleErrors, consoleErrors.join("\n")).toEqual([]);
 });
