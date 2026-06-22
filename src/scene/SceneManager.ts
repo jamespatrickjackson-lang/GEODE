@@ -4396,39 +4396,6 @@ export class SceneManager {
     );
   }
 
-  // R6: evict lazily-loaded precomputed boundary meshes that are no longer in
-  // the visible set for the selected product (hidden boundaries, or geometry
-  // from a previously-selected product), disposing their GPU resources. Bounds
-  // memory as pages cycle through different boundary subsets. Caller gates this
-  // to the settled (non-transition) state.
-  private pruneHiddenMtSurfaceBoundaries(
-    group: THREE.Group,
-    selectedProductId: string,
-    boundaries: ResolvedMtSurfaceBoundary[],
-  ): number {
-    const keep = new Set(
-      boundaries
-        .filter((boundary) => boundary.visible && boundary.source !== "live")
-        .map((boundary) => `${selectedProductId}:${boundary.id}`),
-    );
-    let pruned = 0;
-    for (const child of [...group.children]) {
-      if (
-        child.userData?.mtThresholdSurfacePreview !== true ||
-        child.userData?.mtSurfaceBoundaryPrecomputedLazy !== true
-      ) {
-        continue;
-      }
-      const key = `${child.userData?.mtIsosurfaceProductId}:${child.userData?.mtThresholdSurfaceId}`;
-      if (!keep.has(key)) {
-        group.remove(child);
-        disposeObjectTree(child);
-        pruned += 1;
-      }
-    }
-    return pruned;
-  }
-
   private mtThresholdSelectedProductId(style: EditableStyle): string {
     return typeof style.mtIsosurfaceProductId === "string"
       ? style.mtIsosurfaceProductId
@@ -4486,12 +4453,12 @@ export class SceneManager {
       | Record<string, { assetUrl: string; isoProductId: string; id: string }>
       | undefined;
     if (!registry) return;
-    // R6: free GPU memory for boundaries no longer shown (hidden, or from a
-    // previously-selected product). Only when settled — never evict mid-
-    // transition, when the source page's surfaces may still be on screen.
-    if (this.activeSceneTransitionContext === null) {
-      this.pruneHiddenMtSurfaceBoundaries(group, selectedProductId, boundaries);
-    }
+    // Hidden boundary meshes are intentionally NOT evicted here. Once loaded a
+    // boundary mesh stays attached and visibility is a pure obj.visible toggle,
+    // so a boundary hidden on one page reappears on another with no async
+    // reload. An earlier lazy-unload (evict-on-hide) made a boundary "stay off"
+    // after navigation because the target-page reload raced the transition
+    // commit. Bounded set (~tens of boundaries), so retaining them is cheap.
     const inFlight: Set<string> =
       group.userData.__mtPrecomputedInFlight instanceof Set
         ? group.userData.__mtPrecomputedInFlight

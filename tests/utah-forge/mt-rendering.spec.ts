@@ -119,8 +119,10 @@ test("Utah FORGE MT threshold surfaces load from binary tiles with correct colou
     "depthWrite restored at settle",
   ).toBe(true);
 
-  // R6 lazy unload: hiding a boundary evicts (disposes) its mesh, not just hides
-  // it — bounding GPU memory as pages cycle through boundary subsets.
+  // Hiding a boundary removes it from the VISIBLE set but RETAINS its mesh
+  // (no eviction): a boundary hidden on one page reappears on another via a
+  // pure visibility toggle, with no async reload that could race a transition
+  // commit and leave it stuck off.
   const attachedThresholdIds = () =>
     page.evaluate(() => {
       const scene = (
@@ -172,12 +174,20 @@ test("Utah FORGE MT threshold surfaces load from binary tiles with correct colou
     });
   }, THRESHOLD_LAYER_ID);
 
-  // The hidden boundary's mesh is evicted; the visible one stays attached.
+  // The hidden boundary leaves the visible set...
   await expect
-    .poll(attachedThresholdIds, { timeout: 30_000 })
+    .poll(
+      () => mtVolumeSceneState(page).then((s) => s.visibleThresholdSurfaceIds),
+      { timeout: 30_000 },
+    )
     .not.toContain("resistive-ge-1000-ohm-m");
-  expect(await attachedThresholdIds()).toContain("conductive-le-30-ohm-m");
+  // ...but its mesh is RETAINED (not evicted) so it can reappear cheaply, and
+  // the still-authored boundary stays visible.
+  expect(await attachedThresholdIds()).toContain("resistive-ge-1000-ohm-m");
+  expect(
+    (await mtVolumeSceneState(page)).visibleThresholdSurfaceIds,
+  ).toContain("conductive-le-30-ohm-m");
 
-  // Lazy binary load + dequantization + unload must not surface console/page errors.
+  // Lazy binary load + dequantization must not surface console/page errors.
   expect(consoleErrors, consoleErrors.join("\n")).toEqual([]);
 });
