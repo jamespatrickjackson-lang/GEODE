@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "status": "active-guard",
-  "lastReviewedAt": "2026-06-20",
-  "lastReviewNote": "Dev Mode Inspector Phase 6 + polish: CollapsibleSection.tsx top-level sections gain data-dev-order-group='sidebar-structure'/-id={manifestId} and EditorRoot.tsx passes selectedPageId to DevModeInspector (override re-apply on page change). Sidebar-structure reorder EMITS a proposal only (no runtime mutation, devModeReorderGuard); no new sidebar control or persisted variable. Earlier reorder: LayerPanel.tsx layer rows + SceneOverlayControls.tsx SceneOverlayRow gain data-dev-order-group/-id (groups 'layers:<section>' and 'scene-overlays') for UI-only sidebar reorder. Overlay reorder rebuilds the global environment.sceneOverlays registry key order (what the sidebar lists); no new sidebar control or persisted-control schema. No new sidebar control or persisted variable; reorder rearranges the editor catalog order only (scene/transition resolve by id). Earlier: phases 2-6 added an EditorRoot.tsx onDevCommit hook for the Save/Discard bar; dev-mode inspector controls remain outside the sidebar manifest; devTextOverrides is dev-authored state. Earlier still: SceneSectionPlanesContainer.tsx keeps representation-specific seismic section targets, SectionVisualsPanel exposes generic Section Visuals controls, and BoreholeLogsControls.tsx registers source-derived Utah FORGE borehole-log controls under FORGE Data > Bore Holes.",
+  "lastReviewedAt": "2026-07-07",
+  "lastReviewNote": "2026-07-07: Cinematics > Post Processing vignette section header renamed 'Post Production' -> 'Vignette' and its 'Amount' row -> 'Strength' so the vignette control is discoverable by name (EnvironmentScenePanel.tsx content=='post'); order/source test updated. No control added/removed. Earlier: Dev Mode Inspector Phase 6 + polish: CollapsibleSection.tsx top-level sections gain data-dev-order-group='sidebar-structure'/-id={manifestId} and EditorRoot.tsx passes selectedPageId to DevModeInspector (override re-apply on page change). Sidebar-structure reorder EMITS a proposal only (no runtime mutation, devModeReorderGuard); no new sidebar control or persisted variable. Earlier reorder: LayerPanel.tsx layer rows + SceneOverlayControls.tsx SceneOverlayRow gain data-dev-order-group/-id (groups 'layers:<section>' and 'scene-overlays') for UI-only sidebar reorder. Overlay reorder rebuilds the global environment.sceneOverlays registry key order (what the sidebar lists); no new sidebar control or persisted-control schema. No new sidebar control or persisted variable; reorder rearranges the editor catalog order only (scene/transition resolve by id). Earlier: phases 2-6 added an EditorRoot.tsx onDevCommit hook for the Save/Discard bar; dev-mode inspector controls remain outside the sidebar manifest; devTextOverrides is dev-authored state. Earlier still: SceneSectionPlanesContainer.tsx keeps representation-specific seismic section targets, SectionVisualsPanel exposes generic Section Visuals controls, and BoreholeLogsControls.tsx registers source-derived Utah FORGE borehole-log controls under FORGE Data > Bore Holes.",
   "description": "Canonical editor sidebar control manifest. Any user-facing editor sidebar control, command, section, or persisted variable must be represented here before editor-bar source changes are accepted.",
   "devModeReorderGuard": {
     "status": "active-guard",
@@ -2067,6 +2067,17 @@
       "scope": "utah-forge borehole-log layer",
       "backedBy": "EditableStyle.boreholeLogReadoutVisible",
       "setterRoute": "LayerBooleanStyleControl",
+      "status": "active"
+    },
+    {
+      "id": "viewport.max-detail",
+      "label": "Max Detail",
+      "kind": "toggle",
+      "sourceFile": "src/editor/EditorRoot.tsx",
+      "sourceAnchor": "data-editor-control-id=\"viewport.max-detail\"",
+      "scope": "all-projects",
+      "backedBy": "editor session state maxDetail (not persisted)",
+      "setterRoute": "useEditor toggleMaxDetail -> sceneHandle.setForceMaxDetail",
       "status": "active"
     }
   ]

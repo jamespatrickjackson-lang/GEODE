@@ -433,6 +433,12 @@ export interface SceneHandle {
   waitForCaptureFidelityReady(): Promise<void>;
   endCaptureFullResolutionAssets(): void;
   endCaptureFidelityLock(snapshot: CaptureFidelitySnapshot): void;
+  // Persistent browse-mode "Max Detail": pins the same DETAIL levers the capture
+  // fidelity lock uses (terrain->source, seismic->source while moving, full-res
+  // ortho drape, composer MSAA) WITHOUT touching render resolution / pixelRatio
+  // / backing store. Composes with the capture lock via the shared refcount.
+  setForceMaxDetail(enabled: boolean): void;
+  isForceMaxDetail(): boolean;
   setCaptureCameraPathOverlay(options: CaptureCameraPathOverlayState): void;
   clearCaptureCameraPathOverlay(): void;
   setCaptureCameraPathInteraction(
@@ -996,6 +1002,50 @@ export function mountScene(
       manager.setCaptureFullResolution(false);
     }
   };
+  // Persistent browse-mode Max Detail. Reuses the capture DETAIL pin only
+  // (beginCaptureFullResolutionAssets + composer MSAA); it never calls
+  // beginCaptureSize and never touches pixelRatio, so the backing store and
+  // display resolution are unchanged. `browseMaxDetailSamples` is the MSAA
+  // sample count the live profile should hold OUTSIDE a capture lock, so the
+  // lock's own MSAA restore (endCaptureFidelityLock) returns to this value
+  // instead of hard 0 -- which is what lets Max Detail survive a capture cycle.
+  let forceMaxDetailActive = false;
+  let browseMaxDetailSamples = 0;
+  // Budget MSAA by the live drawing-buffer pixel count (already includes
+  // pixelRatio). Mirrors the capture budget: MSAA memory scales with
+  // samples x pixels x 2 HalfFloat ping-pong targets, so drop samples as the
+  // buffer grows to avoid a failed framebuffer allocation (black frame).
+  const browseMaxDetailMultisampleBudget = (): number => {
+    const maxSamples = Math.max(0, renderer.capabilities.maxSamples ?? 0);
+    const size = renderer.getDrawingBufferSize(new THREE.Vector2());
+    const renderPixels = size.x * size.y;
+    return renderPixels <= 4_000_000
+      ? Math.min(8, maxSamples)
+      : renderPixels <= 9_000_000
+        ? Math.min(4, maxSamples)
+        : 0;
+  };
+  const setForceMaxDetail = (enabled: boolean) => {
+    if (forceMaxDetailActive === enabled) return;
+    forceMaxDetailActive = enabled;
+    renderer.domElement.dataset.maxDetail = enabled ? "on" : "off";
+    if (enabled) {
+      // Detail assets only (terrain->source, seismic->source-while-moving,
+      // full-res ortho, raymarch steps). Refcounted, so a concurrent capture
+      // lock composes without double-apply or a premature revert.
+      beginCaptureFullResolutionAssets();
+      browseMaxDetailSamples = browseMaxDetailMultisampleBudget();
+    } else {
+      endCaptureFullResolutionAssets();
+      browseMaxDetailSamples = 0;
+    }
+    // A live capture render owns the composer sample count while its lock is
+    // held (captureSizeSnapshot != null). Do not stomp it here; the lock's
+    // MSAA restore now falls back to browseMaxDetailSamples on release.
+    if (!captureSizeSnapshot) {
+      post.setCaptureMultisample(browseMaxDetailSamples);
+    }
+  };
   const beginCaptureFidelityLock = (options: {
     reason: "render-out" | "still-capture" | "external-still";
     width: number;
@@ -1109,7 +1159,9 @@ export function mountScene(
     post.setCaptureTileRect(0, 0, 1, 1);
     captureGradeMode = null;
     captureGradeTiled = false;
-    post.setCaptureMultisample(0);
+    // Restore to the browse-desired MSAA, not hard 0: if browse-mode Max Detail
+    // is on, its composer MSAA must survive the capture cycle (0 otherwise).
+    post.setCaptureMultisample(browseMaxDetailSamples);
     if (_snapshot.fullResolutionAssetsActive) {
       endCaptureFullResolutionAssets();
     }
@@ -1138,6 +1190,12 @@ export function mountScene(
     const w = container.clientWidth;
     const h = container.clientHeight;
     applyRenderSize(w, h, renderer.getPixelRatio(), true);
+    // Re-budget browse-mode Max Detail MSAA against the new drawing-buffer size
+    // so growing the window cannot push the multisample buffer past GPU memory.
+    if (forceMaxDetailActive) {
+      browseMaxDetailSamples = browseMaxDetailMultisampleBudget();
+      post.setCaptureMultisample(browseMaxDetailSamples);
+    }
   };
   window.addEventListener("resize", onResize);
 
@@ -3780,6 +3838,78 @@ export function mountScene(
   renderer.domElement.addEventListener("contextmenu", onCanvasContextMenu);
   window.addEventListener("mouseup", onWindowMouseUp);
 
+  // --- Pointer-lock orbit drag: keep the OS cursor still while rotating (LMB).
+  // OrbitControls rotates from event.clientX/clientY, which freeze under pointer
+  // lock. Bridge the frozen real move into a synthetic pointermove whose
+  // clientX/Y are reconstructed from movementX/Y, so the camera rotates while the
+  // cursor stays put and reappears in place on release. Safe fallback: if lock
+  // never engages (denied/embedded/unsupported), orbitPointerLockActive stays
+  // false and OrbitControls behaves exactly as before. Left button only; pan
+  // (right) and zoom are untouched.
+  const orbitLockCanvas = renderer.domElement;
+  let orbitPointerLockActive = false;
+  let orbitVirtualX = 0;
+  let orbitVirtualY = 0;
+  let dispatchingSyntheticOrbitMove = false;
+  const onOrbitLockPointerDown = (event: PointerEvent) => {
+    if (
+      event.button !== 0 ||
+      event.pointerType !== "mouse" ||
+      !controls.enabled ||
+      controls.enableRotate === false
+    ) {
+      return;
+    }
+    orbitVirtualX = event.clientX;
+    orbitVirtualY = event.clientY;
+    try {
+      const request = orbitLockCanvas.requestPointerLock?.() as
+        | Promise<void>
+        | undefined;
+      request?.catch?.(() => undefined);
+    } catch {
+      // Pointer lock unavailable/denied: normal cursor behaviour continues.
+    }
+  };
+  const onOrbitLockChange = () => {
+    orbitPointerLockActive = document.pointerLockElement === orbitLockCanvas;
+  };
+  const onOrbitLockPointerMove = (event: PointerEvent) => {
+    if (!orbitPointerLockActive || dispatchingSyntheticOrbitMove) return;
+    // Consume the frozen real move; re-emit with reconstructed coordinates so
+    // OrbitControls sees a moving pointer while the OS cursor stays locked.
+    event.stopImmediatePropagation();
+    orbitVirtualX += event.movementX;
+    orbitVirtualY += event.movementY;
+    const synthetic = new PointerEvent("pointermove", {
+      pointerId: event.pointerId,
+      pointerType: event.pointerType,
+      clientX: orbitVirtualX,
+      clientY: orbitVirtualY,
+      button: event.button,
+      buttons: event.buttons,
+      bubbles: true,
+      cancelable: true,
+      view: window,
+    });
+    dispatchingSyntheticOrbitMove = true;
+    orbitLockCanvas.dispatchEvent(synthetic);
+    dispatchingSyntheticOrbitMove = false;
+  };
+  const onOrbitLockPointerUp = () => {
+    if (document.pointerLockElement === orbitLockCanvas) {
+      try {
+        document.exitPointerLock?.();
+      } catch {
+        // ignore
+      }
+    }
+  };
+  orbitLockCanvas.addEventListener("pointerdown", onOrbitLockPointerDown);
+  orbitLockCanvas.addEventListener("pointermove", onOrbitLockPointerMove, true);
+  window.addEventListener("pointerup", onOrbitLockPointerUp);
+  document.addEventListener("pointerlockchange", onOrbitLockChange);
+
   const setRaycastEnabled = (enabled: boolean) => {
     raycastEnabled = enabled;
     if (!enabled) {
@@ -3810,6 +3940,21 @@ export function mountScene(
     renderer.domElement.removeEventListener("dblclick", onCanvasDblClick);
     renderer.domElement.removeEventListener("contextmenu", onCanvasContextMenu);
     window.removeEventListener("mouseup", onWindowMouseUp);
+    orbitLockCanvas.removeEventListener("pointerdown", onOrbitLockPointerDown);
+    orbitLockCanvas.removeEventListener(
+      "pointermove",
+      onOrbitLockPointerMove,
+      true,
+    );
+    window.removeEventListener("pointerup", onOrbitLockPointerUp);
+    document.removeEventListener("pointerlockchange", onOrbitLockChange);
+    if (document.pointerLockElement === orbitLockCanvas) {
+      try {
+        document.exitPointerLock?.();
+      } catch {
+        // ignore
+      }
+    }
     if (hoverTimer !== null) window.clearTimeout(hoverTimer);
     setHoverTooltip(null);
     clearCaptureCameraPathOverlay();
@@ -3855,6 +4000,8 @@ export function mountScene(
     waitForCaptureFidelityReady,
     endCaptureFullResolutionAssets,
     endCaptureFidelityLock,
+    setForceMaxDetail,
+    isForceMaxDetail: () => forceMaxDetailActive,
     setCaptureCameraPathOverlay,
     clearCaptureCameraPathOverlay,
     setCaptureCameraPathInteraction,

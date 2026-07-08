@@ -501,6 +501,7 @@ export function EditorRoot({
   const {
     state,
     togglePresenterMode,
+    toggleMaxDetail,
     commitPending,
     setEnvScene,
     setPageField,
@@ -1329,6 +1330,8 @@ export function EditorRoot({
         <FloatingPreviewToggle
           presenterMode={state.presenterMode}
           onClick={enterPreview}
+          maxDetail={state.maxDetail}
+          onToggleMaxDetail={toggleMaxDetail}
         />
       </>
     );
@@ -1565,6 +1568,8 @@ export function EditorRoot({
       <FloatingPreviewToggle
         presenterMode={state.presenterMode}
         onClick={enterPreview}
+        maxDetail={state.maxDetail}
+        onToggleMaxDetail={toggleMaxDetail}
       />
       {previewLensPromptOpen && (
         <PreviewLensPrompt
@@ -1815,9 +1820,13 @@ function SaveDiskIcon({ sizePx }: { sizePx: number }) {
 function FloatingPreviewToggle({
   presenterMode,
   onClick,
+  maxDetail,
+  onToggleMaxDetail,
 }: {
   presenterMode: boolean;
   onClick: () => void;
+  maxDetail: boolean;
+  onToggleMaxDetail: () => void;
 }) {
   const { state } = useEditor();
   const gui = state.environment.scene?.gui ?? {};
@@ -1873,39 +1882,124 @@ function FloatingPreviewToggle({
       controlButtonGapPx +
       controlButtonSizePx +
       controlButtonGapPx;
+  // Max Detail sits immediately to the left of the preview toggle, sharing its
+  // geometry and glass styling. Active state follows the viewport-button
+  // convention: the same glass, darker/more opaque (never a coloured accent),
+  // so "on" reads as the pressed/darker state like the other control buttons.
+  const maxDetailRight =
+    previewToggleRight + controlButtonSizePx + controlButtonGapPx;
+  const maxDetailActiveBg = hexToRgba(
+    backgroundColor,
+    clamp01(Math.max(backgroundAlpha + 0.45, 0.58)),
+  );
+  const maxDetailActiveBorder = hexToRgba(
+    borderColor,
+    clamp01(borderAlpha + 0.2),
+  );
   return (
-    <button
-      style={{
-        position: "absolute",
-        right: previewToggleRight,
-        bottom: navBottom,
-        zIndex: 35,
-        width: controlButtonSizePx,
-        height: controlButtonSizePx,
-        display: "inline-flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: 0,
-        border:
-          borderWidth > 0
-            ? `${borderWidth}px solid ${hexToRgba(borderColor, borderAlpha)}`
-            : "none",
-        borderRadius: "50%",
-        background: hexToRgba(backgroundColor, backgroundAlpha),
-        color: textColor,
-        boxShadow: "none",
-        backdropFilter: `blur(${backdropBlur}px) saturate(${backdropSaturation}%)`,
-        WebkitBackdropFilter: `blur(${backdropBlur}px) saturate(${backdropSaturation}%)`,
-        cursor: "pointer",
+    <>
+      <button
+        style={{
+          position: "absolute",
+          right: maxDetailRight,
+          bottom: navBottom,
+          zIndex: 35,
+          width: controlButtonSizePx,
+          height: controlButtonSizePx,
+          display: "inline-flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: 0,
+          border: maxDetail
+            ? `${Math.max(1, borderWidth)}px solid ${maxDetailActiveBorder}`
+            : borderWidth > 0
+              ? `${borderWidth}px solid ${hexToRgba(borderColor, borderAlpha)}`
+              : "none",
+          borderRadius: "50%",
+          background: maxDetail
+            ? maxDetailActiveBg
+            : hexToRgba(backgroundColor, backgroundAlpha),
+          color: textColor,
+          boxShadow: "none",
+          backdropFilter: `blur(${backdropBlur}px) saturate(${backdropSaturation}%)`,
+          WebkitBackdropFilter: `blur(${backdropBlur}px) saturate(${backdropSaturation}%)`,
+          cursor: "pointer",
           fontFamily: TECHNICAL_MONO_FONT,
-        fontSize: 0,
-      }}
-      onClick={onClick}
-      title={presenterMode ? "Exit preview" : "Enter preview"}
-      aria-label={presenterMode ? "Exit preview" : "Enter preview"}
+          fontSize: 0,
+        }}
+        data-editor-control-id="viewport.max-detail"
+        onClick={onToggleMaxDetail}
+        aria-pressed={maxDetail}
+        title={maxDetail ? "Max Detail: on" : "Max Detail: off"}
+        aria-label={maxDetail ? "Max Detail: on" : "Max Detail: off"}
+      >
+        <MaxDetailIcon />
+      </button>
+      <button
+        style={{
+          position: "absolute",
+          right: previewToggleRight,
+          bottom: navBottom,
+          zIndex: 35,
+          width: controlButtonSizePx,
+          height: controlButtonSizePx,
+          display: "inline-flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: 0,
+          border:
+            borderWidth > 0
+              ? `${borderWidth}px solid ${hexToRgba(borderColor, borderAlpha)}`
+              : "none",
+          borderRadius: "50%",
+          background: hexToRgba(backgroundColor, backgroundAlpha),
+          color: textColor,
+          boxShadow: "none",
+          backdropFilter: `blur(${backdropBlur}px) saturate(${backdropSaturation}%)`,
+          WebkitBackdropFilter: `blur(${backdropBlur}px) saturate(${backdropSaturation}%)`,
+          cursor: "pointer",
+          fontFamily: TECHNICAL_MONO_FONT,
+          fontSize: 0,
+        }}
+        onClick={onClick}
+        title={presenterMode ? "Exit preview" : "Enter preview"}
+        aria-label={presenterMode ? "Exit preview" : "Enter preview"}
+      >
+        {presenterMode ? <ExitPreviewIcon /> : <EnterPreviewIcon />}
+      </button>
+    </>
+  );
+}
+
+function MaxDetailIcon() {
+  // A fine 3x3 grid inside a rounded square: reads as "maximum resolution /
+  // detail". Uses currentColor so it inverts with the active-state text color.
+  return (
+    <svg
+      width="19"
+      height="19"
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+      focusable="false"
+      style={{ display: "block" }}
     >
-      {presenterMode ? <ExitPreviewIcon /> : <EnterPreviewIcon />}
-    </button>
+      <rect
+        x="4"
+        y="4"
+        width="16"
+        height="16"
+        rx="2.5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.7"
+      />
+      <path
+        d="M9.33 4.5v15M14.67 4.5v15M4.5 9.33h15M4.5 14.67h15"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        strokeLinecap="round"
+      />
+    </svg>
   );
 }
 

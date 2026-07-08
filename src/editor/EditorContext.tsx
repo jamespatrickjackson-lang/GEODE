@@ -206,6 +206,7 @@ interface EditorContextValue {
   addOverlayImage: (pageId: string, fileName: string, caption?: string) => void;
   removeOverlayImage: (pageId: string, fileName: string) => void;
   togglePresenterMode: () => void;
+  toggleMaxDetail: () => void;
   setLiveApplyTransitionActive: (active: boolean) => void;
   canApplyLiveSceneEdits: () => boolean;
   flushDeferredLiveSceneEdits: () => boolean;
@@ -2171,6 +2172,8 @@ function reducer(state: EditorState, action: EditorAction): EditorState {
       };
     case "TOGGLE_PRESENTER_MODE":
       return { ...state, presenterMode: !state.presenterMode };
+    case "TOGGLE_MAX_DETAIL":
+      return { ...state, maxDetail: !state.maxDetail };
     default:
       return state;
   }
@@ -2325,6 +2328,7 @@ export function EditorProvider({
     saveStatus: "idle" as const,
     saveError: null,
     presenterMode: false,
+    maxDetail: false,
   }));
 
   const stateRef = useRef(state);
@@ -3239,6 +3243,13 @@ export function EditorProvider({
     sceneHandle.setEditorMode(!state.presenterMode);
   }, [sceneHandle, state.presenterMode]);
 
+  // Persistent browse-mode Max Detail: pins the capture DETAIL levers
+  // (terrain/seismic source, full-res ortho, composer MSAA) without touching
+  // render resolution. Composes with the capture lock via the shared refcount.
+  useEffect(() => {
+    sceneHandle.setForceMaxDetail(state.maxDetail);
+  }, [sceneHandle, state.maxDetail]);
+
   const setLayerProvenance = useCallback<EditorContextValue["setLayerProvenance"]>(
     (layerId, metadata) =>
       dispatch({ type: "SET_LAYER_PROVENANCE", layerId, metadata }),
@@ -3786,6 +3797,11 @@ export function EditorProvider({
     [],
   );
 
+  const toggleMaxDetail = useCallback(
+    () => dispatch({ type: "TOGGLE_MAX_DETAIL" }),
+    [],
+  );
+
   const togglePresenterMode = useCallback(
     () => dispatch({ type: "TOGGLE_PRESENTER_MODE" }),
     [],
@@ -3858,6 +3874,7 @@ export function EditorProvider({
       addOverlayImage,
       removeOverlayImage,
       togglePresenterMode,
+      toggleMaxDetail,
       setLiveApplyTransitionActive,
       canApplyLiveSceneEdits,
       flushDeferredLiveSceneEdits,
@@ -3918,6 +3935,7 @@ export function EditorProvider({
       addOverlayImage,
       removeOverlayImage,
       togglePresenterMode,
+      toggleMaxDetail,
       setLiveApplyTransitionActive,
       canApplyLiveSceneEdits,
       flushDeferredLiveSceneEdits,

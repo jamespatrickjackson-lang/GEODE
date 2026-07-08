@@ -301,7 +301,7 @@ test("Camera Studio and Post Processing split cinematic control sections", () =>
   for (const label of [
     "Depth of Field",
     "Tilt-Shift",
-    "Post Production",
+    "Vignette",
     "Image finish",
     "Glow",
     "Film / Optics",
@@ -337,7 +337,7 @@ test("Camera Studio and Post Processing split cinematic control sections", () =>
   const expectedPostOrder = [
     "Depth of Field",
     "Tilt-Shift",
-    "Post Production",
+    "Vignette",
     "Image finish",
     "Glow",
     "Film / Optics",

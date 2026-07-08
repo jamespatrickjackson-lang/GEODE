@@ -3891,3 +3891,50 @@ early return), `src/editor/EditorChrome.tsx`
 (hooks-before-null-return and compact-geometry contract intact); visual check
 that the section buttons render on section-off slides while planes stay off
 (agent is blind on this WebGL scene).
+
+## DEC-188 - Browse-mode Max Detail toggle reuses the capture DETAIL pin only
+
+Status: implemented 2026-07-07.
+
+**Decision:** A persistent viewport toggle ("Max Detail", bottom-right beside
+Enter Preview) pins full render DETAIL in normal browse mode by driving the
+existing capture fidelity assets refcount (`beginCaptureFullResolutionAssets` ->
+`SceneManager.setCaptureFullResolution`): terrain->source (via the terrain
+`setCaptureDetailLock`, which overrides `selectUniformTerrainLodTier`),
+seismic->source even while the camera moves (via `captureFidelityActive`,
+`SceneManager.ts` ~4727), full-res ortho drape, raymarch sample steps, plus
+composer MSAA (`setCaptureMultisample`). It deliberately does NOT scale render
+resolution: it never calls `beginCaptureSize`, never touches `pixelRatio`, and
+leaves the backing store at `min(devicePixelRatio, 2)`. Detail and resolution
+are separable in the capture lock because `setCaptureFullResolution` performs no
+`setSize`/`setPixelRatio` work; `beginCaptureSize` is the sole resolution path.
+
+**No parallel LOD flag** is threaded through the tier selectors: the existing
+capture detail lock already overrides them, so a second `forceMaxDetail` branch
+would duplicate that logic. The toggle is session state
+(`EditorState.maxDetail`), not persisted to disk.
+
+**Capture composition:** the detail pin is refcounted, so a capture starting or
+stopping while the toggle is on composes without double-apply or premature
+revert. The one required change: `endCaptureFidelityLock` now restores composer
+MSAA to a `browseMaxDetailSamples` value (the toggle's budgeted sample count)
+instead of a hard `0`, so Max Detail's MSAA survives a capture cycle. Browse
+MSAA is budgeted by live drawing-buffer pixels (<=4M -> 8, <=9M -> 4, else 0)
+and re-budgeted on window resize to avoid a failed multisample allocation.
+
+**Files:** `src/scene.ts` (`setForceMaxDetail`/`isForceMaxDetail` on
+`SceneHandle`, browse-MSAA budget, `endCaptureFidelityLock` restore-to-browse),
+`src/editor/EditorContext.tsx` + `src/editor/types.ts` (`maxDetail` state,
+`toggleMaxDetail`, effect -> `sceneHandle.setForceMaxDetail`),
+`src/editor/EditorRoot.tsx` (Max Detail button beside the preview toggle,
+`data-editor-control-id="viewport.max-detail"`),
+`docs/dev-context/editor-control-manifest.json` (manifest entry
+`viewport.max-detail`).
+
+**Verification:** `tsc -b`; `npm run check:editor-controls` (166 entries);
+`node tests/tools/editor-control-manifest-source.test.mjs`; browser preview
+confirmed button placement (254px vs 210px), on/off state + `dataset.maxDetail`
+flip via `setForceMaxDetail`, clean revert, no console errors. Live framerate
+(off vs on) was NOT measurable in the preview harness: the preview tab is
+`document.hidden`, so `requestAnimationFrame` is throttled to zero frames. FPS
+delta must be measured on a visible display.

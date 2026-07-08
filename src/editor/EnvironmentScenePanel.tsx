@@ -2309,9 +2309,9 @@ export function CameraSetupPanel({
             </Row>
           </div>
 
-          <div style={sectionHeaderStyle}>Post Production</div>
+          <div style={sectionHeaderStyle}>Vignette</div>
           <div style={panelStyles.section}>
-            <Row label="Amount">
+            <Row label="Strength">
               <Range
                 value={scene.vignette?.strength ?? 0.95}
                 min={0}

@@ -85,6 +85,7 @@ const launcherStyle: CSSProperties = {
   backdropFilter: "blur(18px) saturate(150%)",
 };
 
+// Recording indicator: solid red + glow ONLY while a recording is running.
 const dotStyle: CSSProperties = {
   width: 12,
   height: 12,
@@ -92,6 +93,22 @@ const dotStyle: CSSProperties = {
   background: "#ff453a",
   boxShadow: "0 0 0 4px rgba(255,69,58,0.18)",
 };
+
+// Idle launcher glyph: a neutral hollow ring so the button does not look like it
+// is recording ("turned on"). Matches the other viewport buttons — the launcher
+// only darkens when the Capture Director is open (selected), red only when
+// actually recording.
+const dotIdleStyle: CSSProperties = {
+  width: 12,
+  height: 12,
+  borderRadius: "50%",
+  background: "transparent",
+  border: "1.5px solid rgba(255,255,255,0.55)",
+  boxSizing: "border-box",
+};
+
+const LAUNCHER_BG_CLOSED = "rgba(18, 22, 26, 0.28)";
+const LAUNCHER_BG_OPEN = "rgba(18, 22, 26, 0.64)";
 
 const toolbarRootStyle: CSSProperties = {
   position: "absolute",
@@ -1447,9 +1464,17 @@ export function CaptureDirectorToolbar() {
         aria-label={open ? "Close Capture Director" : "Open Capture Director"}
         title={open ? "Close Capture Director" : "Open Capture Director"}
         onClick={() => setDirectorPanel(open ? "closed" : "realtime")}
-        style={{ ...launcherStyle, right: launcherRight, bottom: navBottom }}
+        style={{
+          ...launcherStyle,
+          right: launcherRight,
+          bottom: navBottom,
+          background: open ? LAUNCHER_BG_OPEN : LAUNCHER_BG_CLOSED,
+        }}
       >
-        <span data-testid="capture-director-launcher-dot" style={dotStyle} />
+        <span
+          data-testid="capture-director-launcher-dot"
+          style={isRecording ? dotStyle : dotIdleStyle}
+        />
       </button>
 
       {cameraAddKindPopover && (

@@ -56,6 +56,8 @@ export interface EditorState {
   saveStatus: SaveStatus;
   saveError: string | null;
   presenterMode: boolean;
+  // Persistent browse-mode Max Detail toggle (session-scoped, not saved to disk).
+  maxDetail: boolean;
 }
 
 export interface EditableProvenance {
@@ -284,4 +286,5 @@ export type EditorAction =
   | { type: "MARK_SAVED"; key: EntityKey }
   | { type: "SAVE_STATUS"; status: SaveStatus; error?: string | null }
   | { type: "TOGGLE_PRESENTER_MODE" }
+  | { type: "TOGGLE_MAX_DETAIL" }
   | { type: "HYDRATE_OVERLAY"; pageId: string; text: string };
