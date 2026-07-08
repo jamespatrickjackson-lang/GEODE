@@ -3862,3 +3862,32 @@ new page-deck-independent guard in `tests/utah-forge/mt-rendering.spec.ts`
 asserting the surfaces are section-clipped under a `selected-targets` scope that
 does NOT list them (eligibility) and stay clipped when a second axis is enabled;
 transition behaviour confirmed visually (agent is blind on this WebGL scene).
+
+## DEC-187 - Scene-section quick legend is always present on Utah FORGE slides
+
+Status: implemented 2026-06-23. Supersedes DEC-186 point 3 (the legend rendered
+only when `sceneSectionEnabled === true`).
+
+**Problem:** the X/Y/Z section buttons appeared only on pages where a scene
+section was already enabled, so a presenter on a section-off slide had no way to
+turn a section on from the viewport. The intent is to expose the section
+controls everywhere while leaving the actual section planes off until toggled.
+
+**Decision (program-level, no per-page authoring):** the scene-section quick
+legend (the X/Y/Z section buttons) is present on every Utah FORGE slide
+regardless of `sceneSectionEnabled` or any per-page flag. Each axis row's
+on/off state still mirrors the page's per-axis plane state, so an all-off page
+shows the buttons in the shared inactive gray with the actual sections off.
+Clicking a `Show` button enables that axis (and `sceneSectionEnabled`) through
+the existing per-axis commit path; it does not pre-author any page. This is the
+only allowed mechanism — viewport quick-legend behaviour must never be driven by
+page-id/page-index/fixture special cases or by editing `projects/*/pages/**`.
+
+**Files:** `src/ui/SceneSectionLegend.tsx` (removed the `sceneSectionEnabled`
+early return), `src/editor/EditorChrome.tsx`
+(`utahForgeLegendPresenceForPage` returns `"scene-section": true`).
+
+**Verification:** `tsc -b`; `node tests/tools/scene-section-legend-contract-source.test.mjs`
+(hooks-before-null-return and compact-geometry contract intact); visual check
+that the section buttons render on section-off slides while planes stay off
+(agent is blind on this WebGL scene).

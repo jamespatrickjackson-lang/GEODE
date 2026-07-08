@@ -595,9 +595,11 @@ export function SceneSectionLegend({
     : page
       ? effectiveStyle(pageEnvironment, page, SEISMIC_LAYER_ID)
       : pageEnvironment.layerStyles[SEISMIC_LAYER_ID] ?? {};
-  if (style.sceneSectionEnabled !== true) return null;
-  // The section legend shows whenever a scene section is enabled — program-level,
-  // not gated by any per-page flag (DEC-186).
+  // Program-level always-on: the X/Y/Z section buttons stay visible on every
+  // Utah FORGE slide so a section can be enabled from any page, even when no
+  // section is currently active. Each row's on/off state still mirrors the
+  // page's per-axis plane state (DEC-187, supersedes DEC-186 point 3). Legend
+  // presence is never gated by sceneSectionEnabled or any per-page flag.
 
   const styleForLayer = (targetLayerId: string): EditableStyle => {
     if (targetLayerId === SCENE_SECTION_LAYER_ID) return style;

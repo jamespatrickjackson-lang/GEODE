@@ -65,7 +65,6 @@ import {
   UTAH_FORGE_MT_RESISTIVITY_SLICES_LAYER_ID,
   UTAH_FORGE_MT_RESISTIVITY_VOLUME_LAYER_ID,
   UTAH_FORGE_MT_THRESHOLD_SURFACES_LAYER_ID,
-  UTAH_FORGE_SCENE_SECTION_LAYER_ID,
   UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID,
 } from "../projectModules/utahForge/layerIds";
 import { resolveTopoMapSettings } from "../topoMap/settings";
@@ -336,7 +335,6 @@ function utahForgeLegendPresenceForPage(
     state.projectSlug === "utah-forge" &&
     state.selectedPageId === ENVIRONMENT_SENTINEL;
   const seismicStyle = styleFor(UTAH_FORGE_SEISMIC_BROWSER_LAYER_ID);
-  const sceneSectionStyle = styleFor(UTAH_FORGE_SCENE_SECTION_LAYER_ID);
   const thresholdStyle = styleFor(UTAH_FORGE_MT_THRESHOLD_SURFACES_LAYER_ID);
   const boreholeLogStyle = styleFor(UTAH_FORGE_BOREHOLE_LOGS_LAYER_ID);
   const topoMapSettings = resolveTopoMapSettings({
@@ -375,9 +373,11 @@ function utahForgeLegendPresenceForPage(
   return {
     seismic: seismicPresentationVisible ? false : seismicVisible,
     "seismic-presentation": seismicPresentationVisible,
-    "scene-section":
-      sceneSectionStyle.sceneSectionEnabled === true &&
-      styleBoolean(sceneSectionStyle, "sceneSectionLegendVisible", true),
+    // Program-level always-on: the scene-section quick legend (X/Y/Z section
+    // buttons) is present on every Utah FORGE slide so sections can be toggled
+    // from any page, even when no section is currently enabled (DEC-187,
+    // supersedes DEC-186 point 3). Never gated by per-page state.
+    "scene-section": true,
     "section-iso": possibleSectionIsoTargetVisible && sectionIsoTargetsVisible,
     "mt-boundaries":
       visible.has(UTAH_FORGE_MT_THRESHOLD_SURFACES_LAYER_ID) &&
