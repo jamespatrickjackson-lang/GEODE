@@ -106,3 +106,36 @@ To recover, restore the bundle into a **new destination**, verify its refs, and 
 ## Alignerr handoff
 
 The privacy/history decision is approved and implemented, and initial publication was independently verified. Confirm the CI bootstrap follow-up and use the verified repository URL for the Alignerr project-creation flow, identify GeoSee as the implemented geoscience alpha, and cite concrete source/decision/test evidence. Do not submit an empty repository or present the separate medical branch as already public.
+
+## Pre-Alignerr submission hardening (12 November 2026)
+
+This section is a subsequent, narrowly scoped improvement to the already-published release above. Older launch/CI observations in this report describe their earlier state and should not be mistaken for this new candidate.
+
+### Clean published-ancestry development workspace
+
+A separate clean clone was made at C:\GeoSee\GEODE-public-dev from the public GitHub main at e32964c9d16ff683c9f31326de6a8a931005e758, with origin/main tracking and none of the excluded Chrome debug directories in its reachable history. This is the safe future development base. It does not replace or overwrite C:\GeoSee\GeoSee_Dev, which still has 17 preserved pending working entries and its original pre-publication Git history. Do not merge the original history into public main.
+
+### Portfolio visual evidence
+
+Four original 3840×2160 PNG captures supplied by the owner were located in the owner's Downloads directory, checked by filename/SHA-256, resized without crop or content alteration to 1920×1080 JPEGs, and added to docs/assets/screenshots/. The root README presents them in an image gallery with scientific-interpretation limits. docs/assets/screenshots/README.md records the original image names and SHA-256 values. There are four unique frames; an exact original duplicate was omitted. These depict Utah FORGE visualization, not an engineering-verified model; accepted GUI/spline-export imagery is still a possible future improvement.
+
+### Dependency security and CI rigor
+
+A **non-forced** npm audit fix updated transitive packages in package-lock.json without changing the application's direct dependency specifications. Audit findings fell from **10 (1 low, 3 moderate, 6 high)** to **3 (1 moderate, 2 high)**. Residual reports concern Vite/esbuild and Sharp/libvips; npm's available fixes require breaking-version upgrades (Vite 8 / Sharp 0.35), so no forced upgrades were applied. Avoid exposing the development-authoring server beyond trusted loopback and do not interpret reduced audit counts as a complete security review.
+
+The GitHub Actions workflow now includes npm run check:runtime-assets and npm run build as blocking steps. npm run test:tools is also **blocking**, replacing the old continue-on-error configuration. Before this change the suite passed 679/679 in the initial Linux release, but a later failure would not have failed the workflow; this change closes that loophole.
+
+### Tests of this candidate (local)
+
+| Check | Observed result |
+| --- | --- |
+| npm ci | PASS, Node 24; install-script approval warnings recorded |
+| npm run check:gate | PASS |
+| npm run check:pages | PASS |
+| npm run check:runtime-assets | PASS |
+| npm run build (Node 24) | PASS; existing Vite large-chunk warning |
+| npm run test:tools (Node 24, Python 3.14.4 on PATH) | **PASS: 679/679**, zero failures |
+| npm run build (portable Node 20.20.2/npm 10.9.10) | PASS; existing chunk warning |
+| GitHub Actions on updated commit | **Requires post-push inspection**; a local result is not a remote acceptance receipt |
+
+The images, lockfile update, CI edits and this addendum constitute presentation/test-infrastructure changes only. The code performing scientific interpretation, scene rendering, data loading and capture was not modified in this preparation. Record actual new GitHub Actions results by their run URL after publishing.

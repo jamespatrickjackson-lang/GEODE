@@ -15,6 +15,21 @@ GeoSee combines terrain, geographic context, drilling, seismic and magnetotellur
 | Medical imaging development | Separate experimental, non-diagnostic branch; not included in this release |
 | Offshore Vancouver Island and DMT method kit | Separate development workspaces; not incorporated into this application |
 
+## Application screenshots
+
+These are authentic, user-supplied screenshots of GeoSee's Utah FORGE visualization, displayed here as web-optimized copies of original 3840 × 2160 PNG captures. They show scientific **visualizations**, not independently verified subsurface interpretations or engineering measurements. The exact active dataset/recipe for each frame has not been independently reconstructed from its image alone.
+
+| Terrain and geographic context | Terrain with subsurface scientific representation |
+| --- | --- |
+| ![Utah FORGE broad terrain and draped imagery in GeoSee](docs/assets/screenshots/utah-forge-terrain.jpg) | ![Utah FORGE terrain cap and colored subsurface cutaway](docs/assets/screenshots/utah-forge-terrain-mt-section.jpg) |
+| Landscape-scale terrain and prepared imagery. | Combined topographic and subsurface 3D rendering, with section/axis indicators. |
+
+| Subsurface section | Layered scalar/volume view |
+| --- | --- |
+| ![GeoSee Utah FORGE colored subsurface section with a visual sun marker](docs/assets/screenshots/utah-forge-volume-section.jpg) | ![GeoSee layered subsurface visualization with atmospheric lighting](docs/assets/screenshots/utah-forge-layered-volume.jpg) |
+| Colored section/volume output; precise active layer not identified from image alone. | Layered scalar representation with scene lighting; image is not an accuracy acceptance result. |
+
+The [image provenance register](docs/assets/screenshots/README.md) lists each original filename, SHA-256, original resolution and scope of the visual evidence. For editable branding/HUD controls and spline-based cinematics, see the source-linked [authoring](#authoring-and-presentation) and [Capture Director](#cinematic-capture) sections below. Separate accepted UI/capture screenshots are not yet published.
 ## Start here
 
 - [Architecture](docs/02-architecture.md), [scope](docs/01-scope.md) and [decision history](docs/03-decisions.md)

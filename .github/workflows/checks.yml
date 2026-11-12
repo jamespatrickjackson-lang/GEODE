@@ -24,7 +24,7 @@ jobs:
       - run: npm run check:editor-controls
       - run: npm run check:agent-drag
       - run: npm run check:pages
-      # test:tools flips to blocking once the pre-existing tests/tools failures
-      # are resolved (see DMT/audit/tests-tools-triage-2026-06-20.md). Until then:
+      - run: npm run check:runtime-assets
+      - run: npm run build
+      # Full source suite: 679/679 on 2026-11-12. Failures must now block.
       - run: npm run test:tools
-        continue-on-error: true
