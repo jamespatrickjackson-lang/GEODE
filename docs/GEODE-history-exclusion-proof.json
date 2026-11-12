@@ -1,0 +1,33 @@
+{
+  "excludedDirectories": [
+    ".chrome-debug-2ac3d386860f4c179becdcd31c2bf784/",
+    ".chrome-debug-35f28de655654a7b851d6845946145f4/"
+  ],
+  "removedPaths": [
+    ".chrome-debug-2ac3d386860f4c179becdcd31c2bf784/8afa30f8-a95f-402a-984f-936adc48adac.tmp",
+    ".chrome-debug-2ac3d386860f4c179becdcd31c2bf784/Crashpad/metadata",
+    ".chrome-debug-2ac3d386860f4c179becdcd31c2bf784/Crashpad/reports/fe23ea5a-44f1-4da6-939b-3f32c66a5518.dmp",
+    ".chrome-debug-2ac3d386860f4c179becdcd31c2bf784/Crashpad/settings.dat",
+    ".chrome-debug-2ac3d386860f4c179becdcd31c2bf784/CrashpadMetrics-active.pma",
+    ".chrome-debug-2ac3d386860f4c179becdcd31c2bf784/Variations",
+    ".chrome-debug-35f28de655654a7b851d6845946145f4/753854ec-0ae5-4937-97e7-e8a3cb3ecd38.tmp",
+    ".chrome-debug-35f28de655654a7b851d6845946145f4/Crashpad/metadata",
+    ".chrome-debug-35f28de655654a7b851d6845946145f4/Crashpad/reports/7c5f7956-3cc1-466d-bd7d-5ee06a3d06c8.dmp",
+    ".chrome-debug-35f28de655654a7b851d6845946145f4/Crashpad/settings.dat",
+    ".chrome-debug-35f28de655654a7b851d6845946145f4/CrashpadMetrics-active.pma",
+    ".chrome-debug-35f28de655654a7b851d6845946145f4/Variations"
+  ],
+  "commitsCompared": 395,
+  "originalCount": 395,
+  "publicCount": 395,
+  "publicBase": "f406bc5102f24641dcfb5401bfcd7a7f1ed333e7",
+  "originalTipTree": "16d2301112ed3931f4143a0b4c66c944d902a2f5",
+  "publicTipTree": "16d2301112ed3931f4143a0b4c66c944d902a2f5",
+  "tipTreesIdentical": true,
+  "excludedPathHistoryEmpty": true,
+  "dumpBlobsReachable": [],
+  "refs": "f406bc5102f24641dcfb5401bfcd7a7f1ed333e7 refs/heads/main",
+  "fsckPassed": true,
+  "errors": [],
+  "pass": true
+}
