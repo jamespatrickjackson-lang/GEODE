@@ -5,7 +5,7 @@ Verification ran in an isolated clone of the recovery bundle, not in the active 
 
 ## Current result
 
-The README, publication manifest, verification report and machine-readable exclusion proof form an explicitly scoped release documentation commit. The historical-content gate was resolved by the owner-approved removal of two browser-debug directories from an isolated public-history copy. The [publication manifest](GEODE-publication-manifest.md) and [exclusion proof](GEODE-history-exclusion-proof.json) record the exact scope. This report records pre-publication verification; remote publication and GitHub Actions results are recorded separately after pushing.
+The README, publication manifest, verification report and machine-readable exclusion proof form an explicitly scoped release documentation commit. The historical-content gate was resolved by the owner-approved removal of two browser-debug directories from an isolated public-history copy. The [publication manifest](GEODE-publication-manifest.md) and [exclusion proof](GEODE-history-exclusion-proof.json) record the exact scope. The initial release was published as `b980e8f55cc1111cbc969ffec14d3c500a26b704`. An independent clone from GitHub matched its tree `504c5d332dec68ca7e45e967aa8041766569fc98`, contained 396 commits and 1,658 tracked files, passed `git fsck --full`, and contained neither excluded path history nor either dump blob. Only `main` was published; it is the default branch. The following CI bootstrap correction is a separate release follow-up.
 
 ## Runtime and checks
 
@@ -27,7 +27,7 @@ The README, publication manifest, verification report and machine-readable exclu
 
 The first portable npm 10 invocation used an invalid package-local Windows shim path and failed before installation. The release-local shim was corrected to invoke npm's CLI with the portable Node binary; the successful compatibility results above are from the rerun. Neither the system Node installation nor global PATH was changed.
 
-Python is necessary for the Phase 2C shapefile and borehole-ingestion fixtures. An available Python 3 executable must be discoverable as `python` for the full source suite. Ordinary Node build/runtime checks do not require Python.
+Python is necessary for the Phase 2C shapefile and borehole-ingestion fixtures. An available Python 3 executable must be discoverable as `python` for the full source suite. Install its pinned test dependencies with `python -m pip install -r tools/requirements-test.txt`; `openpyxl` and `et-xmlfile` were already present in the tested Windows environment. Ordinary Node build/runtime checks do not require Python.
 
 ## Browser smoke
 
@@ -59,11 +59,12 @@ Vite's build plugins copy prepared project/runtime data and FFmpeg core assets, 
 
 Existing workflow: [checks.yml](../.github/workflows/checks.yml).
 
-- Ubuntu runner, Node 20, `npm ci`.
+- Ubuntu runner, Node 20, explicit Python 3.14, pinned Python test dependencies, and `npm ci`.
 - Blocking steps: routes, mirror, editor controls, agent drag and pages.
 - `test:tools` is currently advisory through `continue-on-error: true`, reflecting historical failures.
 - The workflow does not currently run the production build, runtime-assets check or full browser suite.
-- Local Node 20 compatibility passed. A Linux/GitHub Actions run is **not yet verified** because no candidate has been pushed.
+- The [initial published run](https://github.com/jamespatrickjackson-lang/GEODE/actions/runs/43296826167) passed all blocking steps but its advisory source suite had 675 passes and four failures. All four failed because `openpyxl` was missing from the Linux runner; the workflow appeared successful because that step has `continue-on-error: true`.
+- The follow-up explicitly selects Python 3.14 and installs `tools/requirements-test.txt` before testing. No application source, scientific fixtures, or test assertions changed. Inspect the [latest Actions run](https://github.com/jamespatrickjackson-lang/GEODE/actions) for this correction; a green workflow alone must not be treated as proof that the advisory source suite passed.
 
 The Windows Git credential path passed `git push --dry-run origin main:main` with interactive prompts disabled. This confirms non-publishing push negotiation, not publication. Windows `gh auth status` independently still reported no authenticated host. The connected GitHub integration can inspect the public destination.
 
@@ -77,7 +78,8 @@ The Windows Git credential path passed `git push --dry-run origin main:main` wit
 | Nonblocking | Vite large-chunk warning | Build succeeds; performance work remains |
 | Nonblocking browser compatibility limitation | Woodjam canvas evaluation timed out in bundled Chromium; installed Chrome passed | Retain browser versions and do not claim cross-browser acceptance |
 | Nonblocking presentation polish | Shahbazi strict console check reports missing favicon (404) | Application flow and scientific assets passed; no runtime changes made |
-| Unverified | Remote Linux CI, broad browser regression, all capture/export modes and full scientific accuracy | No corresponding acceptance claim |
+| Corrected CI bootstrap; rerun required for acceptance | Initial Linux run: four source-suite failures caused by missing `openpyxl` | Explicit Python setup and pinned test dependencies added; inspect source-test counts as well as workflow conclusion |
+| Unverified | Broad browser regression, all capture/export modes and full scientific accuracy | No corresponding acceptance claim |
 | Historical | Earlier saved browser failure markers | Retained as historical evidence, not presented as current results |
 
 Scientific literature comparison and professional review are developer-reported. Numerical registration, metrology, engineering-use validation and medical-device clearance are not established.
@@ -103,4 +105,4 @@ To recover, restore the bundle into a **new destination**, verify its refs, and 
 
 ## Alignerr handoff
 
-The privacy/history decision is approved and implemented. Finish the narrowly scoped release commit, push only reviewed main to the existing repository, independently compare remote and local SHAs and inspect CI. Then use the verified repository URL for the Alignerr project-creation flow, identify GeoSee as the implemented geoscience alpha, and cite concrete source/decision/test evidence. Do not submit an empty repository or present the separate medical branch as already public.
+The privacy/history decision is approved and implemented, and initial publication was independently verified. Confirm the CI bootstrap follow-up and use the verified repository URL for the Alignerr project-creation flow, identify GeoSee as the implemented geoscience alpha, and cite concrete source/decision/test evidence. Do not submit an empty repository or present the separate medical branch as already public.

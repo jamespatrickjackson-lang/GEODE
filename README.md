@@ -27,7 +27,7 @@ GeoSee combines terrain, geographic context, drilling, seismic and magnetotellur
 
 ## Run locally
 
-Tested environments: Node 20.20.2 / npm 10.9.10 and Node 24.22.2 / npm 11.19.1 on Windows. The existing CI targets Node 20; its Linux run remains to be verified after publication. The release verification record contains the exact outcomes. Python 3 is needed for the Python-backed ingestion tests and selected offline preparation tools, not for the browser application itself.
+Tested environments: Node 20.20.2 / npm 10.9.10 and Node 24.22.2 / npm 11.19.1 on Windows. CI targets Node 20 and Python 3.14 on Ubuntu; see the [Actions runs](https://github.com/jamespatrickjackson-lang/GEODE/actions) and the recorded initial dependency failure. The release verification record contains the exact outcomes. Python 3 is needed for the Python-backed ingestion tests and selected offline preparation tools, not for the browser application itself.
 
 ```sh
 git clone https://github.com/jamespatrickjackson-lang/GEODE.git
@@ -43,6 +43,7 @@ npm run build
 npm run check:gate
 npm run check:pages
 npm run check:runtime-assets
+python -m pip install -r tools/requirements-test.txt
 npm run test:tools
 ```
 

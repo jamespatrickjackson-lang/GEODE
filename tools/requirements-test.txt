@@ -1,0 +1,3 @@
+# Python dependencies for the Node-driven scientific ingestion tests.
+openpyxl==3.1.5
+et-xmlfile==2.0.0
