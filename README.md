@@ -3,7 +3,7 @@
 ## One visualization foundation. A world of scientific possibilities
 
 
-*GEODE is a community-oriented, open-source scientific extensible visualization initiative developed to make advanced imaging, spatial-data exploration and visual communication more accessible. The project is intended for researchers, universities, schools, scientific institutions and independent developers. Its objective is to reduce the need to repeatedly build the same visualization and interaction capabilities across different scientific disciplines, allowing teams to concentrate their effort on the scientific challenges unique to their data, while offering deeper insights into their data.
+Geode is a community-oriented, open-source scientific visualization initiative intended to make advanced imaging, spatial-data exploration and visual communication more accessible. The project is intended for researchers, universities, schools, scientific institutions and independent developers. Its objective is to reduce the need to repeatedly build the same visualization and interaction capabilities across different scientific disciplines, allowing teams to concentrate their effort on the scientific challenges unique to their data, while offering deeper insights into their data.
 
 GEODE is not being developed as a commercial software service. Its purpose is to establish a freely accessible and extensible foundation that the scientific community can use, adapt and develop further.
 
@@ -23,7 +23,18 @@ For teams building scientific instruments, imaging products and data-rich applic
 
 GeoSee goes beyond viewing: datasets can be combined or isolated, sections and volumes explored, scene environments configured, presentation pages authored, camera motion animated and still or video outputs produced through supported capture paths. Built with **React, TypeScript, Three.js and Vite**, it supplies a substantial executable and source-tested foundation for Geode's broader architectural direction.
 
-**What is in this repository:** the GeoSee geoscience application, its project data and preparation tools, authoring/presentation/capture subsystems, tests and engineering records. The independent Geode core, reusable module contracts and integrations into other scientific domains remain development objectives. The planned open-source direction also requires a separate software licence decision.
+**What is in this repository:** the GeoSee geoscience application, its project data and preparation tools, authoring/presentation/capture subsystems, tests and engineering records. The independent Geode core, reusable module contracts and integrations into other scientific domains remain development objectives.
+
+### Intended workflow: bring scientific data into Geode
+
+The proposed Geode platform would guide a user from a dataset to a configurable scientific viewing environment. A setup workflow would help the user select data sources, inspect their structure, confirm essential metadata and choose compatible visualization capabilities. It would be a configuration interface for the underlying pipeline, not a replacement for scientific data processing or verification.
+
+1. **Import and inspect.** Supported common formats would use existing input adapters. Instrument-specific or unusual data could be connected through custom adapters.
+2. **Interpret and prepare.** Explicit field mappings, units, coordinate systems, dimensions and calibration requirements would be checked before applying any necessary transformations or deriving browser-ready data.
+3. **Choose compatible views.** Geode would offer visualization modules suited to the prepared data and its declared metadata, rather than assuming every file can be displayed in every viewer.
+4. **Assemble and reuse.** The selected modules, processing steps and display settings would form a reproducible project configuration that can be explored, extended, authored and presented.
+
+**Development boundary:** This guided setup, independent module selection and general adapter interface are proposed capabilities, not features already delivered in the GeoSee alpha. GeoSee currently implements project-specific preparation, loaders, scientific views and authoring workflows, which provide starting points for extraction.
 
 **Licensing and third-party materials**
 
@@ -216,23 +227,29 @@ These are implemented subsystem boundaries, not proof that the common core alrea
 
 ```mermaid
 flowchart TB
-    S["Scientific sources and prepared data"] --> M["Domain-specific modules and adapters"]
-    M --> C["Common artifact and module contracts (target)"]
-    C --> G["Geode core (target): rendering, interaction, scene, authoring, navigation, capture"]
-    G --> X["Interactive views, authored experiences and visual outputs"]
-    M -.-> J["GeoSee: geoscience domain"]
-    M -.-> I["Medical imaging and other sciences: future integrations"]
+    S["Scientific sources and instrument outputs"] --> A["Input adapters: decode and describe"]
+    A --> P["Processing modules: validate, transform and derive"]
+    P --> C["Common artifact contracts: data type, dimensions, units and provenance"]
+    C --> V["Compatible visualization modules"]
+    V --> G["Geode shared foundation: render, interact, navigate, author and capture"]
+    G --> X["Configured scientific projects and visual outputs"]
+    W["Guided project setup (planned)"] -.-> A
+    W -.-> P
+    W -.-> V
 ```
 
-*Conceptual **target architecture**, not a diagram of an independently deployed module host. Medical-imaging work exists separately and is not part of the public GEODE main release.*
+*Conceptual **target architecture** showing a proposed data-to-visualization pipeline and guided setup. GeoSee currently bundles common and geoscience-specific functionality; independent module interfaces and the setup workflow have not yet been implemented. Medical-imaging work is separate from the public GEODE main release.*
 
-| Shared foundation: planned responsibility | Scientific module: planned responsibility |
+| Planned component | Responsibility |
 | --- | --- |
-| 2D/3D rendering surfaces, scene/camera and consistent navigation | Interpret domain formats, units, acquisition and scientific semantics |
-| Selection, interaction primitives, overlays, legends, authoring and capture | Supply domain views, styling rules, tools and workflow-specific presentation |
-| Common renderable artifact interfaces, module lifecycle and compatibility contracts | Convert prepared inputs into contracted artifacts and declare provenance/limitations |
+| **Input adapters** | Decode supported file structures or instrument outputs and expose fields and associated metadata without inventing scientific meaning |
+| **Processing modules** | Apply explicit mappings, unit/coordinate conversions, resampling and derived computations, recording transformations and limitations |
+| **Common artifact and module contracts** | Carry typed data, dimensions, units, coordinates, provenance, compatibility requirements and module lifecycle information |
+| **Visualization modules** | Present compatible data as images, points, surfaces, sections, volumes or plots with appropriate controls and domain-specific interpretation |
+| **Geode shared foundation** | Provide consistent rendering, scene/camera, interaction, navigation, authoring, presentation and capture services |
+| **Guided setup (future)** | Help configure adapters, transformations, compatible modules and saved project settings without implying automatic scientific validation |
 
-The intended benefit is **reuse without forcing unrelated sciences into one data model**. A scientific instrument or data team would integrate through a documented module/adapter boundary and retain responsibility for discipline-specific processing and verification. This is a design objective, not a demonstrated cross-domain integration benchmark.
+The intended benefit is **reuse without forcing unrelated sciences into one scientific data model**. Common artifact types and explicit metadata requirements allow compatible viewing tools to be reused while domain adapters and processing modules retain specialized semantics. A scientific instrument or data team would remain responsible for its processing and verification. Recognizing a file extension does not establish that units, calibration, coordinates or scientific interpretation are correct. This is a design objective, not a demonstrated cross-domain integration benchmark.
 
 A separate **DMT** engineering governance and enforcement methodology is under development; it is not a functioning module of this published application. Likewise, the independent clinical Geode Workbench is a separate prototype, not a deployed feature in this repository.
 
@@ -267,13 +284,14 @@ Representative review trails include trace-header-driven seismic geometry and so
 | Area | Current state | Next evidence or engineering milestone |
 | --- | --- | --- |
 | **GeoSee geoscience application** | Working research/software alpha in this public repository | Broader browser acceptance, interaction polish and repeatable demonstrations |
-| **Geode reusable core and scientific modules** | Architectural direction; common behaviors remain coupled to GeoSee | Extract stable boundaries, define/version interface contracts and demonstrate independent reuse |
-| **Scientific import and data fidelity** | Project-specific preparation, loaders and source distinctions | Improve file-format coverage, registration checks, metadata validation and uncertainty presentation |
+| **Geode reusable core and scientific modules** | Architectural direction; common behaviors remain coupled to GeoSee | Extract one stable boundary, define/version an artifact contract and demonstrate independently reusable visualization capability |
+| **Scientific import and data fidelity** | Project-specific preparation, loaders and source distinctions | Demonstrate a supported input adapter and a custom-data path, with explicit metadata, transformations, registration checks and uncertainty presentation |
+| **Guided project setup** | Proposed workflow; no general wizard or automatic module compatibility selection in the published alpha | Prototype data inspection, explicit metadata confirmation, compatible visualization choices and a saved project configuration |
 | **Authoring and cinematic outputs** | Implemented editor, presenter, path/timeline and selected still/video capture paths | Validate capture/export parity, high-resolution effects, codecs and multi-page workflows |
 | **Large scientific data** | Prepared browser-oriented runtime products | Bound memory/performance and expand stress/regression coverage |
 | **Other domains and governance tools** | Separate experimental medical/Workbench work; DMT and other projects outside this release | Independent integration, permissions and verification before claiming cross-domain modules |
 
-**Not yet demonstrated:** a separated and versioned cross-domain Geode core, multiple independently integrated scientific modules, unrestricted file-format ingestion, a hardened hosted editing service, certified scientific metrology, or medical-device clearance. These are boundaries, not features hidden behind the UI.
+**Not yet demonstrated:** a separated and versioned cross-domain Geode core, independently integrated scientific modules, a guided import/setup wizard, unrestricted file-format ingestion, a hardened hosted editing service, certified scientific metrology, or medical-device clearance. These are boundaries, not features hidden behind the UI.
 
 ### Scientific interpretation and source boundaries
 
@@ -283,6 +301,6 @@ The developer has reported qualitative comparison of Utah FORGE visuals with lit
 
 ## Rights and release status
 
-The repository owner confirmed rights clearance for this release on 12 November 2026. Existing source attribution and provenance remain applicable. No software reuse licence has been selected or added; public visibility alone is not an open-source licence. Dataset terms are distinct from the application's code licence.
+The repository owner confirmed rights clearance for this release on 12 November 2026. The GEODE-authored application software is released under the [Apache License, Version 2.0](LICENSE), subject to its terms. Scientific datasets, externally sourced imagery and other third-party materials retain their own applicable rights, attribution and licensing conditions.
 
 [Release verification](docs/GEODE-release-verification.md) records tested commands, failures and publication status. Historical internal-only descriptions document earlier development stages; this README describes the intended public GEODE presentation.
