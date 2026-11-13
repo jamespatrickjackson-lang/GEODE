@@ -3,9 +3,7 @@
 ## One visualization foundation. A world of scientific possibilities
 
 
-GEODE is a community-oriented, open-source scientific visualization initiative developed to make advanced imaging, spatial-data exploration and visual communication more accessible.
-
-The project is intended for researchers, universities, schools, scientific institutions and independent developers. Its objective is to reduce the need to repeatedly build the same visualization and interaction capabilities across different scientific disciplines, allowing teams to concentrate their effort on the scientific challenges unique to their work.
+*GEODE is a community-oriented, open-source scientific extensible visualization initiative developed to make advanced imaging, spatial-data exploration and visual communication more accessible. The project is intended for researchers, universities, schools, scientific institutions and independent developers. Its objective is to reduce the need to repeatedly build the same visualization and interaction capabilities across different scientific disciplines, allowing teams to concentrate their effort on the scientific challenges unique to their data, while offering deeper insights into their data.
 
 GEODE is not being developed as a commercial software service. Its purpose is to establish a freely accessible and extensible foundation that the scientific community can use, adapt and develop further.
 
@@ -26,6 +24,17 @@ For teams building scientific instruments, imaging products and data-rich applic
 GeoSee goes beyond viewing: datasets can be combined or isolated, sections and volumes explored, scene environments configured, presentation pages authored, camera motion animated and still or video outputs produced through supported capture paths. Built with **React, TypeScript, Three.js and Vite**, it supplies a substantial executable and source-tested foundation for Geode's broader architectural direction.
 
 **What is in this repository:** the GeoSee geoscience application, its project data and preparation tools, authoring/presentation/capture subsystems, tests and engineering records. The independent Geode core, reusable module contracts and integrations into other scientific domains remain development objectives. The planned open-source direction also requires a separate software licence decision.
+
+**Licensing and third-party materials**
+
+The GEODE-authored application software is released under the Apache License, Version 2.0, subject to the stated scope and third-party exclusions.
+
+The licence permits use, modification and redistribution, including commercial use, subject to its terms.
+
+Scientific datasets, externally sourced imagery, research materials and other third-party assets included in or referenced by the repository retain their respective ownership, attribution and licensing conditions. They are not automatically licensed under Apache 2.0.
+
+GEODE is currently a research and software-development alpha. Its scientific visualizations are not certified engineering measurements, validated clinical tools or substitutes for specialist scientific verification.
+
 
 ## Geode in action
 
