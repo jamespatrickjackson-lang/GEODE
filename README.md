@@ -1,8 +1,7 @@
 # Geode
 
-## Make the unseen explorable.
+## One visualization foundation. A world of scientific possibilities
 
-*One visualization foundation. A world of scientific possibilities.*
 
 GEODE is a community-oriented, open-source scientific visualization initiative developed to make advanced imaging, spatial-data exploration and visual communication more accessible.
 
