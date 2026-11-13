@@ -61,4 +61,6 @@ The developer reports literature comparison and professional geophysics review o
 
 ## Licence
 
-No application software licence has been selected or added. Public readability does not grant a general software reuse licence. Third-party data and dependency terms remain distinct.
+At the original publication on 12 November 2026, no application software licence had yet been selected or added. Public readability alone did not grant general software reuse permission. Third-party data and dependency terms remained distinct.
+
+**Post-publication update — 13 November 2026:** The repository owner selected the Apache License, Version 2.0, for GEODE/GeoSee project-authored software and accompanying development material that the contributors have rights to license. See the [root LICENSE](../LICENSE), [NOTICE](../NOTICE), and [licensing and third-party content guidance](LICENSING.md). Third-party scientific datasets, imagery, research content, dependencies and other separately licensed materials are **not automatically relicensed** by this decision. This update records the new licence without changing the historical publication and rights-review findings above.
