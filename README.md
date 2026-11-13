@@ -33,25 +33,38 @@ GeoSee goes beyond viewing: datasets can be combined or isolated, sections and v
 
 The Utah FORGE geothermal example shows terrain and geographic context alongside prepared subsurface scientific representations. These images demonstrate the working geoscience renderer, layering and section views, not the complete planned multi-domain platform.
 
-### Exploring the subsurface
+### Geode visual identity
 
-| Terrain and geographic context | Subsurface visualization |
+![Geode visual identity and wordmark](docs/assets/screenshots/geode-0.png)
+
+*Geode identity artwork supplied by the project owner. The artwork carries the phrase “Connected | Directed | Communicated”; the README's current mission tagline appears above.*
+
+### Scientific visualization and interaction
+
+The following six images are selected views from the working GeoSee geoscience application. Alongside scientific spatial representations, they show page navigation, layer/section controls and scene configuration surfaces in context.
+
+| Terrain and page navigation | Surface-to-subsurface visualization |
 | --- | --- |
-| ![Utah FORGE terrain visualization](docs/assets/screenshots/utah-forge-terrain.jpg) | ![Utah FORGE terrain and subsurface visualization](docs/assets/screenshots/utah-forge-terrain-mt-section.jpg) |
-| Real-world terrain and prepared imagery provide the context for exploration. | Surface and subsurface representations can be viewed together in a spatial scene. |
+| ![GeoSee Utah FORGE terrain environment with interactive page and scene controls](docs/assets/screenshots/geode-A.jpg) | ![GeoSee terrain combined with color-coded subsurface geophysical sections and controls](docs/assets/screenshots/geode-B.jpg) |
+| Terrain, distant geographic context and the page/environment interface. | Combined terrain and prepared geophysical representation with sectional controls. |
 
-| Scientific sectioning | Layered volume visualization |
+| Three-dimensional seismic context | Seismic section and well context |
 | --- | --- |
-| ![Utah FORGE subsurface section](docs/assets/screenshots/utah-forge-volume-section.jpg) | ![Utah FORGE layered scientific volume](docs/assets/screenshots/utah-forge-layered-volume.jpg) |
-| A sectional representation helps reveal spatial relationships within prepared models. | Layered scalar and volume rendering exposes information that is difficult to communicate in a flat image. |
+| ![GeoSee 3D seismic section with well labels, markers, source context and editor controls](docs/assets/screenshots/geode-C.jpg) | ![GeoSee front-facing seismic section with well trajectories, elevation markers and page controls](docs/assets/screenshots/geode-D.jpg) |
+| Seismic representation with labelled well and source-location context. | Section-oriented view displaying relative spatial context and well trajectories. |
 
-*Authentic captures from the GeoSee application, supplied by the repository owner and optimized for the web. Images are evidence of visualization capabilities, not independently certified interpretations, registration or measurements. [Image provenance and source details](docs/assets/screenshots/README.md).*
+| Layered geophysical representation | Subsurface lines and spatial features |
+| --- | --- |
+| ![GeoSee colored geophysical section, point-like volumetric features and scene controls](docs/assets/screenshots/geode-E.jpg) | ![GeoSee dark 3D subsurface view with colored curved lines and scene controls](docs/assets/screenshots/geode-F.jpg) |
+| Layered scientific visualization with point-like structure and well context. | A different subsurface representation illustrating configurable 3D scientific scenes. |
+
+*These images are owner-supplied visual evidence of software presentation and interaction, not verified scientific registration, quantitative accuracy or a complete user-acceptance test. Web-sized copies were derived from the unmodified source PNGs. [Selected image provenance](docs/assets/screenshots/GEODE-SELECTED-GALLERY.md). The earlier [Utah FORGE image provenance register](docs/assets/screenshots/README.md) documents separately published screenshots.*
 
 ### More than a viewer
 
 The implemented GeoSee toolchain includes [layer and scene controls](src/editor/layerControls/), [page-based authoring](src/pages/), [audience-specific presentation](src/audience/), [environment configuration](src/editor/), and [Capture Director](docs/capture-director/README.md). Together they support a progression from exploring scientific information to arranging and communicating it as a guided visual experience.
 
-**Visual evidence still to add:** authentic screenshots of the editor, layers and environment controls, an authored presentation, and the Capture Director timeline/camera path. These interfaces are described and source-linked below, but are not shown in the current four-image gallery.
+The selected images demonstrate scene and page interfaces alongside scientific representations. **Still missing from this visual record:** an accepted screenshot of page editing in progress and Capture Director's camera-path/timeline editor. Visible *Cinematics* menu entries should not be mistaken for evidence that the timeline is shown or fully accepted.
 
 ## From scientific data to interactive experience
 
