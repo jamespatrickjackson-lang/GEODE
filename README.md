@@ -4,6 +4,14 @@
 
 *One visualization foundation. A world of scientific possibilities.*
 
+GEODE is a community-oriented, open-source scientific visualization initiative developed to make advanced imaging, spatial-data exploration and visual communication more accessible.
+
+The project is intended for researchers, universities, schools, scientific institutions and independent developers. Its objective is to reduce the need to repeatedly build the same visualization and interaction capabilities across different scientific disciplines, allowing teams to concentrate their effort on the scientific challenges unique to their work.
+
+GEODE is not being developed as a commercial software service. Its purpose is to establish a freely accessible and extensible foundation that the scientific community can use, adapt and develop further.
+
+GeoSee is the first substantial working implementation, focused on geoscience and subsurface visualization. The broader GEODE architecture, including an independently reusable core and additional scientific-domain integrations, remains under development.
+
 Scientific visualization spans an extraordinary range of disciplines, instruments and data types. Yet the software used to explore scientific information is often fragmented and developed in isolation. Geoscience, medical imaging, industrial scanning and emerging sensing systems each require specialized data handling, but they also share fundamental needs: representing complex information, navigating it in two and three dimensions, exploring spatial relationships and communicating results. Too often, these common capabilities are rebuilt for each application.
 
 **Geode exists to bridge that gap.**
