@@ -1,48 +1,79 @@
-# GEODE
+# Geode
 
-**Scientific data, interactive 3D visualization, and solo-directed, AI-assisted software engineering.**
+## Make the unseen explorable.
 
-GEODE is the broader direction for a reusable scientific software platform: turning complex, multidimensional data into understandable, interactive experiences with explicit provenance and engineering evidence. Its executable foundation in this repository is **GeoSee**, a substantial geoscience visualization and authoring alpha built with React, TypeScript, Three.js and Vite.
+*One visualization foundation. A world of scientific possibilities.*
 
-GeoSee combines terrain, geographic context, drilling, seismic and magnetotelluric data with sectioning, configurable environments, authored pages, camera transitions and cinematic capture. Development is directed by James Patrick Jackson using AI coding assistants, with human decisions, implementation iterations, source contracts and tests recorded alongside the code. AI assistance describes the development method; an embedded AI assistant is not required to run the application.
+Scientific visualization spans an extraordinary range of disciplines, instruments and data types. Yet the software used to explore scientific information is often fragmented and developed in isolation. Geoscience, medical imaging, industrial scanning and emerging sensing systems each require specialized data handling, but they also share fundamental needs: representing complex information, navigating it in two and three dimensions, exploring spatial relationships and communicating results. Too often, these common capabilities are rebuilt for each application.
 
-**Maturity:** research and software-development alpha. Visualization is not certified geospatial measurement, engineering-grade scientific validation, or medical-device clearance.
+**Geode exists to bridge that gap.**
 
-| Component | State |
+Geode aims to give the scientific community a shared, extensible visualization foundation. The proposed platform separates common capabilities, such as rendering, interaction, scene navigation, authoring and capture, from specialized modules responsible for the formats, representations and workflows of individual disciplines. Its long-term direction is an open-source platform that scientific and engineering teams can build upon, rather than another viewer that must be recreated from the ground up.
+
+For teams building scientific instruments, imaging products and data-rich applications, the goal is to concentrate more development effort on the science and functionality that make each product unique. Geode is intended to provide the common visualization environment beneath those specialized applications.
+
+### From vision to working software
+
+**GeoSee is the first substantial implementation of Geode's vision.** It is a working scientific visualization and authoring alpha for geoscience, bringing real-world terrain, geographic imagery, geological and survey context, boreholes, seismic sections and volumetric geophysical representations into an interactive 3D environment.
+
+GeoSee goes beyond viewing: datasets can be combined or isolated, sections and volumes explored, scene environments configured, presentation pages authored, camera motion animated and still or video outputs produced through supported capture paths. Built with **React, TypeScript, Three.js and Vite**, it supplies a substantial executable and source-tested foundation for Geode's broader architectural direction.
+
+**What is in this repository:** the GeoSee geoscience application, its project data and preparation tools, authoring/presentation/capture subsystems, tests and engineering records. The independent Geode core, reusable module contracts and integrations into other scientific domains remain development objectives. The planned open-source direction also requires a separate software licence decision.
+
+## Geode in action
+
+**Complex data. One interactive environment.**
+
+The Utah FORGE geothermal example shows terrain and geographic context alongside prepared subsurface scientific representations. These images demonstrate the working geoscience renderer, layering and section views, not the complete planned multi-domain platform.
+
+### Exploring the subsurface
+
+| Terrain and geographic context | Subsurface visualization |
 | --- | --- |
-| GeoSee geoscience application | Implemented here: viewer, editor, presenter, project data and verification tools |
-| Independent GEODE common spine | Architecture direction and future extraction; not yet a completely separated runtime |
-| Medical imaging development | Separate experimental, non-diagnostic branch; not included in this release |
-| Offshore Vancouver Island and DMT method kit | Separate development workspaces; not incorporated into this application |
+| ![Utah FORGE terrain visualization](docs/assets/screenshots/utah-forge-terrain.jpg) | ![Utah FORGE terrain and subsurface visualization](docs/assets/screenshots/utah-forge-terrain-mt-section.jpg) |
+| Real-world terrain and prepared imagery provide the context for exploration. | Surface and subsurface representations can be viewed together in a spatial scene. |
 
-## Application screenshots
-
-These are authentic, user-supplied screenshots of GeoSee's Utah FORGE visualization, displayed here as web-optimized copies of original 3840 × 2160 PNG captures. They show scientific **visualizations**, not independently verified subsurface interpretations or engineering measurements. The exact active dataset/recipe for each frame has not been independently reconstructed from its image alone.
-
-| Terrain and geographic context | Terrain with subsurface scientific representation |
+| Scientific sectioning | Layered volume visualization |
 | --- | --- |
-| ![Utah FORGE broad terrain and draped imagery in GeoSee](docs/assets/screenshots/utah-forge-terrain.jpg) | ![Utah FORGE terrain cap and colored subsurface cutaway](docs/assets/screenshots/utah-forge-terrain-mt-section.jpg) |
-| Landscape-scale terrain and prepared imagery. | Combined topographic and subsurface 3D rendering, with section/axis indicators. |
+| ![Utah FORGE subsurface section](docs/assets/screenshots/utah-forge-volume-section.jpg) | ![Utah FORGE layered scientific volume](docs/assets/screenshots/utah-forge-layered-volume.jpg) |
+| A sectional representation helps reveal spatial relationships within prepared models. | Layered scalar and volume rendering exposes information that is difficult to communicate in a flat image. |
 
-| Subsurface section | Layered scalar/volume view |
-| --- | --- |
-| ![GeoSee Utah FORGE colored subsurface section with a visual sun marker](docs/assets/screenshots/utah-forge-volume-section.jpg) | ![GeoSee layered subsurface visualization with atmospheric lighting](docs/assets/screenshots/utah-forge-layered-volume.jpg) |
-| Colored section/volume output; precise active layer not identified from image alone. | Layered scalar representation with scene lighting; image is not an accuracy acceptance result. |
+*Authentic captures from the GeoSee application, supplied by the repository owner and optimized for the web. Images are evidence of visualization capabilities, not independently certified interpretations, registration or measurements. [Image provenance and source details](docs/assets/screenshots/README.md).*
 
-The [image provenance register](docs/assets/screenshots/README.md) lists each original filename, SHA-256, original resolution and scope of the visual evidence. For editable branding/HUD controls and spline-based cinematics, see the source-linked [authoring](#authoring-and-presentation) and [Capture Director](#cinematic-capture) sections below. Separate accepted UI/capture screenshots are not yet published.
-## Start here
+### More than a viewer
 
-- [Architecture](docs/02-architecture.md), [scope](docs/01-scope.md) and [decision history](docs/03-decisions.md)
-- [Verification and known release limitations](docs/GEODE-release-verification.md)
-- [Publication manifest and data attribution](docs/GEODE-publication-manifest.md)
-- [Scientific dataset map](docs/dev-context/Dataset-Map.md) and [Utah FORGE layer status](projects/utah-forge/DATA_LAYER_STATUS.md)
-- [Capture Director](docs/capture-director/README.md)
+The implemented GeoSee toolchain includes [layer and scene controls](src/editor/layerControls/), [page-based authoring](src/pages/), [audience-specific presentation](src/audience/), [environment configuration](src/editor/), and [Capture Director](docs/capture-director/README.md). Together they support a progression from exploring scientific information to arranging and communicating it as a guided visual experience.
 
-- [Developer orientation](docs/START-HERE.md), [agent contract](CLAUDE.md) and [active build context](docs/dev-context/Active-Build-Context.md)
+**Visual evidence still to add:** authentic screenshots of the editor, layers and environment controls, an authored presentation, and the Capture Director timeline/camera path. These interfaces are described and source-linked below, but are not shown in the current four-image gallery.
+
+## From scientific data to interactive experience
+
+The Utah FORGE example connects multiple parts of GeoSee's working implementation. A typical project workflow uses the following stages; the linked subsystems exist in the repository, but the complete sequence has **not** been independently reverified here as one recorded end-to-end acceptance run.
+
+| Stage | What the application and tooling do | Source and implementation evidence |
+| --- | --- | --- |
+| **1. Scientific inputs** | Start from project-specific terrain, geospatial context, magnetotelluric and seismic source material, retaining source and interpretation boundaries. | [Utah FORGE project](projects/utah-forge/), [dataset map](docs/dev-context/Dataset-Map.md) |
+| **2. Prepare and describe** | Convert selected inputs into browser-ready products and describe coordinate mapping, scalar dimensions, metadata and source provenance in project-specific manifests. | [Seismic preparation](prep/build_utah_forge_seismic_browser.py), [computed-artifact pipeline](docs/dev-context/Computed-Artifact-Pipeline.md) |
+| **3. Assemble the scene** | Load prepared terrain, imagery, stations and subsurface representations into the interactive 3D scene. | [Scene manager](src/scene/SceneManager.ts), [loaders](src/loaders/), [MT subsystem](src/mtResistivity/) |
+| **4. Explore and compose** | Control visible layers, examine sections and volume representations, adjust styles and configure the scene to emphasize a scientific relationship. | [Section runtime](src/scene/section/), [layer controls](src/editor/layerControls/) |
+| **5. Author an explanation** | Save page-specific camera and layer states, then navigate them in a presenter flow for a particular audience. | [Pages](src/pages/), [editor](src/editor/), [presenter](src/presenter/) |
+| **6. Capture and communicate** | Produce supported stills, recordings or frame sequences; format, codec, resolution and rendering parity remain environment-dependent. | [Capture Director](src/capture/), [production notes](docs/capture-director/README.md) |
+
+**Boundary:** The present workflow uses project-wired loaders and prepared inputs. It is not a universal scientific file importer, automatically validated data-processing pipeline or certified quantitative analysis environment.
+
+## Explore the implementation
+
+- **[Implementation architecture](docs/02-architecture.md):** Current application structure, rendering, data and authoring systems.
+- **[Scientific datasets and provenance](docs/dev-context/Dataset-Map.md):** Source data, prepared assets and scientific representation boundaries.
+- **[Capture Director](docs/capture-director/README.md):** Camera paths, timeline, still and video capture tooling.
+- **[Engineering and release verification](docs/GEODE-release-verification.md):** Test results, release checks, known limitations and follow-up work.
+- **[Decision history](docs/03-decisions.md):** Traceable development choices and their rationale.
 
 ## Run locally
 
-Tested environments: Node 20.20.2 / npm 10.9.10 and Node 24.22.2 / npm 11.19.1 on Windows. CI targets Node 20 and Python 3.14 on Ubuntu; see the [Actions runs](https://github.com/jamespatrickjackson-lang/GEODE/actions) and the recorded initial dependency failure. The release verification record contains the exact outcomes. Python 3 is needed for the Python-backed ingestion tests and selected offline preparation tools, not for the browser application itself.
+### Quick start
+
+The application runs locally in the browser through a Vite development server. Node **20.20.2** and **24.22.2** were used for the documented Windows verification runs; CI uses Node 20 on Ubuntu. Python 3 is only required for selected preprocessing and Python-backed tests, not for opening the browser application.
 
 ```sh
 git clone https://github.com/jamespatrickjackson-lang/GEODE.git
@@ -51,7 +82,17 @@ npm ci
 npm run dev -- --host 127.0.0.1 --port 5189 --strictPort
 ```
 
-Open [http://127.0.0.1:5189](http://127.0.0.1:5189), select a project, and use the page/editor controls. Direct project URLs include `/?project=woodjam`, `/?project=utah-forge`, `/?project=case-study-b` and `/?project=base-gui`.
+Open **http://127.0.0.1:5189** in a browser. The application offers a project landing screen. To go directly to the principal geophysics example, open **http://127.0.0.1:5189/?project=utah-forge**.
+
+### First five minutes: a reviewer walkthrough
+
+1. **Load Utah FORGE.** Confirm that the terrain/environment appears. Loading and visible layers depend on the included prepared project assets and the selected scene/page state.
+2. **Explore the spatial scene.** Navigate the terrain and inspect the available geological/geophysical representations and their layer or section controls. Use the project interface to vary the view rather than treating the screenshots as fixed rendered outputs.
+3. **Inspect the authoring and presenter controls.** Open the editor/page controls, examine how camera and layer states contribute to authored pages, and try a supported presenter navigation path. Capture Director is a separate deeper feature to inspect after the basic scene.
+
+This is a **suggested first-use route**, not a recorded browser acceptance script. Do not overwrite project state needed for your own work. Direct project routes include `/?project=woodjam`, `/?project=utah-forge`, `/?project=case-study-b` and `/?project=base-gui`.
+
+### Build and verification commands
 
 ```sh
 npm run build
@@ -62,11 +103,15 @@ python -m pip install -r tools/requirements-test.txt
 npm run test:tools
 ```
 
-`npm ci` enables the repository's pre-commit checks through its prepare script. Authoring uses development-only Vite endpoints and writes project/page state to the checkout. Use a disposable clone for experimentation. Bind this development server to loopback; it is not a hardened hosted editing service. The Windows launcher can stop a process on port 5173, so the explicit command above is preferable for automated verification.
+The repository's [release verification record](docs/GEODE-release-verification.md) documents observed outcomes and the CI environment. On **12 November 2026**, the published [GitHub Actions run 43302400916](https://github.com/jamespatrickjackson-lang/GEODE/actions/runs/43302400916) passed the production build, runtime-asset checks and **679 of 679 tests**. These results apply to that run and commit, not every browser configuration or future change.
 
-The build includes prepared project/runtime data and FFmpeg assets, while excluding raw source buckets and selected archived material. Static builds omit the development authoring endpoints. See the release verification record for hosting and export limitations. Raw regeneration inputs may live outside Git. [Archive mapping](docs/archive-map.md) and [the archive manifest](docs/archive-manifest.json) describe historical source locations; local `C:\GeoSee\GeoSee_Archive` paths are developer provenance, not portable download instructions.
+### Local development boundaries
 
-## Scientific and geospatial visualization
+`npm ci` enables the repository's pre-commit checks through its prepare script. The authoring interface uses **development-only Vite endpoints** that can write project/page state to the checkout; use a disposable clone when exploring. Keep the dev server bound to loopback. It is **not** a hardened public editing service. Static builds omit those development write endpoints, so don't assume equivalent hosted edit/publish functionality.
+
+The build includes prepared project/runtime data and FFmpeg assets, while excluding raw-source buckets and selected archives. Some source regeneration inputs may live outside Git. See [archive mapping](docs/archive-map.md), [archive manifest](docs/archive-manifest.json) and [release verification](docs/GEODE-release-verification.md). Historical local `C:\GeoSee\GeoSee_Archive` paths are developer provenance, not portable installation instructions.
+
+## Scientific visualization and data pipelines
 
 | Capability | Implementation and representative evidence |
 | --- | --- |
@@ -81,7 +126,7 @@ The build includes prepared project/runtime data and FFmpeg assets, while exclud
 
 Spatial manifests, scene origins and dataset-specific transforms allow layers to share a view. They do not automatically establish accepted registration across coordinate systems, vertical datums, or seismic time/depth domains. Source, derived, preview, synthetic and future content must remain distinguishable. Some seismic registration metadata explicitly remains unverified.
 
-### Formats: runtime, preparation and future targets
+### Supported runtime inputs, preparation formats and future targets
 
 | Route | Formats and limits |
 | --- | --- |
@@ -91,13 +136,25 @@ Spatial manifests, scene origins and dataset-specific transforms allow layers to
 
 Binary arrays need their dimensions, coordinate mapping, scalar ranges and other manifest metadata. The Utah FORGE file-drop interface stages intake; it does not automatically validate, interpret or display arbitrary scientific files. PDF/Excel/source archives serve as reference or preprocessing material.
 
-## Authoring and presentation
+## Interaction, authoring and presentation
 
-The [project catalog](src/projects/projectCatalogRuntime.ts) selects separate project loads. [Pages](src/pages/) and the [editor](src/editor/) manage camera poses, visibility, overrides, page creation/duplication/reordering and presentation content. [Transition executors](src/scene/transitions/) coordinate representation-aware opacity, section masks, scalar styles and environment changes within a loaded project. Switching projects is not a seamless geospatial flythrough between coordinate systems.
+Geode's value proposition is broader than rendering a scene. GeoSee's implemented interaction and authoring systems help someone **inspect**, **organize**, **explain** and **communicate** spatial information. These are software interaction capabilities, not claims that a particular scientific interpretation is correct or that formal usability validation has been completed.
 
-Environment controls cover lighting, separate sun visuals and light contribution, scene fog, local atmospheric volumes, terrain materials and post-processing. Branding and layout controls configure logos, headers, menus, HUDs and overlays. The [developer inspector](src/editor/DevModeInspector.tsx) supports interface inspection and editing of registered layout properties; it is not a universal no-code UI builder.
+### Explore and configure
 
-[Audience-specific views](src/audience/) and [presentation cards](src/presenter/OverlayDisplay.tsx) provide different explanations of the same project for technical and nontechnical audiences.
+Users can navigate scene and terrain context, work with layer visibility and opacity, inspect sections, change representation styles and adjust the environmental settings available to a project. The [scene controller](src/scene/SceneManager.ts), [layer controls](src/editor/layerControls/), [section runtime](src/scene/section/) and [MT visualization subsystem](src/mtResistivity/) show how specialized scientific representations are wired into a common visual experience.
+
+Environment controls include lighting, sun appearance and contribution, fog, local atmospheric volumes, terrain materials and post-processing. Branding and layout controls configure logos, headers, menus, HUDs and overlays. The [developer inspector](src/editor/DevModeInspector.tsx) edits registered layout properties; it is not a universal no-code application builder.
+
+### Author a guided experience
+
+The [project catalog](src/projects/projectCatalogRuntime.ts) selects distinct project loads. [Pages](src/pages/) and the [editor](src/editor/) manage camera poses, layer visibility, overrides, page creation/duplication/reordering and presentation content. [Transition executors](src/scene/transitions/) coordinate changes in opacity, sections, scalar styles and environment state within a project. Switching between projects is not an automatic geospatial flythrough between coordinate systems.
+
+[Audience-specific views](src/audience/) and [presentation cards](src/presenter/OverlayDisplay.tsx) allow different explanations of the same project to be composed for technical and nontechnical audiences. The intended output is an authored, interactive walkthrough rather than only a single screenshot or raw 3D dataset.
+
+### Communicate and capture
+
+The working environment supports authored page navigation and multiple capture paths. It does **not** yet constitute a fully verified browser-hosted publishing or generalized export service. Details of the cinematic system, including supported still/video pathways and limitations, appear in the next section.
 
 ## Cinematic capture
 
@@ -107,20 +164,13 @@ Implemented capture paths include realtime screen/viewport recording, composited
 
 High-resolution paths include configured 4K output and tiled still rendering for larger outputs such as 8K. GPU memory, browser/codec support, effects parity and tile seams remain practical constraints. The presence of these code paths is not a claim that every resolution, codec or multipage export has passed visual acceptance.
 
-## Demonstration projects
+## Geode architecture and extensibility
 
-| Project | What it demonstrates | Interpretation boundary |
-| --- | --- | --- |
-| [Utah FORGE](projects/utah-forge/) | Terrain/imagery, geothermal context, MT inversion representations, seismic sections/volumes, station and well context, sectioning and authored scientific views | Source-derived visualization; unresolved registration and quantitative validation limits remain explicit |
-| [Woodjam](projects/woodjam/) | Terrain, exploration/drilling, assays/geochemistry, geology, roads/water/claims and authored walkthroughs | Measured/source-derived context and interpretation layers retain distinct meanings |
-| [Shahbazi Gravel Pit](projects/case-study-b/) | UAV/survey material, TLS previews, prepared meshes/contours, cameras and photography overlays | Demo coordinates and preview geometry; placeholders are not final survey products |
-| [Base GUI](projects/base-gui/) | Shared interface, scene/environment and presentation authoring | Local studio/template context, not a scientific survey |
+The first implementation and the long-term platform objective should not be confused. **GeoSee is a bundled geoscience application today.** The goal is to extract its reusable visualization, interaction and authoring capabilities into a **domain-independent Geode core**, then connect specialized scientific modules through explicit data and integration contracts.
 
-The developer reports comparing Utah FORGE visualizations with published scientific literature and obtaining a geophysics professional's review. Wannamaker et al. (2020), Figure 16, is a candidate reference; the exact paper, comparison record and review scope remain to be confirmed. This is reported qualitative evidence, not formal professional certification or engineering-grade validation. No MIT involvement is asserted.
+### Current implementation
 
-## Engineering evidence and architecture
-
-The application shell loads project manifests and page state; project-specific preparation supplies browser-ready scientific products; loaders feed the Three.js scene; editor controls author environment/page overrides; the presenter and capture systems consume that state.
+The published application shell selects projects and page states; project-specific preparation provides browser-ready scientific representations; loaders feed the Three.js scene; editor controls author project and page overrides; presenter and capture systems consume the resulting state.
 
 | Area | Entry point |
 | --- | --- |
@@ -131,9 +181,76 @@ The application shell loads project manifests and page state; project-specific p
 | Tests, guards and CI | [tests](tests/), [tools](tools/), [GitHub Actions](.github/workflows/checks.yml) |
 | Decisions, risks and agent context | [decisions](docs/03-decisions.md), [risk register](docs/risk-management/GeoSee-Risk-Register.md), [AGENTS.md](AGENTS.md), [active build context](docs/dev-context/Active-Build-Context.md) |
 
-Concrete review trails include trace-header-driven seismic geometry and source gating; transition entity identity and interrupted-transition handling; and deterministic spline/capture sampling. Follow their source, tests and decision records rather than treating commit counts as proof of correctness. The risk register and requirements practices support development but do not constitute an audited QMS or regulatory approval.
+These are implemented subsystem boundaries, not proof that the common core already operates independently of the geoscience-specific code. The current [architecture document](docs/02-architecture.md) and [decision log](docs/03-decisions.md) describe the published foundation.
 
-Meaningful remaining engineering work includes extracting reusable scene/editor boundaries, defining cross-domain module contracts, improving browser regression coverage, bounding large-data memory use, resolving export parity and formalizing numerical registration/uncertainty verification.
+### Proposed shared platform
+
+```mermaid
+flowchart TB
+    S["Scientific sources and prepared data"] --> M["Domain-specific modules and adapters"]
+    M --> C["Common artifact and module contracts (target)"]
+    C --> G["Geode core (target): rendering, interaction, scene, authoring, navigation, capture"]
+    G --> X["Interactive views, authored experiences and visual outputs"]
+    M -.-> J["GeoSee: geoscience domain"]
+    M -.-> I["Medical imaging and other sciences: future integrations"]
+```
+
+*Conceptual **target architecture**, not a diagram of an independently deployed module host. Medical-imaging work exists separately and is not part of the public GEODE main release.*
+
+| Shared foundation: planned responsibility | Scientific module: planned responsibility |
+| --- | --- |
+| 2D/3D rendering surfaces, scene/camera and consistent navigation | Interpret domain formats, units, acquisition and scientific semantics |
+| Selection, interaction primitives, overlays, legends, authoring and capture | Supply domain views, styling rules, tools and workflow-specific presentation |
+| Common renderable artifact interfaces, module lifecycle and compatibility contracts | Convert prepared inputs into contracted artifacts and declare provenance/limitations |
+
+The intended benefit is **reuse without forcing unrelated sciences into one data model**. A scientific instrument or data team would integrate through a documented module/adapter boundary and retain responsibility for discipline-specific processing and verification. This is a design objective, not a demonstrated cross-domain integration benchmark.
+
+A separate **DMT** engineering governance and enforcement methodology is under development; it is not a functioning module of this published application. Likewise, the independent clinical Geode Workbench is a separate prototype, not a deployed feature in this repository.
+
+## Engineering approach and verification
+
+Geode's development is **human-directed and AI-assisted**. The design direction, architecture decisions, scope boundaries, integration choices and acceptance judgments are owned by the developer. AI coding assistants are used in implementation and iteration; their use is a development method, **not** a claim that an AI assistant is embedded in the user-facing application.
+
+The repository provides more meaningful engineering evidence than a tool label: runnable application code, project-specific scientific preparation and source gates, decision records, automated checks, a release verification record, and CI execution on the published branch.
+
+| Engineering concern | Reviewable evidence |
+| --- | --- |
+| Requirements, decisions and known risks | [Decision history](docs/03-decisions.md), [risk register](docs/risk-management/GeoSee-Risk-Register.md), [development context](docs/dev-context/Active-Build-Context.md) |
+| Scientific integrity and source mapping | [Dataset map](docs/dev-context/Dataset-Map.md), [computed-artifact pipeline](docs/dev-context/Computed-Artifact-Pipeline.md), [seismic source gates](tools/validate-seismic-source-gates.mjs) |
+| Source-level testing and deterministic behavior | [Tool/source tests](tests/tools/), [capture spline runtime test](tests/tools/capture-director-camera-path-v3-spline-runtime.test.mjs), [checks workflow](.github/workflows/checks.yml) |
+| Published build and CI evidence | [GitHub Actions run, 12 Nov 2026](https://github.com/jamespatrickjackson-lang/GEODE/actions/runs/43302400916), [release verification](docs/GEODE-release-verification.md) |
+
+**Verified snapshot, 12 November 2026:** At published commit [`b50916fe`](https://github.com/jamespatrickjackson-lang/GEODE/commit/b50916fe4cb987280ad1148a4314752f0e573a1c), the release checks reported a successful production build, runtime-asset validation and **679 passing tests out of 679**. This does not establish scientifically certified accuracy, universal browser compatibility or the completion of all export paths. Specific acceptance results and known failures are recorded in the [verification report](docs/GEODE-release-verification.md).
+
+Representative review trails include trace-header-driven seismic geometry and source gating, transition identity/interruption handling, and deterministic spline/camera sampling. Review the linked source and test evidence rather than inferring correctness from line count or Git history. The development risk register is not an audited quality management system and does not establish regulatory conformity.
+
+## Demonstration projects
+
+| Project | What it demonstrates | Interpretation boundary |
+| --- | --- | --- |
+| [Utah FORGE](projects/utah-forge/) | Terrain/imagery, geothermal context, MT inversion representations, seismic sections/volumes, station and well context, sectioning and authored scientific views | Source-derived visualization; unresolved registration and quantitative validation limits remain explicit |
+| [Woodjam](projects/woodjam/) | Terrain, exploration/drilling, assays/geochemistry, geology, roads/water/claims and authored walkthroughs | Measured/source-derived context and interpretation layers retain distinct meanings |
+| [Shahbazi Gravel Pit](projects/case-study-b/) | UAV/survey material, TLS previews, prepared meshes/contours, cameras and photography overlays | Demo coordinates and preview geometry; placeholders are not final survey products |
+| [Base GUI](projects/base-gui/) | Shared interface, scene/environment and presentation authoring | Local studio/template context, not a scientific survey |
+
+## Development status and roadmap
+
+| Area | Current state | Next evidence or engineering milestone |
+| --- | --- | --- |
+| **GeoSee geoscience application** | Working research/software alpha in this public repository | Broader browser acceptance, interaction polish and repeatable demonstrations |
+| **Geode reusable core and scientific modules** | Architectural direction; common behaviors remain coupled to GeoSee | Extract stable boundaries, define/version interface contracts and demonstrate independent reuse |
+| **Scientific import and data fidelity** | Project-specific preparation, loaders and source distinctions | Improve file-format coverage, registration checks, metadata validation and uncertainty presentation |
+| **Authoring and cinematic outputs** | Implemented editor, presenter, path/timeline and selected still/video capture paths | Validate capture/export parity, high-resolution effects, codecs and multi-page workflows |
+| **Large scientific data** | Prepared browser-oriented runtime products | Bound memory/performance and expand stress/regression coverage |
+| **Other domains and governance tools** | Separate experimental medical/Workbench work; DMT and other projects outside this release | Independent integration, permissions and verification before claiming cross-domain modules |
+
+**Not yet demonstrated:** a separated and versioned cross-domain Geode core, multiple independently integrated scientific modules, unrestricted file-format ingestion, a hardened hosted editing service, certified scientific metrology, or medical-device clearance. These are boundaries, not features hidden behind the UI.
+
+### Scientific interpretation and source boundaries
+
+Project manifests and transforms can place data layers in a common scene, but that does **not** automatically establish accepted alignment between different geographic coordinate systems, vertical datums or seismic time/depth domains. Source, derived, preview, synthetic and future-target data remain distinct. Scientific viewers are responsible for presenting source and uncertainty context, not manufacturing apparent precision.
+
+The developer has reported qualitative comparison of Utah FORGE visuals with literature and external professional feedback, but the underlying dated comparison and review scope have not been independently established. Neither is presented as certified scientific validation or regulatory sign-off. See the [release verification](docs/GEODE-release-verification.md) and [data provenance](docs/dev-context/Dataset-Map.md) for precise evidence boundaries.
 
 ## Rights and release status
 
