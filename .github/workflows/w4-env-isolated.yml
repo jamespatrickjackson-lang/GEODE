@@ -14,7 +14,8 @@ concurrency:
 jobs:
   isolated-preflight:
     if: github.repository == 'jamespatrickjackson-lang/GEODE'
-    runs-on: ubuntu-latest
+    # Playwright 1.60 Chromium installer does not support Ubuntu 26.04 (ubuntu-latest).
+    runs-on: ubuntu-24.04
     timeout-minutes: 25
     env:
       W4_EXPECTED_SHA: ${{ github.sha }}
