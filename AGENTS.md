@@ -16,6 +16,18 @@ and unresolved holds are recorded in
 
 ## First Read
 
+Before choosing a GEODE / GeoSee workstream or making changes, consult the
+[canonical GEODE / GeoSee Notion workstream and authority manifest](https://app.notion.com/p/418fb09932768139b693dbf2b5a191aa) for approved product scope, W1–W4 ownership,
+current decisions, requirements, dependencies, active holds, and links to the
+owning reports. Verify the authorized repository, exact branch/commit and
+permissions against live GitHub. The manifest is the single project-level
+onboarding route, not a substitute for the engineering instructions in this
+file or its scoped counterparts, and does not itself authorize edits, merges,
+or releases. Treat historical, provisional, and cross-domain GEODE OSS V2
+materials as reference, not active GeoSee requirements. If the manifest or
+assigned workstream is unavailable, report the gap rather than assuming
+change authorization.
+
 For normal software-build work, start with
 `docs/dev-context/Active-Build-Context.md`, then open only the docs and
 source files directly relevant to the task.
