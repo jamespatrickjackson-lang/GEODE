@@ -1941,6 +1941,10 @@ export interface ProjectManifest {
   layers: ProjectLayerSpec[];
   pageOrder: string[];
   archivedPageOrder?: string[];
+  // Additive, backward-compatible permanent page identity ledger.
+  // Legacy projects omit it; existing numeric IDs and archives remain unchanged.
+  // Every newly issued UUID page ID stays here even after its page is deleted.
+  issuedPageIds?: string[];
   presentationDefaults?: PresentationDefaults;
   watermark: string;
   [k: string]: unknown;
