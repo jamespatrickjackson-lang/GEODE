@@ -14,6 +14,11 @@ import {
   type ProjectCatalogEntry,
 } from "./projects/projectCatalogRuntime";
 import { debugLog } from "./utils/debugLog";
+import { CuratedPublicLanding, CuratedExplorerShell } from "./public/CuratedExplorerShell";
+import {
+  canOpenProject,
+  resolveGateAExperience,
+} from "./public/gateAExperience";
 import { SHAHBAZI_VIEWER_BACKGROUND } from "./projectModules/shahbazi/ui";
 import "./App.css";
 
@@ -49,15 +54,24 @@ const EditorChrome = lazy(() =>
 );
 
 export function App() {
+  // Resolve once: direct public links and attempted editor deep-links fail closed.
+  const [experience] = useState(() =>
+    resolveGateAExperience(window.location.search, import.meta.env.DEV),
+  );
   const containerRef = useRef<HTMLDivElement>(null);
   const loadRequestRef = useRef(0);
   const initialProjectOpenedRef = useRef(false);
   const [project, setProject] = useState<LoadedProject | null>(null);
-  const [loadError, setLoadError] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(experience.error);
   const [loadState, setLoadState] = useState<LoadState>("landing");
   const [sceneHandle, setSceneHandle] = useState<SceneHandle | null>(null);
 
   const openProject = useCallback((projectSlug: string = DEFAULT_PROJECT_SLUG) => {
+    // Behavior-boundary enforcement, not just removal of landing controls.
+    if (!canOpenProject(experience, projectSlug)) {
+      setLoadError("This project is unavailable in the public explorer.");
+      return;
+    }
     const requestId = loadRequestRef.current + 1;
     loadRequestRef.current = requestId;
     setLoadError(null);
@@ -78,7 +92,7 @@ export function App() {
         setLoadError(message);
         setLoadState("landing");
       });
-  }, []);
+  }, [experience]);
 
   const returnToLanding = useCallback(() => {
     loadRequestRef.current += 1;
@@ -91,9 +105,26 @@ export function App() {
   useEffect(() => {
     if (initialProjectOpenedRef.current) return;
     initialProjectOpenedRef.current = true;
-    const slug = new URLSearchParams(window.location.search).get("project");
-    if (slug) openProject(slug);
-  }, [openProject]);
+    if (experience.initialProjectSlug) {
+      openProject(experience.initialProjectSlug);
+    }
+  }, [experience.initialProjectSlug, openProject]);
+
+  useEffect(() => {
+    if (experience.mode !== "public") return;
+    // Capture-phase Ctrl/Cmd+S can never reach an editor save shortcut in the
+    // public route, including if a future child installs its own key listener.
+    const blockPublicSaveShortcut = (event: KeyboardEvent) => {
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "s") {
+        event.preventDefault();
+        event.stopPropagation();
+        event.stopImmediatePropagation();
+      }
+    };
+    window.addEventListener("keydown", blockPublicSaveShortcut, true);
+    return () =>
+      window.removeEventListener("keydown", blockPublicSaveShortcut, true);
+  }, [experience.mode]);
 
   useEffect(() => {
     if (!containerRef.current || !project) return;
@@ -158,7 +189,14 @@ export function App() {
   return (
     <div style={{ position: "absolute", inset: 0 }}>
       <div ref={containerRef} style={{ position: "absolute", inset: 0 }} />
-      {loadState === "landing" && !project && (
+      {loadState === "landing" && !project && experience.mode === "public" && (
+        <CuratedPublicLanding
+          error={loadError}
+          developmentAvailable={import.meta.env.DEV}
+          onOpenUtah={() => openProject(UTAH_FORGE_PROJECT.slug)}
+        />
+      )}
+      {loadState === "landing" && !project && experience.mode === "developer" && (
         <ProjectLanding
           error={loadError}
           onOpenProject={openProject}
@@ -177,7 +215,14 @@ export function App() {
         </div>
       )}
       <HoverTooltip />
-      {sceneHandle && project && (
+      {sceneHandle && project && experience.mode === "public" && (
+        <CuratedExplorerShell
+          sceneHandle={sceneHandle}
+          project={project}
+          onReturnHome={returnToLanding}
+        />
+      )}
+      {sceneHandle && project && experience.mode === "developer" && (
         <EditorProvider
           projectSlug={project.projectSlug}
           projectRoot={project.projectRoot}
