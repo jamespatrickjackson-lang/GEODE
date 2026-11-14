@@ -270,16 +270,10 @@ export function PagePanel({ sceneHandle }: Props) {
       ? allEditablePages.find((p) => p.id === state.selectedPageId)
       : null);
   const pageStructureLocked = isTransitioning || targetIndex !== null;
-  const selectedActionPageIsActive = selectedActionPage
-    ? state.pages.some((page) => page.id === selectedActionPage.id)
-    : false;
   const selectedActionPageIsArchived = selectedActionPage
     ? state.archivedPages.some((page) => page.id === selectedActionPage.id)
     : false;
-  const deleteSelectedDisabled =
-    pageStructureLocked ||
-    !selectedActionPage ||
-    (selectedActionPageIsActive && state.pages.length <= 1);
+  const deleteSelectedDisabled = pageStructureLocked || !selectedActionPage;
   const pageStructureLockedTitle =
     "Page structure is locked while the camera is transitioning";
   const pageStructureActionTitle = (title: string) =>
@@ -589,14 +583,14 @@ export function PagePanel({ sceneHandle }: Props) {
       if (target) {
         const sourceArchived = state.archivedPages.some((page) => page.id === pageId);
         if (target.kind === "archive-header") {
-          if (!sourceArchived && state.pages.length > 1) {
+          if (!sourceArchived) {
             archivePage(pageId);
             previewPageAfterSelectionPaint(pageId);
           }
         } else if (target.shelf === "archived") {
           if (sourceArchived) {
             moveArchivedPage(pageId, target.pageId, target.insertPosition);
-          } else if (state.pages.length > 1) {
+          } else {
             archivePage(pageId, target.pageId, target.insertPosition);
             previewPageAfterSelectionPaint(pageId);
           }

@@ -129,9 +129,7 @@ export async function loadProject(
     "archivedPageOrder",
   );
 
-  if (pages.length === 0) {
-    throw new Error("loadProject: no pages resolved from pageOrder");
-  }
+  // Zero authored pages are valid; Global Settings/environment remains the opening state.
   debugLog(
     `[loadProject] ${manifest.id}: ${pages.length} pages, ` +
       `${archivedPages.length} archived pages, ${manifest.layers.length} layers`,
