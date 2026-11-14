@@ -1,5 +1,7 @@
 # Code Map
 
+> **As-built implementation map:** [`29d9c4c7eee77ac1b104289b09b1382c574145d0`](https://github.com/jamespatrickjackson-lang/GEODE/commit/29d9c4c7eee77ac1b104289b09b1382c574145d0), 14 November 2026. This is a coupled, bundled GeoSee React/Three.js app with fixed project catalog and specialized handlers, **not** an independently packaged cross-domain GEODE core, generic input adapter or public SDK. Listed module sizes are dated/approximate observations; proposed splits, abstractions, presenter routes and hotspot mitigations are **not completed implementations**.
+
 ## App Shape
 
 | Area | Observed role | Status | Evidence |
@@ -50,8 +52,8 @@
 ## Architecture Inputs Recorded, Not Implemented
 
 - Observed: Project-specific loader isolation has evidence in `src/scene/layerLoaders.ts`.
-- Observed: SceneManager split has evidence in `src/scene/SceneManager.ts`.
-- Observed: Editor module split has evidence in `src/editor/LayerPanel.tsx` and `src/editor/EnvironmentScenePanel.tsx`.
+- **Not implemented, future candidate:** `src/scene/SceneManager.ts` demonstrates a large shared responsibility surface; its component split remains proposed.
+- **Not implemented, future candidate:** large `src/editor/LayerPanel.tsx` and `src/editor/EnvironmentScenePanel.tsx` suggest possible extraction; their presence is not evidence of a completed split.
 - Observed: Lightweight presenter route is a candidate because presenter behavior exists inside the loaded app/editor chrome.
 - Observed: Page-level lazy loading is a candidate, but only editor chrome lazy-loading is currently observed.
 - Observed: Bundle inspection can be done without code changes because Vite chunks and large modules are visible.
