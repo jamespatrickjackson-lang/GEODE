@@ -20,6 +20,11 @@ export interface TransitionCommitGraphEntity {
   representationKey?: string | null;
   presenceState?: string | null;
   visible?: boolean;
+  // Unknown coverage prevents a projected field from masquerading as a read.
+  presenceCoverage?: TransitionCommitCoverage;
+  visibilityCoverage?: TransitionCommitCoverage;
+  representationCoverage?: TransitionCommitCoverage;
+  readinessCoverage?: TransitionCommitCoverage;
   readinessState?: string | null;
   derivedFromEntityKey?: string | null;
   dependencyState?: string | null;
@@ -251,7 +256,12 @@ function compareEntityToTarget(input: {
     });
     return;
   }
-  if (visibleValue(actual) !== visibleValue(target)) {
+  if (
+    actual.presenceCoverage === "unknown" ||
+    actual.visibilityCoverage === "unknown"
+  ) {
+    addCoverage(unresolvedCoverage, graphName, entityKey, "visibility");
+  } else if (visibleValue(actual) !== visibleValue(target)) {
     visibleDeltas.push({
       entityKey,
       property: "visibility",
@@ -263,7 +273,9 @@ function compareEntityToTarget(input: {
       targetValue: visibleValue(target),
     });
   }
-  if ((actual.representationKey ?? null) !== (target.representationKey ?? null)) {
+  if (actual.representationCoverage === "unknown") {
+    addCoverage(unresolvedCoverage, graphName, entityKey, "representation");
+  } else if ((actual.representationKey ?? null) !== (target.representationKey ?? null)) {
     visibleDeltas.push({
       entityKey,
       property: "representation",
@@ -275,6 +287,12 @@ function compareEntityToTarget(input: {
         phase === "committed-target" ? actual.representationKey ?? null : undefined,
       targetValue: target.representationKey ?? null,
     });
+  }
+  if (
+    actual.readinessCoverage === "unknown" &&
+    target.readinessState != null
+  ) {
+    addCoverage(unresolvedCoverage, graphName, entityKey, "readiness");
   }
   const actualChannels = channelMap(actual);
   const targetChannels = channelMap(target);
