@@ -14,6 +14,13 @@ import {
   type ProjectCatalogEntry,
 } from "./projects/projectCatalogRuntime";
 import { debugLog } from "./utils/debugLog";
+import { CuratedPublicLanding, CuratedExplorerShell } from "./public/CuratedExplorerShell";
+import {
+  attachPublicKeyboardGuard,
+  canOpenProject,
+  publicRouteUrl,
+  resolveGateAExperience,
+} from "./public/gateAExperience";
 import { SHAHBAZI_VIEWER_BACKGROUND } from "./projectModules/shahbazi/ui";
 import "./App.css";
 
@@ -49,15 +56,30 @@ const EditorChrome = lazy(() =>
 );
 
 export function App() {
+  // Resolve once: direct public links and attempted editor deep-links fail closed.
+  const [experience] = useState(() =>
+    resolveGateAExperience(window.location.search, import.meta.env.DEV),
+  );
   const containerRef = useRef<HTMLDivElement>(null);
   const loadRequestRef = useRef(0);
   const initialProjectOpenedRef = useRef(false);
   const [project, setProject] = useState<LoadedProject | null>(null);
-  const [loadError, setLoadError] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(experience.error);
   const [loadState, setLoadState] = useState<LoadState>("landing");
   const [sceneHandle, setSceneHandle] = useState<SceneHandle | null>(null);
 
-  const openProject = useCallback((projectSlug: string = DEFAULT_PROJECT_SLUG) => {
+  const openProject = useCallback((
+    projectSlug: string = DEFAULT_PROJECT_SLUG,
+    updatePublicUrl = true,
+  ) => {
+    // Behavior-boundary enforcement, not just removal of landing controls.
+    if (!canOpenProject(experience, projectSlug)) {
+      setLoadError("This project is unavailable in the public explorer.");
+      return;
+    }
+    if (experience.mode === "public" && updatePublicUrl) {
+      window.history.replaceState(window.history.state, "", publicRouteUrl(window.location.href, projectSlug));
+    }
     const requestId = loadRequestRef.current + 1;
     loadRequestRef.current = requestId;
     setLoadError(null);
@@ -78,22 +100,31 @@ export function App() {
         setLoadError(message);
         setLoadState("landing");
       });
-  }, []);
+  }, [experience]);
 
   const returnToLanding = useCallback(() => {
+    if (experience.mode === "public") {
+      window.history.replaceState(window.history.state, "", publicRouteUrl(window.location.href, null));
+    }
     loadRequestRef.current += 1;
     setLoadError(null);
     setProject(null);
     setSceneHandle(null);
     setLoadState("landing");
-  }, []);
+  }, [experience.mode]);
 
   useEffect(() => {
     if (initialProjectOpenedRef.current) return;
     initialProjectOpenedRef.current = true;
-    const slug = new URLSearchParams(window.location.search).get("project");
-    if (slug) openProject(slug);
-  }, [openProject]);
+    if (experience.initialProjectSlug) {
+      openProject(experience.initialProjectSlug, false);
+    }
+  }, [experience.initialProjectSlug, openProject]);
+
+  useEffect(() => {
+    if (experience.mode !== "public") return;
+    return attachPublicKeyboardGuard(window, Boolean(sceneHandle && project));
+  }, [experience.mode, sceneHandle, project]);
 
   useEffect(() => {
     if (!containerRef.current || !project) return;
@@ -148,17 +179,25 @@ export function App() {
   }, [project]);
 
   useEffect(() => {
-    if (!sceneHandle || !project || !import.meta.env.DEV) return;
+    if (!sceneHandle || !project || !import.meta.env.DEV ||
+        experience.mode !== "developer") return;
     return installDevLayerDiagnostics(sceneHandle, {
       projectSlug: project.projectSlug,
       projectName: project.manifest.name,
     });
-  }, [project, sceneHandle]);
+  }, [project, sceneHandle, experience.mode]);
 
   return (
     <div style={{ position: "absolute", inset: 0 }}>
       <div ref={containerRef} style={{ position: "absolute", inset: 0 }} />
-      {loadState === "landing" && !project && (
+      {loadState === "landing" && !project && experience.mode === "public" && (
+        <CuratedPublicLanding
+          error={loadError}
+          developmentAvailable={import.meta.env.DEV}
+          onOpenUtah={() => openProject(UTAH_FORGE_PROJECT.slug)}
+        />
+      )}
+      {loadState === "landing" && !project && experience.mode === "developer" && (
         <ProjectLanding
           error={loadError}
           onOpenProject={openProject}
@@ -177,7 +216,14 @@ export function App() {
         </div>
       )}
       <HoverTooltip />
-      {sceneHandle && project && (
+      {sceneHandle && project && experience.mode === "public" && (
+        <CuratedExplorerShell
+          sceneHandle={sceneHandle}
+          project={project}
+          onReturnHome={returnToLanding}
+        />
+      )}
+      {sceneHandle && project && experience.mode === "developer" && (
         <EditorProvider
           projectSlug={project.projectSlug}
           projectRoot={project.projectRoot}
