@@ -2,14 +2,18 @@
 
 Status: active entry point for software-build work
 
-Canonical active repo root: `C:\GeoSee\GeoSee_Dev`. If a shell opens in
-`C:\GeoSee_Dev` or another path that is missing the repo, change to the
-canonical root before running project commands.
+Authorized workspace: the Git checkout explicitly supplied for the current task.
+Use `git rev-parse --show-toplevel` to locate its root and verify the intended
+repository identity and branch before edits or commits. If it is missing or
+ambiguous, stop and report; do not automatically switch to another checkout.
+Historical local paths `C:\GeoSee\GeoSee_Dev` and `C:\GeoSee_Dev`
+are not universal or authorized working roots.
 
 Entry hierarchy:
 
 - `README.md`: human repo landing page
-- `CLAUDE.md`: agent operating contract
+- `AGENTS.md`: shared provider-neutral agent operating contract
+- `CLAUDE.md`: current Claude-specific entry, still substantive until its separately verified router conversion
 - `docs/START-HERE.md`: stable product/system orientation
 - `docs/dev-context/Active-Build-Context.md`: active software-work router
 
@@ -19,7 +23,7 @@ GeoSee is in software-build mode. Start from the requested runtime, editor, visu
 
 Do not route normal work through staged-intake records, old review-route artifacts, historical receipts, generated report folders, or old screenshots unless the task explicitly needs that history.
 
-Large raw/source inputs are archived outside the active repo at `C:\GeoSee\GeoSee_Archive`. When current provenance, prep scripts, or generated metadata mention old repo-relative source paths, resolve them through `docs/archive-map.md` and `docs/archive-manifest.json`.
+Historical raw/source inputs were kept in a separate local archive at `C:\GeoSee\GeoSee_Archive`. This path is provenance, not permission to enter or modify a different local tree. For historical repo-relative source paths in provenance, prep scripts or metadata, consult `docs/archive-map.md` and `docs/archive-manifest.json`; do not infer local access.
 
 Standalone `UI_EDITOR` prototype/package history stays separate from the active
 GeoSee app. Do not merge or resurrect `UI_EDITOR/` or `UI_EDITOR_v1_0/` content
@@ -49,7 +53,7 @@ Core runtime/project surfaces:
 - `src/scene/SceneManager.ts`: also owns the current product-aware transition
   envelope, section-window interpolation, and render-entity opacity handling
 
-Treat current project/source files as the authority over older prose.
+Current project/source files, tests, manifests and artifacts establish observed implementation and data state; accepted requirements and dated decisions govern intended behavior. Historical prose and draft plans do not silently override observations. If observed behavior contradicts accepted intent, record the discrepancy and stop the affected change for review.
 
 ## Current Utah FORGE Reality
 
@@ -124,8 +128,7 @@ tooling, or section-frame helper visuals, read:
 - `docs/dev-context/Transition-Page-Fixture-Evidence-Register-2026-05-31.md`
 - `docs/dev-context/Page-Transitions-And-Section-Frames.md`
 
-The constitution and decision log are the source of truth for transition
-intent. Historical logs and matrix artifacts are evidence only.
+Accepted entries in `docs/03-decisions.md` and the relevant accepted transition decision records govern transition intent. The Constitution and Continuity Contract remain draft proposals, not operative precedence over accepted decisions. `docs/dev-context/Transition-Runtime-Operating-Spec.md` is active guidance for current transition implementation, subject to accepted decisions. When these documents genuinely conflict, record the clauses and hold the affected change. Historical logs and matrix artifacts are evidence only.
 
 Current MT threshold-surface rendering separates overlay stability from surface
 opacity semantics. Section ISO lines are late readability overlays, while MT
@@ -292,7 +295,7 @@ Receipt and audit subdirs (`Archive/`, `Change-Receipts/`,
 ## Default Guardrails
 
 - Run `npm run check:workspace` before commits or broad verification.
-- Follow the output posture in `CLAUDE.md`: system/dev context transfer, not social framing.
+- For engineering handoffs, follow the shared `AGENTS.md` factual reporting convention; human-facing writing follows its own audience-appropriate style.
 - Use the cheapest verification that matches the changed surface.
 - Prefer targeted browser checks over full Utah regression during iteration.
 - For transition changes, include at least one focused browser check around the
