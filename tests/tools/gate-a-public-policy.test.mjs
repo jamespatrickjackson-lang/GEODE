@@ -100,8 +100,8 @@ test("public viewer does not mount editing, capture or developer-write UI", () =
   assert.doesNotMatch(shell, /<(?:EditorProvider|EditorRoot|EditorChrome|CaptureDirector|UtahForgeAddToProjectDrop)\b/);
   assert.doesNotMatch(shell, /\b(?:writeFilesBatch|commitPending)\s*\(/);
   const app = readFileSync(resolve(root, "src/App.tsx"), "utf8");
-  assert.match(app, /stopImmediatePropagation/);
-  assert.match(app, /addEventListener\("keydown", blockPublicSaveShortcut, true\)/);
+  assert.match(source(), /stopImmediatePropagation/);
+  assert.match(app, /attachPublicKeyboardGuard\(window, Boolean\(sceneHandle && project\)\)/);
   assert.match(app, /experience\.mode !== "developer"\) return;\n    return installDevLayerDiagnostics/);
 });
 
