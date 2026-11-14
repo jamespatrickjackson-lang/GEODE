@@ -1425,7 +1425,7 @@ function reducer(state: EditorState, action: EditorAction): EditorState {
       };
     }
     case "ADD_PAGE": {
-      const manifest = clone(state.manifest);
+      const manifest = withIssuedPageId(clone(state.manifest), action.page.id);
       const pageOrder = [...manifest.pageOrder];
       const archivedPageOrder = archivedPageOrderOf(manifest);
       const sourceIsArchived =
@@ -1746,7 +1746,7 @@ function reducer(state: EditorState, action: EditorAction): EditorState {
       };
     }
     case "ADD_SUB_MASTER": {
-      const manifest = clone(state.manifest);
+      const manifest = withIssuedPageId(clone(state.manifest), action.page.id);
       const pageOrder = [...manifest.pageOrder];
       const pageIndex =
         action.afterPageId !== undefined
@@ -1784,7 +1784,7 @@ function reducer(state: EditorState, action: EditorAction): EditorState {
       const parentArchived = state.archivedPages.some(
         (p) => p.id === parentMasterId,
       );
-      const manifest = clone(state.manifest);
+      const manifest = withIssuedPageId(clone(state.manifest), action.page.id);
       const archivedPageOrder = archivedPageOrderOf(manifest);
       if (parentArchived) {
         const existingArchivedChildren = state.archivedPages
@@ -1905,7 +1905,7 @@ function reducer(state: EditorState, action: EditorAction): EditorState {
       const parent = findEditablePage(state, parentMasterId);
       if (!parent || !isSubMasterPage(parent)) return state;
 
-      const manifest = clone(state.manifest);
+      const manifest = withIssuedPageId(clone(state.manifest), action.page.id);
       const parentArchived = state.archivedPages.some(
         (p) => p.id === parentMasterId,
       );
@@ -2179,14 +2179,28 @@ function reducer(state: EditorState, action: EditorAction): EditorState {
   }
 }
 
-function newPageId(existingIds: string[]): string {
-  let maxN = 0;
-  for (const id of existingIds) {
-    const m = /^(\d+)_/.exec(id);
-    if (m) maxN = Math.max(maxN, parseInt(m[1], 10));
+// New page IDs never use the legacy numeric filename namespace.
+function newPageId(existingIds: string[], reservedIds: Iterable<string> = [], generateUuid: () => string = () => crypto.randomUUID()): string {
+  const reserved = new Set([...existingIds, ...reservedIds]);
+  for (let attempt = 0; attempt < 1000; attempt += 1) {
+    const id = `p_${generateUuid()}`;
+    if (!reserved.has(id)) return id;
   }
-  const n = String(maxN + 1).padStart(2, "0");
-  return `${n}_page`;
+  throw new Error("Unable to allocate an unused page ID");
+}
+
+function withIssuedPageId(manifest: ProjectManifest, pageId: string): ProjectManifest {
+  const previous = Array.isArray(manifest.issuedPageIds) ? manifest.issuedPageIds : [];
+  return previous.includes(pageId)
+    ? manifest
+    : { ...manifest, issuedPageIds: [...previous, pageId] };
+}
+
+// Existing presentation archives are historical records, not replaceable saves.
+function shouldWritePageArchive(existingArchiveContent: string | null, sourceContent: string, pageId: string): boolean {
+  if (existingArchiveContent === null) return true;
+  if (existingArchiveContent === sourceContent) return false;
+  throw new Error(`presentation archive ${pageId} already exists with different bytes; refusing overwrite`);
 }
 
 function isExternalOrRootedAssetPath(path: string): boolean {
@@ -2404,6 +2418,22 @@ export function EditorProvider({
   // in EditorRoot trigger it; nothing fires automatically. The reducer
   // and per-entity dispatchers still set dirty bits exactly as before.
   const deletedPageIdsRef = useRef<Set<string>>(new Set());
+  // Reserve IDs synchronously because stateRef may lag consecutive ADD_PAGE dispatches.
+  // Keep issued IDs for this editor session so deferred deletes cannot recycle paths.
+  const issuedPageIdsRef = useRef<Set<string>>(new Set());
+  const reserveNewPageId = useCallback((): string => {
+    const cur = stateRef.current;
+    const id = newPageId(
+      allEditablePages(cur).map((page) => page.id),
+      [
+        ...deletedPageIdsRef.current,
+        ...issuedPageIdsRef.current,
+        ...(Array.isArray(cur.manifest.issuedPageIds) ? cur.manifest.issuedPageIds : []),
+      ],
+    );
+    issuedPageIdsRef.current.add(id);
+    return id;
+  }, []);
 
   const commitPending = useCallback(async () => {
     const cur = stateRef.current;
@@ -2454,14 +2484,17 @@ export function EditorProvider({
             );
             if (content !== null) {
               const path = pageArchivePath(id, cur.projectRoot);
-              batchWrites.push({
-                path,
-                content,
-                expectedContent: await expectedContentForSave(
+              const existingArchive = await readFile(path);
+              if (shouldWritePageArchive(existingArchive, content, id)) {
+                batchWrites.push({
                   path,
-                  knownDiskContent,
-                ),
-              });
+                  content,
+                  expectedContent: await expectedContentForSave(
+                    path,
+                    knownDiskContent,
+                  ),
+                });
+              }
             }
           }
         } else if (key === "environment") {
@@ -2515,9 +2548,8 @@ export function EditorProvider({
         rememberWrittenContent(knownDiskContent, write.path, write.content);
       }
       for (const id of deletedPageIds) {
-        await deleteFile(pageJsonPath(id, cur.projectRoot)).catch(() => {
-          /* ignore */
-        });
+        // Preserve tombstones on failure and report the writer error.
+        await deleteFile(pageJsonPath(id, cur.projectRoot));
         rememberWrittenContent(
           knownDiskContent,
           pageJsonPath(id, cur.projectRoot),
@@ -3537,7 +3569,7 @@ export function EditorProvider({
   const addPage = useCallback<EditorContextValue["addPage"]>(
     (basePose) => {
       const cur = stateRef.current;
-      const id = newPageId(allEditablePages(cur).map((p) => p.id));
+      const id = reserveNewPageId();
       const page: PresentationPage = {
         id,
         title: "New page",
@@ -3551,7 +3583,7 @@ export function EditorProvider({
       dispatch({ type: "ADD_PAGE", page });
       return id;
     },
-    [],
+    [reserveNewPageId],
   );
 
   const duplicatePageById = useCallback<
@@ -3561,7 +3593,7 @@ export function EditorProvider({
       const cur = stateRef.current;
       const source = findEditablePage(cur, pageId);
       if (!source) return null;
-      const id = newPageId(allEditablePages(cur).map((p) => p.id));
+      const id = reserveNewPageId();
       const page: PresentationPage = {
         ...rewriteOverlayForDuplicate(source, source.id, id),
         id,
@@ -3583,12 +3615,13 @@ export function EditorProvider({
       );
       return id;
     },
-    [],
+    [reserveNewPageId],
   );
 
   const deletePageById = useCallback<EditorContextValue["deletePageById"]>(
     (pageId) => {
       const cur = stateRef.current;
+      if (!findEditablePage(cur, pageId)) return;
       const activeTarget = cur.pages.some((page) => page.id === pageId);
       if (activeTarget && cur.pages.length <= 1) return;
       deletedPageIdsRef.current.add(pageId);
@@ -3654,7 +3687,7 @@ export function EditorProvider({
   const addSubMaster = useCallback<EditorContextValue["addSubMaster"]>(
     (basePose) => {
       const cur = stateRef.current;
-      const id = newPageId(allEditablePages(cur).map((p) => p.id));
+      const id = reserveNewPageId();
       const ordinal = nextSubMasterOrdinal(allEditablePages(cur));
       const envSnapshot = clone(cur.environment);
       const page: PresentationPage = {
@@ -3670,7 +3703,7 @@ export function EditorProvider({
       dispatch({ type: "ADD_SUB_MASTER", page });
       return id;
     },
-    [],
+    [reserveNewPageId],
   );
 
   const addSubMasterChild = useCallback<
@@ -3679,7 +3712,7 @@ export function EditorProvider({
     const cur = stateRef.current;
     const parent = findEditablePage(cur, parentMasterId);
     if (!parent || !isSubMasterPage(parent)) return null;
-    const id = newPageId(allEditablePages(cur).map((p) => p.id));
+    const id = reserveNewPageId();
     const page: PresentationPage = {
       id,
       title: "New child",
@@ -3690,7 +3723,7 @@ export function EditorProvider({
     };
     dispatch({ type: "ADD_SUB_MASTER_CHILD", page });
     return id;
-  }, []);
+  }, [reserveNewPageId]);
 
   const makePageSubMaster = useCallback<
     EditorContextValue["makePageSubMaster"]
@@ -3704,7 +3737,7 @@ export function EditorProvider({
     const cur = stateRef.current;
     const source = findEditablePage(cur, pageId);
     if (!source || !isSubMasterPage(source)) return null;
-    const id = newPageId(allEditablePages(cur).map((p) => p.id));
+    const id = reserveNewPageId();
     const page: PresentationPage = {
       ...rewriteOverlayForDuplicate(source, source.id, id),
       id,
@@ -3727,7 +3760,7 @@ export function EditorProvider({
       overlayText,
     );
     return id;
-  }, []);
+  }, [reserveNewPageId]);
 
   const reSnapshotSubMaster = useCallback<
     EditorContextValue["reSnapshotSubMaster"]
