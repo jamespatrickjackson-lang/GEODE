@@ -108,6 +108,10 @@ import {
   type TransitionCommitGraph,
   type TransitionCommitTrace,
 } from "./transitions/transitionCommitGate";
+import {
+  observeSceneRootHierarchy,
+  observeTransitionCommitGraph,
+} from "./transitions/transitionCommitObserver";
 import { replanTransitionEntityReadiness } from "./transitions/transitionExecutionPlan";
 import { DEFAULT_DETACHED_FADE_MS } from "./transitions/transitionDefaults";
 import {
@@ -3290,24 +3294,35 @@ export class SceneManager {
     );
   }
 
-  private transitionCommitUnknownTerminalGraph(): TransitionCommitGraph {
-    const targetGraph = this.transitionCommitTargetGraph();
-    return {
-      entities: targetGraph.entities.map((entity) => ({
-        ...entity,
-        channels: Object.fromEntries(
-          Object.entries(entity.channels ?? {}).map(([key, value]) => [
-            key,
-            {
-              ...(value && typeof value === "object" && !Array.isArray(value)
-                ? (value as Record<string, unknown>)
-                : { value }),
-              coverage: "unknown",
-            },
-          ]),
-        ),
-      })),
-    };
+  private observeTransitionCommitGraph(
+    expected: TransitionCommitGraph,
+  ): TransitionCommitGraph {
+    return observeTransitionCommitGraph(
+      expected,
+      (layerId) => {
+        // Case Study B aliases are logical shell channels, not independently
+        // registered render groups. Missing direct roots must NOT mean absent.
+        if (Object.prototype.hasOwnProperty.call(CASE_STUDY_B_DEMO_LAYER_ALIASES, layerId)) {
+          return null;
+        }
+        const group = this.layers.get(layerId);
+        if (!group) return { attached: false, visible: false, opacity: null };
+        // The group can remain registered after detachment or inside a hidden
+        // ancestor. Walk its parents to the active scene identity.
+        const hierarchy = observeSceneRootHierarchy(group, this.scene);
+        // NaN blocks authored/target fallbacks. This samples only a CPU
+        // material proxy, not shader/clipping/derived/GPU composed opacity.
+        const opacity = hierarchy.visible
+          ? this.currentRenderOpacityForTree(group, Number.NaN)
+          : Number.NaN;
+        return {
+          ...hierarchy,
+          opacity: Number.isFinite(opacity) ? opacity : null,
+          opacityMeasurement: "cpu-material-proxy",
+        };
+      },
+      () => this.layers.keys(),
+    );
   }
 
   recordTransitionCommitAttempt(input: {
@@ -3419,8 +3434,9 @@ export class SceneManager {
       );
       return null;
     }
-    const terminalTransitionGraph = this.transitionCommitUnknownTerminalGraph();
     const resolvedTargetGraph = this.transitionCommitTargetGraph();
+    const terminalTransitionGraph =
+      this.observeTransitionCommitGraph(resolvedTargetGraph);
     this.lastPostCommitTargetAssertionSuppressed = false;
     this.recordTransitionCommitAttempt({
       phase: "terminal-before-commit",
@@ -3434,7 +3450,7 @@ export class SceneManager {
       attemptedBy: "SceneManager.finalizePageTransitionCommit",
       terminalTransitionGraph,
       resolvedTargetGraph,
-      committedGraph: terminalTransitionGraph,
+      // No committed-state receipt exists until final scene writers run.
       reason: "SceneManager owns page-transition final commit",
     });
     if (finalTrace?.allowed) {
@@ -3467,13 +3483,14 @@ export class SceneManager {
         ),
       );
     }
+    const committedGraph = this.observeTransitionCommitGraph(resolvedTargetGraph);
     this.recordTransitionCommitAttempt({
       phase: "post-commit-graph-check",
       attemptedBy: "SceneManager.finalizePageTransitionCommit",
       terminalTransitionGraph,
       resolvedTargetGraph,
-      committedGraph: terminalTransitionGraph,
-      reason: "post-commit graph comparison is observational only",
+      committedGraph,
+      reason: "observed scene-parent root visibility and CPU material proxy; composed alpha, alias, derived and unmanaged roots unresolved",
     });
     return finalTrace;
   }
