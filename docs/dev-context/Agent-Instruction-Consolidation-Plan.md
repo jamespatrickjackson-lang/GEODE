@@ -1,6 +1,6 @@
 # Agent instruction consolidation: preservation-first staging plan
 
-**Status:** review-only migration plan; no authorization to merge, remove original instructions, alter runtime behavior or resolve conflicting policies. **Baseline:** `main` at `29d9c4c7eee77ac1b104289b09b1382c574145d0` (13 November 2026).
+**Status:** review-only migration plan. The owner approved **only H01, H02, H03 and H09** in DEC-189 (13 November 2026); this does not authorize merging, Claude router conversion, runtime changes, or resolving the seven remaining holds. **Baseline:** `main` at `29d9c4c7eee77ac1b104289b09b1382c574145d0` (13 November 2026).
 
 **Owner intent:** GEODE is a multi-provider engineering project. Shared engineering knowledge must not be owned exclusively by Claude. `AGENTS.md` is the proposed common instruction interface. A provider file such as `CLAUDE.md` should eventually be a *thin importer/router only*, never an alternate source of substantive policy. Existing unique workflows and regression safeguards must survive migration without being flattened.
 
@@ -99,7 +99,7 @@ Vendor-specific historical tool verbs (such as `Read` with `offset`/`limit`, `Gr
 
 These are **consolidation candidates**, not instructions to delete the long-form specifications or lose any subcondition.
 
-## Unresolved holds — intentionally not decided in this pass
+## Holds identified in Phase 1 — original audit status (current approvals below)
 
 | Hold | Unresolved issue |
 | --- | --- |
@@ -243,3 +243,39 @@ The proposed future content for each `CLAUDE.md` file is a single import of the 
 **Conversion blockers:** Do not update any of those files until original-to-shared rule parity is independently established, the owner-reviewed holds affecting routing and source-of-truth are addressed, and actual Claude behavior for nested imports is verified. Other providers may require their own tiny adapters rather than treating Claude's syntax as portable. The current `CLAUDE.md` files must remain authoritative for Claude's actual execution until a verified switchover; no partial route-only transition.
 
 **Verification evidence for this phase:** Static comparison establishes preservation of the eight untouched root sections and the previously Claude-only routing/search details. It is not a live Claude/Codex test, not a Windows local-worktree inspection, and not a full semantic equivalence certification of the future thin-router setup. GitHub CI must be inspected at the new branch HEAD separately. Keep this PR in **draft/unmerged** state.
+
+
+## Phase 3: approved authority/workspace/writing changes — 13 November 2026
+
+**Approved by the owner:** H01, H02, H03 and H09, as recorded in
+[`DEC-189`](../../03-decisions.md). This section updates the *status* of
+the historical Phase 1 holds table above; the historical table and the 61-group
+original-source crosswalk remain preserved for auditing. No unapproved
+conflict is resolved by implication.
+
+| Hold | Approved change | Where the draft PR implements it |
+| --- | --- | --- |
+| H01 | Use the explicitly authorized checkout, find its root with `git rev-parse --show-toplevel`, verify identity/branch, never auto-switch to remembered Windows paths; preserve local archive path as provenance only | Root `AGENTS.md`, root `CLAUDE.md`, `Active-Build-Context.md`, `Visual-Review-Current.md`; `DEC-189` |
+| H02 | Separate approved intended requirements from observed source/tests/manifests; record and hold any contradiction instead of automatically treating one as approved truth | Root `AGENTS.md`, root `CLAUDE.md`, `Active-Build-Context.md`, `docs/AGENTS.md`; `DEC-189` |
+| H03 | Accepted DEC entries govern transition intent; active Runtime Operating Spec guides implementation; draft Constitution and Continuity Contract have no implicit overriding precedence, including their historical draft ranking | `Active-Build-Context.md`, `Transition-Constitution.md`, `Transition-Continuity-Contract.md`, `Transition-Runtime-Operating-Spec.md`, `docs/AGENTS.md`; `DEC-189` |
+| H09 | Keep factual technical handoff style; allow appropriate natural language in README, tutorials, documentation, UX and other human-facing writing | Root `AGENTS.md`, root `CLAUDE.md`, `Active-Build-Context.md`; `DEC-189` |
+
+**Why the root `CLAUDE.md` was narrowly edited:** It still contains a
+substantive working contract, and Claude may load it ahead of `AGENTS.md`.
+Leaving the old automatic checkout-switch instruction or universal writing
+restriction in that active file would contradict the approved decisions.
+Its substantive non-approved rules, and all three nested `CLAUDE.md` files,
+remain intact. **No file has been converted into an importer or router.**
+
+**Remaining holds (not approved here):**
+H04 root mirror CI/provider parity; H05 missing transition evidence register;
+H06 stale historical current-state references; H07 human launcher port
+mismatch; H08 fixture reproduction versus generic test enforcement;
+H10 product-aware adapters versus generic transition policy; H11 actual
+cross-provider root/nested instruction discovery. Existing evidence for these
+remains unchanged; do not silently fix them in this stage.
+
+**Verification gate:** Review the full GitHub diff, run static documentation
+and CI checks, preserve the original 61-row matrix and historical file links,
+and leave the PR in **draft/unmerged** state. There are no actual Claude/Codex
+loading tests and no application-level behavior changes in this phase.
