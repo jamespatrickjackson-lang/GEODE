@@ -26,8 +26,9 @@ file before editing and again before reporting.
 - `docs/dev-context/Transition-Constitution.md`
 - `docs/dev-context/Transition-Continuity-Contract.md`
 - `docs/dev-context/Transition-Decision-Log.md`
-- `docs/dev-context/Transition-Page-Fixture-Evidence-Register-2026-05-31.md`
 - Relevant entries in `docs/dev-context/Transition-Implementation-Changelog.md`
+
+The historical `docs/dev-context/Transition-Page-Fixture-Evidence-Register-2026-05-31.md` is absent from the public checkout. Its provenance and distributability are unverified; do not fabricate a replacement or block work on this missing *historical* attachment. If a particular claim depends on it, mark the evidence unavailable and seek the original before asserting verification.
 
 ## Required Framing
 
@@ -73,9 +74,7 @@ captures, or video capture unless explicitly requested.
 
 ## Allowed Fixture Use
 
-Fixtures may be used to reproduce, observe, and record evidence. Fixture details
-must stay in evidence registers, generated artifacts, or content-regression
-tests. They must not become runtime branches or remediation criteria.
+Three evidence roles are distinct: (1) real authored page pairs may be used to reproduce and observe a symptom, but not as its generic fix target; (2) synthetic in-memory fixtures or fixture builders verify reusable application behavior independently of live deck order; (3) named deck-state checks document a particular authored presentation, not general app health. Human visual acceptance is a separate gate for visual quality. Reproduction paths belong in evidence reports or content checks, never in product runtime branches or universal success criteria.
 
 ## Transition Runtime Operating Spec
 
