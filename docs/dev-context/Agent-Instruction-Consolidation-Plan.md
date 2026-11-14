@@ -203,3 +203,43 @@ Other discovered document-reference errors and stale size estimates remain liste
 - **CI limitations:** Existing mirror validation checks only `mirror:monoliths`, and `check:agent-drag` does not scan root `AGENTS.md`. Green CI cannot certify parity, full link graph, nested discovery or independent agent execution. No code/runtime test or actual Claude/Codex instruction-loading test was conducted in this phase.
 
 **Status after these corrective edits:** Original existing files and all H01–H11 owner decision holds stay unchanged. Keep the PR in draft. Before an operational agent migration, independently audit every protected negative rule against its final owner, verify provider loading, and resolve/explicitly accept safety and authority blockers.
+
+
+## Phase 2 review: shared root contract reconciled, Claude routers still held — 13 November 2026
+
+**Branch-only change:** `AGENTS.md` is now titled a **shared engineering contract**, rather than identifying Codex as the sole audience and `CLAUDE.md` as the canonical author. This follows the owner's explicitly approved provider-neutral architecture. **It does not imply that any provider's existing instruction loader has been switched.** Root and nested `CLAUDE.md` files are intentionally unchanged; the 11 preexisting contradictions H01–H11 remain unresolved.
+
+**Semantic comparison at baseline 29d9c4c7eee77ac1b104289b09b1382c574145d0:** Both original root contracts have 12 headings/sections when the intro is counted. The only non-whitespace differences between the baseline root `AGENTS.md` and root `CLAUDE.md` were in their intro, source-of-truth routing and search-hygiene details. All other sections had matching normalized content. The current root `AGENTS.md` preserves **all eight unchanged technical/operational sections exactly byte-for-byte**, including the lengthy MT, seismic, project-fixture and transition special cases.
+
+| Source section | Exact Phase 2 treatment | Preservation result |
+| --- | --- | --- |
+| Intro / provider policy | Rewrite the provider-specific “CLAUDE is source of truth” statement to describe the requested **shared root**. Clearly state the parallel Claude file is *still substantive* until tested and converted. | Owner's target architecture stated; no premature import switch |
+| First Read | Add explicit routing to `projects/AGENTS.md`, `src/editor/AGENTS.md`, `src/scene/AGENTS.md`, `docs/AGENTS.md` for agents launched outside those directories. Retain the original selective-first-read and historical-archive exceptions verbatim. | Original rule plus explicit scoped discovery |
+| Source Of Truth | Preserve existing links and add the unique Claude routes: `README.md` as human landing, `docs/START-HERE.md` as stable orientation, and `docs/dev-context/Page-Transitions-And-Section-Frames.md`. Also route editor exposure and licensing to their existing owners. | No previously unique Claude-only route omitted |
+| Search Hygiene | Preserve original excluded path list; incorporate Claude's nuance that gitignored build/dependency files may still be reachable through Glob/discovery. | Same bounded-search obligation, stronger explanatory exception |
+| Output Rail | **No edit** | Exact original preserved, disputed writing scope remains H09 |
+| Workspace Rules | **No edit** | Exact original preserved, unsafe hard-coded working tree remains H01 |
+| Decision Discipline | **No edit** | Exact original preserved, code/document authority remains H02 |
+| Authoring Persistence | **No edit** | Exact original preserved |
+| Working Tree And Archive | **No edit** | Exact original preserved, historical/archive location remains |
+| Disposable Page Fixture Rule | **No edit** | Exact original preserved |
+| Page-to-page false-fix ban | **No edit** | Exact original preserved |
+| Transition Runtime Operating Spec | **No edit** | Exact original preserved |
+
+**Explicit safety warning:** The original root `AGENTS.md` and `docs/dev-context/Active-Build-Context.md` still direct agents into `C:\GeoSee\GeoSee_Dev`. Because this path can refer to an unsanitized internal checkout, do **not** merge PR #2 or declare public-checkout routing safe until the owner approves a source-preserving portable-root strategy (H01). Likewise the original document-vs-code and transition precedence disputes (H02/H03) were not settled.
+
+### Draft future Claude adapter files — NOT WRITTEN OR ENABLED
+
+The proposed future content for each `CLAUDE.md` file is a single import of the same-directory shared `AGENTS.md`. Each is a **candidate snippet for future review, not a tested runtime mechanism**:
+
+| Proposed adapter path | Candidate complete content after verified conversion |
+| --- | --- |
+| root `CLAUDE.md` | `@AGENTS.md` |
+| `projects/CLAUDE.md` | `@AGENTS.md` |
+| `src/editor/CLAUDE.md` | `@AGENTS.md` |
+| `src/scene/CLAUDE.md` | `@AGENTS.md` |
+| `docs/CLAUDE.md` (if required) | `@AGENTS.md` |
+
+**Conversion blockers:** Do not update any of those files until original-to-shared rule parity is independently established, the owner-reviewed holds affecting routing and source-of-truth are addressed, and actual Claude behavior for nested imports is verified. Other providers may require their own tiny adapters rather than treating Claude's syntax as portable. The current `CLAUDE.md` files must remain authoritative for Claude's actual execution until a verified switchover; no partial route-only transition.
+
+**Verification evidence for this phase:** Static comparison establishes preservation of the eight untouched root sections and the previously Claude-only routing/search details. It is not a live Claude/Codex test, not a Windows local-worktree inspection, and not a full semantic equivalence certification of the future thin-router setup. GitHub CI must be inspected at the new branch HEAD separately. Keep this PR in **draft/unmerged** state.
