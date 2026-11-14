@@ -1425,7 +1425,7 @@ function reducer(state: EditorState, action: EditorAction): EditorState {
       };
     }
     case "ADD_PAGE": {
-      const manifest = clone(state.manifest);
+      const manifest = withIssuedPageId(clone(state.manifest), action.page.id);
       const pageOrder = [...manifest.pageOrder];
       const archivedPageOrder = archivedPageOrderOf(manifest);
       const sourceIsArchived =
@@ -1746,7 +1746,7 @@ function reducer(state: EditorState, action: EditorAction): EditorState {
       };
     }
     case "ADD_SUB_MASTER": {
-      const manifest = clone(state.manifest);
+      const manifest = withIssuedPageId(clone(state.manifest), action.page.id);
       const pageOrder = [...manifest.pageOrder];
       const pageIndex =
         action.afterPageId !== undefined
@@ -1784,7 +1784,7 @@ function reducer(state: EditorState, action: EditorAction): EditorState {
       const parentArchived = state.archivedPages.some(
         (p) => p.id === parentMasterId,
       );
-      const manifest = clone(state.manifest);
+      const manifest = withIssuedPageId(clone(state.manifest), action.page.id);
       const archivedPageOrder = archivedPageOrderOf(manifest);
       if (parentArchived) {
         const existingArchivedChildren = state.archivedPages
@@ -1905,7 +1905,7 @@ function reducer(state: EditorState, action: EditorAction): EditorState {
       const parent = findEditablePage(state, parentMasterId);
       if (!parent || !isSubMasterPage(parent)) return state;
 
-      const manifest = clone(state.manifest);
+      const manifest = withIssuedPageId(clone(state.manifest), action.page.id);
       const parentArchived = state.archivedPages.some(
         (p) => p.id === parentMasterId,
       );
@@ -2179,14 +2179,21 @@ function reducer(state: EditorState, action: EditorAction): EditorState {
   }
 }
 
-function newPageId(existingIds: string[], reservedIds: Iterable<string> = []): string {
-  let maxN = 0;
-  for (const id of [...existingIds, ...reservedIds]) {
-    const m = /^(\d+)_/.exec(id);
-    if (m) maxN = Math.max(maxN, parseInt(m[1], 10));
+// New page IDs never use the legacy numeric filename namespace.
+function newPageId(existingIds: string[], reservedIds: Iterable<string> = [], generateUuid: () => string = () => crypto.randomUUID()): string {
+  const reserved = new Set([...existingIds, ...reservedIds]);
+  for (let attempt = 0; attempt < 1000; attempt += 1) {
+    const id = `p_${generateUuid()}`;
+    if (!reserved.has(id)) return id;
   }
-  const n = String(maxN + 1).padStart(2, "0");
-  return `${n}_page`;
+  throw new Error("Unable to allocate an unused page ID");
+}
+
+function withIssuedPageId(manifest: ProjectManifest, pageId: string): ProjectManifest {
+  const previous = Array.isArray(manifest.issuedPageIds) ? manifest.issuedPageIds : [];
+  return previous.includes(pageId)
+    ? manifest
+    : { ...manifest, issuedPageIds: [...previous, pageId] };
 }
 
 function isExternalOrRootedAssetPath(path: string): boolean {
@@ -2411,7 +2418,11 @@ export function EditorProvider({
     const cur = stateRef.current;
     const id = newPageId(
       allEditablePages(cur).map((page) => page.id),
-      [...deletedPageIdsRef.current, ...issuedPageIdsRef.current],
+      [
+        ...deletedPageIdsRef.current,
+        ...issuedPageIdsRef.current,
+        ...(Array.isArray(cur.manifest.issuedPageIds) ? cur.manifest.issuedPageIds : []),
+      ],
     );
     issuedPageIdsRef.current.add(id);
     return id;
@@ -2527,9 +2538,8 @@ export function EditorProvider({
         rememberWrittenContent(knownDiskContent, write.path, write.content);
       }
       for (const id of deletedPageIds) {
-        await deleteFile(pageJsonPath(id, cur.projectRoot)).catch(() => {
-          /* ignore */
-        });
+        // Preserve tombstones on failure and report the writer error.
+        await deleteFile(pageJsonPath(id, cur.projectRoot));
         rememberWrittenContent(
           knownDiskContent,
           pageJsonPath(id, cur.projectRoot),
@@ -3601,6 +3611,7 @@ export function EditorProvider({
   const deletePageById = useCallback<EditorContextValue["deletePageById"]>(
     (pageId) => {
       const cur = stateRef.current;
+      if (!findEditablePage(cur, pageId)) return;
       const activeTarget = cur.pages.some((page) => page.id === pageId);
       if (activeTarget && cur.pages.length <= 1) return;
       deletedPageIdsRef.current.add(pageId);
