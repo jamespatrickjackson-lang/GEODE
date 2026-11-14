@@ -179,12 +179,13 @@ export function App() {
   }, [project]);
 
   useEffect(() => {
-    if (!sceneHandle || !project || !import.meta.env.DEV) return;
+    if (!sceneHandle || !project || !import.meta.env.DEV ||
+        experience.mode !== "developer") return;
     return installDevLayerDiagnostics(sceneHandle, {
       projectSlug: project.projectSlug,
       projectName: project.manifest.name,
     });
-  }, [project, sceneHandle]);
+  }, [project, sceneHandle, experience.mode]);
 
   return (
     <div style={{ position: "absolute", inset: 0 }}>
