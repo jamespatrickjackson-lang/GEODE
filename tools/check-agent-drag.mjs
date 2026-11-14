@@ -2,7 +2,7 @@ import { readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
 
 const rootDir = process.cwd();
-const scanRoots = ["README.md", "CLAUDE.md", "docs", "projects", "src", "tests"];
+const scanRoots = ["README.md", "AGENTS.md", "CLAUDE.md", "docs", "projects", "src", "tests"];
 const allowedExtensions = new Set([
   ".css",
   ".html",
