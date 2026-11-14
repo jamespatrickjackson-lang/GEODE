@@ -1,6 +1,6 @@
 # Agent instruction consolidation: preservation-first staging plan
 
-**Status:** review-only migration plan. The owner approved **only H01, H02, H03 and H09** in DEC-189 (13 November 2026); this does not authorize merging, Claude router conversion, runtime changes, or resolving the seven remaining holds. **Baseline:** `main` at `29d9c4c7eee77ac1b104289b09b1382c574145d0` (13 November 2026).
+**Status:** preservation-first migration plan. Owner-approved governance decisions: **H01/H02/H03/H09 in DEC-189 (13 November 2026)** and **H04/H05/H06/H07/H08/H10/H11 approaches in DEC-190 (14 November 2026)**. Implementation is staged in draft PR #2; H05 evidence provenance and H11 real agent loading remain unverified. No approval to merge, change scientific/application runtime behavior, or convert Claude routers before validation. **Baseline:** `main` at `29d9c4c7eee77ac1b104289b09b1382c574145d0` (13 November 2026).
 
 **Owner intent:** GEODE is a multi-provider engineering project. Shared engineering knowledge must not be owned exclusively by Claude. `AGENTS.md` is the proposed common instruction interface. A provider file such as `CLAUDE.md` should eventually be a *thin importer/router only*, never an alternate source of substantive policy. Existing unique workflows and regression safeguards must survive migration without being flattened.
 
@@ -279,3 +279,57 @@ remains unchanged; do not silently fix them in this stage.
 and CI checks, preserve the original 61-row matrix and historical file links,
 and leave the PR in **draft/unmerged** state. There are no actual Claude/Codex
 loading tests and no application-level behavior changes in this phase.
+
+
+## Phase 4: DEC-190 approved resolution approaches, staged 14 November 2026
+
+**Owner approval:** H04, H05, H06, H07, H08, H10 and H11 approaches approved
+on 14 November 2026. The decision is recorded in
+[`DEC-190`](../03-decisions.md), following the previously approved
+[`DEC-189`](../03-decisions.md). The original Phase 1 holds table and
+61-rule original-to-owner matrix are intentionally retained as an
+unchanged historical inventory; this section is the current status.
+
+| Hold | Implemented in this draft | Remaining evidence/gate |
+| --- | --- | --- |
+| H04 | New `npm run check:agent-contracts` CI check; tests validate 61 uniquely pinned source groups, all scoped contracts, substantive-versus-router state and atomic conversion; root `AGENTS.md` included in `check:agent-drag` | Keep existing `check:mirror` until Claude is converted, then replace it with actual pure-import checks; no real provider loading certified |
+| H05 | Inspected published Git tree; searched accessible Notion; missing `Transition-Page-Fixture-Evidence-Register-2026-05-31.md` no longer a mandatory pre-read in active transition docs, but the original missing link remains annotated as historical | Original provenance, privacy and distribution rights **unverified**; do not invent or publish substitute evidence |
+| H06 | `Current-State.md` labeled historical May–June snapshot; corrected retired `tools/validate-utah-presentation-snapshot.mjs` reference while preserving its historical mention | Additional dated historical documents may still require review as they become task-relevant; no mass rewrite/delete |
+| H07 | `Verification-Routing.md` corrected: human launcher 5194, Claude launch profile 5273, user visual-review session context 5173; forbids terminating unknown processes | Human launcher implementation **unchanged**; opt-in replacement requires separate decision |
+| H08 | Verification Routing and Transition Guardrails now distinguish diagnostic real-page pairs, synthetic generic fixtures, deck-specific state checks and separate human visual acceptance | No new application/fixture behavior tests requested or implemented in this docs pass |
+| H10 | `src/scene/AGENTS.md` and active Transition Runtime Operating Spec clarify product-specific scientific adapters versus generic normalized-entity/channel transition policy | No runtime refactor; validated product behavior preserved |
+| H11 | Concrete provider instruction-loading gate below; script preflight rejects incomplete Claude router conversion | **Real Claude/Codex live loading NOT performed**. Existing four `CLAUDE.md` remain substantive. Conversion/merge blocked until actual loading tested |
+
+### H11 actual provider instruction-loading matrix — future live gate
+
+This is a **test plan, not a test report**. Perform only in an authorized,
+isolated checkout of the exact review branch. Validate repository identity,
+branch and status first; do not switch into remembered local Windows paths,
+modify authored project data, or touch an existing user dev session. Do not
+assert a provider supports a mode or import until the locally installed version
+and configuration are inspected.
+
+| Start scope | Shared rules required | Claude-specific question | Codex-specific question |
+| --- | --- | --- | --- |
+| Repository root | Root `AGENTS.md` | Does root `CLAUDE.md` import shared root verbatim without unique rules? | Is root `AGENTS.md` loaded? |
+| `projects/` | Root + `projects/AGENTS.md` | Does scoped import correctly attach to project files? | Does invocation rooted here load scoped file? |
+| `src/editor/` | Root + `src/editor/AGENTS.md` | Does editor import attach and retain manifest/800-line guardrails? | Does invocation rooted here load scoped file? |
+| `src/scene/` | Root + `src/scene/AGENTS.md` | Does scene import attach and retain opacity/loader/disposal guardrails? | Does invocation rooted here load scoped file? |
+| `docs/` | Root + `docs/AGENTS.md` | Is a `docs/CLAUDE.md` import actually necessary? | Does invocation rooted here load scoped file? |
+
+**Procedure:**
+
+1. Confirm target checkout with `git rev-parse --show-toplevel`, `git remote -v`, `git branch --show-current`, and `git status --short`. Use a separate disposable worktree to trial import files; never mutate the user's active worktree.
+2. Check `npm run check:agent-contracts`, `npm run check:mirror`, `npm run test:tools` and the existing PR CI. These are static/source tests, not proof of actual agent loading.
+3. Record actual Claude Code version, current instruction-file loading mode/plugin configuration, the explicit instruction sources loaded from root and each subdirectory, and whether an isolated `@AGENTS.md` adapter resolves exactly as intended. A provider's natural-language self-report is a clue, not proof without trace/log or controlled marker checks.
+4. Record actual Codex version and instruction chain at root and all four scopes. Codex documentation describes discovery from Git root to working directory, not automatic loading of *every* nested scope when started at repository root. Confirm with observed loaded-source traces and non-editing prompts.
+5. Investigate duplicate or missing instructions and cross-provider precedence before converting active files. If a provider fails any required scope, keep substantive Claude contracts and mark H11 **unverified**.
+6. Only after a reviewed successful experiment, convert all four `CLAUDE.md` files to exact thin `@AGENTS.md` adapters in a single gated review change, add `docs/CLAUDE.md` if the tests demonstrate need, remove/replace obsolete mirror-section CI in that same change, run all relevant tests, and request a separate merge decision.
+
+**Current source preservation:** The 61-row crosswalk remains anchored to immutable
+baseline `29d9c4c7eee77ac1b104289b09b1382c574145d0`. Do not rewrite
+or compress its original source/exception evidence as part of provider routing.
+
+**No merge authority:** The approval of H04/H11 is approval of the approach and
+preparation, **not** proof that a local Claude or Codex environment has loaded
+any file. Draft PR #2 stays unmerged.
