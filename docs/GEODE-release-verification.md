@@ -114,11 +114,7 @@ Dependencies/build output, test-results, temporary directories and media-output 
 
 To recover, restore the bundle into a **new destination**, verify its refs, and restore the saved working files/patches there. Do not overwrite the live working repository as a routine recovery step.
 
-## Alignerr handoff
-
-The privacy/history decision is approved and implemented, and initial publication was independently verified. Confirm the CI bootstrap follow-up and use the verified repository URL for the Alignerr project-creation flow, identify GeoSee as the implemented geoscience alpha, and cite concrete source/decision/test evidence. Do not submit an empty repository or present the separate medical branch as already public.
-
-## Pre-Alignerr submission hardening (12 November 2026)
+## Public-repository hardening (12 November 2026)
 
 This section is a subsequent, narrowly scoped improvement to the already-published release above. Older launch/CI observations in this report describe their earlier state and should not be mistaken for this new candidate.
 
