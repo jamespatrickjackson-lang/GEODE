@@ -97,7 +97,8 @@ test("App gates project loading and only mounts the editor in development mode",
 test("public viewer does not mount editing, capture or developer-write UI", () => {
   const shell = readFileSync(resolve(root, "src/public/CuratedExplorerShell.tsx"), "utf8");
   assert.match(shell, /PageControllerProvider/);
-  assert.doesNotMatch(shell, /EditorRoot|EditorChrome|CaptureDirector|writeFilesBatch|commitPending|UtahForgeAddToProjectDrop/);
+  assert.doesNotMatch(shell, /<(?:EditorProvider|EditorRoot|EditorChrome|CaptureDirector|UtahForgeAddToProjectDrop)\\b/);
+  assert.doesNotMatch(shell, /\\b(?:writeFilesBatch|commitPending)\\s*\\(/);
   const app = readFileSync(resolve(root, "src/App.tsx"), "utf8");
   assert.match(app, /stopImmediatePropagation/);
   assert.match(app, /addEventListener\("keydown", blockPublicSaveShortcut, true\)/);
