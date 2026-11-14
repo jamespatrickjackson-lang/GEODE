@@ -1,5 +1,7 @@
 # Start Here: GeoSee Stable Product/System Orientation
 
+> **Current direction (14 November 2026):** GeoSee is the existing geoscience visualization **research alpha**, originally developed as a technical and service-led presentation demonstration and now being retooled for **free public geoscience use**. The current fixed project catalog, prepared-data loaders and local development-only authoring are not a generic user importer or portable project-saving service. W3 has approved **future**, not implemented, Gate A curated-example/PNG acceptance and Gate B desktop single-user local-first constrained 2D WGS84 GeoJSON, local projects, JSON save/reopen and PNG. [W3 draft requirements, unmerged](https://github.com/jamespatrickjackson-lang/GEODE/pull/8). Earlier service-era text below is retained as historical context.
+
 This document is stable product/system orientation. It explains what GeoSee is,
 why it exists, and how the app/data model is shaped. It is not the active-work
 router.
@@ -10,9 +12,7 @@ agent operating rules, use `CLAUDE.md`. For the repo landing page, use
 
 ## Product Frame
 
-GeoSee is a service-first visual communication tool that turns complex mining,
-geoscience, geothermal, and spatial project material into guided 3D
-presentations for different audiences.
+GeoSee currently loads preconfigured geoscience projects for 3D exploration, scene/layer controls and presentation. Its original **service-first** communication model is historical; the approved direction is a **free public geoscience application**.
 
 The working thesis:
 
@@ -22,19 +22,13 @@ The working thesis:
 
 ## What The App Is
 
-GeoSee is an internal authoring and presentation app built with Vite, React,
-TypeScript, and Three.js. It lets a small team load a project, tune a 3D scene,
-edit pages and overlays, preview a guided presentation, and keep project data
-and provenance organized for later publishing.
+The current alpha uses Vite, React, TypeScript and Three.js. It can load its included projects and, in a local developer environment, edit pages and overlays using file-write endpoints. It has **no production project-saving backend**, independent new-project generator or general raw-file importer. The landing **Add New Project** action opens the existing Base GUI template.
 
-GeoSee is not a public SaaS product, not a final modelling/GIS/engineering
-tool, and not a place to present uncertain or placeholder data as measured
-truth.
+GeoSee is not a validated GIS/modelling/engineering tool or a place to present uncertain, interpreted, preview-only or placeholder data as measured truth.
 
 ## Who It Is For
 
-GeoSee is designed around technical projects that need to be explained to
-multiple audiences:
+The historical service-led workflows considered several technical audiences. This list does **not** restrict the new public product to those audiences:
 
 - investors
 - public/community stakeholders
@@ -154,8 +148,8 @@ the dev-only author-write plugin described in `CLAUDE.md` and
 
 ## Working Safely
 
-- Use `C:\GeoSee\GeoSee_Dev` as the active repo root for current work.
-  `C:\GeoSee_Dev` is obsolete/stale and should not be used as a working tree.
+- Use only the authorized repository checkout, branch and SHA; `C:\GeoSee\GeoSee_Dev` and `C:\GeoSee_Dev` are historical local paths, not automatic instructions.
+- Use a disposable checkout for authoring experiments and keep development file-write endpoints on trusted loopback.
 - Read local files before editing.
 - Prefer existing patterns.
 - Keep changes scoped.
@@ -185,8 +179,7 @@ projects/<slug>/data_refs/
 
 ## Current North Star
 
-GeoSee should make technical spatial projects easier to understand without
-flattening the truth of the data.
+GeoSee should make scientific spatial data more accessible, traceable and communicable without misrepresenting source, model, preview or synthetic evidence. W3's public-use milestones remain **future acceptance targets**, not completed alpha capabilities.
 
 The app wins when a viewer can understand the project story, a technical
 reviewer can trace the data status, and the authoring team can keep building
