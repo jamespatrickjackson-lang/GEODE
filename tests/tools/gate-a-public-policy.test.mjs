@@ -113,3 +113,129 @@ test("production route denies developer mode regardless of direct query paramete
     assert.equal(route.initialProjectSlug, null);
   }
 });
+
+function syntheticEvent(key, options = {}) {
+  return {
+    key,
+    ctrlKey: Boolean(options.ctrlKey),
+    metaKey: Boolean(options.metaKey),
+    altKey: Boolean(options.altKey),
+    target: options.target ?? { tagName: "DIV", isContentEditable: false },
+    defaultPrevented: false,
+    immediateStopped: false,
+    preventDefault() { this.defaultPrevented = true; },
+    stopPropagation() { this.propagationStopped = true; },
+    stopImmediatePropagation() { this.immediateStopped = true; },
+  };
+}
+
+function syntheticWindow() {
+  const listeners = [];
+  return {
+    listeners,
+    addEventListener(type, callback, capture) { listeners.push({ type, callback, capture }); },
+    removeEventListener(type, callback, capture) {
+      const i = listeners.findIndex(x => x.type === type && x.callback === callback && x.capture === capture);
+      if (i >= 0) listeners.splice(i, 1);
+    },
+    dispatch(event) {
+      for (const listener of [...listeners].sort((a, b) => Number(Boolean(b.capture)) - Number(Boolean(a.capture)))) {
+        if (event.immediateStopped) break;
+        if (listener.type === "keydown") listener.callback(event);
+      }
+    },
+  };
+}
+
+test("R1: public viewer consumes page-navigation keys before presentation-page listeners", async () => {
+  const { attachPublicKeyboardGuard } = await policy();
+  const host = syntheticWindow();
+  const consumed = [];
+  const detach = attachPublicKeyboardGuard(host, true);
+  host.addEventListener("keydown", e => consumed.push(e.key), false); // pre-existing PageController listener
+  for (const key of ["ArrowRight", "ArrowLeft", "PageDown", "PageUp", "Home", "End"]) {
+    const event = syntheticEvent(key);
+    host.dispatch(event);
+    assert.equal(event.defaultPrevented, true, key);
+    assert.equal(event.immediateStopped, true, key);
+  }
+  assert.deepEqual(consumed, []);
+  detach();
+  assert.equal(host.listeners.filter(x => x.capture === true).length, 0);
+});
+
+test("R1: public landing and editable elements retain normal arrow-key behavior", async () => {
+  const { attachPublicKeyboardGuard } = await policy();
+  for (const viewerActive of [false, true]) {
+    const host = syntheticWindow();
+    const consumed = [];
+    const detach = attachPublicKeyboardGuard(host, viewerActive);
+    host.addEventListener("keydown", e => consumed.push(e.key), false);
+    const editable = { tagName: "INPUT", isContentEditable: false };
+    const a = syntheticEvent("ArrowLeft", { target: editable });
+    host.dispatch(a);
+    assert.equal(a.defaultPrevented, false);
+    if (!viewerActive) {
+      const b = syntheticEvent("PageDown");
+      host.dispatch(b);
+      assert.equal(b.defaultPrevented, false);
+    }
+    const ordinary = syntheticEvent("z");
+    host.dispatch(ordinary);
+    assert.equal(ordinary.defaultPrevented, false);
+    assert.ok(consumed.length >= 2);
+    detach();
+  }
+});
+
+test("R3: Ctrl/Cmd+S is captured in public mode, preventing a downstream save handler", async () => {
+  const { attachPublicKeyboardGuard } = await policy();
+  for (const options of [{ ctrlKey: true }, { metaKey: true }]) {
+    for (const viewerActive of [false, true]) {
+      const host = syntheticWindow();
+      let saves = 0;
+      const detach = attachPublicKeyboardGuard(host, viewerActive);
+      host.addEventListener("keydown", () => { saves += 1; }, false);
+      const event = syntheticEvent("S", options);
+      host.dispatch(event);
+      assert.equal(event.defaultPrevented, true);
+      assert.equal(saves, 0);
+      detach();
+    }
+  }
+});
+
+test("R3: denied public actions never invoke their authoring/write callbacks; developer mode preserves them", async () => {
+  const { performGateAAction } = await policy();
+  for (const capability of ["project.create", "project.import", "project.save", "project.write", "dev.writeBatch", "layer.author", "page.author", "presenter.launch", "capture.advanced"]) {
+    let writes = 0;
+    const action = () => { writes++; return "done"; };
+    assert.throws(() => performGateAAction("public", capability, action), /not available/i);
+    assert.equal(writes, 0, capability);
+    assert.equal(performGateAAction("developer", capability, action), "done");
+    assert.equal(writes, 1, capability);
+  }
+});
+
+test("R3: public App uses a capture-stage listener; editor is exclusive to developer mode", () => {
+  const app = readFileSync(resolve(root, "src/App.tsx"), "utf8");
+  assert.match(app, /attachPublicKeyboardGuard\(window, Boolean\(sceneHandle && project\)\)/);
+  assert.match(app, /experience\.mode === "public" &&\s*\(\s*<CuratedExplorerShell/);
+  assert.match(app, /experience\.mode === "developer" &&\s*\(\s*<EditorProvider/);
+  assert.doesNotMatch(readFileSync(resolve(root, "src/public/CuratedExplorerShell.tsx"), "utf8"), /\bEditorProvider\b\s*\(/);
+});
+
+test("R4: public URL helper clears stale developer/page/project query but preserves path and hash", async () => {
+  const { publicRouteUrl } = await policy();
+  assert.equal(publicRouteUrl("https://example.test/geosee/?mode=developer&project=woodjam&page=123#viewer", "utah-forge"), "/geosee/?project=utah-forge#viewer");
+  assert.equal(publicRouteUrl("https://example.test/geosee/?project=utah-forge&page=123#viewer", null), "/geosee/#viewer");
+  assert.equal(publicRouteUrl("https://example.test/geosee/?project=utah-forge", null), "/geosee/");
+  assert.throws(() => publicRouteUrl("https://example.test/?project=base-gui", "woodjam"), /unavailable|not supported/i);
+});
+
+test("R4: public App normalizes URL for CTA and Back, preserving developer URLs", () => {
+  const app = readFileSync(resolve(root, "src/App.tsx"), "utf8");
+  assert.match(app, /window\.history\.replaceState\(window\.history\.state, "", publicRouteUrl\(window\.location\.href, projectSlug\)\)/);
+  assert.match(app, /window\.history\.replaceState\(window\.history\.state, "", publicRouteUrl\(window\.location\.href, null\)\)/);
+  assert.match(app, /if \(experience\.mode === "public" && updatePublicUrl\)/);
+});
