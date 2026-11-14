@@ -3938,3 +3938,68 @@ flip via `setForceMaxDetail`, clean revert, no console errors. Live framerate
 (off vs on) was NOT measurable in the preview harness: the preview tab is
 `document.hidden`, so `requestAnimationFrame` is throttled to zero frames. FPS
 delta must be measured on a visible display.
+
+## DEC-189 - Provider-neutral agent workspace, authority and writing scope
+
+Status: approved 2026-11-13 by the repository owner. Applies to the GEODE
+agent operating contract, working-copy routing, document/evidence
+interpretation, and engineering communication. **No application/runtime,
+project authoring, source-data, or transition behavior change is authorized
+by this governance decision.**
+
+**H01 — authorized working tree:** An agent must work in the checkout
+explicitly supplied for the task, find its root using
+`git rev-parse --show-toplevel`, and confirm repository identity and the
+intended branch before modifying files or committing. If an authorized
+checkout is missing or ambiguous, stop and report. **Never automatically
+switch** to `C:\GeoSee\GeoSee_Dev\`, `C:\GeoSee_Dev\` or another
+remembered local tree. Retain the original workspace safeguards:
+`npm run check:workspace`, focused staging and protection of unrelated
+dirty/user files. The historical raw archive path
+`C:\GeoSee\GeoSee_Archive\` and archive map remain provenance only,
+not authorization for local traversal.
+
+**H02 — intent versus observation:** Accepted requirements and dated
+decisions govern intended behavior, with active approved subsystem specs
+providing detail. Current code, tests, project files, manifests and
+artifacts are evidence of observed implementation and data state, not
+automatic approval of a requirement change. Draft/historical prose does
+not silently override observed implementation. If accepted intent and
+observed implementation conflict, record both and stop the affected
+change for explicit review. Earlier decision records remain immutable;
+approved supersession is recorded as a new decision.
+
+**H03 — transition authority:** The
+`docs/dev-context/Transition-Runtime-Operating-Spec.md` is the active
+operating guide for current transition implementation, subject to
+accepted decision records. `Transition-Constitution.md` and
+`Transition-Continuity-Contract.md` remain **draft** proposals unless
+particular provisions are separately accepted by a dated decision.
+The Constitution's existing numbered ranking is preserved as a
+historical *draft* proposal, not operative precedence. Accepted
+transition decisions govern approved intent; a real contradiction
+between accepted intent, active guidance and proposed invariants is
+documented and held for owner resolution. This decision does **not**
+reject previously accepted transition invariants or authorize their
+runtime reimplementation.
+
+**H09 — audience-appropriate writing:** Engineering handoffs favor
+factual descriptions of commands, evidence, decisions, risk and outcome
+without unnecessary social framing. The former universal prohibition
+on first- or second-person prose does **not** apply to public README
+copy, documentation, tutorials, UX content, requested writing or other
+human-facing material; language should serve the intended reader.
+Preserve exact wording in quoted text, source code, tools and APIs.
+
+**Supersession scope:** This decision replaces contradictory
+non-decision *agent/documentation wording* requiring a single
+Windows checkout path, treating any current source file as an
+automatic approved requirement, asserting draft transition precedence,
+or applying the engineering handoff writing convention to every
+document. It does **not** supersede any numbered technical DEC.
+
+**Migration holds unaffected:** H04, H05, H06, H07, H08, H10 and H11
+remain pending; no provider adapter has become import-only, no actual
+Claude/Codex instruction-loading test is claimed, and no merge is
+authorized. Preserve the original source-text and rule crosswalk in
+`docs/dev-context/Agent-Instruction-Consolidation-Plan.md`.
