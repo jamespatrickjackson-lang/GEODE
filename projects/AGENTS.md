@@ -8,7 +8,7 @@ Each project combines small, authored JSON state with potentially large scientif
 
 - `base-gui/`: base GUI scene.
 - `case-study-b/`: Case Study B.
-- `utah-forge/`: Utah FORGE Phase 3, including a particularly large `data/` tree.
+- `utah-forge/`: Utah FORGE Phase 3. The original project contract recorded approximately 116 MB under `utah-forge/data/`; this is a historical estimate, not a current measurement.
 - `woodjam/`: Woodjam.
 
 Treat this directory map as a navigation aid, not as evidence that all inputs are distributable or scientifically verified.
@@ -29,8 +29,8 @@ Treat this directory map as a navigation aid, not as evidence that all inputs ar
 
 ## Upstream source and archive provenance
 
-- Historical upstream/raw source buckets are separate from the tracked application repository.
+- Historical upstream/raw source buckets are separate from the tracked application repository. The original local source location was recorded as `C:\GeoSee\GeoSee_Archive\`; this is provenance, not a portable instruction or an assertion that the path exists in any current environment.
 - Resolve historical repo-relative source identifiers through `docs/archive-map.md` and `docs/archive-manifest.json`. A path recorded in historical provenance is not authorization to switch working trees, alter archives, or assume access to a local drive.
 - Preserve traceability to the original scientific source and explicitly label missing or unverified source members.
 
-Source-preservation reference: [`projects/CLAUDE.md`](CLAUDE.md). Consolidation and provider-specific routing remain pending review.
+Historical source (immutable Git baseline): [`projects/CLAUDE.md` at 29d9c4c, lines 1–41](https://github.com/jamespatrickjackson-lang/GEODE/blob/29d9c4c7eee77ac1b104289b09b1382c574145d0/projects/CLAUDE.md#L1-L41). The source remains available if a future `CLAUDE.md` becomes a provider-specific router. Consolidation status and held decisions are tracked in [the migration plan](../docs/dev-context/Agent-Instruction-Consolidation-Plan.md).
