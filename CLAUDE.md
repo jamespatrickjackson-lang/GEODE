@@ -6,6 +6,16 @@ landing page, `docs/START-HERE.md` is stable product/system orientation, and
 
 ## First Read
 
+Before selecting a GEODE / GeoSee assignment or editing the repository,
+consult the [canonical GEODE / GeoSee Notion workstream and authority manifest](https://app.notion.com/p/418fb09932768139b693dbf2b5a191aa) for the
+approved product scope, W1–W4 owning records, decisions, current holds and
+workstream boundaries. Check live GitHub branch and commit against the owner
+record. This external manifest is the single project-level onboarding route;
+it does not override this file's provider instructions or grant edit, merge,
+or release approval. Historical or exploratory cross-domain GEODE OSS V2
+material is not active GeoSee requirements. If project authority cannot be
+verified, report the uncertainty rather than acting on stale entry guidance.
+
 For normal software-build work, start with
 `docs/dev-context/Active-Build-Context.md`, then open only the docs and source
 files directly relevant to the task.
@@ -16,16 +26,18 @@ verification evidence, intake/drop review, or visual QA evidence.
 
 ## Output Rail
 
-Agent responses use system/dev context transfer: facts, commands, files, risks,
-decisions, verification, and outcomes.
+Agent engineering handoffs use factual system/development reporting:
+commands, files, risks, decisions, verification evidence, and outcomes.
+Avoid praise, reassurance, motivational framing, apology loops, and
+unnecessary personal framing. Keep first/second-person wording restrained
+when a concise technical status report does not need it.
 
-Avoid praise, reassurance, motivational framing, apology loops, personal
-framing, and first/second-person posture. Avoid first/second-person pronouns in
-assistant-authored prose, including `I`, `me`, `my`, `we`, `our`, `you`, and
-`your`.
-
-Exceptions: quoted source text, code identifiers, commands, file content, UI
-copy under review, and required wording from tools, tests, or external APIs.
+This reporting convention does **not** dictate the language of user-facing
+README content, tutorials, documentation, UX copy, or requested writing.
+Write appropriately for the intended audience, including natural first- and
+second-person language when useful. Quoted source text, code identifiers,
+commands, file content, UI copy, and tool/test/API wording retain their
+original form.
 
 ## Source Of Truth
 
@@ -43,11 +55,15 @@ copy under review, and required wording from tools, tests, or external APIs.
 
 ## Workspace Rules
 
-- The canonical active repo root is `C:\GeoSee\GeoSee_Dev\`.
-- If the current working directory is missing the repo, switch to
-  `C:\GeoSee\GeoSee_Dev\` before inspecting, testing, editing, or committing.
-- `C:\GeoSee_Dev\` is obsolete/stale and must not be treated as the current
-  working tree.
+- Work in the Git checkout explicitly authorized for the current task.
+  Verify its root with `git rev-parse --show-toplevel`; verify the intended
+  repository identity and branch before modifying files or committing.
+- If no Git checkout is present or its identity is ambiguous, stop and report
+  rather than selecting a different checkout. Never automatically switch to a
+  remembered local path.
+- Historical `C:\GeoSee\GeoSee_Dev\` and `C:\GeoSee_Dev\` are
+  local-context references, not universal locations or instructions to enter
+  those trees.
 - `UI_EDITOR` prototype/package work stays separate from this active app tree.
   Do not merge or resurrect `UI_EDITOR/` or `UI_EDITOR_v1_0/` content into
   `main` unless a request explicitly asks for that standalone package.
@@ -170,7 +186,15 @@ range (approximate current line counts):
 
 ## Decision Discipline
 
-- If a change would contradict `/docs`, stop and surface it before acting.
+- Accepted requirements and dated decisions govern intended behavior; active
+  approved specifications explain that intent. Current code, tests, project
+  manifests, and artifacts are evidence of what is implemented, not automatic
+  approval of a change in requirements.
+- If observed implementation and accepted intent disagree, document the
+  competing clauses and evidence, then stop the affected change for review.
+  A stale, proposed, or historical document does not automatically override
+  current observed behavior; current behavior does not silently override an
+  accepted requirement.
 - New durable decisions belong in `docs/03-decisions.md`.
 - Do not rewrite earlier decision entries; add a new entry with a
   `supersedes DEC-NNN` note when replacing an older decision.
@@ -185,9 +209,13 @@ the user explicitly asks for a persistence architecture change.
 
 ## Working Tree And Archive
 
-- The active working tree is `C:\GeoSee\GeoSee_Dev\`.
-- Large raw/source buckets are outside the active repo at
-  `C:\GeoSee\GeoSee_Archive\`.
+- The active working tree is the authorized checkout verified with
+  `git rev-parse --show-toplevel`, not a fixed machine directory.
+- Historical local working-tree path: `C:\GeoSee\GeoSee_Dev\` (reference
+  only; do not switch to it automatically).
+- Historical large raw/source buckets were held outside that tree at
+  `C:\GeoSee\GeoSee_Archive\`. This is provenance information, not
+  permission to inspect or modify an archive.
 - Treat old repo-relative source paths in provenance as historical identifiers
   and resolve them through `docs/archive-map.md` and
   `docs/archive-manifest.json`.

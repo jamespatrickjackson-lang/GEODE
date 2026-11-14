@@ -1,11 +1,32 @@
-﻿# GeoSee Agent Operating Contract â€” Codex CLI
+﻿# GeoSee / GEODE Agent Operating Contract — Shared Engineering Instructions
 
-This file is the operating contract for Codex CLI and other agent runtimes
-that auto-load `AGENTS.md`. Claude Code reads `CLAUDE.md` instead; the two
-files mirror each other. Source of truth is `CLAUDE.md` â€” update both when
-either changes.
+This is the provider-neutral engineering contract for agents working in this
+repository. Read the relevant scoped `AGENTS.md` before changing its subtree.
+A provider-specific entry file such as `CLAUDE.md` is not intended to own
+separate engineering policy.
+
+**Migration boundary:** The existing root and nested `CLAUDE.md` files still
+contain substantive original instructions and have not been converted into
+import-only routers. Only owner-approved workspace, authority, and writing
+policy corrections are made during this review stage. Do not shrink, remove,
+or replace those instructions until their unique rules are preserved and
+provider loading is verified. The migration plan
+and unresolved holds are recorded in
+`docs/dev-context/Agent-Instruction-Consolidation-Plan.md`.
 
 ## First Read
+
+Before choosing a GEODE / GeoSee workstream or making changes, consult the
+[canonical GEODE / GeoSee Notion workstream and authority manifest](https://app.notion.com/p/418fb09932768139b693dbf2b5a191aa) for approved product scope, W1–W4 ownership,
+current decisions, requirements, dependencies, active holds, and links to the
+owning reports. Verify the authorized repository, exact branch/commit and
+permissions against live GitHub. The manifest is the single project-level
+onboarding route, not a substitute for the engineering instructions in this
+file or its scoped counterparts, and does not itself authorize edits, merges,
+or releases. Treat historical, provisional, and cross-domain GEODE OSS V2
+materials as reference, not active GeoSee requirements. If the manifest or
+assigned workstream is unavailable, report the gap rather than assuming
+change authorization.
 
 For normal software-build work, start with
 `docs/dev-context/Active-Build-Context.md`, then open only the docs and
@@ -15,22 +36,37 @@ Do not route through old receipt archives, screenshots, staged-intake
 records, or older root docs unless the task explicitly needs audit history,
 verification evidence, intake/drop review, or visual QA evidence.
 
+For work under a scoped area, also read its shared instructions **before**
+changing files in that area:
+
+- `projects/AGENTS.md`: project authoring, bulk scientific data and provenance.
+- `src/editor/AGENTS.md`: editor controls, persistence, UI and safe edits.
+- `src/scene/AGENTS.md`: Three.js runtime, loaders, opacity and transitions.
+- `docs/AGENTS.md`: documentation evidence, decisions, source rights and claims.
+
+Read these explicitly if the current agent runtime does not automatically
+discover nested instructions. Do not assume all providers load the same files
+or that an abbreviated scoped rule supersedes its detailed technical owner.
+
 ## Output Rail
 
-Agent responses use system/dev context transfer: facts, commands, files,
-risks, decisions, verification, and outcomes.
+Agent engineering handoffs use factual system/development reporting:
+commands, files, risks, decisions, verification evidence, and outcomes.
+Avoid praise, reassurance, motivational framing, apology loops, and
+unnecessary personal framing. Keep first/second-person wording restrained
+when a concise technical status report does not need it.
 
-Avoid praise, reassurance, motivational framing, apology loops, personal
-framing, and first/second-person posture. Avoid first/second-person
-pronouns in assistant-authored prose, including `I`, `me`, `my`, `we`,
-`our`, `you`, and `your`.
-
-Exceptions: quoted source text, code identifiers, commands, file content,
-UI copy under review, and required wording from tools, tests, or external
-APIs.
+This reporting convention does **not** dictate the language of user-facing
+README content, tutorials, documentation, UX copy, or requested writing.
+Write appropriately for the intended audience, including natural first- and
+second-person language when useful. Quoted source text, code identifiers,
+commands, file content, UI copy, and tool/test/API wording retain their
+original form.
 
 ## Source Of Truth
 
+- Human repository landing page: `README.md`
+- Stable product/system orientation: `docs/START-HERE.md`
 - Product purpose and alpha boundaries: `docs/00-purpose.md`
 - Scope: `docs/01-scope.md`
 - Architecture and locked stack decisions: `docs/02-architecture.md`
@@ -41,15 +77,24 @@ APIs.
 - Editor sidebar control manifest and approval policy:
   `docs/dev-context/editor-control-manifest.json` and
   `docs/dev-context/Editor-Control-Manifest-Policy.md`
+- Page transitions and section-frame helpers:
+  `docs/dev-context/Page-Transitions-And-Section-Frames.md`
+- Editor feature completion and user-facing field exposure:
+  `docs/06-editor-exposure-rules.md`
+- Public-release, provenance and third-party data rights:
+  `docs/LICENSING.md`
 
 ## Workspace Rules
 
-- The canonical active repo root is `C:\GeoSee\GeoSee_Dev\`.
-- If the current working directory is missing the repo, switch to
-  `C:\GeoSee\GeoSee_Dev\` before inspecting, testing, editing, or
-  committing.
-- `C:\GeoSee_Dev\` is obsolete/stale and must not be treated as the
-  current working tree.
+- Work in the Git checkout explicitly authorized for the current task.
+  Verify its root with `git rev-parse --show-toplevel`; verify the intended
+  repository identity and branch before modifying files or committing.
+- If no Git checkout is present or its identity is ambiguous, stop and report
+  rather than selecting a different checkout. Never automatically switch to a
+  remembered local path.
+- Historical `C:\GeoSee\GeoSee_Dev\` and `C:\GeoSee_Dev\` are
+  local-context references, not universal locations or instructions to enter
+  those trees.
 - `UI_EDITOR` prototype/package work stays separate from this active app tree.
   Do not merge or resurrect `UI_EDITOR/` or `UI_EDITOR_v1_0/` content into
   `main` unless a request explicitly asks for that standalone package.
@@ -145,7 +190,7 @@ following paths unless the task explicitly requires them:
 - `data/**` â€” root vector data (includes `hydrography_streams.geojson`
   at 17 MB).
 - `dist/**`, `dist-tsbuild/**`, `node_modules/**` â€” build output and
-  dependencies.
+  dependencies; gitignored files may still be reachable by some Glob/file-discovery tools.
 - `docs/dev-context/Archive/**`,
   `docs/dev-context/Change-Receipts/**`,
   `docs/dev-context/Verification-Receipts/**`,
@@ -172,7 +217,15 @@ range (approximate current line counts):
 
 ## Decision Discipline
 
-- If a change would contradict `/docs`, stop and surface it before acting.
+- Accepted requirements and dated decisions govern intended behavior; active
+  approved specifications explain that intent. Current code, tests, project
+  manifests, and artifacts are evidence of what is implemented, not automatic
+  approval of a change in requirements.
+- If observed implementation and accepted intent disagree, document the
+  competing clauses and evidence, then stop the affected change for review.
+  A stale, proposed, or historical document does not automatically override
+  current observed behavior; current behavior does not silently override an
+  accepted requirement.
 - New durable decisions belong in `docs/03-decisions.md`.
 - Do not rewrite earlier decision entries; add a new entry with a
   `supersedes DEC-NNN` note when replacing an older decision.
@@ -188,9 +241,13 @@ unless the user explicitly asks for a persistence architecture change.
 
 ## Working Tree And Archive
 
-- The active working tree is `C:\GeoSee\GeoSee_Dev\`.
-- Large raw/source buckets are outside the active repo at
-  `C:\GeoSee\GeoSee_Archive\`.
+- The active working tree is the authorized checkout verified with
+  `git rev-parse --show-toplevel`, not a fixed machine directory.
+- Historical local working-tree path: `C:\GeoSee\GeoSee_Dev\` (reference
+  only; do not switch to it automatically).
+- Historical large raw/source buckets were held outside that tree at
+  `C:\GeoSee\GeoSee_Archive\`. This is provenance information, not
+  permission to inspect or modify an archive.
 - Treat old repo-relative source paths in provenance as historical
   identifiers and resolve them through `docs/archive-map.md` and
   `docs/archive-manifest.json`.

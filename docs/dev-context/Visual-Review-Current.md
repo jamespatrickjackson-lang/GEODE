@@ -83,7 +83,7 @@ narrow patch
 - Do not revisit unless asked:
   - Intake directives or intake drops for normal software-build work.
   - Full broad Utah FORGE smoke runs during visual iteration.
-  - Killing or restarting the user's `5173` app session unless a stale dev-server/module state blocks visual validation and the active process is confirmed to be running from `C:\GeoSee\GeoSee_Dev`.
+  - Killing or restarting the user's `5173` app session unless a stale dev-server/module state blocks visual validation and the process is confirmed to belong to the explicitly authorized Git checkout (verify with `git rev-parse --show-toplevel`).
 
 ## Screenshot Path
 

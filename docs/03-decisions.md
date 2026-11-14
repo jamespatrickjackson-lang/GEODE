@@ -3938,3 +3938,145 @@ flip via `setForceMaxDetail`, clean revert, no console errors. Live framerate
 (off vs on) was NOT measurable in the preview harness: the preview tab is
 `document.hidden`, so `requestAnimationFrame` is throttled to zero frames. FPS
 delta must be measured on a visible display.
+
+## DEC-189 - Provider-neutral agent workspace, authority and writing scope
+
+Status: approved 2026-11-13 by the repository owner. Applies to the GEODE
+agent operating contract, working-copy routing, document/evidence
+interpretation, and engineering communication. **No application/runtime,
+project authoring, source-data, or transition behavior change is authorized
+by this governance decision.**
+
+**H01 — authorized working tree:** An agent must work in the checkout
+explicitly supplied for the task, find its root using
+`git rev-parse --show-toplevel`, and confirm repository identity and the
+intended branch before modifying files or committing. If an authorized
+checkout is missing or ambiguous, stop and report. **Never automatically
+switch** to `C:\GeoSee\GeoSee_Dev\`, `C:\GeoSee_Dev\` or another
+remembered local tree. Retain the original workspace safeguards:
+`npm run check:workspace`, focused staging and protection of unrelated
+dirty/user files. The historical raw archive path
+`C:\GeoSee\GeoSee_Archive\` and archive map remain provenance only,
+not authorization for local traversal.
+
+**H02 — intent versus observation:** Accepted requirements and dated
+decisions govern intended behavior, with active approved subsystem specs
+providing detail. Current code, tests, project files, manifests and
+artifacts are evidence of observed implementation and data state, not
+automatic approval of a requirement change. Draft/historical prose does
+not silently override observed implementation. If accepted intent and
+observed implementation conflict, record both and stop the affected
+change for explicit review. Earlier decision records remain immutable;
+approved supersession is recorded as a new decision.
+
+**H03 — transition authority:** The
+`docs/dev-context/Transition-Runtime-Operating-Spec.md` is the active
+operating guide for current transition implementation, subject to
+accepted decision records. `Transition-Constitution.md` and
+`Transition-Continuity-Contract.md` remain **draft** proposals unless
+particular provisions are separately accepted by a dated decision.
+The Constitution's existing numbered ranking is preserved as a
+historical *draft* proposal, not operative precedence. Accepted
+transition decisions govern approved intent; a real contradiction
+between accepted intent, active guidance and proposed invariants is
+documented and held for owner resolution. This decision does **not**
+reject previously accepted transition invariants or authorize their
+runtime reimplementation.
+
+**H09 — audience-appropriate writing:** Engineering handoffs favor
+factual descriptions of commands, evidence, decisions, risk and outcome
+without unnecessary social framing. The former universal prohibition
+on first- or second-person prose does **not** apply to public README
+copy, documentation, tutorials, UX content, requested writing or other
+human-facing material; language should serve the intended reader.
+Preserve exact wording in quoted text, source code, tools and APIs.
+
+**Supersession scope:** This decision replaces contradictory
+non-decision *agent/documentation wording* requiring a single
+Windows checkout path, treating any current source file as an
+automatic approved requirement, asserting draft transition precedence,
+or applying the engineering handoff writing convention to every
+document. It does **not** supersede any numbered technical DEC.
+
+**Migration holds unaffected:** H04, H05, H06, H07, H08, H10 and H11
+remain pending; no provider adapter has become import-only, no actual
+Claude/Codex instruction-loading test is claimed, and no merge is
+authorized. Preserve the original source-text and rule crosswalk in
+`docs/dev-context/Agent-Instruction-Consolidation-Plan.md`.
+
+## DEC-190 - Agent-contract preservation gates, evidence classes, and provider-loading review
+
+Status: approved 2026-11-14 by the repository owner as the disposition of
+H04, H05, H06, H07, H08, H10, H11. Supersedes the *administrative hold status*
+for these seven items, **not** any existing scientific or rendering requirement.
+This decision authorizes narrow repository documentation and agent-contract
+verification work in draft PR #2, without merging or changing application
+runtime, scientific datasets, authored project pages, or historical decisions.
+
+**H04 — single substantive instruction owner:** `AGENTS.md` at root and
+scoped directories is the proposed canonical engineering instruction
+interface. `CLAUDE.md` will eventually contain only provider-specific
+imports/routing, not a parallel engineering rule set. While Claude files
+remain substantive, retain the existing mirrored-section CI check and add a
+separate static preservation gate for the shared files, router state and
+61-group source crosswalk. Only replace the obsolete mirror expectation
+*in the same reviewed change* that converts and validates all four Claude
+routers. A static gate is not provider-loading evidence.
+
+**H05 — missing historical fixture register:** The former
+`Transition-Page-Fixture-Evidence-Register-2026-05-31.md` is not in the
+published GEODE Git tree. Searches of accessible Notion context did not
+identify a separate canonical copy. This **does not establish** that no
+private or retired copy exists. Remove the impossible mandatory pre-read
+in active public documentation, preserve its historical citation and
+evidence-status uncertainty, and seek the original and rights clearance
+before restoring, distributing, or making claims based on it. Do not
+fabricate or silently substitute evidence.
+
+**H06 — archival context:** Clearly label older state summaries as
+historical snapshots and correct active references to absent scripts.
+Keep the actual original claims and source links where still useful;
+do not rewrite accepted decisions, normalize historical records, or
+treat old claims of currency as present-day requirements.
+
+**H07 — ports and user-session safety:** The checked-in human launcher
+uses 5194 and can force-terminate a listener; the Claude launch profile
+uses 5273; earlier human visual-review instructions refer to 5173.
+Correct documentation without standardizing port selection or modifying
+the launcher in this stage. Agents must never terminate a possibly
+user-owned listener for convenience; use an isolated free port and
+report it.
+
+**H08 — three distinct proof classes:** A real authored page pair can
+reproduce a symptom for diagnosis. Synthetic in-memory fixtures prove
+generalizable application behavior. A named deck snapshot/matrix
+describes one authored deck, not general app health. Human visual
+acceptance remains distinct. Do not implement or test generic
+transition corrections through hardcoded page IDs, page-order data,
+fixture names or source/target page pairs.
+
+**H10 — scientific adapter boundary:** Product-aware renderer adapters
+may express scientific geometry, material, representation identity,
+readiness, compatibility, visibility, supported channels, masks and
+owned opacity. Common transition classification operates on normalized
+render-entity/channel facts and must not branch on project names,
+product families, editor labels or authored page pairs. This
+clarification preserves validated existing behavior and does **not**
+authorize a transition-engine rewrite.
+
+**H11 — live provider validation required before routing conversion:**
+The four substantive Claude instruction files are to remain intact
+until the owner-reviewed full semantic preservation crosswalk is
+satisfied and real Claude/Codex instruction discovery is checked for
+root, projects, editor, scene and docs scopes. `@AGENTS.md` is a
+candidate Claude import, not a verified GEODE runtime mechanism. Test
+in an authorized isolated checkout, record actual loaded sources and
+any omissions, then convert routers atomically with appropriate CI
+changes. Failure to run the live provider checks **blocks claiming
+H11 verified**; it does not justify silently converting files.
+
+**Unchanged safeguards:** DEC-189 remains in force, the 61-rule
+original-to-owner crosswalk and immutable baseline source links stay
+intact, and prior technical DECs remain historical truth. GitHub PR #2
+remains **draft/unmerged** pending actual provider-loading verification,
+review of unresolved source provenance, and a separate merge decision.

@@ -49,11 +49,13 @@ Run `npm run check:workspace` before commits or broad verification. A dirty tree
 
 The former check:utah-snapshot deck-snapshot check has been retired: Utah pages are disposable authoring state, so deck-order snapshotting is no longer a routed command. Deck-order content must not be asserted by app-behavior tests or included in `test:utah-forge`.
 
+**Three evidence classes:** A real page pair may reproduce a bug and support diagnosis; a synthetic fixture is required for a test claiming reusable application behavior; a clearly labeled deck snapshot/matrix describes that particular authored deck only. Human visual acceptance is independent of all three. Never promote page-order observations to a generic fix or verification gate.
+
 ## Dev Server Rule
 
-Agents should not run `Launch GeoSee.bat`. It is a human-facing launcher and it force-kills any process listening on port `5173`, which may interrupt the user's live app session.
+Agents should not run `Launch GeoSee.bat`. The human-facing launcher currently uses port **5194** and forcibly terminates the process listening on that port (`APP_PORT=5194` in the batch file). Do not assume that process belongs to the agent or terminate it. The `.claude/launch.json` development configuration uses **5273**. Existing human visual-review instructions refer to a user session on **5173**; these are separate configurations, not a single required port.
 
-For agent-run checks, prefer a scoped dev server command such as `npm run dev -- --host 127.0.0.1 --port <free-port>` and report the URL. If port `5173` is already in use, assume it may belong to the user unless the user explicitly asks to restart it.
+For agent-run checks, prefer a scoped dev server command such as `npm run dev -- --host 127.0.0.1 --port <free-port>` and report the URL. Do not kill an existing listener on **any** port for convenience; assume it may be user-owned unless its identity is verified and the user has authorized restart.
 
 
 ## Disposable Page Fixture Rule

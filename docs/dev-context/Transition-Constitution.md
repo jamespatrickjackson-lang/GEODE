@@ -1,23 +1,27 @@
 ﻿# Transition Constitution
 
-Status: draft source of truth.
+Status: draft transition-constitution proposal. It is not approved as an overriding authority over accepted decisions or the active Runtime Operating Spec.
 
 Read before transition runtime, editor/save, show/hide, legend, page-state, or
-matrix/tooling work. This document states durable intent. Historical prep logs
-and matrix artifacts are evidence, not authority.
+matrix/tooling work. This document records proposed invariant principles and their historical rationale; individual provisions are authoritative only where separately accepted in dated decisions. Historical prep logs and matrix artifacts are evidence, not authority.
 
-## Authority Order
+## Proposed Authority Order (draft; not operative precedence)
+
+The historical draft ranking below is retained for traceability, **not**
+as an approved rule for resolving conflicts. Accepted decisions govern intended
+behavior; the active `docs/dev-context/Transition-Runtime-Operating-Spec.md`
+guides current implementation subject to those decisions. Constitution and
+Continuity Contract clauses remain proposals unless separately accepted.
 
 1. This constitution.
 2. `docs/dev-context/Transition-Continuity-Contract.md`.
 3. `docs/dev-context/Transition-Decision-Log.md`.
 4. `docs/dev-context/Transition-Guardrails.md`.
-5. `docs/dev-context/Transition-Page-Fixture-Evidence-Register-2026-05-31.md`.
+5. `docs/dev-context/Transition-Page-Fixture-Evidence-Register-2026-05-31.md` (historical missing-public-source reference; not an available pre-read or a current authority).
 6. `docs/dev-context/Transition-Implementation-Changelog.md`.
 7. Historical prep/audit logs and generated artifacts.
 
-When documents disagree, use the highest item in this list and add or update a
-decision record before implementing behavior.
+When documents disagree, **do not use this draft list to choose a winner**. Identify the exact competing clauses and accepted decision records, hold the affected implementation, and obtain an explicit decision before changing requirements or behavior.
 
 ## Core Rules
 

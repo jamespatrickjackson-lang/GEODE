@@ -1,8 +1,8 @@
 # Transition Continuity Contract
 
-Status: draft source-of-truth contract.
+Status: draft proposed continuity contract. It does not override accepted decisions or the active Runtime Operating Spec unless explicitly adopted.
 
-This document defines transition continuity intent. It is not a page-transition
+This document proposes transition continuity intent. Accepted decision records and the active Runtime Operating Spec govern their respective intent and implementation roles; unresolved conflicts must be surfaced rather than silently ranked. It is not a page-transition
 fix plan and does not authorize visual tuning, camera smoothing, opacity
 changes, contour cadence changes, section-helper changes, page JSON edits, or
 fixture-specific remediation.

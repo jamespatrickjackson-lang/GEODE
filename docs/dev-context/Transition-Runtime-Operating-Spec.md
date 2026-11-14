@@ -2,6 +2,8 @@
 
 Status: active transition-system operating spec.
 
+This is current implementation guidance, subject to accepted requirements and dated decisions. It does not automatically approve draft Constitution or Continuity Contract clauses. When a proposed draft invariant conflicts with this active guidance or an accepted decision, record the evidence and hold the affected change for owner review.
+
 Purpose: define the intended page-to-page transition model before runtime code changes.
 
 ## Non-negotiable rules
@@ -13,6 +15,8 @@ Purpose: define the intended page-to-page transition model before runtime code c
 - Do not use full final reapply as a visual fix. Final commit must be visually idempotent.
 
 ## Core model
+
+**Product-aware adapters, generic policy:** A scientific renderer may supply domain-specific representation identity, compatibility, channel capability, readiness and owned opacity/visibility constraints. The generic transition classifier must operate on normalized render-entity and channel facts; it must not depend on named products, tools, case studies, page identifiers or a specific authored page pair. This documents the boundary of existing behavior and does **not** authorize changes to loader, geometry, material, scientific thresholds or transition semantics.
 
 A page transition is a deterministic diff between:
 
