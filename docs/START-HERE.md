@@ -2,6 +2,16 @@
 
 > **Current direction (14 November 2026):** GeoSee is the existing geoscience visualization **research alpha**, originally developed as a technical and service-led presentation demonstration and now being retooled for **free public geoscience use**. The current fixed project catalog, prepared-data loaders and local development-only authoring are not a generic user importer or portable project-saving service. W3 has approved **future**, not implemented, Gate A curated-example/PNG acceptance and Gate B desktop single-user local-first constrained 2D WGS84 GeoJSON, local projects, JSON save/reopen and PNG. [W3 draft requirements, unmerged](https://github.com/jamespatrickjackson-lang/GEODE/pull/8). Earlier service-era text below is retained as historical context.
 
+For current project-level agent onboarding, consult the
+[canonical GEODE / GeoSee Notion workstream and authority manifest](https://app.notion.com/p/418fb09932768139b693dbf2b5a191aa) first. It routes active
+product decisions, W1–W4 ownership, review gates, branch/commit verification
+and unresolved holds to their respective owning records. This page remains
+stable product/system orientation; the relevant root/scoped `AGENTS.md` and
+`CLAUDE.md` files remain the engineering instruction routes, and
+`docs/dev-context/Active-Build-Context.md` remains a technical build-context
+reference. Neither a historical document nor the exploratory cross-domain
+GEODE OSS V2 direction creates active GeoSee requirements.
+
 This document is stable product/system orientation. It explains what GeoSee is,
 why it exists, and how the app/data model is shaped. It is not the active-work
 router.
