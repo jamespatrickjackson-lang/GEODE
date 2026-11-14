@@ -16,6 +16,8 @@ Purpose: define the intended page-to-page transition model before runtime code c
 
 ## Core model
 
+**Product-aware adapters, generic policy:** A scientific renderer may supply domain-specific representation identity, compatibility, channel capability, readiness and owned opacity/visibility constraints. The generic transition classifier must operate on normalized render-entity and channel facts; it must not depend on named products, tools, case studies, page identifiers or a specific authored page pair. This documents the boundary of existing behavior and does **not** authorize changes to loader, geometry, material, scientific thresholds or transition semantics.
+
 A page transition is a deterministic diff between:
 
 1. Source live render graph:
