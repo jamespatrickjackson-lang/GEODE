@@ -1,0 +1,375 @@
+# TEMPORARY W4 alpha browser verification, disposable branch only. Do not merge.
+# Application source under test is untouched PR #21 head 831dd2daa37a650cc7deefe82a4ac1f0f2194338.
+name: W4 alpha viewer isolated browser verification (temporary)
+on:
+  push:
+    branches:
+      - test/w4-alpha-g101-20261114
+permissions:
+  contents: read
+jobs:
+  alpha-browser:
+    if: github.repository == 'jamespatrickjackson-lang/GEODE'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      W4_APP_SHA: 831dd2daa37a650cc7deefe82a4ac1f0f2194338
+      W4_APP_BRANCH: feat/w3-g1-01-public-landing
+      W4_REMOTE: https://github.com/jamespatrickjackson-lang/GEODE.git
+      W4_TEST_BRANCH: test/w4-alpha-g101-20261114
+    steps:
+      - name: Bootstrap test-only workflow
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 2
+      - name: Node 20 locked toolchain
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Python for existing source checks
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.14'
+      - name: Create owned scratch clone, exact SHA, all tracked hash baseline
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$GITHUB_REF" = "refs/heads/$W4_TEST_BRANCH"
+          test "$(git rev-parse HEAD^)" = "$W4_APP_SHA"
+          test "$(git diff --name-only "$W4_APP_SHA" "$GITHUB_SHA")" = ".github/workflows/w4-alpha-viewer.yml"
+          remote_sha="$(git ls-remote "$W4_REMOTE" "refs/heads/$W4_APP_BRANCH" | cut -f1)"
+          test "$remote_sha" = "$W4_APP_SHA"
+          sandbox="$(mktemp -d "$RUNNER_TEMP/geosee-w4-alpha-XXXXXXXX")"
+          mkdir -m 700 "$sandbox/evidence"
+          node -e 'const fs=require("fs");const c=require("crypto");const p=process.argv[1];fs.writeFileSync(p,JSON.stringify({kind:"geosee-w4-alpha-test-owned-v1",path:require("path").resolve(require("path").dirname(p)),token:c.randomUUID(),created:new Date().toISOString()},null,2),{flag:"wx",mode:0o600})' "$sandbox/.w4-alpha-owned.json"
+          echo "W4_SANDBOX=$sandbox" >> "$GITHUB_ENV"
+          echo "W4_CHECKOUT=$sandbox/checkout" >> "$GITHUB_ENV"
+          echo "RUNNER_OS=$RUNNER_OS RUNNER_NAME=$RUNNER_NAME"
+          uname -a
+          git --version
+          node --version
+          npm --version
+          echo "G1_SOURCE_SHA=$W4_APP_SHA"
+          echo "TEST_RUNNER_SHA=$GITHUB_SHA"
+          echo "W4_SANDBOX=$sandbox"
+          test ! -e "$sandbox/checkout"
+          git clone --single-branch --branch "$W4_APP_BRANCH" "$W4_REMOTE" "$sandbox/checkout"
+          test "$(git -C "$sandbox/checkout" rev-parse HEAD)" = "$W4_APP_SHA"
+          cat > "$sandbox/verify.py" <<'PY'
+          import os,sys,subprocess,hashlib,json,stat,datetime
+          base=os.path.realpath(sys.argv[1]); mode=sys.argv[2]
+          root=os.path.realpath(os.path.join(base,'checkout'))
+          evidence=os.path.join(base,'evidence')
+          marker=json.load(open(os.path.join(base,'.w4-alpha-owned.json')))
+          assert marker['kind']=='geosee-w4-alpha-test-owned-v1' and marker['path']==base
+          assert root==os.path.join(base,'checkout') and os.path.isdir(root)
+          def git(*args):
+              return subprocess.check_output(['git',*args],cwd=root).decode().strip()
+          assert git('rev-parse','--show-toplevel')==root
+          assert git('rev-parse','HEAD')==os.environ['W4_APP_SHA']
+          assert git('symbolic-ref','--quiet','--short','HEAD')==os.environ['W4_APP_BRANCH']
+          assert git('remote','get-url','origin')==os.environ['W4_REMOTE']
+          assert not git('status','--porcelain=v1','--untracked-files=all')
+          names=[x.decode() for x in subprocess.check_output(['git','ls-files','-z'],cwd=root).split(b'\0') if x]
+          hashes={}
+          for name in sorted(names):
+              path=os.path.join(root,name)
+              parts=name.split('/')
+              cur=root
+              for part in parts:
+                  cur=os.path.join(cur,part)
+                  assert not os.path.islink(cur), 'tracked symlink unsafe: '+name
+              assert os.path.isfile(path), 'tracked missing: '+name
+              hashes[name]=hashlib.sha256(open(path,'rb').read()).hexdigest()
+          if mode=='before':
+              assert not os.path.exists(os.path.join(evidence,'before.json'))
+              with open(os.path.join(evidence,'before.json'),'x') as f:
+                  json.dump({'sourceSha':os.environ['W4_APP_SHA'],'count':len(hashes),'hashes':hashes,'checkedAt':datetime.datetime.now(datetime.timezone.utc).isoformat()},f,indent=2)
+              print('W4_BASELINE_TRACKED='+str(len(hashes)))
+              print('W4_BASELINE_UTAH_MANIFEST_SHA256='+hashes['projects/utah-forge/project.json'])
+          else:
+              before=json.load(open(os.path.join(evidence,'before.json')))
+              assert before['sourceSha']==os.environ['W4_APP_SHA']
+              assert before['hashes']==hashes, 'TRACKED HASH MISMATCH'
+              with open(os.path.join(evidence,'after.json'),'x') as f:
+                  json.dump({'result':'PASS','sourceSha':os.environ['W4_APP_SHA'],'trackedCount':len(hashes),'matchedCount':len(hashes),'projectManifestSha256':hashes['projects/utah-forge/project.json'],'checkedAt':datetime.datetime.now(datetime.timezone.utc).isoformat()},f,indent=2)
+              print('W4_AFTER_INTEGRITY=PASS')
+              print('W4_MATCHED_TRACKED='+str(len(hashes)))
+          PY
+          python "$sandbox/verify.py" "$sandbox" before
+      - name: Install pinned dependencies, existing source suite, and production build in exact source clone
+        working-directory: ${{ env.W4_CHECKOUT }}
+        run: |
+          set -Eeuo pipefail
+          python -m pip install -r tools/requirements-test.txt
+          npm ci
+          npm run check:routes
+          npm run check:mirror
+          npm run check:editor-controls
+          npm run check:agent-drag
+          npm run check:pages
+          npm run check:runtime-assets
+          npm run test:tools
+          npm run build
+      - name: Install Playwright fresh Chromium for actual browser tests
+        working-directory: ${{ env.W4_CHECKOUT }}
+        run: |
+          set -Eeuo pipefail
+          npx playwright --version
+          npx playwright install --with-deps chromium
+      - name: Execute alpha browser matrix with owned static preview, traces and screenshots
+        working-directory: ${{ env.W4_CHECKOUT }}
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          cat > "$W4_SANDBOX/alpha-browser.mjs" <<'JS'
+          import {createRequire} from 'node:module';
+          import {spawn} from 'node:child_process';
+          import {createServer} from 'node:net';
+          import {join} from 'node:path';
+          import {writeFileSync,readFileSync} from 'node:fs';
+          import {createHash} from 'node:crypto';
+          import {setTimeout as delay} from 'node:timers/promises';
+          const require=createRequire(join(process.env.W4_CHECKOUT,'package.json'));
+          const {chromium}=require('@playwright/test');
+          const evidence=join(process.env.W4_SANDBOX,'evidence');
+          const report={sourceSha:process.env.W4_APP_SHA,testBranchSha:process.env.GITHUB_SHA,startedAt:new Date().toISOString(),tests:[],requests:[],consoleErrors:[],browser:null,preview:null};
+          const assert=(condition,msg)=>{if(!condition)throw Error(msg)};
+          const status=(name,result,details)=>{report.tests.push({name,status:result,details:details||'',at:new Date().toISOString()});console.log('W4_ALPHA_'+result+' '+name+': '+JSON.stringify(details||''));};
+          const own=()=>new Promise((resolve,reject)=>{
+            const server=createServer();server.once('error',reject);
+            server.listen(0,'127.0.0.1',()=>{const port=server.address().port;server.close(()=>resolve(port));});
+          });
+          let port,preview,browser,base;
+          const pos=async(page)=>page.evaluate(()=>{const s=window.__scene;return s?.camera?.position?.toArray?.()||null});
+          const distance=(a,b)=>!a||!b?null:Math.sqrt(a.reduce((v,x,i)=>v+(x-b[i])**2,0));
+          async function viewer(page,direct=true){
+            await page.goto(base+(direct?'/?project=utah-forge':'/'),{waitUntil:'domcontentloaded'});
+            if(!direct)await page.getByRole('button',{name:'Open Utah FORGE'}).click();
+            await page.getByText('Utah FORGE · Public viewer',{exact:true}).waitFor({timeout:45000});
+            await page.locator('canvas').first().waitFor({state:'visible',timeout:15000});
+          }
+          async function run(name,fn){
+            let context,page;
+            try{
+              context=await browser.newContext({viewport:{width:1280,height:800},acceptDownloads:true});
+              page=await context.newPage();
+              page.setDefaultTimeout(12000);
+              page.on('console',e=>{if(e.type()==='error'&&report.consoleErrors.length<80)report.consoleErrors.push({name,message:e.text().slice(0,500)})});
+              page.on('request',req=>{if(req.url().includes('/api/')&&report.requests.length<80)report.requests.push({name,method:req.method(),url:req.url()})});
+              const details=await fn(page,context);
+              status(name,'PASS',details);
+            }catch(e){
+              const message=String(e?.stack||e).slice(0,1800);
+              status(name,'FAIL',message);
+              try{if(page)await page.screenshot({path:join(evidence,'failure-'+name+'.png'),timeout:6000})}catch{}
+            }finally{try{await context?.close()}catch{}}
+          }
+          try {
+            port=await own();
+            base='http://127.0.0.1:'+port;
+            report.preview={origin:base,port,strictPort:true,reuseExistingServer:false};
+            const vite=join(process.env.W4_CHECKOUT,'node_modules/vite/bin/vite.js');
+            preview=spawn(process.execPath,[vite,'preview','--host','127.0.0.1','--port',String(port),'--strictPort'],{cwd:process.env.W4_CHECKOUT,stdio:['ignore','pipe','pipe'],shell:false});
+            report.preview.pid=preview.pid;
+            assert(preview.pid,'No owned preview PID');
+            writeFileSync(join(evidence,'preview-pid.json'),JSON.stringify(report.preview,null,2),{flag:'wx'});
+            let ready=false;
+            for(let i=0;i<100;i++){try{const r=await fetch(base+'/');if(r.status===200){ready=true;break}}catch{}await delay(250)}
+            assert(ready,'Strict production preview failed to start');
+            browser=await chromium.launch({headless:true,args:['--enable-webgl','--use-angle=swiftshader','--enable-unsafe-swiftshader','--disable-dev-shm-usage']});
+            report.browser={version:browser.version(),userAgent:null};
+            const probe=await browser.newPage();
+            report.browser.userAgent=await probe.evaluate(()=>navigator.userAgent);
+            report.browser.webgl=await probe.evaluate(()=>{const c=document.createElement('canvas');return Boolean(c.getContext('webgl2')||c.getContext('webgl'))});
+            await probe.close();
+            console.log('W4_ALPHA_BROWSER='+JSON.stringify(report.browser));
+            await run('landing',async page=>{
+              await page.goto(base+'/',{waitUntil:'domcontentloaded'});
+              await page.getByRole('heading',{name:'Explore Utah FORGE'}).waitFor();
+              assert(await page.getByRole('button',{name:'Open Utah FORGE'}).count()===1,'Utah CTA absent');
+              await page.screenshot({path:join(evidence,'landing.png')});
+              return {url:page.url(),button:'Open Utah FORGE'};
+            });
+            await run('utah-canvas',async page=>{
+              await viewer(page,false);
+              await delay(1200);
+              const canvas=page.locator('canvas').first();
+              const box=await canvas.boundingBox();
+              const img=await page.screenshot({path:join(evidence,'utah-canvas.png')});
+              assert(box&&box.width>200&&box.height>100,'Invalid canvas extent');
+              assert(img.length>8000,'Suspiciously tiny screenshot');
+              const data=await page.request.get(base+'/projects/utah-forge/project.json');
+              assert(data.status()===200,'Missing static Utah manifest');
+              const manifest=await data.json();
+              return {url:page.url(),canvas:box,layerDefinitions:manifest.layers?.length,screenshotBytes:img.length,camera:await pos(page)};
+            });
+            await run('camera-orbit-zoom-reset',async page=>{
+              await viewer(page,true);
+              await delay(1100);
+              const canvas=page.locator('canvas').first(),box=await canvas.boundingBox();
+              assert(box,'Canvas unavailable for camera input');
+              const before=await pos(page),x=box.x+box.width/2,y=box.y+box.height/2;
+              await page.mouse.move(x,y);await page.mouse.down();await page.mouse.move(x+110,y+75,{steps:12});await page.mouse.up();await delay(650);
+              const orbited=await pos(page);await page.screenshot({path:join(evidence,'after-orbit.png')});
+              const orbitDelta=distance(before,orbited);
+              assert(orbitDelta!==null&&orbitDelta>0.00001,'Pointer orbit did not move camera');
+              await page.mouse.move(x,y);await page.mouse.wheel(0,-420);await delay(900);
+              const zoomed=await pos(page),zoomDelta=distance(orbited,zoomed);
+              assert(zoomDelta!==null&&zoomDelta>0.00001,'Wheel zoom did not move camera');
+              await page.getByRole('button',{name:'Reset view'}).click();await delay(2200);
+              const reset=await pos(page);await page.screenshot({path:join(evidence,'after-reset.png')});
+              assert(reset,'Reset camera not accessible');
+              return {before,orbited,zoomed,reset,orbitDelta,zoomDelta,resetDelta:distance(before,reset)};
+            });
+            await run('in-app-back-and-reload',async page=>{
+              await viewer(page,true);
+              await page.getByRole('button',{name:'Back to examples'}).click();
+              await page.getByRole('heading',{name:'Explore Utah FORGE'}).waitFor();
+              assert(!new URL(page.url()).searchParams.has('project'),'In-app Back left project query');
+              await page.reload();await page.getByRole('heading',{name:'Explore Utah FORGE'}).waitFor();
+              await page.getByRole('button',{name:'Open Utah FORGE'}).click();
+              await page.getByText('Utah FORGE · Public viewer',{exact:true}).waitFor({timeout:45000});
+              await page.reload();await page.getByText('Utah FORGE · Public viewer',{exact:true}).waitFor({timeout:45000});
+              return {url:page.url(),backAndReload:true};
+            });
+            await run('native-back-forward',async page=>{
+              await page.goto(base+'/',{waitUntil:'domcontentloaded'});
+              await page.getByRole('heading',{name:'Explore Utah FORGE'}).waitFor();
+              await page.getByRole('button',{name:'Open Utah FORGE'}).click();
+              await page.getByText('Utah FORGE · Public viewer',{exact:true}).waitFor({timeout:45000});
+              const afterOpen=page.url();
+              await page.goBack({waitUntil:'domcontentloaded',timeout:10000}).catch(()=>null);
+              const backUrl=page.url();
+              const landing=await page.getByRole('heading',{name:'Explore Utah FORGE'}).isVisible().catch(()=>false);
+              assert(landing,'Native browser Back did not restore landing; back URL='+backUrl+' afterOpen='+afterOpen);
+              await page.goForward({waitUntil:'domcontentloaded',timeout:10000}).catch(()=>null);
+              const forward=await page.getByText('Utah FORGE · Public viewer',{exact:true}).isVisible().catch(()=>false);
+              assert(forward,'Native browser Forward did not restore viewer');
+              return {afterOpen,backUrl,forwardUrl:page.url()};
+            });
+            await run('invalid-public-routes',async page=>{
+              const cases=['/?project=woodjam','/?project=base-gui','/?project=unknown','/?mode=developer&project=woodjam','/?mode=editor&project=utah-forge'];
+              const outcome=[];
+              for(const route of cases){
+                await page.goto(base+route,{waitUntil:'domcontentloaded'});
+                const alert=page.getByRole('alert');await alert.waitFor();
+                const message=await alert.innerText();
+                assert(message.length>5,'Invalid route did not explain rejection: '+route);
+                assert(await page.getByText('Utah FORGE · Public viewer',{exact:true}).count()===0,'Viewer mounted on forbidden route '+route);
+                outcome.push({route,message});
+              }
+              await page.screenshot({path:join(evidence,'invalid-route.png')});
+              return outcome;
+            });
+            await run('static-writer-boundary',async(page,context)=>{
+              const codes={};
+              for(const route of ['/api/write-batch','/api/write-file']){
+                const response=await context.request.post(base+route,{data:{files:[],writes:[]}});
+                codes[route]=response.status();
+                assert(response.status()>=400,'Writer route accepted '+route+' status='+response.status());
+              }
+              await viewer(page,true);await delay(600);
+              const callCount=report.requests.filter(x=>x.name==='static-writer-boundary').length;
+              assert(callCount===0,'Public UI invoked /api/ endpoints unexpectedly');
+              return {codes,uiApiRequests:callCount};
+            });
+            await run('missing-manifest-error-recovery',async page=>{
+              const pattern='**/projects/utah-forge/project.json';
+              await page.route(pattern,route=>route.fulfill({status:404,contentType:'application/json',body:'{}'}));
+              await page.goto(base+'/?project=utah-forge',{waitUntil:'domcontentloaded'});
+              const alert=page.getByRole('alert');await alert.waitFor({timeout:25000});
+              const message=await alert.innerText();
+              assert(message.includes('404'),'Critical asset failure not explained to user: '+message);
+              await page.screenshot({path:join(evidence,'missing-manifest.png')});
+              await page.unroute(pattern);
+              await page.getByRole('button',{name:'Open Utah FORGE'}).click();
+              await page.getByText('Utah FORGE · Public viewer',{exact:true}).waitFor({timeout:45000});
+              return {failureMessage:message,recovered:true};
+            });
+            await run('synthetic-page-id-preserves-project-view',async(page,context)=>{
+              const src=await context.request.get(base+'/projects/utah-forge/project.json');assert(src.ok(),'Original project manifest unavailable');
+              const manifest=await src.json(), old=manifest.pageOrder?.[0];
+              assert(old,'No existing page for synthetic non-disk route');
+              const pg=await context.request.get(base+'/projects/utah-forge/pages/'+old+'.json');assert(pg.ok(),'Original page unavailable: '+old);
+              const pageJson=await pg.json(), id='w4-alpha-test-owned-synthetic';
+              const modified={...manifest,pageOrder:[id],archivedPageOrder:[]};
+              const testPage={...pageJson,id};
+              await page.route('**/projects/utah-forge/project.json',r=>r.fulfill({status:200,contentType:'application/json',body:JSON.stringify(modified)}));
+              await page.route('**/projects/utah-forge/pages/'+id+'.json',r=>r.fulfill({status:200,contentType:'application/json',body:JSON.stringify(testPage)}));
+              await viewer(page,true);await delay(500);
+              await page.screenshot({path:join(evidence,'synthetic-page-id.png')});
+              return {newId:id,layerDefinitions:modified.layers.length,activePages:modified.pageOrder.length,authoredFilesChanged:false};
+            });
+            await run('zero-authored-pages-current-behavior',async page=>{
+              const manifest=await (await page.request.get(base+'/projects/utah-forge/project.json')).json();
+              await page.route('**/projects/utah-forge/project.json',r=>r.fulfill({status:200,contentType:'application/json',body:JSON.stringify({...manifest,pageOrder:[],archivedPageOrder:[]})}));
+              await page.goto(base+'/?project=utah-forge',{waitUntil:'domcontentloaded'});
+              const msg=await page.getByRole('alert').innerText({timeout:25000});
+              await page.screenshot({path:join(evidence,'zero-pages.png')});
+              const viewerVisible=await page.getByText('Utah FORGE · Public viewer',{exact:true}).isVisible().catch(()=>false);
+              if(viewerVisible)status('zero-page-global-settings','PASS',{viewerVisible:true});
+              else status('zero-page-global-settings','BLOCKED',{observed:msg,reason:'No transient project-scoped state / Global Settings startup in current G1 source; PI-005 separate implementation'});
+              return {observedMessage:msg,viewerVisible};
+            });
+            await run('layer-controls-and-png-availability',async page=>{
+              await viewer(page,true);
+              const buttons=await page.getByRole('button').allTextContents();
+              const hasLayerToggle=buttons.some(s=>/layer|visibility|toggle/i.test(s));
+              const hasExport=buttons.some(s=>/png|export|screenshot|capture/i.test(s));
+              const file=join(evidence,'browser-evidence-only.png'),buf=await page.screenshot({path:file});
+              assert(buf.subarray(0,8).equals(Buffer.from([137,80,78,71,13,10,26,10])),'Browser evidence screenshot invalid PNG');
+              const png={bytes:buf.length,width:buf.readUInt32BE(16),height:buf.readUInt32BE(20),sha256:createHash('sha256').update(buf).digest('hex')};
+              if(!hasLayerToggle)status('public-layer-toggle','BLOCKED',{buttons,reason:'No public layer visibility controls mounted in G1-01'});
+              if(!hasExport)status('user-png-export','BLOCKED',{buttons,reason:'No public PNG/capture export control; browser screenshot is NOT GeoSee export'});
+              return {buttons,hasLayerToggle,hasExport,playwrightScreenshot:png};
+            });
+          }catch(e){
+            report.fatal=String(e?.stack||e).slice(0,2400);
+            status('harness-or-browser-start','FAIL',report.fatal);
+          }finally{
+            try{await browser?.close()}catch(e){status('browser-cleanup','FAIL',String(e))}
+            if(preview?.pid){
+              const exit=new Promise(resolve=>preview.once('exit',(code,signal)=>resolve({code,signal})));
+              if(preview.exitCode===null)preview.kill('SIGTERM');
+              const result=await Promise.race([exit,delay(10000).then(()=>null)]);
+              if(!result && preview.exitCode===null){preview.kill('SIGKILL');await delay(500)}
+              let alive=false;try{process.kill(preview.pid,0);alive=true}catch{}
+              report.preview.teardown=!alive?'PASS':'FAIL';
+              console.log('W4_ALPHA_PREVIEW_PID='+preview.pid+' W4_ALPHA_TEARDOWN='+report.preview.teardown);
+              if(alive)status('preview-teardown','FAIL',{pid:preview.pid});
+            }
+            report.completedAt=new Date().toISOString();
+            writeFileSync(join(evidence,'alpha-matrix.json'),JSON.stringify(report,null,2)+'\n',{flag:'wx'});
+            console.log('W4_ALPHA_SUMMARY='+JSON.stringify({sourceSha:report.sourceSha,passes:report.tests.filter(t=>t.status==='PASS').length,failures:report.tests.filter(t=>t.status==='FAIL').map(t=>t.name),blocked:report.tests.filter(t=>t.status==='BLOCKED').map(t=>t.name),preview:report.preview,browser:report.browser}));
+            if(report.tests.some(t=>t.status==='FAIL')||report.preview?.teardown!=='PASS')process.exitCode=1;
+          }
+          JS
+          node "$W4_SANDBOX/alpha-browser.mjs" 2>&1 | tee "$W4_SANDBOX/evidence/alpha-console.log"
+      - name: Verify all tracked files, clean full clone and owned preview shutdown
+        if: always()
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          if test -n "$W4_SANDBOX"; then
+            test -f "$W4_SANDBOX/.w4-alpha-owned.json"
+            if test -f "$W4_SANDBOX/evidence/preview-pid.json"; then
+              pid="$(node -p "JSON.parse(require('fs').readFileSync(process.argv[1], 'utf8')).pid" "$W4_SANDBOX/evidence/preview-pid.json")"
+              if kill -0 "$pid" 2>/dev/null; then
+                echo "::error::W4 owned preview PID remains alive"
+                exit 1
+              fi
+              echo "W4_OWNED_PID_TEARDOWN=PASS"
+            fi
+            python "$W4_SANDBOX/verify.py" "$W4_SANDBOX" after
+          fi
+      - name: Upload bounded alpha viewer evidence (short retention)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: w4-alpha-viewer-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ env.W4_SANDBOX }}/evidence/
+          if-no-files-found: warn
+          retention-days: 1
+          compression-level: 6
