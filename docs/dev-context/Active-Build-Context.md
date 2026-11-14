@@ -125,8 +125,9 @@ tooling, or section-frame helper visuals, read:
 - `docs/dev-context/Transition-Continuity-Contract.md`
 - `docs/dev-context/Transition-Guardrails.md`
 - `docs/dev-context/Transition-Decision-Log.md`
-- `docs/dev-context/Transition-Page-Fixture-Evidence-Register-2026-05-31.md`
 - `docs/dev-context/Page-Transitions-And-Section-Frames.md`
+
+Historical evidence note: `docs/dev-context/Transition-Page-Fixture-Evidence-Register-2026-05-31.md` is referenced in older transition material but is absent from the public Git tree inspected on 14 November 2026. It is **not a mandatory pre-read**; do not invent it or claim it was verified. Request the original and a rights/provenance decision if its evidence is needed.
 
 Accepted entries in `docs/03-decisions.md` and the relevant accepted transition decision records govern transition intent. The Constitution and Continuity Contract remain draft proposals, not operative precedence over accepted decisions. `docs/dev-context/Transition-Runtime-Operating-Spec.md` is active guidance for current transition implementation, subject to accepted decisions. When these documents genuinely conflict, record the clauses and hold the affected change. Historical logs and matrix artifacts are evidence only.
 
