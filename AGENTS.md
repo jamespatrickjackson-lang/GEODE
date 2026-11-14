@@ -50,6 +50,8 @@ APIs.
 
 ## Source Of Truth
 
+- Human repository landing page: `README.md`
+- Stable product/system orientation: `docs/START-HERE.md`
 - Product purpose and alpha boundaries: `docs/00-purpose.md`
 - Scope: `docs/01-scope.md`
 - Architecture and locked stack decisions: `docs/02-architecture.md`
