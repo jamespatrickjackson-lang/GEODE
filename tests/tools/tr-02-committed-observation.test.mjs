@@ -125,3 +125,114 @@ test("TR-02 SceneManager samples runtime scene roots after actual final scene wr
   assert.doesNotMatch(finalizer.slice(finalCommitAt,applyAt),
     /committedGraph:\s*terminalTransitionGraph/);
 });
+
+
+import * as THREE from "three";
+
+test("TR-02 RED follow-up: registered root must reach the active Three.Scene through its parent hierarchy", () => {
+  const scene = new THREE.Scene();
+  const otherScene = new THREE.Scene();
+  const parent = new THREE.Group();
+  const registered = new THREE.Group();
+  parent.add(registered);
+  scene.add(parent);
+  assert.deepEqual(observer.observeSceneRootHierarchy(registered, scene), {
+    attached: true, visible: true,
+  });
+  scene.remove(parent); // still registered in a SceneManager map; no scene ancestor
+  assert.deepEqual(observer.observeSceneRootHierarchy(registered, scene), {
+    attached: false, visible: false,
+  });
+  otherScene.add(parent); // belongs to another scene, not the active one
+  assert.equal(observer.observeSceneRootHierarchy(registered, scene).attached, false);
+});
+
+test("TR-02 RED follow-up: invisible ancestors hide a visible registered child", () => {
+  const scene = new THREE.Scene();
+  const parent = new THREE.Group();
+  const child = new THREE.Group();
+  scene.add(parent);
+  parent.add(child);
+  child.visible = true;
+  parent.visible = false;
+  assert.deepEqual(observer.observeSceneRootHierarchy(child, scene), {
+    attached: true, visible: false,
+  });
+  parent.visible = true;
+  assert.equal(observer.observeSceneRootHierarchy(child, scene).visible, true);
+});
+
+test("TR-02 RED follow-up: logical demo aliases without own roots are UNKNOWN, never known absent", () => {
+  const expected = target("layer:synthetic-demo-alias");
+  const measured = observer.observeTransitionCommitGraph(expected, () => null);
+  const entity = measured.entities[0];
+  assert.equal(entity.presenceCoverage, "unknown");
+  assert.equal(entity.visibilityCoverage, "unknown");
+  assert.equal(entity.presenceState, undefined);
+  const comparison = gate.compareTransitionCommitGraphs({
+    resolvedTargetGraph: expected, committedGraph: measured,
+  });
+  assert.equal(comparison.visibleDeltaCount, 0);
+  assert.ok(comparison.unresolvedCoverage.includes(
+    "committed:layer:synthetic-demo-alias:visibility"));
+  // Integration guard: SceneManager must avoid turning logical aliases into false absences.
+  assert.match(manager, /CASE_STUDY_B_DEMO_LAYER_ALIASES, layerId/);
+});
+
+test("TR-02 RED follow-up: mixed or unsupported CPU materials cannot certify composed renderer opacity", () => {
+  const expected = target();
+  const measured = observer.observeTransitionCommitGraph(expected, () => ({
+    attached: true, visible: true, opacity: 0.34, opacityMeasurement: "cpu-material-proxy",
+  }));
+  const entity = measured.entities[0];
+  assert.equal(entity.observedCpuMaterialOpacity, 0.34);
+  assert.equal(entity.channels.opacity.coverage, "unknown");
+  assert.equal(entity.channels.opacity.value, undefined);
+  const comparison = gate.compareTransitionCommitGraphs({
+    resolvedTargetGraph: expected, committedGraph: measured,
+  });
+  assert.equal(comparison.visibleDeltaCount, 0);
+  assert.ok(comparison.unresolvedCoverage.includes("committed:layer:synthetic-survey:opacity"));
+  assert.ok(comparison.unresolvedCoverage.includes("committed:layer:synthetic-survey:opacity:composed"));
+  // Real observer must pass an explicitly labeled CPU-material proxy, not claim GPU output.
+  assert.match(manager, /opacityMeasurement:\s*"cpu-material-proxy"/);
+});
+
+test("TR-02 RED follow-up: unexpectedly visible registered physical roots are detected as extras", () => {
+  const expected = target();
+  const measured = observer.observeTransitionCommitGraph(
+    expected,
+    (id) => ({
+      attached: true, visible: true, opacity: id === "synthetic-survey" ? 0.8 : 0.4,
+      opacityMeasurement: "cpu-material-proxy",
+    }),
+    () => ["synthetic-survey", "unexpected-visible-layer"],
+  );
+  const extra = measured.entities.find((entity) =>
+    entity.entityKey === "layer:unexpected-visible-layer");
+  assert.ok(extra, "registered visible root absent from target must be captured");
+  assert.equal(extra.presenceState, "visible");
+  const comparison = gate.compareTransitionCommitGraphs({
+    resolvedTargetGraph: expected, committedGraph: measured,
+  });
+  assert.ok(comparison.visibleDeltas.some((delta) =>
+    delta.entityKey === "layer:unexpected-visible-layer" &&
+    delta.phase === "committed-target" && delta.property === "presence"));
+});
+
+test("TR-02 RED follow-up: detached extra roots are not falsely visible and unmanaged inventory is UNKNOWN", () => {
+  const expected = target();
+  const measured = observer.observeTransitionCommitGraph(
+    expected,
+    (id) => id === "detached-extra"
+      ? { attached: false, visible: false, opacity: null }
+      : { attached: true, visible: true, opacity: 0.8 },
+    () => ["synthetic-survey", "detached-extra"],
+  );
+  assert.equal(measured.entities.some((e) => e.entityKey === "layer:detached-extra"), false);
+  const comparison = gate.compareTransitionCommitGraphs({
+    resolvedTargetGraph: expected, committedGraph: measured,
+  });
+  assert.ok(comparison.unresolvedCoverage.includes(
+    "committed:scene-inventory:unmanaged-or-derived-roots"));
+});
