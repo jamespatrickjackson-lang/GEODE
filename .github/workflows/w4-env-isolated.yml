@@ -73,6 +73,18 @@ jobs:
         working-directory: ${{ env.W4_CHECKOUT }}
         run: npm ci
 
+      - name: Set up the same Python test toolchain as existing project CI
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.14'
+
+      - name: Install existing pinned scientific test prerequisites
+        working-directory: ${{ env.W4_CHECKOUT }}
+        run: |
+          set -Eeuo pipefail
+          python --version
+          python -m pip install -r tools/requirements-test.txt
+
       - name: Run configured source checks in the owned full repository
         working-directory: ${{ env.W4_CHECKOUT }}
         run: |
