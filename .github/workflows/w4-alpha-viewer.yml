@@ -198,9 +198,66 @@ jobs:
                 });
                 const early=await inspect();await delay(1400);const later=await inspect();
                 const details={early,later};
-                try{await page.screenshot({path:join(evidence,'viewer-dom-diagnostic.png'),timeout:6000,animations:'disabled'});details.screenshot='PASS'}catch(e){details.screenshot='FAILED '+String(e).slice(0,400)}
+                details.screenshot='SKIPPED in fast DOM follow-up (earlier Chromium screenshot timed out)';
                 console.log('W4_ALPHA_DOM_DIAG='+JSON.stringify(details));
                 return details;
+              });
+              await run('in-app-back-dom',async page=>{
+                await page.goto(base+'/?project=utah-forge',{waitUntil:'domcontentloaded'});
+                await page.getByText('Utah FORGE · Public viewer',{exact:true}).waitFor({timeout:45000});
+                await page.getByRole('button',{name:'Back to examples'}).click({timeout:20000});
+                await page.getByRole('heading',{name:'Explore Utah FORGE'}).waitFor({timeout:15000});
+                assert(!new URL(page.url()).searchParams.has('project'),'In-app Back did not normalize URL');
+                await page.reload({waitUntil:'domcontentloaded'});
+                await page.getByRole('heading',{name:'Explore Utah FORGE'}).waitFor();
+                return {backURL:page.url(),reloadLanding:true};
+              });
+              await run('camera-orbit-zoom-reset-dom',async page=>{
+                await page.goto(base+'/?project=utah-forge',{waitUntil:'domcontentloaded'});
+                await page.getByText('Utah FORGE · Public viewer',{exact:true}).waitFor({timeout:45000});
+                const get=()=>page.evaluate(()=>{const c=window.__scene?.camera;return {pos:c?.position?.toArray?.()||null,controlsEnabled:window.__scene?.controls?.enabled??null,canvasConnected:window.__scene?.renderer?.domElement?.isConnected??false}});
+                const before=await get();
+                assert(before.pos&&before.canvasConnected,'No camera/canvas handle');
+                await page.mouse.move(570,370);
+                await page.mouse.down();
+                await page.mouse.move(740,480,{steps:5});
+                await page.mouse.up();
+                await delay(600);
+                const orbited=await get();
+                await page.mouse.wheel(0,-380);
+                await delay(650);
+                const zoomed=await get();
+                await page.getByRole('button',{name:'Reset view'}).click({timeout:20000});
+                await delay(2100);
+                const reset=await get();
+                const delta=(a,b)=>Math.sqrt(a.reduce((n,x,i)=>n+(x-b[i])**2,0));
+                const details={before,orbited,zoomed,reset,orbitDelta:delta(before.pos,orbited.pos),zoomDelta:delta(orbited.pos,zoomed.pos),resetDelta:delta(before.pos,reset.pos)};
+                assert(details.orbitDelta>0.0001,'Orbit did not change camera');
+                assert(details.zoomDelta>0.0001,'Zoom did not change camera');
+                return details;
+              });
+              await run('synthetic-page-id-dom',async(page,context)=>{
+                const manifest=await (await context.request.get(base+'/projects/utah-forge/project.json')).json();
+                const first=manifest.pageOrder[0];assert(first,'No original page');
+                const original=await (await context.request.get(base+'/projects/utah-forge/pages/'+first+'.json')).json();
+                const newId='w4-alpha-test-owned-synthetic';
+                await page.route('**/projects/utah-forge/project.json',r=>r.fulfill({status:200,contentType:'application/json',body:JSON.stringify({...manifest,pageOrder:[newId],archivedPageOrder:[]})}));
+                await page.route('**/projects/utah-forge/pages/'+newId+'.json',r=>r.fulfill({status:200,contentType:'application/json',body:JSON.stringify({...original,id:newId})}));
+                await page.goto(base+'/?project=utah-forge',{waitUntil:'domcontentloaded'});
+                await page.getByText('Utah FORGE · Public viewer',{exact:true}).waitFor({timeout:45000});
+                const dom=await page.evaluate(()=>({canvasConnected:!!window.__scene?.renderer?.domElement?.isConnected,canvasCount:document.querySelectorAll('canvas').length}));
+                assert(dom.canvasConnected&&dom.canvasCount>0,'Synthetic page ID did not leave a connected canvas');
+                return {id:newId,layerDefinitions:manifest.layers.length,dom,requestsInterceptedOnly:true};
+              });
+              await run('public-layer-and-png-controls-dom',async page=>{
+                await page.goto(base+'/?project=utah-forge',{waitUntil:'domcontentloaded'});
+                await page.getByText('Utah FORGE · Public viewer',{exact:true}).waitFor({timeout:45000});
+                const buttons=await page.getByRole('button').allTextContents();
+                const layerButtons=buttons.filter(x=>/layer|toggle|visibility/i.test(x));
+                const exportButtons=buttons.filter(x=>/png|export|capture|screenshot/i.test(x));
+                if(layerButtons.length===0)status('public-layer-visibility-ui','BLOCKED',{buttons,reason:'Current G1 public shell has no layer visibility control'});
+                if(exportButtons.length===0)status('geoSee-user-png-export','BLOCKED',{buttons,reason:'Current G1 public shell has no PNG export; developer exporter is separate'});
+                return {buttons,connectedCanvas:await page.locator('canvas').count(),layerButtons,exportButtons};
               });
             } else {
             await run('landing',async page=>{
