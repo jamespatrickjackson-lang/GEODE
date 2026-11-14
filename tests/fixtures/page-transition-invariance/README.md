@@ -26,10 +26,11 @@ writer, package script, CI workflow or existing W1-W4 branch was modified.
 | PI-005 last-page deletion guard | PASS | Existing behavior, product policy unresolved |
 | PI-B/E permutations/overrides retain fixture scientific identities | PASS | Fixture contract only, not reducer runtime |
 | PI-F/H scientific data write-path guard | PASS | Restricted source slice; no writer invoked |
-| TR identity permutation, scalar/opacity, material color | PASS | Pure classifier and plan |
+| TR identity permutation, scalar/opacity, categorical/material color, terminal plan | PASS | Pure classifier and plan, not measured final render state |
 | TR section compatibility/dissolve, Section ISO | PASS | Pure section/plan |
 | TR delayed target readiness | PASS | Pure plan |
-| TR-01 live source at multiple progress fractions | PASS | Pure classifier receives explicitly supplied live state |
+| TR page-pair AST mutation control | PASS | Narrow classifier/plan source-only guard, not complete runtime dataflow |
+| TR-01 live source, interrupted reversal at 20/50/80% | PASS | Pure classifier/plan receives explicitly supplied live state; NOT actual renderer continuity |
 | TR-01 real PageController interruption continuity | NOT RUN | Requires instrumented isolated browser/render graph |
 | TR-02 measured-vs-target comparator and unknown coverage | PASS | Pure comparison with synthetic measured samples |
 | TR-02 SceneManager post-commit measured-graph contract | RED | Source guard: known unmeasured committedGraph projection |
