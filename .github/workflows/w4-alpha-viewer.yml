@@ -37,7 +37,7 @@ jobs:
         run: |
           set -Eeuo pipefail
           test "$GITHUB_REF" = "refs/heads/$W4_TEST_BRANCH"
-          test "$(git rev-parse HEAD^)" = "$W4_APP_SHA"
+          test "$(git merge-base "$W4_APP_SHA" "$GITHUB_SHA")" = "$W4_APP_SHA"
           test "$(git diff --name-only "$W4_APP_SHA" "$GITHUB_SHA")" = ".github/workflows/w4-alpha-viewer.yml"
           remote_sha="$(git ls-remote "$W4_REMOTE" "refs/heads/$W4_APP_BRANCH" | cut -f1)"
           test "$remote_sha" = "$W4_APP_SHA"
