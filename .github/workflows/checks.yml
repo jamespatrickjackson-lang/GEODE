@@ -21,6 +21,9 @@ jobs:
       # Blocking — currently green:
       - run: npm run check:routes
       - run: npm run check:mirror
+      # Validates 61 preserved source groups and the staged Claude contract state.
+      # check:mirror stays active until the actual adapter switchover.
+      - run: npm run check:agent-contracts
       - run: npm run check:editor-controls
       - run: npm run check:agent-drag
       - run: npm run check:pages
