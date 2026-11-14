@@ -2179,9 +2179,9 @@ function reducer(state: EditorState, action: EditorAction): EditorState {
   }
 }
 
-function newPageId(existingIds: string[]): string {
+function newPageId(existingIds: string[], reservedIds: Iterable<string> = []): string {
   let maxN = 0;
-  for (const id of existingIds) {
+  for (const id of [...existingIds, ...reservedIds]) {
     const m = /^(\d+)_/.exec(id);
     if (m) maxN = Math.max(maxN, parseInt(m[1], 10));
   }
@@ -2404,6 +2404,18 @@ export function EditorProvider({
   // in EditorRoot trigger it; nothing fires automatically. The reducer
   // and per-entity dispatchers still set dirty bits exactly as before.
   const deletedPageIdsRef = useRef<Set<string>>(new Set());
+  // Reserve IDs synchronously because stateRef may lag consecutive ADD_PAGE dispatches.
+  // Keep issued IDs for this editor session so deferred deletes cannot recycle paths.
+  const issuedPageIdsRef = useRef<Set<string>>(new Set());
+  const reserveNewPageId = useCallback((): string => {
+    const cur = stateRef.current;
+    const id = newPageId(
+      allEditablePages(cur).map((page) => page.id),
+      [...deletedPageIdsRef.current, ...issuedPageIdsRef.current],
+    );
+    issuedPageIdsRef.current.add(id);
+    return id;
+  }, []);
 
   const commitPending = useCallback(async () => {
     const cur = stateRef.current;
@@ -3537,7 +3549,7 @@ export function EditorProvider({
   const addPage = useCallback<EditorContextValue["addPage"]>(
     (basePose) => {
       const cur = stateRef.current;
-      const id = newPageId(allEditablePages(cur).map((p) => p.id));
+      const id = reserveNewPageId();
       const page: PresentationPage = {
         id,
         title: "New page",
@@ -3551,7 +3563,7 @@ export function EditorProvider({
       dispatch({ type: "ADD_PAGE", page });
       return id;
     },
-    [],
+    [reserveNewPageId],
   );
 
   const duplicatePageById = useCallback<
@@ -3561,7 +3573,7 @@ export function EditorProvider({
       const cur = stateRef.current;
       const source = findEditablePage(cur, pageId);
       if (!source) return null;
-      const id = newPageId(allEditablePages(cur).map((p) => p.id));
+      const id = reserveNewPageId();
       const page: PresentationPage = {
         ...rewriteOverlayForDuplicate(source, source.id, id),
         id,
@@ -3583,7 +3595,7 @@ export function EditorProvider({
       );
       return id;
     },
-    [],
+    [reserveNewPageId],
   );
 
   const deletePageById = useCallback<EditorContextValue["deletePageById"]>(
@@ -3654,7 +3666,7 @@ export function EditorProvider({
   const addSubMaster = useCallback<EditorContextValue["addSubMaster"]>(
     (basePose) => {
       const cur = stateRef.current;
-      const id = newPageId(allEditablePages(cur).map((p) => p.id));
+      const id = reserveNewPageId();
       const ordinal = nextSubMasterOrdinal(allEditablePages(cur));
       const envSnapshot = clone(cur.environment);
       const page: PresentationPage = {
@@ -3670,7 +3682,7 @@ export function EditorProvider({
       dispatch({ type: "ADD_SUB_MASTER", page });
       return id;
     },
-    [],
+    [reserveNewPageId],
   );
 
   const addSubMasterChild = useCallback<
@@ -3679,7 +3691,7 @@ export function EditorProvider({
     const cur = stateRef.current;
     const parent = findEditablePage(cur, parentMasterId);
     if (!parent || !isSubMasterPage(parent)) return null;
-    const id = newPageId(allEditablePages(cur).map((p) => p.id));
+    const id = reserveNewPageId();
     const page: PresentationPage = {
       id,
       title: "New child",
@@ -3690,7 +3702,7 @@ export function EditorProvider({
     };
     dispatch({ type: "ADD_SUB_MASTER_CHILD", page });
     return id;
-  }, []);
+  }, [reserveNewPageId]);
 
   const makePageSubMaster = useCallback<
     EditorContextValue["makePageSubMaster"]
@@ -3704,7 +3716,7 @@ export function EditorProvider({
     const cur = stateRef.current;
     const source = findEditablePage(cur, pageId);
     if (!source || !isSubMasterPage(source)) return null;
-    const id = newPageId(allEditablePages(cur).map((p) => p.id));
+    const id = reserveNewPageId();
     const page: PresentationPage = {
       ...rewriteOverlayForDuplicate(source, source.id, id),
       id,
@@ -3727,7 +3739,7 @@ export function EditorProvider({
       overlayText,
     );
     return id;
-  }, []);
+  }, [reserveNewPageId]);
 
   const reSnapshotSubMaster = useCallback<
     EditorContextValue["reSnapshotSubMaster"]
