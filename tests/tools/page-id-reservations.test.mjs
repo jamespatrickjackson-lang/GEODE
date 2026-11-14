@@ -85,7 +85,8 @@ test("PI-004: page deletion leaves layer registry, scientific references and pro
   assert.match(deletion, /manifest\.pageOrder\s*=/);
   assert.match(deletion, /manifest\.archivedPageOrder\s*=/);
   assert.doesNotMatch(deletion, /manifest\.layers\s*=|delete\s+manifest\.layers|removeProjectLayer\(|sourceId\s*=|provenance\s*=/);
-  assert.match(deletion, /activeTarget\s*&&\s*state\.pages\.length\s*<=\s*1/, "Keep PI-005 separate");
+  assert.doesNotMatch(deletion, /activeTarget\s*&&\s*state\.pages\.length\s*<=\s*1/, "PI-005 now permits zero authored pages");
+  assert.match(deletion, /ENVIRONMENT_SENTINEL/, "Deleting the final page returns to Global Settings");
 });
 
 test("PI-004: manual-save page paths remain separate from scientific source files (static)", () => {

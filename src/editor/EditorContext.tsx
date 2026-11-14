@@ -1482,8 +1482,6 @@ function reducer(state: EditorState, action: EditorAction): EditorState {
       };
     }
     case "DELETE_PAGE": {
-      const activeTarget = state.pages.some((p) => p.id === action.pageId);
-      if (activeTarget && state.pages.length <= 1) return state;
       const manifest = clone(state.manifest);
       manifest.pageOrder = manifest.pageOrder.filter(
         (id) => id !== action.pageId,
@@ -1497,7 +1495,7 @@ function reducer(state: EditorState, action: EditorAction): EditorState {
       );
       const selectedPageId =
         state.selectedPageId === action.pageId
-          ? pages[0]?.id ?? null
+          ? pages[0]?.id ?? ENVIRONMENT_SENTINEL
           : state.selectedPageId;
       return {
         ...state,
@@ -1653,7 +1651,6 @@ function reducer(state: EditorState, action: EditorAction): EditorState {
       };
     }
     case "ARCHIVE_PAGE": {
-      if (state.pages.length <= 1) return state;
       const source = state.pages.find((p) => p.id === action.pageId);
       if (!source) return state;
       const manifest = clone(state.manifest);
@@ -1684,7 +1681,7 @@ function reducer(state: EditorState, action: EditorAction): EditorState {
         manifest,
         pages,
         archivedPages,
-        selectedPageId: source.id,
+        selectedPageId: pages.length === 0 ? ENVIRONMENT_SENTINEL : source.id,
         dirty: withDirty(state.dirty, "project"),
       };
     }
@@ -2013,7 +2010,6 @@ function reducer(state: EditorState, action: EditorAction): EditorState {
         .filter((p) => p.parentMasterId === target.id)
         .map((p) => p.id);
       const blockIds = new Set([target.id, ...childIds]);
-      if (state.pages.filter((p) => !blockIds.has(p.id)).length < 1) return state;
       const oldIdxOfFirstBlockMember = state.manifest.pageOrder.findIndex(
         (id) => blockIds.has(id),
       );
@@ -2031,7 +2027,7 @@ function reducer(state: EditorState, action: EditorAction): EditorState {
       const fallbackSelected =
         previousId && pages.some((p) => p.id === previousId)
           ? previousId
-          : pages[0]?.id ?? null;
+          : pages[0]?.id ?? ENVIRONMENT_SENTINEL;
       const currentSelected = state.selectedPageId;
       const selectedPageId =
         typeof currentSelected === "string" && blockIds.has(currentSelected)
@@ -3622,8 +3618,6 @@ export function EditorProvider({
     (pageId) => {
       const cur = stateRef.current;
       if (!findEditablePage(cur, pageId)) return;
-      const activeTarget = cur.pages.some((page) => page.id === pageId);
-      if (activeTarget && cur.pages.length <= 1) return;
       deletedPageIdsRef.current.add(pageId);
       dispatch({ type: "DELETE_PAGE", pageId });
     },
@@ -3779,7 +3773,6 @@ export function EditorProvider({
         .filter((p) => p.parentMasterId === pageId)
         .map((p) => p.id)],
     );
-    if (cur.pages.filter((p) => !blockIds.has(p.id)).length < 1) return;
     // Track every id touched so commitPending can clean up the orphaned
     // page files on disk (same convention as deletePageById).
     for (const id of blockIds) {

@@ -22,7 +22,8 @@ import type {
 import type { Pose } from "./types";
 import type { SceneHandle, SceneTargetBox, SceneTargetEventDetail } from "../scene";
 import { CameraTweener } from "./cameraTween";
-import { applyPose } from "./capturePose";
+import { applyPose, capturePose } from "./capturePose";
+import { ENVIRONMENT_SENTINEL } from "../editor/types";
 import {
   clearCapturePageSourcePreviewDebugState,
   resolveCapturePageSourcePreview,
@@ -977,6 +978,22 @@ function lastVisiblePageIndex(pages: PresentationPage[]): number {
   return -1;
 }
 
+// An ephemeral adapter for scene APIs accepting a PresentationPage delta.
+// This view is NEVER inserted in pageOrder, saved to pages/*.json, or presented
+// as an authored page. Global layers and overlays inherit the environment.
+function globalEnvironmentView(environment: EnvironmentSetup, pose: Pose): PresentationPage {
+  return {
+    id: ENVIRONMENT_SENTINEL,
+    title: "Global Settings",
+    camera: pose,
+    transition: { duration: 0, easing: "easeInOutCubic" },
+    holdDuration: 0,
+    sceneOverlays: Object.entries(environment.sceneOverlays ?? {})
+      .filter(([, definition]) => definition.enabled !== false)
+      .map(([id]) => ({ id, visible: true })),
+  };
+}
+
 export function PageControllerProvider({
   pages,
   authoringPages,
@@ -1922,21 +1939,32 @@ export function PageControllerProvider({
     const tweener = new CameraTweener(camera, controls);
     tweenerRef.current = tweener;
 
-    // Snap to first page (the establishing shot per #023): pose, effective
-    // visibility, effective styling, per-page mood, scene overlays.
-    const first = pages[0];
-    const firstResolved = resolvePresentationState(first);
-    const firstPose = poseWithEnvironmentCamera(
-      firstResolved.page.camera,
-      firstResolved.environment,
-    );
-    applyPose(camera, controls, firstPose);
+    // Start in the project environment when Global Settings is selected,
+    // even if authored presentation pages exist. Zero pages is also valid.
+    const first = previewEnvironmentBase ? null : (pages[0] ?? null);
+    const firstResolved = first
+      ? resolvePresentationState(first)
+      : { environment, page: globalEnvironmentView(environment, capturePose(camera, controls)) };
+    const firstPose = first
+      ? poseWithEnvironmentCamera(firstResolved.page.camera, firstResolved.environment)
+      : firstResolved.page.camera;
+    if (first) {
+      applyPose(camera, controls, firstPose);
+    } else {
+      const globalFov = environment.scene?.camera?.fov;
+      if (typeof globalFov === "number") {
+        camera.fov = globalFov;
+        camera.updateProjectionMatrix();
+        firstPose.fov = globalFov;
+      }
+      manager.applyEnvironment(environment);
+    }
     arrivalPoseRef.current = firstPose;
     dynamicBasePoseRef.current = firstPose;
     dynamicPageIdRef.current = null;
     dynamicStartMsRef.current = null;
     dynamicOrbitBlendMsRef.current = null;
-    currentCameraKeyRef.current = `${first.id}:${poseKey(first.camera)}`;
+    currentCameraKeyRef.current = first ? `${first.id}:${poseKey(first.camera)}` : null;
     manager.applyEffectiveVisibilityForPage(
       firstResolved.environment,
       firstResolved.page,
@@ -1950,7 +1978,7 @@ export function PageControllerProvider({
       firstResolved.environment,
       firstResolved.page,
     );
-    if (first.cameraObjectFocus) {
+    if (first?.cameraObjectFocus) {
       const resolvedTarget = sceneHandle.resolveSceneTarget(
         first.cameraObjectFocus.targetId,
       );
@@ -2324,7 +2352,9 @@ export function PageControllerProvider({
           (page) => page.id === authoringPreviewPageId,
         ) ?? null
       : null;
-  const currentPageForReapply = authoringPreviewPage ?? pages[currentIndex];
+  const currentPageForReapply = previewEnvironmentBase
+    ? null
+    : authoringPreviewPage ?? pages[currentIndex];
   const resolvedEnvForReapply = useMemo(
     () =>
       currentPageForReapply
@@ -2341,8 +2371,27 @@ export function PageControllerProvider({
               (page) => page.id === authoringPreviewPageId,
             )
           : null;
-      const page = previewPage ?? pagesRef.current[currentIndexRef.current];
-      if (!page) return;
+      const page = previewPage ??
+        (previewEnvironmentBase ? null : pagesRef.current[currentIndexRef.current]);
+      if (!page) {
+        if (isTransitioningRef.current) return;
+        const env = environmentRef.current;
+        const globalPage = globalEnvironmentView(
+          env,
+          capturePose(sceneHandle.camera, sceneHandle.controls),
+        );
+        sceneHandle.manager.applyEnvironment(env);
+        sceneHandle.manager.applyEffectiveVisibilityForPage(env, globalPage);
+        sceneHandle.manager.applyEffectiveStylesForPage(env, globalPage);
+        sceneHandle.manager.applyPageScene(globalPage);
+        sceneHandle.manager.applySceneOverlaysForPage(env, globalPage);
+        const globalFov = env.scene?.camera?.fov;
+        if (typeof globalFov === "number" && sceneHandle.camera.fov !== globalFov) {
+          sceneHandle.camera.fov = globalFov;
+          sceneHandle.camera.updateProjectionMatrix();
+        }
+        return;
+      }
       if (isTransitioningRef.current) {
         return;
       }
@@ -2411,7 +2460,7 @@ export function PageControllerProvider({
         }
       }
     },
-    [authoringPreviewPageId, resolvePresentationState, sceneHandle],
+    [authoringPreviewPageId, previewEnvironmentBase, resolvePresentationState, sceneHandle],
   );
 
   const applyCapturePageSourceNow = useCallback(
