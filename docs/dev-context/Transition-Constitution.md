@@ -17,7 +17,7 @@ Continuity Contract clauses remain proposals unless separately accepted.
 2. `docs/dev-context/Transition-Continuity-Contract.md`.
 3. `docs/dev-context/Transition-Decision-Log.md`.
 4. `docs/dev-context/Transition-Guardrails.md`.
-5. `docs/dev-context/Transition-Page-Fixture-Evidence-Register-2026-05-31.md`.
+5. `docs/dev-context/Transition-Page-Fixture-Evidence-Register-2026-05-31.md` (historical missing-public-source reference; not an available pre-read or a current authority).
 6. `docs/dev-context/Transition-Implementation-Changelog.md`.
 7. Historical prep/audit logs and generated artifacts.
 
