@@ -1,9 +1,16 @@
-﻿# GeoSee Agent Operating Contract â€” Codex CLI
+﻿# GeoSee / GEODE Agent Operating Contract — Shared Engineering Instructions
 
-This file is the operating contract for Codex CLI and other agent runtimes
-that auto-load `AGENTS.md`. Claude Code reads `CLAUDE.md` instead; the two
-files mirror each other. Source of truth is `CLAUDE.md` â€” update both when
-either changes.
+This is the provider-neutral engineering contract for agents working in this
+repository. Read the relevant scoped `AGENTS.md` before changing its subtree.
+A provider-specific entry file such as `CLAUDE.md` is not intended to own
+separate engineering policy.
+
+**Migration boundary:** The existing root and nested `CLAUDE.md` files still
+contain substantive original instructions and remain unchanged during this
+review stage. Do not shrink, remove, or replace those instructions until every
+unique rule is preserved and provider loading is verified. The migration plan
+and unresolved holds are recorded in
+`docs/dev-context/Agent-Instruction-Consolidation-Plan.md`.
 
 ## First Read
 
@@ -14,6 +21,18 @@ source files directly relevant to the task.
 Do not route through old receipt archives, screenshots, staged-intake
 records, or older root docs unless the task explicitly needs audit history,
 verification evidence, intake/drop review, or visual QA evidence.
+
+For work under a scoped area, also read its shared instructions **before**
+changing files in that area:
+
+- `projects/AGENTS.md`: project authoring, bulk scientific data and provenance.
+- `src/editor/AGENTS.md`: editor controls, persistence, UI and safe edits.
+- `src/scene/AGENTS.md`: Three.js runtime, loaders, opacity and transitions.
+- `docs/AGENTS.md`: documentation evidence, decisions, source rights and claims.
+
+Read these explicitly if the current agent runtime does not automatically
+discover nested instructions. Do not assume all providers load the same files
+or that an abbreviated scoped rule supersedes its detailed technical owner.
 
 ## Output Rail
 
@@ -41,6 +60,12 @@ APIs.
 - Editor sidebar control manifest and approval policy:
   `docs/dev-context/editor-control-manifest.json` and
   `docs/dev-context/Editor-Control-Manifest-Policy.md`
+- Page transitions and section-frame helpers:
+  `docs/dev-context/Page-Transitions-And-Section-Frames.md`
+- Editor feature completion and user-facing field exposure:
+  `docs/06-editor-exposure-rules.md`
+- Public-release, provenance and third-party data rights:
+  `docs/LICENSING.md`
 
 ## Workspace Rules
 
@@ -145,7 +170,7 @@ following paths unless the task explicitly requires them:
 - `data/**` â€” root vector data (includes `hydrography_streams.geojson`
   at 17 MB).
 - `dist/**`, `dist-tsbuild/**`, `node_modules/**` â€” build output and
-  dependencies.
+  dependencies; gitignored files may still be reachable by some Glob/file-discovery tools.
 - `docs/dev-context/Archive/**`,
   `docs/dev-context/Change-Receipts/**`,
   `docs/dev-context/Verification-Receipts/**`,
