@@ -6,6 +6,16 @@ landing page, `docs/START-HERE.md` is stable product/system orientation, and
 
 ## First Read
 
+Before selecting a GEODE / GeoSee assignment or editing the repository,
+consult the [canonical GEODE / GeoSee Notion workstream and authority manifest](https://app.notion.com/p/418fb09932768139b693dbf2b5a191aa) for the
+approved product scope, W1–W4 owning records, decisions, current holds and
+workstream boundaries. Check live GitHub branch and commit against the owner
+record. This external manifest is the single project-level onboarding route;
+it does not override this file's provider instructions or grant edit, merge,
+or release approval. Historical or exploratory cross-domain GEODE OSS V2
+material is not active GeoSee requirements. If project authority cannot be
+verified, report the uncertainty rather than acting on stale entry guidance.
+
 For normal software-build work, start with
 `docs/dev-context/Active-Build-Context.md`, then open only the docs and source
 files directly relevant to the task.
