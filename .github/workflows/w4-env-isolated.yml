@@ -1,0 +1,185 @@
+# TEMPORARY W4-ENV #9 isolated infrastructure verification; do not merge or deploy.
+# Owner authorization: https://github.com/jamespatrickjackson-lang/GEODE/issues/9#issuecomment-6882412051
+name: W4-ENV isolated static preflight (temporary)
+on:
+  push:
+    branches:
+      - test/w4-env-isolated-preflight
+permissions:
+  contents: read
+concurrency:
+  group: w4-env-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  isolated-preflight:
+    if: github.repository == 'jamespatrickjackson-lang/GEODE'
+    # Playwright 1.60 Chromium installer does not support Ubuntu 26.04 (ubuntu-latest).
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    env:
+      W4_EXPECTED_SHA: ${{ github.sha }}
+      W4_BRANCH: test/w4-env-isolated-preflight
+      W4_REMOTE: https://github.com/jamespatrickjackson-lang/GEODE.git
+
+    steps:
+      - name: Bootstrap W4's existing sandbox creator (not the test checkout)
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+
+      - name: Use locked Node.js toolchain
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Verify runner, remote and independent scratch ownership
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          echo "RUNNER_OS=$RUNNER_OS RUNNER_NAME=$RUNNER_NAME RUNNER_TEMP=$RUNNER_TEMP"
+          uname -a
+          git --version
+          node --version
+          npm --version
+          echo "EVENT_SHA=$GITHUB_SHA EXPECTED_BRANCH=$W4_BRANCH"
+          test "$GITHUB_REF" = "refs/heads/$W4_BRANCH"
+          test "$GITHUB_SHA" = "$W4_EXPECTED_SHA"
+          remote_sha="$(git ls-remote "$W4_REMOTE" "refs/heads/$W4_BRANCH" | cut -f1)"
+          test -n "$remote_sha"
+          test "$remote_sha" = "$GITHUB_SHA"
+          echo "REMOTE_HEAD=$remote_sha"
+          node tools/w4/create-sandbox.mjs > "$RUNNER_TEMP/w4-created-sandbox.json"
+          sandbox="$(node -p "JSON.parse(require('fs').readFileSync(process.argv[1], 'utf8')).sandbox" "$RUNNER_TEMP/w4-created-sandbox.json")"
+          test -n "$sandbox"
+          test -d "$sandbox/evidence"
+          test ! -e "$sandbox/checkout"
+          echo "W4_SANDBOX=$sandbox" >> "$GITHUB_ENV"
+          echo "W4_CHECKOUT=$sandbox/checkout" >> "$GITHUB_ENV"
+          echo "OWNED_SANDBOX=$sandbox"
+          git clone --branch "$W4_BRANCH" --single-branch "$W4_REMOTE" "$sandbox/checkout"
+          test "$(git -C "$sandbox/checkout" rev-parse HEAD)" = "$GITHUB_SHA"
+          node "$sandbox/checkout/tools/w4/verify-isolated-checkout.mjs" "$sandbox" "$sandbox/checkout" "$GITHUB_SHA"
+          # This is a real Git clone, not the bootstrap actions/checkout or a reconstructed archive.
+
+      - name: Run the checked-in nine W4 isolation guard tests
+        working-directory: ${{ env.W4_CHECKOUT }}
+        run: |
+          set -Eeuo pipefail
+          node --check tools/w4/guard-core.mjs
+          node --test tests/w4/w4-env-guard.test.mjs 2>&1 | tee "$W4_SANDBOX/evidence/synthetic-guard.tap"
+
+      - name: Install locked dependencies only inside W4 checkout
+        working-directory: ${{ env.W4_CHECKOUT }}
+        run: npm ci
+
+      - name: Set up the same Python test toolchain as existing project CI
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.14'
+
+      - name: Install existing pinned scientific test prerequisites
+        working-directory: ${{ env.W4_CHECKOUT }}
+        run: |
+          set -Eeuo pipefail
+          python --version
+          python -m pip install -r tools/requirements-test.txt
+
+      - name: Run configured source checks in the owned full repository
+        working-directory: ${{ env.W4_CHECKOUT }}
+        run: |
+          set -Eeuo pipefail
+          npm run check:routes
+          npm run check:mirror
+          npm run check:editor-controls
+          npm run check:agent-drag
+          npm run check:pages
+          npm run check:runtime-assets
+          npm run test:tools
+
+      - name: Build production static app inside the isolated checkout
+        working-directory: ${{ env.W4_CHECKOUT }}
+        run: npm run build
+
+      - name: Install fresh Playwright Chromium and required OS libraries
+        working-directory: ${{ env.W4_CHECKOUT }}
+        run: |
+          set -Eeuo pipefail
+          npx playwright --version
+          npx playwright install --with-deps chromium
+
+      - name: Allocate exclusive loopback candidate and verify Chromium runtime
+        working-directory: ${{ env.W4_CHECKOUT }}
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node tools/w4/allocate-strict-port.mjs > "$W4_SANDBOX/evidence/port-allocation.txt"
+          cat "$W4_SANDBOX/evidence/port-allocation.txt"
+          port="$(sed -n 's/^W4_PORT=\([0-9]*\)$/\1/p' "$W4_SANDBOX/evidence/port-allocation.txt")"
+          test -n "$port"
+          echo "W4_PORT=$port" >> "$GITHUB_ENV"
+          node --input-type=module <<'JS'
+          import { chromium } from '@playwright/test';
+          import { writeFileSync } from 'node:fs';
+          import { join } from 'node:path';
+          const browser = await chromium.launch({ headless: true });
+          try {
+            const context = await browser.newContext();
+            const page = await context.newPage();
+            await page.goto('data:text/html,<title>W4-owned-browser-check</title>');
+            const receipt = {
+              kind: 'w4-env-fresh-browser-probe',
+              version: browser.version(),
+              userAgent: await page.evaluate(() => navigator.userAgent),
+              pageTitle: await page.title(),
+              processPid: process.pid,
+              checkedAt: new Date().toISOString()
+            };
+            writeFileSync(join(process.env.W4_SANDBOX, 'evidence', 'chromium-probe.json'),
+              JSON.stringify(receipt, null, 2) + '\n', { flag: 'wx', mode: 0o600 });
+            console.log(JSON.stringify(receipt));
+            await context.close();
+          } finally { await browser.close(); }
+          JS
+
+      - name: Run ONLY approved W4 static-production HTTP smoke
+        working-directory: ${{ env.W4_CHECKOUT }}
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          npx playwright test -c playwright.w4.config.ts --workers=1 --reporter=line 2>&1 | tee "$W4_SANDBOX/evidence/static-browser-smoke.log"
+
+      - name: Verify W4-owned preview teardown and every tracked/fixture hash
+        if: always() && env.W4_SANDBOX != '' && env.W4_CHECKOUT != ''
+        shell: bash
+        working-directory: ${{ env.W4_CHECKOUT }}
+        run: |
+          set -Eeuo pipefail
+          receipt="$W4_SANDBOX/evidence/preview-process.json"
+          if test -f "$receipt"; then
+            pid="$(node -p "JSON.parse(require('fs').readFileSync(process.argv[1], 'utf8')).pid" "$receipt")"
+            echo "W4_PREVIEW_PID=$pid"
+            for i in $(seq 1 20); do
+              if ! kill -0 "$pid" 2>/dev/null; then break; fi
+              sleep 1
+            done
+            if kill -0 "$pid" 2>/dev/null; then
+              echo "::error::Owned preview PID is still present after Playwright teardown; refuse false-green" >&2
+              exit 1
+            fi
+            echo "W4_PREVIEW_TEARDOWN=PASS"
+          else
+            echo "::warning::No W4 preview receipt was created; no teardown success asserted"
+          fi
+          node tools/w4/check-worktree-integrity.mjs "$W4_SANDBOX" "$W4_CHECKOUT"
+
+      - name: Upload bounded W4-only evidence for owner review
+        if: always() && env.W4_SANDBOX != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: w4-env-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ env.W4_SANDBOX }}/evidence/
+          if-no-files-found: warn
+          retention-days: 1
+          compression-level: 6

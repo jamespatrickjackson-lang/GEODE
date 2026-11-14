@@ -1,0 +1,6 @@
+{
+  "kind": "w4-synthetic-fixture-inventory-v1",
+  "sha256": {
+    "tests/w4/fixtures/synthetic-example.geojson": "1bdb5582c73905ac63fd93e3283e117d57835573aeac51af59fceb028fa6f96a"
+  }
+}
