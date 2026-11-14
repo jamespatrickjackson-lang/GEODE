@@ -4,20 +4,20 @@
 
 **Status: Research and software-development alpha**
 
-GeoSee is the working geoscience application in the GEODE repository. It began as a technical capabilities demonstration that brought geological, geophysical, geographic and survey information together in an interactive 3D environment. It is being retooled for free public geoscience use, with the future goal of enabling geoscientists, researchers and educators to bring supported data into projects, explore spatial relationships and communicate results.
+GeoSee is an open-source platform for visualizing and exploring geological, geophysical, geographic and subsurface data in an interactive 3D environment. By bringing diverse sources of information into a shared spatial context, GeoSee enables users to examine relationships between datasets, explore complex geological environments and communicate geoscientific information more effectively.
 
 The present application includes substantial viewing, layer control, authoring, presentation and capture code, but **it is not yet a general-purpose bring-your-own-data tool** or a validated engineering measurement system. The separate exploratory cross-domain GEODE OSS V2 concept is not the current product scope.
 
 ## Current application architecture
 
-GeoSee is one **React, TypeScript, Three.js and Vite** browser application with an enumerated project catalog. Its main components are:
+The current GeoSee alpha is built with **Vite, React, TypeScript and Three.js**. It loads its included geoscience projects and, in a local development environment, supports editing pages and overlays through file-writing endpoints. **It does not yet provide a production project-saving backend, independent new-project generation or general raw-file importing.** On the landing page, **Add New Project** opens the existing **Base GUI** template rather than creating a standalone project. Its main components are:
 
 - **Project and page configuration:** project-specific JSON manifests, environments, page states, overlays, layer definitions and coordinate context.
 - **Scientific preparation and loading:** selected source formats are processed offline into browser-ready imagery, geometry, sections, tiles, scalar volumes and metadata. Project-aware loaders read these artifacts; they are not a universal import SDK.
 - **Interactive scene:** Three.js scene/layer management, navigation, styles, visibility, section controls and visual presentation.
 - **Editor, presenter and capture:** authored camera/page state, presentation transitions, camera paths, still-image and conditional recording/render routes.
 
-The application currently has **no production backend**. The local development server provides file-writing endpoints for editor saves; a static deployment does not include a comparable authenticated project-file persistence service. Saves are not fully transactional. See [the as-built architecture](docs/02-architecture.md).
+**Saving limitation:** Local development saves are not fully transactional; static deployments do not provide an authenticated project-file persistence service. See [the as-built architecture](docs/02-architecture.md).
 
 ## Scientific data and current capabilities
 
@@ -41,7 +41,7 @@ See the [dataset map and provenance notes](docs/dev-context/Dataset-Map.md) for 
 - **Utah FORGE:** public terrain and imagery, MT station and model-derived resistivity representations, offline-prepared seismic products, wells, logs, sections and layered scientific visualizations. Its declared coordinate frame does not establish verified registration; some legacy seismic lines use approximate fallback placement.
 - **Woodjam:** terrain, drilling and assay/lithology representations, geology, soil/geochemical samples, survey footprints and geographic context. Certain target/anomaly overlays are interpretations, not verified measurements.
 - **Shahbazi Gravel Pit:** TLS/UAV and photogrammetric prepared previews, point tiles, separate interpolated surfaces, contours, camera/GCP context and projected photography. Preview geometry and photos are not a calibrated final survey, orthomosaic, completed Potree stream or accepted quarry-volume calculation.
-- **Base GUI:** a development/editing template for shared interface and environment defaults, not an independently generated geoscience project. The current **Add New Project** action opens this existing template; it does not create a new self-contained user project.
+- **Base GUI:** a development/editing template for shared interface and environment defaults, not an independently generated geoscience project.
 
 ## Example visualizations
 
