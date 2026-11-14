@@ -120,3 +120,18 @@ test("PI-004 permanent: synthetic on-disk Save/reopen retains issued history and
     rmSync(root, { recursive: true, force: true });
   }
 });
+
+
+test("PI-004 archive: a prior archive must never be overwritten with different bytes", async () => {
+  const archiveModule = await import("data:text/javascript;base64," + Buffer.from(
+    transpile(extract("shouldWritePageArchive"), ["shouldWritePageArchive"]),
+  ).toString("base64"));
+  const mayWrite = archiveModule.shouldWritePageArchive;
+  assert.equal(mayWrite(null, '{"id":"p_fresh"}', "p_fresh"), true);
+  assert.equal(mayWrite('{"id":"p_same"}', '{"id":"p_same"}', "p_same"), false);
+  assert.throws(
+    () => mayWrite('{"id":"01_page","original":true}', '{"id":"01_page","different":true}', "01_page"),
+    /archive.*01_page.*already exists/i,
+  );
+  assert.match(editor, /shouldWritePageArchive\(existingArchive, content, id\)/);
+});
