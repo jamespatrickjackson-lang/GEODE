@@ -17,6 +17,7 @@ jobs:
       W4_APP_BRANCH: feat/w3-g1-01-public-landing
       W4_REMOTE: https://github.com/jamespatrickjackson-lang/GEODE.git
       W4_TEST_BRANCH: test/w4-alpha-g101-20261114
+      W4_ALPHA_DIAGNOSTIC_ONLY: 'true'
     steps:
       - name: Bootstrap test-only workflow
         uses: actions/checkout@v4
@@ -185,6 +186,23 @@ jobs:
             report.browser.webgl=await probe.evaluate(()=>{const c=document.createElement('canvas');return Boolean(c.getContext('webgl2')||c.getContext('webgl'))});
             await probe.close();
             console.log('W4_ALPHA_BROWSER='+JSON.stringify(report.browser));
+            if(process.env.W4_ALPHA_DIAGNOSTIC_ONLY==='true') {
+              await run('public-viewer-dom-diagnostic',async page=>{
+                page.on('pageerror',err=>{if(report.consoleErrors.length<80)report.consoleErrors.push({name:'public-viewer-dom-diagnostic',message:String(err).slice(0,750)})});
+                await page.goto(base+'/?project=utah-forge',{waitUntil:'domcontentloaded'});
+                await page.getByText('Utah FORGE · Public viewer',{exact:true}).waitFor({timeout:45000});
+                const inspect=()=>page.evaluate(()=>{
+                  const canvases=Array.from(document.querySelectorAll('canvas')).map(c=>({connected:c.isConnected,width:c.width,height:c.height,clientWidth:c.clientWidth,clientHeight:c.clientHeight,rect:(()=>{const b=c.getBoundingClientRect();return {x:b.x,y:b.y,width:b.width,height:b.height}})()}));
+                  const s=window.__scene;
+                  return {url:location.href,ready:document.readyState,canvasCount:canvases.length,canvases,scenePresent:!!s,rendererCanvasConnected:!!s?.renderer?.domElement?.isConnected,rendererCanvasOuter:s?.renderer?.domElement?.outerHTML?.slice(0,400)||null,rootMarkup:document.getElementById('root')?.innerHTML?.slice(0,900)||null,errors:Array.from(document.querySelectorAll('[role="alert"]')).map(x=>x.textContent),bodyText:document.body?.innerText?.slice(0,600)||null};
+                });
+                const early=await inspect();await delay(1400);const later=await inspect();
+                const details={early,later};
+                try{await page.screenshot({path:join(evidence,'viewer-dom-diagnostic.png'),timeout:6000,animations:'disabled'});details.screenshot='PASS'}catch(e){details.screenshot='FAILED '+String(e).slice(0,400)}
+                console.log('W4_ALPHA_DOM_DIAG='+JSON.stringify(details));
+                return details;
+              });
+            } else {
             await run('landing',async page=>{
               await page.goto(base+'/',{waitUntil:'domcontentloaded'});
               await page.getByRole('heading',{name:'Explore Utah FORGE'}).waitFor();
@@ -325,6 +343,7 @@ jobs:
               if(!hasExport)status('user-png-export','BLOCKED',{buttons,reason:'No public PNG/capture export control; browser screenshot is NOT GeoSee export'});
               return {buttons,hasLayerToggle,hasExport,playwrightScreenshot:png};
             });
+            }
           }catch(e){
             report.fatal=String(e?.stack||e).slice(0,2400);
             status('harness-or-browser-start','FAIL',report.fatal);
