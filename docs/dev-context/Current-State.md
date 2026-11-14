@@ -1,12 +1,14 @@
 # Current State
 
+**Historical snapshot:** This document records an earlier May–June 2026 state review. Sections using “current” describe the state observed at that time, not an authoritative November 2026 backlog or a command to revive retired workflows. For current work, consult `docs/dev-context/Active-Build-Context.md`, accepted decisions and observed source/tests; independently verify any old status before acting.
+
 ## Authority
 
 - Observed: This file is a docs/dev-context population record, not accepted scope, not app runtime, and not official DHF.
 - Observed: Deterministic state lives in source files, project manifests, generated data artifacts, tests, and explicit human acceptance records.
-- Observed: Current project files and generated artifacts are the authority for runtime/data state.
+- Observed at time of snapshot: project files and generated artifacts evidenced runtime/data state. Under DEC-189, accepted decisions govern intent and current source/tests/manifests establish observed implementation; neither automatically overrides the other.
 
-## Current Human Priority
+## Human Priority at Time of Snapshot
 
 - Observed: Current priority is GeoVox data/system/app structural refinement before further implementation.
 - Observed: Current operating mode is software-build mode. Normal work should start from the requested subsystem and current source/project files, not from stale staged-intake traces.
@@ -39,7 +41,7 @@
 | Woodjam remains a real/reference project with public terrain, drilling, geochem, geology, hydrography, roads, and related layers. | Observed | `projects/woodjam/project.json`, `docs/woodjam/` |
 | Shahbazi Gravel Pit / Case Study B has source-derived preview layers plus placeholder/future targets. | Observed | `projects/case-study-b/project.json`, `projects/case-study-b/data/processed/shahbazi_gravel_pit/README.md` |
 | Utah FORGE manifests now include Phase 3 MT, public context, scalar volume/threshold/top-surface records, and a Phase 3 seismic browser record. | Observed | `projects/utah-forge/project.json`, `projects/utah-forge/environment.json` |
-| Utah FORGE verification is split across runtime validators, presentation snapshot checks, and focused browser suites. | Observed | `tools/validate-utah-derived-assets.mjs`, `tools/validate-utah-presentation-snapshot.mjs`, `tests/utah-forge/`, `package.json` |
+| Utah FORGE validation used runtime/derived-asset checks and focused browser suites; the formerly referenced presentation snapshot validator is no longer in the tracked repository. | Historical observation, corrected against the published tree on 2026-11-14 | `tools/validate-utah-derived-assets.mjs`, `tests/utah-forge/`, `package.json`. Historical reference: `tools/validate-utah-presentation-snapshot.mjs` (absent; do not invoke). |
 | A layer/artifact/computed-artifact classification matrix now exists for Utah FORGE, Case Study B / Shahbazi, and Woodjam. | Observed | `docs/dev-context/Layer-Artifact-Classification.md` |
 | A computed-artifact pipeline guardrail now exists and explicitly protects raw-to-derived analytical/render-ready output generation. | Observed | `docs/dev-context/Computed-Artifact-Pipeline.md` |
 | Utah FORGE now has a project-local data/layer status guide. | Observed | `projects/utah-forge/DATA_LAYER_STATUS.md`; covers source/client/archived, processed/browser-ready, render-ready, QA/validation, provenance/status wrappers, MT, seismic, public context, and unclear/future artifacts; docs only, no runtime behavior change. Created 2026-05-26 after earlier session entries incorrectly listed this as already present. |
