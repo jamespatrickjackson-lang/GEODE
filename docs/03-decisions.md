@@ -4003,3 +4003,80 @@ remain pending; no provider adapter has become import-only, no actual
 Claude/Codex instruction-loading test is claimed, and no merge is
 authorized. Preserve the original source-text and rule crosswalk in
 `docs/dev-context/Agent-Instruction-Consolidation-Plan.md`.
+
+## DEC-190 - Agent-contract preservation gates, evidence classes, and provider-loading review
+
+Status: approved 2026-11-14 by the repository owner as the disposition of
+H04, H05, H06, H07, H08, H10, H11. Supersedes the *administrative hold status*
+for these seven items, **not** any existing scientific or rendering requirement.
+This decision authorizes narrow repository documentation and agent-contract
+verification work in draft PR #2, without merging or changing application
+runtime, scientific datasets, authored project pages, or historical decisions.
+
+**H04 — single substantive instruction owner:** `AGENTS.md` at root and
+scoped directories is the proposed canonical engineering instruction
+interface. `CLAUDE.md` will eventually contain only provider-specific
+imports/routing, not a parallel engineering rule set. While Claude files
+remain substantive, retain the existing mirrored-section CI check and add a
+separate static preservation gate for the shared files, router state and
+61-group source crosswalk. Only replace the obsolete mirror expectation
+*in the same reviewed change* that converts and validates all four Claude
+routers. A static gate is not provider-loading evidence.
+
+**H05 — missing historical fixture register:** The former
+`Transition-Page-Fixture-Evidence-Register-2026-05-31.md` is not in the
+published GEODE Git tree. Searches of accessible Notion context did not
+identify a separate canonical copy. This **does not establish** that no
+private or retired copy exists. Remove the impossible mandatory pre-read
+in active public documentation, preserve its historical citation and
+evidence-status uncertainty, and seek the original and rights clearance
+before restoring, distributing, or making claims based on it. Do not
+fabricate or silently substitute evidence.
+
+**H06 — archival context:** Clearly label older state summaries as
+historical snapshots and correct active references to absent scripts.
+Keep the actual original claims and source links where still useful;
+do not rewrite accepted decisions, normalize historical records, or
+treat old claims of currency as present-day requirements.
+
+**H07 — ports and user-session safety:** The checked-in human launcher
+uses 5194 and can force-terminate a listener; the Claude launch profile
+uses 5273; earlier human visual-review instructions refer to 5173.
+Correct documentation without standardizing port selection or modifying
+the launcher in this stage. Agents must never terminate a possibly
+user-owned listener for convenience; use an isolated free port and
+report it.
+
+**H08 — three distinct proof classes:** A real authored page pair can
+reproduce a symptom for diagnosis. Synthetic in-memory fixtures prove
+generalizable application behavior. A named deck snapshot/matrix
+describes one authored deck, not general app health. Human visual
+acceptance remains distinct. Do not implement or test generic
+transition corrections through hardcoded page IDs, page-order data,
+fixture names or source/target page pairs.
+
+**H10 — scientific adapter boundary:** Product-aware renderer adapters
+may express scientific geometry, material, representation identity,
+readiness, compatibility, visibility, supported channels, masks and
+owned opacity. Common transition classification operates on normalized
+render-entity/channel facts and must not branch on project names,
+product families, editor labels or authored page pairs. This
+clarification preserves validated existing behavior and does **not**
+authorize a transition-engine rewrite.
+
+**H11 — live provider validation required before routing conversion:**
+The four substantive Claude instruction files are to remain intact
+until the owner-reviewed full semantic preservation crosswalk is
+satisfied and real Claude/Codex instruction discovery is checked for
+root, projects, editor, scene and docs scopes. `@AGENTS.md` is a
+candidate Claude import, not a verified GEODE runtime mechanism. Test
+in an authorized isolated checkout, record actual loaded sources and
+any omissions, then convert routers atomically with appropriate CI
+changes. Failure to run the live provider checks **blocks claiming
+H11 verified**; it does not justify silently converting files.
+
+**Unchanged safeguards:** DEC-189 remains in force, the 61-rule
+original-to-owner crosswalk and immutable baseline source links stay
+intact, and prior technical DECs remain historical truth. GitHub PR #2
+remains **draft/unmerged** pending actual provider-loading verification,
+review of unresolved source provenance, and a separate merge decision.
