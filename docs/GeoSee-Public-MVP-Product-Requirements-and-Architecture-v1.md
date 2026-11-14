@@ -1,6 +1,6 @@
 # GeoSee public-use MVP — product requirements and minimum architecture v1.0
 
-**Status:** OWNER-APPROVED PRODUCT INTENT; PROPOSED VERSIONED GITHUB BASELINE IN DRAFT PR, NOT MERGED, IMPLEMENTED OR VERIFIED.  
+**Status:** OWNER-APPROVED PRODUCT INTENT; VERSIONED REQUIREMENTS DOCUMENT STAGED IN DRAFT PR #8 (NOT MERGED). G1-01 IS SOURCE-IMPLEMENTED IN SEPARATE DRAFT PR #21, BUT BROWSER ACCEPTANCE AND THE REMAINDER OF GATE A/B ARE NOT VERIFIED.  
 **Decision date:** 2026-11-14. **W3 owner record:** [approved W3 scope](https://app.notion.com/p/418fb09932768185a02cf9cb3492fb3e). **Tracking:** [W3 #6](https://github.com/jamespatrickjackson-lang/GEODE/issues/6).  
 **Implementation evidence reference:** `main` at `29d9c4c7eee77ac1b104289b09b1382c574145d0`; [staged README V2](https://github.com/jamespatrickjackson-lang/GEODE/blob/822465e7ad86c6fb0d785484fee2fd35cf30c6cf/README.md).  
 **Workstream:** W3 product and architecture. W1 agent governance, W2 current-state documentation and W4 release/verification remain separate.  
@@ -8,7 +8,7 @@
 
 ## 1. Scope and user promise
 
-GeoSee is a free public **geoscience** visualization application for geoscientists, researchers and educators. The first useful public workflow is desktop-browser, single-user, static-hosted, and local-first. It permits exploring prepared scientific examples and independently visualizing a deliberately constrained spatial dataset without source-code editing or a service account. It is **not** the separate exploratory cross-domain GEODE OSS V2 platform, a geological modeller, a survey/metrology system, a generic native scientific parser or a certified engineering decision-support system.
+GeoSee is a free public **geoscience** visualization application for geoscientists, researchers and educators. The intended first useful public workflow is desktop-browser, single-user, static-hosted, and local-first. The target release will permit exploration of prepared scientific examples and, at Gate B, independent visualization of a deliberately constrained spatial dataset without source-code editing or a service account. These are release targets, not present-tense claims about current main. It is **not** the separate exploratory cross-domain GEODE OSS V2 platform, a geological modeller, a survey/metrology system, a generic native scientific parser or a certified engineering decision-support system.
 
 **Primary MVP user:** a geoscientist, geology student or educator with small georeferenced point/line/polygon observations to inspect and communicate. **Secondary user:** someone exploring curated Utah FORGE, Woodjam or Shahbazi scientific examples. Raw seismic/MT, borehole logs and survey point-cloud authors are later users, not native-import users in v1.
 
@@ -56,7 +56,7 @@ Public docs must distinguish source/observation, transformed/derived, interpreta
 
 ### GeoJSON v1 input contract (approved direction; engineering details below remain gate-controlled)
 
-- Input: an explicitly selected, **local** UTF-8 `.geojson` or `.json` file that parses as RFC 7946 `FeatureCollection`; first implementation slice **Point, LineString and Polygon** with finite 2D longitude/latitude coordinate pairs. Multi geometries may be added by an independently tested contract amendment, not by broad advertisement.
+- Input: an explicitly selected, **local** UTF-8 `.geojson` or `.json` file that parses as RFC 7946 `FeatureCollection`; provisional first implementation slice **Point, LineString and Polygon**, subject to later explicit geometry-subset owner approval and acceptance tests, with finite 2D longitude/latitude coordinate pairs. Multi geometries may be added by an independently tested contract amendment, not by broad advertisement.
 - Reference: input locations are WGS84 longitude, latitude in degrees (EPSG:4326 / RFC 7946 order). Explicit contradictory CRS information, coordinate-order uncertainty, coordinates outside valid bounds or unsupported altitudes/datum must never be silently corrected or positioned as valid. **No imported Z/depth, time, terrain draping or vertical correctness claim.**
 - Spatial placement: calculate a controlled, documented local render frame for a bounded working region. Capture source frame, origin, transform method/version, numeric precision envelope and unknown vertical datum. Validate at independent control points before accepting the working envelope or tolerance. Do not silently overlay newly imported features on existing Utah/Woodjam layers if their coordinate frames have not been verified compatible.
 - Security/resource boundary: parse in a bounded manner; reject malformed inputs, non-finite coordinates, unsafe property content, unrecognized geometry and resource excess with a specific message. **Trial-only planning limit**: 5 MiB or 25,000 vertices; W4 measures and owner approves actual supported limits before release. Never execute file content or inject properties as HTML.
@@ -176,7 +176,7 @@ All IDs below are **approved target requirements**, **not implemented or verifie
 | G5 — Communicable output | Basic inspection/style/title, labelled view and PNG | End-to-end own-data → saved project → scientifically qualified image |
 | G6 — W4 release acceptance | Software/browser/security/rights/usability/scientific-bounds evidence | Owner release authorization after written residual risks |
 
-**Sequence:** G0 → G1 for the optional public curated preview; G0 → G2 → G3 → G4 → G5 → G6 for the B MVP. Some independent tests may run in parallel but no public claim advances without a gate. Use one scoped engineering issue and focused PR for each substantive independently verifiable increment after approval. Do not create speculative placeholders or merge unverified work. W1 [draft PR #2](https://github.com/jamespatrickjackson-lang/GEODE/pull/2) and W2's [README staging](https://github.com/jamespatrickjackson-lang/GEODE/blob/822465e7ad86c6fb0d785484fee2fd35cf30c6cf/README.md) must not be modified by W3. W4 [#7](https://github.com/jamespatrickjackson-lang/GEODE/issues/7) owns final check implementation and verification receipts.
+**Sequence:** G0 → G1 for the optional public curated preview; G0 → G2 → G3 → G4 → G5 → G6 for the B MVP. Some independent tests may run in parallel but no public claim advances without a gate. Use one scoped engineering issue and focused PR for each substantive independently verifiable increment after approval. Do not create speculative placeholders or merge unverified work. W1 [draft PR #2](https://github.com/jamespatrickjackson-lang/GEODE/pull/2) and W2's owner-accepted ten-file [documentation draft PR #16](https://github.com/jamespatrickjackson-lang/GEODE/pull/16) (including README V2) must not be modified by W3. W4 [#7](https://github.com/jamespatrickjackson-lang/GEODE/issues/7) owns final check implementation and verification receipts.
 
 ## 7. Economics, risks and unresolved engineering parameters
 
