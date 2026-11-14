@@ -12,6 +12,7 @@ Scope: `src/scene/`. These provider-neutral rules preserve the established scene
 ## Required editing discipline
 
 - Layer registration, opacity and transition handling in `SceneManager.ts` is product-aware. Inspect the precise affected code and its contract before changing behavior. Historical implementation context is recorded in commits `15d3c66`, `bb29e23` and `e326e23`.
+- **Adapter boundary:** Product-aware MT, seismic and other renderer adapters may define representation identity, readiness, compatibility, supported channels, masks, scientific visibility and material/source opacity constraints. The common transition policy consumes those normalized facts and must not branch on project names, product names, page IDs, page pairs or editor labels. Specialization at the adapter is not permission to invent competing top-level transition/visibility policies. Preserve existing validated behavior; this clarification does not authorize runtime refactoring.
 - **Keep the transition-opacity regression test passing** after any change affecting product base opacity, page transitions or visual opacity. Read `docs/dev-context/Transition-Runtime-Operating-Spec.md`, `docs/dev-context/Transition-Continuity-Contract.md`, and transition guardrails for broader changes.
 - Route Three.js object/geometry/material cleanup through `disposeObjectTree.ts`; do not introduce independent ad-hoc disposal loops.
 - Register additional layer types through `layerLoaderRegistry.ts`; do not add inline registration inside `SceneManager.ts`.
