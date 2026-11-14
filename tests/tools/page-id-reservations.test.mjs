@@ -26,7 +26,7 @@ test("PI-004: highest saved page deletion/recreation reserves pending tombstone"
     tombstones.has(replacement), false,
     "PI-004: newly allocated " + replacement + " collides with pending deletion",
   );
-  assert.equal(replacement, "04_page", "Next page must advance past the tombstoned highest ID");
+  assert.match(replacement, /^p_[0-9a-f-]{36}$/, "Replacement must use a permanent non-legacy identity");
 });
 
 test("PI-004: unsaved newly added page deletion/recreation reserves pending tombstone", () => {
@@ -38,7 +38,7 @@ test("PI-004: unsaved newly added page deletion/recreation reserves pending tomb
     tombstones.has(regenerated), false,
     "PI-004: unsaved " + regenerated + " reused before deferred deletion is cleared",
   );
-  assert.equal(regenerated, "05_page", "Unsaved deletion must not recycle its reserved path");
+  assert.notEqual(regenerated, generated, "Unsaved deletion must not recycle its reserved path");
 });
 
 test("PI-004: uncommitted and active IDs never collide across rapid creations", () => {
@@ -53,16 +53,17 @@ test("PI-004: uncommitted and active IDs never collide across rapid creations", 
     pending.add(id); // synchronous reservation before React dispatch commits
   }
   assert.equal(generated.size, 50);
-  assert.equal(generated.has("04_page"), true);
-  assert.equal(generated.has("53_page"), true);
+  assert.equal([...generated].every((id) => /^p_[0-9a-f-]{36}$/.test(id)), true);
 });
 
 test("PI-004: archived IDs, highest tombstone and future occupied IDs remain reserved", () => {
   const activeAndArchivedIds = ["01_page", "02_page", "09_page", "21_page"];
   const pendingIds = new Set(["22_page", "23_page", "99_page"]);
-  assert.equal(newPageId(activeAndArchivedIds, pendingIds), "100_page");
-  assert.equal(newPageId(["01_page", "03_page"], ["02_page"]), "04_page");
-  assert.equal(newPageId(["01_page", "02_page"]), "03_page");
+  const allocated = newPageId(activeAndArchivedIds, pendingIds);
+  assert.match(allocated, /^p_[0-9a-f-]{36}$/);
+  assert.equal([...activeAndArchivedIds, ...pendingIds].includes(allocated), false);
+  assert.notEqual(newPageId(["01_page", "03_page"], ["02_page"]), "02_page");
+  assert.notEqual(newPageId(["01_page", "02_page"]), "03_page");
 });
 
 test("PI-004: all page and Sub Master creators reserve through one synchronous helper", () => {
@@ -117,6 +118,6 @@ test("PI-004: a synthetic scientific registry remains unchanged across allocatio
   const deleted = new Set(["03_page"]);
   const replacement = newPageId(pages.filter((id) => !deleted.has(id)), deleted);
   const nextPages = [...pages.filter((id) => !deleted.has(id)), replacement];
-  assert.deepEqual(nextPages, ["01_page", "02_page", "04_page"]);
+  assert.deepEqual(nextPages, ["01_page", "02_page", replacement]);
   assert.deepEqual(project, snapshot);
 });
