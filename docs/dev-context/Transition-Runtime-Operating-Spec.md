@@ -2,6 +2,8 @@
 
 Status: active transition-system operating spec.
 
+This is current implementation guidance, subject to accepted requirements and dated decisions. It does not automatically approve draft Constitution or Continuity Contract clauses. When a proposed draft invariant conflicts with this active guidance or an accepted decision, record the evidence and hold the affected change for owner review.
+
 Purpose: define the intended page-to-page transition model before runtime code changes.
 
 ## Non-negotiable rules
