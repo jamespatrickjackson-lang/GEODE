@@ -215,3 +215,75 @@ test("TR-02 RED source: post-commit comparison must not reuse expected terminal 
     "TR-02: post-commit data is still an unmeasured projection from expected target assignments"
   );
 });
+
+
+test("TR-01 reversal contract PASS only: interruptions at 20/50/80% reverse from sampled live state", () => {
+  // Does NOT observe a rendered frame or prove PageController uses the live graph.
+  const a = fixture.states.from;
+  const b = fixture.states.to;
+  for (const p of [0.2, 0.5, 0.8]) {
+    const live = {
+      ...a,
+      opacity: a.opacity + (b.opacity - a.opacity) * p,
+      scalarMin: a.scalarMin + (b.scalarMin - a.scalarMin) * p,
+    };
+    const ass = assignmentOf(assignmentsFor(live, a, {pageId:"arbitrary-mid", pageOrder:99}, {pageId:"reversed-source",pageOrder:4}));
+    const opacity = ass.changedChannels.find((x) => x.key === "opacity");
+    assert.equal(opacity.sourceValue, live.opacity);
+    assert.equal(opacity.targetValue, a.opacity);
+    const reversePlan = planFor([ass]);
+    assert.equal(planApi.transitionExecutionPlanComplete(reversePlan, 999), false);
+    assert.equal(planApi.transitionExecutionPlanComplete(reversePlan, 1000), true);
+    const terminal = planApi.evaluateTransitionExecutionPlan(reversePlan, 1000);
+    assert.ok(terminal.every((frame) => frame.done && frame.progress === 1));
+  }
+});
+
+test("TR-terminal plan PASS only: identical semantic deltas finish deterministically under page renaming", () => {
+  const a = fixture.states.from, b = fixture.states.to;
+  const p1 = planFor(assignmentsFor(a, b, {pageId:"01_page",pageOrder:0}, {pageId:"02_page",pageOrder:1}));
+  const p2 = planFor(assignmentsFor(a, b, {pageId:"unrelated-R",pageOrder:10}, {pageId:"unrelated-S",pageOrder:-1}));
+  assert.deepEqual(planApi.evaluateTransitionExecutionPlan(p1, 1000), planApi.evaluateTransitionExecutionPlan(p2, 1000));
+  assert.equal(planApi.transitionExecutionPlanComplete(p1, 1000), true);
+  assert.equal(planApi.transitionExecutionPlanComplete(p2, 1000), true);
+  // This is NOT a measured final renderer graph or proof of visual idempotence.
+});
+
+test("TR-categorical PASS: changing a category commits discretely without inventing interpolation", () => {
+  const categoryEntity = (value) => ({
+    entityKey:"layer:synthetic-section", representationKey:"mesh", presenceState:"visible",
+    readinessState:"ready", channels:[channel("lithology", "discrete-categorical", "discrete-commit", value)]
+  });
+  const ass = policy.classifyTransitionEntityPair({
+    source:categoryEntity("synthetic-a"), target:categoryEntity("synthetic-b")
+  });
+  assert.equal(ass.assignment, "discrete-commit");
+  assert.equal(ass.executionMode, "commit-discrete");
+});
+
+test("TR-page-coupling guard PASS: pure classifier/plan reject synthetic authored-page selector mutations", () => {
+  function offendingPageBranch(text) {
+    const sf = ts.createSourceFile("synthetic.ts", text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+    let found = false;
+    function visit(node) {
+      if (ts.isIfStatement(node)) {
+        const predicate = node.expression.getText(sf);
+        if (/\b(?:sourcePage|targetPage|pageId|pageOrder|pageTitle|pageIndex)\b/.test(predicate)
+          && /(?:===|==|!==|!=)/.test(predicate)
+          && /(?:["'][^"']+["']|\b\d+\b)/.test(predicate)) found = true;
+      }
+      ts.forEachChild(node, visit);
+    }
+    visit(sf);
+    return found;
+  }
+  const knownBad = 'if (sourcePage.id === "01_page" && targetPage.id === "02_page") { chooseSpecialTransition(); }';
+  assert.equal(offendingPageBranch(knownBad), true, "Mutation control must be rejected");
+  for (const p of [
+    "src/scene/transitions/transitionEntityPolicy.ts",
+    "src/scene/transitions/transitionExecutionPlan.ts",
+  ]) {
+    assert.equal(offendingPageBranch(source(p)), false, "Unexpected authored-page policy branch in " + p);
+  }
+  // Scoped pure-source AST check only; not full project/capture/UI dataflow proof.
+});
