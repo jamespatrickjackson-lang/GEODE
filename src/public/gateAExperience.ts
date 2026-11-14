@@ -118,3 +118,70 @@ export function canOpenProject(
       projectSlug === GATE_A_CURATED_PROJECT_SLUG)
   );
 }
+
+/**
+ * Run a public/developer action through the same policy used by the app.
+ * In particular, a denied action never evaluates an authoring callback.
+ */
+export function performGateAAction<T>(
+  mode: GateAMode,
+  capability: GateACapability,
+  action: () => T,
+): T {
+  requireGateACapability(mode, capability);
+  return action();
+}
+
+/**
+ * Public keyboard handler is installed at window capture phase so that a
+ * presenter/page controller registered later cannot consume disallowed keys.
+ * When the viewer is absent the public landing retains normal key navigation.
+ */
+export function attachPublicKeyboardGuard(
+  target: Window,
+  viewerActive: boolean,
+): () => void {
+  const onKey = (event: KeyboardEvent) => {
+    const key = event.key;
+    const save = (event.ctrlKey || event.metaKey) && key.toLowerCase() === "s";
+    const pageKey =
+      viewerActive &&
+      (key === "ArrowRight" ||
+        key === "ArrowLeft" ||
+        key === "PageDown" ||
+        key === "PageUp" ||
+        key === "Home" ||
+        key === "End");
+    if (!save && !pageKey) return;
+
+    // Match PageController's editable-target exemption for the page keys.
+    // Save remains disabled throughout the public experience.
+    const element = event.target as HTMLElement | null;
+    const editable =
+      element?.isContentEditable ||
+      element?.tagName === "INPUT" ||
+      element?.tagName === "TEXTAREA" ||
+      element?.tagName === "SELECT";
+    if (!save && editable) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+    event.stopImmediatePropagation();
+  };
+  target.addEventListener("keydown", onKey, true);
+  return () => target.removeEventListener("keydown", onKey, true);
+}
+
+/**
+ * Normalize only the simple public landing/example URL; don't mutate the
+ * developer editor's route and don't introduce a second client router.
+ */
+export function publicRouteUrl(href: string, projectSlug: string | null): string {
+  if (projectSlug !== null && projectSlug !== GATE_A_CURATED_PROJECT_SLUG) {
+    throw new Error("This project is unavailable in the public explorer.");
+  }
+  const url = new URL(href);
+  url.search = "";
+  if (projectSlug) url.searchParams.set("project", projectSlug);
+  return `${url.pathname}${url.search}${url.hash}`;
+}
