@@ -7,7 +7,7 @@ import {
 } from "../pages/PageController";
 import {
   GATE_A_CURATED_PROJECT_SLUG,
-  requireGateACapability,
+  performGateAAction,
 } from "./gateAExperience";
 
 interface PublicLandingProps {
@@ -90,10 +90,8 @@ export function CuratedExplorerShell({
 function PublicExplorerControls({ onReturnHome }: { onReturnHome: () => void }) {
   const { resetToPose } = usePageController();
 
-  const handleReset = () => {
-    requireGateACapability("public", "view.reset");
-    resetToPose();
-  };
+  const handleReset = () =>
+    performGateAAction("public", "view.reset", resetToPose);
 
   return (
     <div style={viewerOverlay}>
