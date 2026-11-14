@@ -47,7 +47,7 @@ Files under `geosee_processed/` in the active repo, generated from the archived 
 | --- | --- | --- | --- |
 | Point QA subset | `resistivity_model/resistivity_point_preview.json` | QA/validation; not default-visible. | 90,000 emitted points, log10(ohm-m). Not a substitute for full-density data. |
 | Full-density tiled points | `resistivity_model/full_density/` | Default-visible; high-fidelity client layer. | 1,094,624 points; 11 tiles; Float32 XYZ + scalar buffers. |
-| Scalar volume | `resistivity_model/volume/mt_volume_manifest.json` | Wired; not default-visible. | 2 products; dimensions, scalar, mask, and stats recorded in manifest. |
+| Scalar volume | `resistivity_model/volume/mt_volume_manifest.json` | Wired; not default-visible. | **One** active full-extent scalar-volume product (383×313×33 voxels); `volume.u8`, `mask.u8` and optional `volume_high.f32` are formats for the same product. Separate threshold surfaces are not a second scalar volume. |
 | Threshold surfaces | `resistivity_model/volume/threshold_surfaces/mt_threshold_surfaces_mesh_preview.json` | Wired; page 08 makes it visible. | Marching Cubes isosurfaces from scalar volume, mask-aware. |
 | Authored slices | `resistivity_model/slices/resistivity_slices_mesh_preview.json` | Wired; page 11 makes it visible. | 6 horizontal slices + 2 vertical sections; legend at `slices/legend.json`. |
 | Observed top-envelope surface | `resistivity_model/top_envelope_surface/mt_top_envelope_surface_mesh_preview.json` | Wired; not default-visible. | 23,811 vertices; top-most observed full-density cell-center points per XY column; bridge triangles above 10,000 m dropped. UI-facing MT Top Surface control routes here. |
@@ -68,6 +68,8 @@ Files under `geosee_processed/` in the active repo, generated from the archived 
 Legacy L5/L11 placement: current L5/L11 products use explicit approximate fallback endpoints because no delivered navigation line is present in the active source set. They are useful as visual/reference section curtains only. Their manifest `navigationPlacement` records `navigationSource: "fallback"`, `placementAccuracy: "approximate"`, and `canClaimPreciseRegistration: false`. Precise registration requires delivered navigation or georeferenced control-point validation with stored residual error.
 
 ### Public Context
+
+**GDR-034 terrain default-visibility evidence hold:** The historical default-visible terrain row below has not been confirmed as the **effective runtime startup/page state**. Environment, presets and page overrides can disagree; this is an unresolved documentation claim, **not** verification or a runtime behavior change. Do not infer visibility until isolated effective-state evidence is recorded.
 
 | Artifact | File | Status |
 | --- | --- | --- |

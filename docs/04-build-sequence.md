@@ -1,6 +1,8 @@
 # Build Sequence
 
-This document is now a current-state build sequence, not the original week plan.
+> **Historical service-led alpha build sequence.** This file preserves source-development history and previous phase plans, **not** the current W3/W4 free-public GeoSee product plan or release criteria. W3's approved **future** Gate A is curated-example exploration/accepted PNG, and Gate B adds desktop single-user local-first 2D WGS84 GeoJSON, independent projects, portable JSON save/reopen and PNG; these are **not yet implemented**. [W3 requirements in unmerged draft PR #8](https://github.com/jamespatrickjackson-lang/GEODE/pull/8). Existing still, recording and video encoding source paths should not be described as absent; accepted MP4/file/codec/browser outputs remain unverified.
+
+This document records a **historical** current-state snapshot of the service/demo alpha build, not the W3-approved public MVP sequence. Earlier “current” and “next” language below is retained as dated historical context.
 
 ## Current Phase
 
@@ -62,11 +64,11 @@ Complete/kept:
 - Woodjam behavior is not intentionally changed by Shahbazi work.
 - Woodjam remains the real/reference project.
 
-Still pending for Woodjam:
+Still pending for Woodjam's **complete accepted publishing/delivery workflow**:
 
-- Publish/export workflow.
-- MP4 export.
-- Still-pack export.
+- Publish/export packaging.
+- **Verified MP4 output** and browser/codec acceptance (source-implemented capture/encode routes exist).
+- **Accepted still-pack export** (single-image capture paths exist).
 - Provenance PDF.
 - Any future content polish beyond the current app shell.
 
@@ -188,16 +190,16 @@ Woodjam remaining:
 
 ## Export/Publish Phase - Not Complete
 
-Still not built:
+Not complete or acceptance-verified as **end-to-end historical deliverables**:
 
 - one-command static publish package
 - hosted artifact packaging
-- MP4 capture/export
-- still-pack export
+- **accepted** MP4 capture/export across target codecs/browsers (implementation routes exist)
+- still-pack export packaging (individual still capture paths exist)
 - provenance PDF
 - release/draft artifact packaging
 
-## Recommended Next Sequence
+## Historical Recommended Next Sequence (Superseded by W3 Direction)
 
 1. Stabilize UI spacing and current editor visual polish.
 2. Verify `npm run build`.
@@ -209,7 +211,7 @@ Still not built:
 8. Build export/publish pipeline.
 9. Replace Shahbazi projected preview with real orthomosaic/mesh once generated.
 
-## Completion Criteria for Current Alpha
+## Historical Alpha Completion Criteria (Not W4 Public Release Criteria)
 
 The current alpha is ready for stronger external demo use when:
 

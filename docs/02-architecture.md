@@ -1,5 +1,7 @@
 # Architecture
 
+> **As-built source baseline:** [`29d9c4c7eee77ac1b104289b09b1382c574145d0`](https://github.com/jamespatrickjackson-lang/GEODE/commit/29d9c4c7eee77ac1b104289b09b1382c574145d0), 14 November 2026. GeoSee is **one bundled React/TypeScript/Three.js/Vite app** with a fixed project catalog, project-specific loaders and shared scene/editor state, **not** a separate cross-domain SDK or generic scientific-file importer. It has no production backend; dev-time authoring writes do **not** work as hosted project persistence. W3's local-first public-user workflow is approved future intent, not the current runtime.
+
 This document describes the current GeoSee implementation, not the original planned architecture.
 
 ## System Shape
@@ -64,7 +66,7 @@ Current entries:
 
 Woodjam, Shahbazi Gravel Pit, and Utah FORGE appear in the main landing list.
 
-Base GUI Template is a development/editing target opened through `EDIT BASE GUI`.
+Base GUI Template is a development/editing target opened through `EDIT BASE GUI`. The landing `Add New Project` action currently opens this **existing** Base GUI project. It does **not** create an independent project folder or portable user JSON; the project catalog is enumerated rather than an automatic discovery/creation service.
 
 ## Project Folder Model
 
@@ -245,7 +247,7 @@ Large editor files still present:
 - `src/editor/EnvironmentScenePanel.tsx`
 - `src/scene/SceneManager.ts`
 
-These are current future architecture targets.
+These are **observed architecture hotspots and possible future refactor targets**, not extracted components already operating or owner-approved changes to the current architecture.
 
 ## Editor State
 
@@ -268,7 +270,7 @@ It tracks:
 - presenter mode
 - scene handle
 
-Save is manual and sequential. It is not transactional.
+Save is manual and sequential. It is **not transactional** and uses the **Vite development-only author-write endpoints** to modify local project/page/overlay files; a static-hosted build has no authenticated project-file persistence route. This is distinct from W3's **future** portable browser JSON save/reopen workflow.
 
 Current save targets:
 
@@ -504,11 +506,13 @@ must not be described as survey-accurate.
 
 ## Shahbazi Data Architecture
 
-Raw source folder:
+**Historical raw-source directory reference (not a populated public-checkout source folder):**
 
 ```text
 projects/case-study-b/data/raw/shahbazi_gravel_pit/
 ```
+
+The actual original Shahbazi raw source is separately archived; see [archive map](archive-map.md). A clean public clone uses the committed **processed preview** products and cannot be assumed to regenerate those artifacts from absent raw inputs.
 
 Processed preview folder:
 

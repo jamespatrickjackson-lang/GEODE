@@ -1,10 +1,12 @@
 # Scope
 
+> **Scope boundary as of 14 November 2026:** Current GeoSee has a **fixed set of prepared geoscience examples**, project-wired data loaders and development-only authoring/save endpoints. **Approved future direction, not implemented:** W3 Gate A public curated-example exploration with accepted PNG, then Gate B desktop single-user local-first **2D WGS84 GeoJSON** import, independent local project creation, portable **JSON save/reopen**, basic inspection/provenance and PNG. [W3 owner decision](https://app.notion.com/p/418fb09932768185a02cf9cb3492fb3e) | [draft PR #8, unmerged](https://github.com/jamespatrickjackson-lang/GEODE/pull/8). Exact geometry subset, data/vertex limits, tolerances, browsers/performance and release evidence require W4. Service-era boundaries below remain historical where inconsistent with that direction.
+
 This document records what the current GeoSee alpha is allowed to do, what it already does, and what remains out of scope.
 
 ## Current Scope Summary
 
-GeoSee is now a multi-project internal authoring and presentation app.
+The **current alpha** is a multi-project geoscience visualization and developer-authoring app. Its fixed catalog, prepared projects and specialized loaders are **not** an independent project creator, generic direct scientific importer or production-hosted persistence mechanism.
 
 Current project set:
 
@@ -13,7 +15,7 @@ Current project set:
 - `utah-forge` - geothermal/geophysics case study with active Phase 3 MT, public context, and seismic browser records.
 - `base-gui` - empty/default project for editing shared GUI/environment defaults.
 
-Current priority:
+**Historical service-era priority (still useful as evidence discipline, not the W3 future build plan):**
 
 > Preserve Woodjam, keep Shahbazi honest as a preview/source-derived demo, continue improving the authoring and presentation shell, and avoid claiming that placeholders or preview products are final measured outputs.
 
@@ -114,7 +116,7 @@ In scope and currently kept:
 
 - Procedural quarry shell as fallback.
 - Shahbazi data intake folders and reference docs.
-- Raw Shahbazi source staging under `projects/case-study-b/data/raw/shahbazi_gravel_pit/`.
+- Historical Shahbazi raw source path `projects/case-study-b/data/raw/shahbazi_gravel_pit/` is **not populated in the public checkout**; see [archive map](archive-map.md). The active runtime uses processed previews.
 - Processed preview outputs under `projects/case-study-b/data/processed/shahbazi_gravel_pit/`.
 - Source-derived preview layers:
   - sampled TLS point preview
@@ -182,8 +184,8 @@ In scope and active:
 - Full-resolution Potree/EPT point-cloud stream.
 - Full photogrammetry reconstruction workflow inside or alongside GeoSee.
 - Export/publish workflow.
-- MP4 video output.
-- Still-pack output.
+- **Accepted MP4 output** and verified codec/browser/export coverage (capture source paths do exist).
+- **Packaged still-set output** (individual still source paths exist; package workflow unverified).
 - Provenance PDF output.
 - Transactional save.
 - Full project creation wizard.
@@ -191,7 +193,9 @@ In scope and active:
 - Stronger code splitting/component extraction for large editor modules.
 - Final mobile presenter polish.
 
-## Out of Scope for Current Alpha
+## Out of Scope for the Current As-Built Alpha
+
+The following is a present-implementation / earlier service-era boundary, **not** rejection of W3's approved future public local-project workflow.
 
 - Client self-serve editing.
 - Multi-user collaboration.
@@ -207,7 +211,9 @@ In scope and active:
 - Automated photogrammetry processing inside the browser.
 - Final regulatory-grade GIS exports.
 
-## Deferred to Later Product Work
+## Deferred / Historical Future Backlog
+
+**Updated intent:** independent local projects, constrained 2D WGS84 GeoJSON intake, portable JSON save/reopen and PNG are now **approved future W3 Gate B targets**, but are **not yet implemented**. Larger science formats, cloud/multi-user operations and packaged video are separate future work. [W3 draft specification](https://github.com/jamespatrickjackson-lang/GEODE/pull/8) remains unmerged.
 
 - Real project creation wizard.
 - Release/review workflow.
@@ -220,7 +226,9 @@ In scope and active:
 - A more formal data ingestion pipeline with repeatable parameter files.
 - Stronger permissions and authentication for non-public client projects.
 
-## Scope Change Rule
+## Historical Service-Era Scope Questions
+
+The original safeguards below preserve scientific honesty but do **not** override the approved W3-D01–D10 future direction or W4 acceptance obligations.
 
 Before building anything new, ask:
 

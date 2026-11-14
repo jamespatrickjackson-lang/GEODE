@@ -1,6 +1,8 @@
 # Purpose
 
-## What GeoSee Is
+> **Owner-approved current direction (14 November 2026):** Free public geoscience use of the existing GeoSee research alpha. **Approved future Gate A** is curated-example exploration with verified PNG; **Gate B** is desktop single-user local-first constrained **2D WGS84 GeoJSON** intake, independent local projects, portable **JSON save/reopen**, inspection/provenance and PNG. These are not current alpha functions or accepted releases. Exact supported geometry, limits, scientific tolerances, browsers and acceptance criteria still need W4 evidence. [W3 decisions](https://app.notion.com/p/418fb09932768185a02cf9cb3492fb3e) | [unmerged W3 PR #8](https://github.com/jamespatrickjackson-lang/GEODE/pull/8). The service and client-presentation model retained below is **historical**, not a competing current product requirement.
+
+## Historical Origin — Service-Led Product Thesis
 
 GeoSee is a service-first visual communication tool for mining and geoscience projects.
 
@@ -12,7 +14,7 @@ Working thesis:
 
 ## What This Repo Is
 
-This repo is the internal production/editor tool used to build GeoSee deliverables.
+The current repo contains the existing GeoSee viewer/editor/presenter alpha and its prepared projects. It originated as an internal production/editor tool used for service-led deliverables; that model is historical rather than the approved future public product.
 
 The current application is a Vite + React + Three.js single-page app. It loads project folders, renders project data in a 3D scene, lets the internal authoring user tune pages and layers, and previews a guided presentation.
 
@@ -29,7 +31,7 @@ The tool currently supports:
 - runtime Audience Lens controls for Shahbazi Gravel Pit
 - source-derived Shahbazi preview surfaces, contours, QA layers, and projected UAV image previews
 
-End clients should see the finished artifact, not the authoring tool.
+**Historical service assumption:** End clients would see a finished artifact rather than the authoring tool. This does **not** prohibit W3's future independent public exploration and local project authoring.
 
 ## Current Build State
 
@@ -56,7 +58,7 @@ Current kept state:
 - The bottom HUD now includes preview, compass, light/dark, and home controls.
 - The home control returns to the landing page and prompts before leaving if edits are unsaved.
 
-## Why This Alpha Exists
+## Historical Alpha / Market Probe Rationale
 
 The alpha is a market and workflow probe.
 
@@ -70,9 +72,9 @@ The key questions remain:
 4. Which audiences need distinct readings of the same project?
 5. Which parts should remain service-led and which parts should become repeatable software?
 
-## What Success Looks Like
+## Original Service-Era Success Criteria (Historical)
 
-Current success criteria:
+Original recorded service-era criteria:
 
 - Woodjam continues to open and behave as the preserved reference project.
 - Shahbazi Gravel Pit opens as a visually credible quarry demo.
@@ -82,7 +84,7 @@ Current success criteria:
 - The data/provenance story remains honest: preview layers are preview layers, not final engineering deliverables.
 - The build can continue toward publish/export and stronger data products without another structural reset.
 
-## What Is Complete
+## Source-Implemented / Kept (Not Comprehensive Browser Acceptance)
 
 Complete or kept:
 
@@ -118,7 +120,7 @@ Unresolved or not complete:
 - Scale bar is local/raycast-based and should not be treated as a global map scale in every camera pose.
 - Save is still sequential and not transactional across all project files.
 - Export/publish pipeline is not complete.
-- MP4 and still-pack export are not complete.
+- Accepted end-to-end MP4 and still-pack delivery are not complete; source still/record/video routes exist, but their output/browser/codec acceptance remains unverified.
 - Some large editor files still need future component extraction.
 - Page duplication attempts to copy overlay assets, but asset-copy failures are warnings, not a fully audited package operation.
 

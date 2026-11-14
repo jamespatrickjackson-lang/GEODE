@@ -1,5 +1,18 @@
 # Dataset Map
 
+> **As-built evidence boundary:** [`main` at `29d9c4c7eee77ac1b104289b09b1382c574145d0`](https://github.com/jamespatrickjackson-lang/GEODE/commit/29d9c4c7eee77ac1b104289b09b1382c574145d0), 14 November 2026. Active scientific visualizations use **project-wired prepared artifacts**, not a general browser file-import pipeline. Runtime source is distinct from archived raw inputs, offline conversion, source-derived QA/preview, synthetic placeholder and future target. A staged intake file is **not** an automatically interpreted or displayed layer; the W3-approved future bounded 2D WGS84 GeoJSON importer is not implemented.
+
+## Data Pathway / Scientific Status Key
+
+| Category | What the current project can establish | Does not establish |
+| --- | --- | --- |
+| Active project-wired | Referenced, browser-ready artifact and project/loader code | Generic raw data import or verified scientific measurements |
+| Offline source preparation | Named source format, transformation script, derived manifest/asset | Regeneration from public checkout if raw archive absent |
+| Preview / QA / synthetic | Prepared points, interpolated meshes, survey context or procedural fallback | Survey-calibrated full source product, definitive measurement or accepted mesh |
+| Future / disabled | Planned or named layer/product without active accepted route | Supported runtime import or scientific completion |
+
+**Registration limits:** Declared CRS, source metadata, scene origin and visibly coincident layers do not independently validate horizontal or vertical datum ties, seismic time/depth conversion or inversion results. Coordinate/accuracy acceptance remains dataset-specific.
+
 ## Project Areas
 
 | Project | Path | Observed current role | Status / caveat |
@@ -29,6 +42,8 @@ Use that map before any cleanup touches source inputs, generated artifacts, QA o
 
 ## Woodjam
 
+**Input/status qualifier:** Woodjam uses selected prepared drill/collar, lithology/assay intervals, soil geochemistry, geology and geographic GeoJSON/JSON, not a general raw well-log or assay importer. The hyperspectral coverage and LiDAR footprint overlays indicate **areas of coverage**, not loaded hyperspectral cubes or LiDAR survey point clouds.
+
 | Dataset family | Status | Evidence |
 | --- | --- | --- |
 | Terrain, drilling, assays, soils, IP lines, hyperspectral coverage, LiDAR footprint, hydrography, geology, roads, power, neighbors, VRI | Observed | `projects/woodjam/project.json`, top-level `data/`, `docs/woodjam/` |
@@ -36,6 +51,8 @@ Use that map before any cleanup touches source inputs, generated artifacts, QA o
 | Publish/export outputs | Observed unresolved | `docs/01-scope.md`, `docs/04-build-sequence.md` |
 
 ## Shahbazi / Case Study B
+
+**Input/status qualifier:** TLS ASCII XYZ and UAV/photogrammetry source records are prepared **offline** as sampled/tiled point previews, separate surface/interpolated mesh previews, contours, GCP/camera QA and projected photo previews. These are **not** a final orthomosaic, finished GLB/glTF survey, full Potree/EPT cloud or accepted stockpile-volume computation. Original raw sources are separately archived; synthetic quarry objects remain placeholders.
 
 | Dataset family | Status | Evidence |
 | --- | --- | --- |
@@ -47,6 +64,10 @@ Use that map before any cleanup touches source inputs, generated artifacts, QA o
 | Metric/GIS-grade orientation and production quality | Unverified / needs human review | Docs caution that previews are not production survey outputs |
 
 ## Utah FORGE
+
+**Input/status qualifier:** SEG-Y seismic and EDI/inversion inputs are processed **offline** into project-specific browser sections, volumes, stations and QC artifacts; the browser does not generally import raw SEG-Y/EDI. The prepared MT inversion **one active full-extent scalar-volume product** is 383×313×33 voxels; separate threshold surfaces are **not** another scalar volume. MT station sources include 122 physical stations/244 EDI variants, and model-derived resistivity should not be called a direct subsurface measurement. The current Utah borehole logs render only 16A(78)-32 HCGR/HSGR gamma tracks; some other wells are trajectory-only or source-location-only markers. Seismic L5/L11 uses **approximate fallback navigation**. All survey-grade interlayer registration and seismic vertical datum/time-depth claims remain **unverified**.
+
+**GDR-034 hold:** public terrain effective default visibility depends on environment/page/preset overrides and has not been verified end-to-end. Historical “default-visible” prose does not establish its effective startup state; no behavioral change is proposed here.
 
 | Dataset family | Status | Evidence |
 | --- | --- | --- |
