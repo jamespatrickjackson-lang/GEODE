@@ -98,7 +98,9 @@ test("public viewer does not mount editing, capture or developer-write UI", () =
   const shell = readFileSync(resolve(root, "src/public/CuratedExplorerShell.tsx"), "utf8");
   assert.match(shell, /PageControllerProvider/);
   assert.doesNotMatch(shell, /EditorRoot|EditorChrome|CaptureDirector|writeFilesBatch|commitPending|UtahForgeAddToProjectDrop/);
-  assert.match(shell, /stopImmediatePropagation|stopPropagation/);
+  const app = readFileSync(resolve(root, "src/App.tsx"), "utf8");
+  assert.match(app, /stopImmediatePropagation/);
+  assert.match(app, /addEventListener\("keydown", blockPublicSaveShortcut, true\)/);
 });
 
 test("production route denies developer mode regardless of direct query parameters", async () => {
