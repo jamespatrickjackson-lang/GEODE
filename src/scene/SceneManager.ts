@@ -108,6 +108,7 @@ import {
   type TransitionCommitGraph,
   type TransitionCommitTrace,
 } from "./transitions/transitionCommitGate";
+import { observeTransitionCommitGraph } from "./transitions/transitionCommitObserver";
 import { replanTransitionEntityReadiness } from "./transitions/transitionExecutionPlan";
 import { DEFAULT_DETACHED_FADE_MS } from "./transitions/transitionDefaults";
 import {
@@ -3290,24 +3291,23 @@ export class SceneManager {
     );
   }
 
-  private transitionCommitUnknownTerminalGraph(): TransitionCommitGraph {
-    const targetGraph = this.transitionCommitTargetGraph();
-    return {
-      entities: targetGraph.entities.map((entity) => ({
-        ...entity,
-        channels: Object.fromEntries(
-          Object.entries(entity.channels ?? {}).map(([key, value]) => [
-            key,
-            {
-              ...(value && typeof value === "object" && !Array.isArray(value)
-                ? (value as Record<string, unknown>)
-                : { value }),
-              coverage: "unknown",
-            },
-          ]),
-        ),
-      })),
-    };
+  private observeTransitionCommitGraph(
+    expected: TransitionCommitGraph,
+  ): TransitionCommitGraph {
+    return observeTransitionCommitGraph(expected, (layerId) => {
+      const group = this.layers.get(layerId);
+      if (!group) return { attached: false, visible: false, opacity: null };
+      // NaN is deliberate: an unmeasurable material must remain unknown,
+      // never fall back to an authored or projected target opacity.
+      const opacity = group.visible
+        ? this.currentRenderOpacityForTree(group, Number.NaN)
+        : 0;
+      return {
+        attached: true,
+        visible: group.visible,
+        opacity: Number.isFinite(opacity) ? opacity : null,
+      };
+    });
   }
 
   recordTransitionCommitAttempt(input: {
@@ -3419,8 +3419,9 @@ export class SceneManager {
       );
       return null;
     }
-    const terminalTransitionGraph = this.transitionCommitUnknownTerminalGraph();
     const resolvedTargetGraph = this.transitionCommitTargetGraph();
+    const terminalTransitionGraph =
+      this.observeTransitionCommitGraph(resolvedTargetGraph);
     this.lastPostCommitTargetAssertionSuppressed = false;
     this.recordTransitionCommitAttempt({
       phase: "terminal-before-commit",
@@ -3434,7 +3435,7 @@ export class SceneManager {
       attemptedBy: "SceneManager.finalizePageTransitionCommit",
       terminalTransitionGraph,
       resolvedTargetGraph,
-      committedGraph: terminalTransitionGraph,
+      // No committed-state receipt exists until final scene writers run.
       reason: "SceneManager owns page-transition final commit",
     });
     if (finalTrace?.allowed) {
@@ -3467,13 +3468,14 @@ export class SceneManager {
         ),
       );
     }
+    const committedGraph = this.observeTransitionCommitGraph(resolvedTargetGraph);
     this.recordTransitionCommitAttempt({
       phase: "post-commit-graph-check",
       attemptedBy: "SceneManager.finalizePageTransitionCommit",
       terminalTransitionGraph,
       resolvedTargetGraph,
-      committedGraph: terminalTransitionGraph,
-      reason: "post-commit graph comparison is observational only",
+      committedGraph,
+      reason: "observed attached scene-root visibility and measurable material opacity; other channels unresolved",
     });
     return finalTrace;
   }
