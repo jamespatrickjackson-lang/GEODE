@@ -108,7 +108,10 @@ import {
   type TransitionCommitGraph,
   type TransitionCommitTrace,
 } from "./transitions/transitionCommitGate";
-import { observeTransitionCommitGraph } from "./transitions/transitionCommitObserver";
+import {
+  observeSceneRootHierarchy,
+  observeTransitionCommitGraph,
+} from "./transitions/transitionCommitObserver";
 import { replanTransitionEntityReadiness } from "./transitions/transitionExecutionPlan";
 import { DEFAULT_DETACHED_FADE_MS } from "./transitions/transitionDefaults";
 import {
@@ -3294,20 +3297,32 @@ export class SceneManager {
   private observeTransitionCommitGraph(
     expected: TransitionCommitGraph,
   ): TransitionCommitGraph {
-    return observeTransitionCommitGraph(expected, (layerId) => {
-      const group = this.layers.get(layerId);
-      if (!group) return { attached: false, visible: false, opacity: null };
-      // NaN is deliberate: an unmeasurable material must remain unknown,
-      // never fall back to an authored or projected target opacity.
-      const opacity = group.visible
-        ? this.currentRenderOpacityForTree(group, Number.NaN)
-        : 0;
-      return {
-        attached: true,
-        visible: group.visible,
-        opacity: Number.isFinite(opacity) ? opacity : null,
-      };
-    });
+    return observeTransitionCommitGraph(
+      expected,
+      (layerId) => {
+        // Case Study B aliases are logical shell channels, not independently
+        // registered render groups. Missing direct roots must NOT mean absent.
+        if (Object.prototype.hasOwnProperty.call(CASE_STUDY_B_DEMO_LAYER_ALIASES, layerId)) {
+          return null;
+        }
+        const group = this.layers.get(layerId);
+        if (!group) return { attached: false, visible: false, opacity: null };
+        // The group can remain registered after detachment or inside a hidden
+        // ancestor. Walk its parents to the active scene identity.
+        const hierarchy = observeSceneRootHierarchy(group, this.scene);
+        // NaN blocks authored/target fallbacks. This samples only a CPU
+        // material proxy, not shader/clipping/derived/GPU composed opacity.
+        const opacity = hierarchy.visible
+          ? this.currentRenderOpacityForTree(group, Number.NaN)
+          : Number.NaN;
+        return {
+          ...hierarchy,
+          opacity: Number.isFinite(opacity) ? opacity : null,
+          opacityMeasurement: "cpu-material-proxy",
+        };
+      },
+      () => this.layers.keys(),
+    );
   }
 
   recordTransitionCommitAttempt(input: {
@@ -3475,7 +3490,7 @@ export class SceneManager {
       terminalTransitionGraph,
       resolvedTargetGraph,
       committedGraph,
-      reason: "observed attached scene-root visibility and measurable material opacity; other channels unresolved",
+      reason: "observed scene-parent root visibility and CPU material proxy; composed alpha, alias, derived and unmanaged roots unresolved",
     });
     return finalTrace;
   }
