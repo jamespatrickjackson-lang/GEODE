@@ -248,7 +248,7 @@ The proposed future content for each `CLAUDE.md` file is a single import of the 
 ## Phase 3: approved authority/workspace/writing changes — 13 November 2026
 
 **Approved by the owner:** H01, H02, H03 and H09, as recorded in
-[`DEC-189`](../../03-decisions.md). This section updates the *status* of
+[`DEC-189`](../03-decisions.md). This section updates the *status* of
 the historical Phase 1 holds table above; the historical table and the 61-group
 original-source crosswalk remain preserved for auditing. No unapproved
 conflict is resolved by implication.
