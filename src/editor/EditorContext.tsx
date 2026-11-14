@@ -2196,6 +2196,13 @@ function withIssuedPageId(manifest: ProjectManifest, pageId: string): ProjectMan
     : { ...manifest, issuedPageIds: [...previous, pageId] };
 }
 
+// Existing presentation archives are historical records, not replaceable saves.
+function shouldWritePageArchive(existingArchiveContent: string | null, sourceContent: string, pageId: string): boolean {
+  if (existingArchiveContent === null) return true;
+  if (existingArchiveContent === sourceContent) return false;
+  throw new Error(`presentation archive ${pageId} already exists with different bytes; refusing overwrite`);
+}
+
 function isExternalOrRootedAssetPath(path: string): boolean {
   return /^(?:[a-z][a-z0-9+.-]*:|data:|#|\/)/i.test(path);
 }
@@ -2477,14 +2484,17 @@ export function EditorProvider({
             );
             if (content !== null) {
               const path = pageArchivePath(id, cur.projectRoot);
-              batchWrites.push({
-                path,
-                content,
-                expectedContent: await expectedContentForSave(
+              const existingArchive = await readFile(path);
+              if (shouldWritePageArchive(existingArchive, content, id)) {
+                batchWrites.push({
                   path,
-                  knownDiskContent,
-                ),
-              });
+                  content,
+                  expectedContent: await expectedContentForSave(
+                    path,
+                    knownDiskContent,
+                  ),
+                });
+              }
             }
           }
         } else if (key === "environment") {
