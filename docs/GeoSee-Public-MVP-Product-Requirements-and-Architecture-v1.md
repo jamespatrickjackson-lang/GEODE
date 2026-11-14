@@ -2,7 +2,7 @@
 
 **Status:** OWNER-APPROVED PRODUCT INTENT; PROPOSED VERSIONED GITHUB BASELINE IN DRAFT PR, NOT MERGED, IMPLEMENTED OR VERIFIED.  
 **Decision date:** 2026-11-14. **W3 owner record:** [approved W3 scope](https://app.notion.com/p/418fb09932768185a02cf9cb3492fb3e). **Tracking:** [W3 #6](https://github.com/jamespatrickjackson-lang/GEODE/issues/6).  
-**Implementation evidence reference:** \`main\` at \`29d9c4c7eee77ac1b104289b09b1382c574145d0\`; [staged README V2](https://github.com/jamespatrickjackson-lang/GEODE/blob/822465e7ad86c6fb0d785484fee2fd35cf30c6cf/README.md).  
+**Implementation evidence reference:** `main` at `29d9c4c7eee77ac1b104289b09b1382c574145d0`; [staged README V2](https://github.com/jamespatrickjackson-lang/GEODE/blob/822465e7ad86c6fb0d785484fee2fd35cf30c6cf/README.md).  
 **Workstream:** W3 product and architecture. W1 agent governance, W2 current-state documentation and W4 release/verification remain separate.  
 **Versioning rule:** This is a product-target document. It does **not** correct the as-built documentation, supersede historic decisions by silent implication, or assert that an unimplemented feature works. Changes require an issue, rationale, owner approval if scope changes, and a reviewed PR.
 
@@ -24,7 +24,7 @@ GeoSee is a free public **geoscience** visualization application for geoscientis
 
 | Journey | Gate A | Gate B | Explicitly later |
 | --- | --- | --- | --- |
-| Explore included scientific example | Required and verified | Retained | Further case studies |
+| Explore included scientific example | Required; browser verification gate | Retained | Further case studies |
 | Import own data | Not available, labelled | Constrained WGS84 GeoJSON | Other native formats |
 | Configure project | Not available, labelled | Name, reference policy, layer options | Advanced project types |
 | Visualize and inspect | Layers, source/legend, curated section | Imported attributes, styles and simple layer comparison | New calculations |
@@ -33,7 +33,7 @@ GeoSee is a free public **geoscience** visualization application for geoscientis
 
 ## 2. Evidence boundary: what exists today
 
-The pinned application implements a React 18/TypeScript/Three.js/Vite SPA, fixed project catalog, project JSON and authored pages, scene/layer registry, prepared GeoTIFF/GeoJSON/mesh/scalar renderers, editor/presenter and conditional capture routes. Audits B–D establish source wiring, not full public browser acceptance. The current **Add New Project** opens an existing Base GUI template, Utah **Add to Project** stages files without registering a scientific layer, and static hosting does not offer the Vite development-only \`/api/write-batch\` save endpoints. Generic own-data import, independent project creation and portable save/reopen **do not currently exist** as complete product flows.
+The pinned application implements a React 18/TypeScript/Three.js/Vite SPA, fixed project catalog, project JSON and authored pages, scene/layer registry, prepared GeoTIFF/GeoJSON/mesh/scalar renderers, editor/presenter and conditional capture routes. Audits B–D establish source wiring, not full public browser acceptance. The current **Add New Project** opens an existing Base GUI template, Utah **Add to Project** stages files without registering a scientific layer, and static hosting does not offer the Vite development-only `/api/write-batch` save endpoints. Generic own-data import, independent project creation and portable save/reopen **do not currently exist** as complete product flows.
 
 The pinned [GitHub Actions CI run 43516222592](https://github.com/jamespatrickjackson-lang/GEODE/actions/runs/43516222592) passed its configured build/source checks (including 679 tool tests). It did not establish Gate A or B browser acceptance, scientific metrology, codec reliability or professional V&V. Historic local smoke tests have a different environment/receipt. **No newly proposed requirement below is called implemented or verified by this document.**
 
@@ -56,7 +56,7 @@ Public docs must distinguish source/observation, transformed/derived, interpreta
 
 ### GeoJSON v1 input contract (approved direction; engineering details below remain gate-controlled)
 
-- Input: an explicitly selected, **local** UTF-8 \`.geojson\` or \`.json\` file that parses as RFC 7946 \`FeatureCollection\`; first implementation slice **Point, LineString and Polygon** with finite 2D longitude/latitude coordinate pairs. Multi geometries may be added by an independently tested contract amendment, not by broad advertisement.
+- Input: an explicitly selected, **local** UTF-8 `.geojson` or `.json` file that parses as RFC 7946 `FeatureCollection`; first implementation slice **Point, LineString and Polygon** with finite 2D longitude/latitude coordinate pairs. Multi geometries may be added by an independently tested contract amendment, not by broad advertisement.
 - Reference: input locations are WGS84 longitude, latitude in degrees (EPSG:4326 / RFC 7946 order). Explicit contradictory CRS information, coordinate-order uncertainty, coordinates outside valid bounds or unsupported altitudes/datum must never be silently corrected or positioned as valid. **No imported Z/depth, time, terrain draping or vertical correctness claim.**
 - Spatial placement: calculate a controlled, documented local render frame for a bounded working region. Capture source frame, origin, transform method/version, numeric precision envelope and unknown vertical datum. Validate at independent control points before accepting the working envelope or tolerance. Do not silently overlay newly imported features on existing Utah/Woodjam layers if their coordinate frames have not been verified compatible.
 - Security/resource boundary: parse in a bounded manner; reject malformed inputs, non-finite coordinates, unsafe property content, unrecognized geometry and resource excess with a specific message. **Trial-only planning limit**: 5 MiB or 25,000 vertices; W4 measures and owner approves actual supported limits before release. Never execute file content or inject properties as HTML.
@@ -115,15 +115,15 @@ not converted to generic browser ingestion in v1.
 
 | Boundary | Input → result | Failure contract |
 | --- | --- | --- |
-| \`ProjectSource\` | \`exampleSlug | localBundle\` → validated project context | Unknown example or unsupported version gives explicit error, no partial scene |
-| \`GeoJSONValidator\` | local byte stream + chosen 2D source policy → \`Preview | Rejection\` | Typed actionable error, no scene side effect |
-| \`FeatureLayerAdapter\` | accepted feature geometry + known transform → scene objects and feature-id mapping | Out-of-range transform or unsupported shape rejected; no fake Z |
-| \`ProjectBundleCodec\` | project + source + provenance + view → self-contained versioned JSON; inverse \`open\` | Corrupt, incompatible or newer versions never replace current project |
-| \`ImageExport\` | current accepted view + visible metadata + dimensions → valid PNG | Unsupported size/GPU/path exposes failure; never report “saved” without file |
+| `ProjectSource` | example slug or local bundle → validated project context | Unknown example or unsupported version gives explicit error, no partial scene |
+| `GeoJSONValidator` | local byte stream + chosen 2D source policy → `Preview | Rejection` | Typed actionable error, no scene side effect |
+| `FeatureLayerAdapter` | accepted feature geometry + known transform → scene objects and feature-id mapping | Out-of-range transform or unsupported shape rejected; no fake Z |
+| `ProjectBundleCodec` | project + source + provenance + view → self-contained versioned JSON; inverse `open` | Corrupt, incompatible or newer versions never replace current project |
+| `ImageExport` | current accepted view + visible metadata + dimensions → valid PNG | Unsupported size/GPU/path exposes failure; never report “saved” without file |
 
 **Persistence:** Save via deliberate user download of one self-contained, versioned project JSON file for small supported inputs; reopen with an explicit file picker on a fresh session. Store feature identities, original or reproducible geometry, source digest/provenance, coordinate context, visible styles, layer order, selected view/camera and title. Temporary browser cache is convenience only. No autosave, account, cloud storage or silent upload promise. Large curated datasets may remain referenced by bundled assets; label such saves **not self-contained** rather than pretending portability. Version migrations are separate explicit work.
 
-**Key code touchpoints (for later narrow PRs):** \`src/projects/projectCatalogRuntime.ts\`, \`src/pages/loadPages.ts\`, \`src/scene/layerLoaderRegistry.ts\`, \`src/scene/layerLoaders.ts\`, \`src/scene/SceneManager.ts\`, \`src/editor/EditorContext.tsx\`, \`src/editor/save.ts\`, and \`plugins/vite-plugin-author-write.ts\`. Inspect scoped agent contracts before implementation. No code edits are included in this W3 documentation PR.
+**Key code touchpoints (for later narrow PRs):** `src/projects/projectCatalogRuntime.ts`, `src/pages/loadPages.ts`, `src/scene/layerLoaderRegistry.ts`, `src/scene/layerLoaders.ts`, `src/scene/SceneManager.ts`, `src/editor/EditorContext.tsx`, `src/editor/save.ts`, and `plugins/vite-plugin-author-write.ts`. Inspect scoped agent contracts before implementation. No code edits are included in this W3 documentation PR.
 
 ## 5. Prioritized requirements register and observable acceptance
 
@@ -154,7 +154,7 @@ All IDs below are **approved target requirements**, **not implemented or verifie
 2. **Runtime and user acceptance:** real static deployment; actual navigation/section/layer actions; PNG download and open; fresh-browser project reopen; appropriate keyboard/novice success; explicit target browser/hardware/GPU details; captured failures.
 3. **Scientific integrity and V&V:** independently checked control points, CRS/units/origin/provenance and stated limits for permitted visualization. This does **not** validate original SEG-Y survey geometry across arbitrary sites, MT inversions, interpreted lithology, survey-grade lengths/volumes or consequential engineering decisions.
 
-**Release receipt:** W4 records source SHA, environment, commands, fixture hashes, browsers/GPU, screenshots/console/network, invalid inputs, reloaded bundle, actual image bytes, review of rights and security advisories, numeric fixture tolerances, residual risk and explicit owner acceptance. Never equate \`npm run build\` or green CI with scientific acceptance.
+**Release receipt:** W4 records source SHA, environment, commands, fixture hashes, browsers/GPU, screenshots/console/network, invalid inputs, reloaded bundle, actual image bytes, review of rights and security advisories, numeric fixture tolerances, residual risk and explicit owner acceptance. Never equate `npm run build` or green CI with scientific acceptance.
 
 ## 6. Incremental engineering plan (after authorization of each code change)
 
@@ -193,8 +193,8 @@ All IDs below are **approved target requirements**, **not implemented or verifie
 
 **Approved W3-D01–D10, 2026-11-14:** Option B MVP / Option A earlier gate; local-first desktop static architecture; constrained 2D GeoJSON; terrain-free local project with bounded frame; explicit JSON save/reopen; simple source-aware inspection/PNG; non-engineering and non-survey scientific scope; W4-led browser/size thresholds after profiling; distinct W4 readiness; representative novice acceptance study. [Owner approval and original alternatives](https://app.notion.com/p/418fb09932768185a02cf9cb3492fb3e). The underlying proposal remains for dated rationale. There is **no owner approval** of arbitrary data formats, numeric precision or unchecked release claims.
 
-**Status meanings:** \`APPROVED PRODUCT TARGET\` (owner chose expected behavior); \`IMPLEMENTED\` (merged software at known SHA); \`VERIFIED\` (test receipt for exact acceptance); \`RELEASE-ACCEPTED\` (independent owner sign-off). An approved requirement is not an implemented feature.
+**Status meanings:** `APPROVED PRODUCT TARGET` (owner chose expected behavior); `IMPLEMENTED` (merged software at known SHA); `VERIFIED` (test receipt for exact acceptance); `RELEASE-ACCEPTED` (independent owner sign-off). An approved requirement is not an implemented feature.
 
-**Document authority:** This W3 v1 target is not the source of truth for what current \`main\` does; W2 owns current-state correction and 34 GDR items. No AGENTS.md/CLAUDE.md changes are in this PR; W1 controls its 61-rule crosswalk and live provider-loading holds. W4 derives specific test suites/limits for the accepted workflow, while keeping actual execution evidence separate. Maintain issue-to-PR links and distinguish hard/soft dependencies.
+**Document authority:** This W3 v1 target is not the source of truth for what current `main` does; W2 owns current-state correction and 34 GDR items. No AGENTS.md/CLAUDE.md changes are in this PR; W1 controls its 61-rule crosswalk and live provider-loading holds. W4 derives specific test suites/limits for the accepted workflow, while keeping actual execution evidence separate. Maintain issue-to-PR links and distinguish hard/soft dependencies.
 
 **Review and merge gate:** Source-aligned terminology; full W3 requirement coverage; no overlap with W1/W2 owned files; exact base SHA; owner review of open numerical/schema decisions; no scope creep or unsupported verification claims. **Draft PR creation does not authorize merge or implementation.**
