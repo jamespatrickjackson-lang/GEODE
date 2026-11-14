@@ -1,5 +1,16 @@
 # GEODE release verification
 
+> **Dated historical verification, with a later pinned-main evidence addendum.** The 12 November release, false-green CI, clean-clone Windows/Chrome smoke, recovery and dependency notes below remain historical records. Their initial GitHub workflow statements must not be read as the active configuration at `main` on 14 November. This W2 documentation branch has no new runtime/browser/scientific acceptance receipt in that earlier release record.
+
+## Pinned main GitHub Actions receipt — 14 November 2026
+
+- **SHA:** [`29d9c4c7eee77ac1b104289b09b1382c574145d0`](https://github.com/jamespatrickjackson-lang/GEODE/commit/29d9c4c7eee77ac1b104289b09b1382c574145d0); [Actions run **43516222592**](https://github.com/jamespatrickjackson-lang/GEODE/actions/runs/43516222592). Ubuntu, Node.js 20, Python 3.14, pinned Python test dependencies, `npm ci`.
+- The [configured workflow](../.github/workflows/checks.yml) ran **blocking** `npm run check:routes`, `check:mirror`, `check:editor-controls`, `check:agent-drag`, `check:pages`, `check:runtime-assets`, `npm run build`, and `npm run test:tools`; the configured tool/source test suite **passed 679/679**. This supersedes only earlier **present-tense** claims of advisory tests or omitted build/asset checks.
+- **Not verified by this receipt:** full `npm run test:e2e` Playwright/Utah browser suites, live end-user journeys, cross-browser visual acceptance, delivered MP4/PNG size/codec fidelity, external deployment, or independent geodesy/scientific validation. The historical Chrome smoke tests below relate to earlier local candidate conditions, not this exact pinned main.
+- **Risk:** residual dependency advisories and large-chunk/performance warnings remain tracked separately. CI green is **not** comprehensive security, scientific or output-format acceptance.
+
+
+
 Verification performed on 12 November 2026. Source baseline: `76e6bf47d2be144049f61ed390879996022cb19c`.
 Verification ran in an isolated clone of the recovery bundle, not in the active development working tree.
 
@@ -55,16 +66,16 @@ Optional offline preparation and audit scripts do reference `C:/GeoSee/GeoSee_Ar
 
 Vite's build plugins copy prepared project/runtime data and FFmpeg core assets, omitting raw/client-preprocessed source buckets, extracted paper figures and selected archive-only pages. Development authoring endpoints are not present in the production build. A build pass does not verify every static hosting or export route.
 
-## GitHub Actions
+## GitHub Actions — Historical publication/CI bootstrap (12 November 2026)
 
-Existing workflow: [checks.yml](../.github/workflows/checks.yml).
+The following initial-release bullets are retained as dated evidence; **see the pinned-main receipt above** for the later, blocking workflow. Historical workflow reference: [checks.yml](../.github/workflows/checks.yml).
 
 - Ubuntu runner, Node 20, explicit Python 3.14, pinned Python test dependencies, and `npm ci`.
 - Blocking steps: routes, mirror, editor controls, agent drag and pages.
-- `test:tools` is currently advisory through `continue-on-error: true`, reflecting historical failures.
-- The workflow does not currently run the production build, runtime-assets check or full browser suite.
+- On the **initial publication run**, `test:tools` was advisory through `continue-on-error: true`, causing the false-green appearance; the later pinned-main workflow makes this suite blocking.
+- The **initial workflow** omitted the production build, runtime-assets check and browser suite. By the pinned-main receipt above, **build and runtime-assets are included**; full Playwright/browser acceptance is still not a configured CI step.
 - The [initial published run](https://github.com/jamespatrickjackson-lang/GEODE/actions/runs/43296826167) passed all blocking steps but its advisory source suite had 675 passes and four failures. All four failed because `openpyxl` was missing from the Linux runner; the workflow appeared successful because that step has `continue-on-error: true`.
-- The follow-up explicitly selects Python 3.14 and installs `tools/requirements-test.txt` before testing. No application source, scientific fixtures, or test assertions changed. Inspect the [latest Actions run](https://github.com/jamespatrickjackson-lang/GEODE/actions) for this correction; a green workflow alone must not be treated as proof that the advisory source suite passed.
+- The CI bootstrap follow-up explicitly selected Python 3.14 and installed `tools/requirements-test.txt`. No scientific runtime/source fixtures were changed for that correction. The later [pinned-main Actions run](https://github.com/jamespatrickjackson-lang/GEODE/actions/runs/43516222592) provides the specific blocking 679/679 pass evidence; this does not demonstrate browser or scientific accuracy.
 
 The Windows Git credential path passed `git push --dry-run origin main:main` with interactive prompts disabled. This confirms non-publishing push negotiation, not publication. Windows `gh auth status` independently still reported no authenticated host. The connected GitHub integration can inspect the public destination.
 
@@ -78,7 +89,7 @@ The Windows Git credential path passed `git push --dry-run origin main:main` wit
 | Nonblocking | Vite large-chunk warning | Build succeeds; performance work remains |
 | Nonblocking browser compatibility limitation | Woodjam canvas evaluation timed out in bundled Chromium; installed Chrome passed | Retain browser versions and do not claim cross-browser acceptance |
 | Nonblocking presentation polish | Shahbazi strict console check reports missing favicon (404) | Application flow and scientific assets passed; no runtime changes made |
-| Corrected CI bootstrap; rerun required for acceptance | Initial Linux run: four source-suite failures caused by missing `openpyxl` | Explicit Python setup and pinned test dependencies added; inspect source-test counts as well as workflow conclusion |
+| Historical CI bootstrap correction | Initial Linux run: four source-suite failures caused by missing `openpyxl` | Explicit Python setup and test dependencies added; later pinned-main configured 679/679 pass is recorded above |
 | Unverified | Broad browser regression, all capture/export modes and full scientific accuracy | No corresponding acceptance claim |
 | Historical | Earlier saved browser failure markers | Retained as historical evidence, not presented as current results |
 
