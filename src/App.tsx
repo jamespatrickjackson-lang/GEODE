@@ -16,7 +16,9 @@ import {
 import { debugLog } from "./utils/debugLog";
 import { CuratedPublicLanding, CuratedExplorerShell } from "./public/CuratedExplorerShell";
 import {
+  attachPublicKeyboardGuard,
   canOpenProject,
+  publicRouteUrl,
   resolveGateAExperience,
 } from "./public/gateAExperience";
 import { SHAHBAZI_VIEWER_BACKGROUND } from "./projectModules/shahbazi/ui";
@@ -66,11 +68,17 @@ export function App() {
   const [loadState, setLoadState] = useState<LoadState>("landing");
   const [sceneHandle, setSceneHandle] = useState<SceneHandle | null>(null);
 
-  const openProject = useCallback((projectSlug: string = DEFAULT_PROJECT_SLUG) => {
+  const openProject = useCallback((
+    projectSlug: string = DEFAULT_PROJECT_SLUG,
+    updatePublicUrl = true,
+  ) => {
     // Behavior-boundary enforcement, not just removal of landing controls.
     if (!canOpenProject(experience, projectSlug)) {
       setLoadError("This project is unavailable in the public explorer.");
       return;
+    }
+    if (experience.mode === "public" && updatePublicUrl) {
+      window.history.replaceState(window.history.state, "", publicRouteUrl(window.location.href, projectSlug));
     }
     const requestId = loadRequestRef.current + 1;
     loadRequestRef.current = requestId;
@@ -95,36 +103,28 @@ export function App() {
   }, [experience]);
 
   const returnToLanding = useCallback(() => {
+    if (experience.mode === "public") {
+      window.history.replaceState(window.history.state, "", publicRouteUrl(window.location.href, null));
+    }
     loadRequestRef.current += 1;
     setLoadError(null);
     setProject(null);
     setSceneHandle(null);
     setLoadState("landing");
-  }, []);
+  }, [experience.mode]);
 
   useEffect(() => {
     if (initialProjectOpenedRef.current) return;
     initialProjectOpenedRef.current = true;
     if (experience.initialProjectSlug) {
-      openProject(experience.initialProjectSlug);
+      openProject(experience.initialProjectSlug, false);
     }
   }, [experience.initialProjectSlug, openProject]);
 
   useEffect(() => {
     if (experience.mode !== "public") return;
-    // Capture-phase Ctrl/Cmd+S can never reach an editor save shortcut in the
-    // public route, including if a future child installs its own key listener.
-    const blockPublicSaveShortcut = (event: KeyboardEvent) => {
-      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "s") {
-        event.preventDefault();
-        event.stopPropagation();
-        event.stopImmediatePropagation();
-      }
-    };
-    window.addEventListener("keydown", blockPublicSaveShortcut, true);
-    return () =>
-      window.removeEventListener("keydown", blockPublicSaveShortcut, true);
-  }, [experience.mode]);
+    return attachPublicKeyboardGuard(window, Boolean(sceneHandle && project));
+  }, [experience.mode, sceneHandle, project]);
 
   useEffect(() => {
     if (!containerRef.current || !project) return;
