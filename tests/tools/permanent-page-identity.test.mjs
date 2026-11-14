@@ -1,5 +1,7 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync, mkdtempSync, rmSync } from "node:fs";
+import { join } from "node:path";
+import { tmpdir } from "node:os";
 import test from "node:test";
 import ts from "typescript";
 
@@ -81,4 +83,40 @@ test("PI-004 permanent: stale deletes cannot register tombstones; failed deletes
     editor.indexOf("deletedPageIdsRef.current.clear();"));
   assert.match(save, /await deleteFile\(pageJsonPath\(id, cur\.projectRoot\)\)/);
   assert.doesNotMatch(save, /await deleteFile\(pageJsonPath\(id, cur\.projectRoot\)\)\.catch/);
+});
+
+
+test("PI-004 permanent: synthetic on-disk Save/reopen retains issued history and original archive bytes", async () => {
+  const update = await import("data:text/javascript;base64," + Buffer.from(
+    transpile(extract("withIssuedPageId"), ["withIssuedPageId"]),
+  ).toString("base64"));
+  const root = mkdtempSync(join(tmpdir(), "geosee-pi004-identity-"));
+  try {
+    const archiveDir = join(root, "pages", "_archive");
+    mkdirSync(archiveDir, { recursive: true });
+    const legacyArchivePath = join(archiveDir, "99_page.json");
+    const originalArchive = '{"id":"99_page","title":"Original untouched archive"}\n';
+    writeFileSync(legacyArchivePath, originalArchive, "utf8");
+    const sourcePath = join(root, "synthetic-scientific-source.json");
+    const protectedSource = '{"features":[{"id":"scientific-data"}]}\n';
+    writeFileSync(sourcePath, protectedSource, "utf8");
+    const issued = "p_aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
+    const manifest = update.withIssuedPageId({
+      id: "synthetic", pageOrder: ["01_page"], archivedPageOrder: [],
+      layers: [{ id: "science", files: { source: "synthetic-scientific-source.json" } }],
+    }, issued);
+    const projectFile = join(root, "project.json");
+    writeFileSync(projectFile, JSON.stringify(manifest) + "\n", "utf8");
+    const reopened = JSON.parse(readFileSync(projectFile, "utf8"));
+    assert.deepEqual(reopened.issuedPageIds, [issued]);
+    let candidates = [issued.slice(2), "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"], index = 0;
+    const next = allocator.newPageId(
+      reopened.pageOrder, reopened.issuedPageIds, () => candidates[index++],
+    );
+    assert.equal(next, "p_bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb");
+    assert.equal(readFileSync(legacyArchivePath, "utf8"), originalArchive);
+    assert.equal(readFileSync(sourcePath, "utf8"), protectedSource);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
 });
