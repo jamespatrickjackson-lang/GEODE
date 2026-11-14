@@ -16,9 +16,11 @@ This document is stable product/system orientation. It explains what GeoSee is,
 why it exists, and how the app/data model is shaped. It is not the active-work
 router.
 
-For active software work, use `docs/dev-context/Active-Build-Context.md`. For
-agent operating rules, use `CLAUDE.md`. For the repo landing page, use
-`README.md`.
+For active software work, use `docs/dev-context/Active-Build-Context.md`.
+For agent instructions, follow the applicable root `AGENTS.md` or `CLAUDE.md`
+and any scoped instruction files actually present in the checked-out revision.
+W1 owns these instruction routes; live provider loading (H11) is not yet verified.
+For the repo landing page, use `README.md`.
 
 ## Product Frame
 
